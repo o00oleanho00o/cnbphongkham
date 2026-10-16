@@ -5,8 +5,7 @@ puts no ceiling on a body, so one anonymous client could make the API process ga
 ASGI middleware cuts the body at the reading layer, the moment the ceiling is crossed (a declared
 ``Content-Length`` is refused without reading a byte; a chunked body is counted as it arrives).
 
-The knowledge-base upload and text routes are exempt: they carry documents up to ``KB_MAX_FILE_MB`` and have
-their own cut (``kb_route_guards.KbBodyLimitRoute``). Everything else is small JSON.
+Every route takes small JSON.
 """
 
 from __future__ import annotations
@@ -19,14 +18,11 @@ from starlette.types import ASGIApp, Message, Receive, Scope, Send
 from pema_contracts.errors import DomainError, ErrorCode
 
 MAX_BODY_BYTES: Final = 4 * 1024 * 1024
-EXEMPT_SUFFIXES: Final = ("/admin/kb/sources/file", "/admin/kb/sources/text")
 
 
 def is_exempt(path: str) -> bool:
-    """KB uploads, and the photo upload ``PUT /media/<id>/content`` (it cuts the stream itself at
+    """The photo upload ``PUT /media/<id>/content`` (it cuts the stream itself at
     ``MEDIA_MAX_BYTES``, see ``routers/patient_care.py``)."""
-    if path.endswith(EXEMPT_SUFFIXES):
-        return True
     return "/media/" in path and path.endswith("/content")
 
 

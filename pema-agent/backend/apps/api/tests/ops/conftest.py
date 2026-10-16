@@ -45,32 +45,10 @@ AddAccount = Callable[..., str]
 
 @pytest.fixture
 def add_account(admin: Engine, world: SeedResult) -> AddAccount:
-    """``add_account("long", channel="zalo_personal", purpose="customer", ...)`` inserts a channel account (and the
-    default agent it needs) and returns its id. Extra keyword arguments are column values."""
+    """``add_account("long")`` names a channel account. The accounts live in the agent service; the clinic
+    keeps only their id, so there is nothing to insert."""
 
-    def make(
-        account_id: str, *, channel: str = "zalo_personal", purpose: str = "customer", **columns: Any
-    ) -> str:
-        with admin.begin() as conn:
-            conn.execute(
-                text(
-                    "INSERT INTO agent.agents (clinic_id, id, name, is_default) "
-                    "VALUES (:c, 'default', 'Trợ lý mặc định (mẫu)', true) ON CONFLICT DO NOTHING"
-                ),
-                {"c": world.clinic_id},
-            )
-            values: dict[str, Any] = {
-                "clinic_id": world.clinic_id,
-                "id": account_id,
-                "label": columns.pop("label", f"Danh tính {account_id}"),
-                "channel": channel,
-                "agent_id": "default",
-                "purpose": purpose,
-                **columns,
-            }
-            names = ", ".join(values)
-            marks = ", ".join(f":{name}" for name in values)
-            conn.execute(text(f"INSERT INTO agent.accounts ({names}) VALUES ({marks})"), values)  # noqa: S608  - test keys
+    def make(account_id: str, **columns: Any) -> str:
         return account_id
 
     return make

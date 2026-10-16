@@ -14,7 +14,6 @@ from pema.api.deps import API_PREFIX
 from pema.api.routers import (
     admin_audit,
     admin_crm_rules,
-    admin_kb,
     admin_templates,
     admin_users,
     appointments,
@@ -62,7 +61,7 @@ TAGS_METADATA: list[dict[str, str]] = [
     {"name": "resources", "description": "Doctors, rooms and room blocks. (U4)"},
     {"name": "studio", "description": "Before/after photo studio of one patient. (U4)"},
     {"name": "crm", "description": "CSKH tasks and contact log. (B1)"},
-    {"name": "guide", "description": "Staff guide and Hoi Pema, backed by the knowledge base. (U7)"},
+    {"name": "guide", "description": "Staff guide and Hoi Pema. (U7)"},
     {"name": "conversations", "description": "Inbox and messages. (B1)"},
     {"name": "review-items", "description": "Doctor follow-up queue (Theo dõi): alerts from CRM tasks. (B1)"},
     {"name": "live", "description": "Live updates (server-sent events) and presence. (ST-R)"},
@@ -72,7 +71,6 @@ TAGS_METADATA: list[dict[str, str]] = [
     {"name": "admin-audit", "description": "Audit log reader. (B1)"},
     {"name": "admin-users", "description": "Staff accounts: owner resets a password. (B1)"},
     {"name": "admin-templates", "description": "Doctor-approved message templates. (B1)"},
-    {"name": "admin-kb", "description": "Knowledge base. (D3)"},
     {"name": "system", "description": "Health."},
 ]
 
@@ -110,7 +108,6 @@ def build_api_router() -> APIRouter:
         admin_audit.router,
         admin_users.router,
         admin_templates.router,
-        admin_kb.router,
     ):
         api.include_router(router)
     return api

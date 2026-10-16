@@ -1,19 +1,60 @@
 """Pure text helpers of the staff guide: article summary, passages and the ranking behind "Hoi Pema".
 
-New module. No database, no clock. The ranking is the Okapi BM25 the knowledge base already uses for its
-keyword side (``pema.knowledge.kb_fts_query``), applied to the passages of the guide articles instead of kb
-chunks; the words are folded the same way (``bo_dau_tieng_viet``), so "dời lịch" finds "doi lich". It is a
+New module. No database, no clock. The ranking is Okapi BM25 over the passages of the guide articles; the
+words are folded (``bo_dau_tieng_viet``), so "dời lịch" finds "doi lich". It is a
 search over clinic-written procedure text: no model is called and nothing is generated, so it cannot invent an
 answer.
 """
 
 from __future__ import annotations
 
+import math
 import re
+from collections import Counter
+from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Final
 
-from pema.knowledge.kb_fts_query import diem_bm25, idf_bm25, tach_tu_khoa
+from pema.shared.bo_dau_tieng_viet import bo_dau_tieng_viet
+
+_WORD: Final = re.compile(r"[^\W_]+")
+"""A token: letters and digits (``\\w`` minus the underscore)."""
+BM25_K1: Final = 1.2
+BM25_B: Final = 0.75
+BM25_IDF_FLOOR: Final = 1e-6
+
+
+def tach_tu_khoa(cau_hoi: str) -> list[str]:
+    """Tokens of the folded text, the same for the passages and the question."""
+    return _WORD.findall(bo_dau_tieng_viet(cau_hoi))
+
+
+def idf_bm25(tong_doan: int, so_doan_chua_tu: int) -> float:
+    """``ln((N - n + 0.5) / (n + 0.5))``, never below ``BM25_IDF_FLOOR`` (a word in most passages counts for
+    almost nothing instead of negatively)."""
+    return max(BM25_IDF_FLOOR, math.log((tong_doan - so_doan_chua_tu + 0.5) / (so_doan_chua_tu + 0.5)))
+
+
+def diem_bm25(
+    tu_khoa: Sequence[str],
+    tokens_doan: Sequence[str],
+    idf_theo_tu: dict[str, float],
+    do_dai_trung_binh: float,
+) -> float:
+    """Okapi BM25 of one passage (its folded tokens) against the question words."""
+    if not tokens_doan:
+        return 0.0
+    tan_suat = Counter(tokens_doan)
+    dl = len(tokens_doan)
+    diem = 0.0
+    for tu in tu_khoa:
+        tf = tan_suat.get(tu, 0)
+        if tf == 0:
+            continue
+        mau = tf + BM25_K1 * (1 - BM25_B + BM25_B * dl / max(do_dai_trung_binh, 1e-9))
+        diem += idf_theo_tu[tu] * tf * (BM25_K1 + 1) / mau
+    return diem
+
 
 SUMMARY_MAX: Final = 240
 PASSAGE_MAX: Final = 700

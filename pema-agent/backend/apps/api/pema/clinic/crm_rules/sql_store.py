@@ -11,10 +11,8 @@ What the snapshots are built from:
 * plans: ``clinic.treatment_plan`` in ``planned``/``active`` summed into ``total_sessions`` /
   ``completed_sessions`` (JavaScript ``p.total`` / ``p.completed``); ``first_plan_id`` is the earliest one;
 * appointments: cancelled and missed ones of any age (recall) and every appointment from today on;
-* channel target: a VERIFIED ``clinic.channel_identity`` of a ``zalo_bot`` / ``zalo_personal`` channel
-joined to
-  an enabled ``agent.accounts`` row of that channel (the most recently active identity wins; when a clinic has
-  several enabled accounts of one channel the first by id is used);
+* channel target: a VERIFIED ``clinic.channel_identity`` of a ``zalo_bot`` / ``zalo_personal`` channel (the
+  most recently active identity wins); the channel stands in for the account id;
 * consent: the newest ``messaging`` row of ``clinic.consent`` is granted and not revoked;
 * templates: ``clinic.message_template`` that is active AND approved.
 
@@ -218,12 +216,13 @@ class SqlCrmRuleStore:
         )
         target_rows = await _rows(
             session,
-            "SELECT DISTINCT ON (ci.patient_id) ci.patient_id, a.id AS account_id, ci.external_user_id "
+            # shortcut: the channel stands in for the account id (the accounts live in the agent's zalo
+            # plugin and nothing delivers from here today); keep the account on the identity when it does
+            "SELECT DISTINCT ON (ci.patient_id) ci.patient_id, ci.channel AS account_id, ci.external_user_id "
             "FROM clinic.channel_identity ci "
-            "JOIN agent.accounts a ON a.clinic_id = ci.clinic_id AND a.channel = ci.channel AND a.enabled "
             "WHERE ci.clinic_id = :c AND ci.verification_status = 'verified' AND ci.patient_id IS NOT NULL "
             "AND ci.channel IN ('zalo_bot', 'zalo_personal') "
-            "ORDER BY ci.patient_id, ci.last_inbound_at DESC NULLS LAST, a.id",
+            "ORDER BY ci.patient_id, ci.last_inbound_at DESC NULLS LAST",
             c=clinic_id,
         )
         consent_rows = await _rows(

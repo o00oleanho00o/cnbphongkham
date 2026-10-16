@@ -1,0 +1,38 @@
+agent_rt_app | agent | f
+agent_rt_app | agent_rt | t
+agent_rt_app | clinic | f
+agent_rt_app | clinic_agent | f
+agent_rt_app | ctx | f
+agent_rt_app | public | t
+agent_worker | agent | t
+agent_worker | agent_rt | f
+agent_worker | clinic | f
+agent_worker | clinic_agent | t
+agent_worker | ctx | t
+agent_worker | public | t
+be_app | agent | t
+be_app | agent_rt | f
+be_app | clinic | t
+be_app | clinic_agent | t
+be_app | ctx | t
+be_app | public | t
+agent_rt_app | agent_rt | DELETE | 21
+agent_rt_app | agent_rt | INSERT | 23
+agent_rt_app | agent_rt | SELECT | 24
+agent_rt_app | agent_rt | UPDATE | 21
+agent_worker | agent | DELETE | 28
+agent_worker | agent | INSERT | 28
+agent_worker | agent | SELECT | 28
+agent_worker | agent | UPDATE | 28
+agent_worker | clinic_agent | SELECT | 13
+be_app | agent | DELETE | 28
+be_app | agent | INSERT | 28
+be_app | agent | SELECT | 28
+be_app | agent | UPDATE | 28
+be_app | clinic | DELETE | 51
+be_app | clinic | INSERT | 53
+be_app | clinic | SELECT | 53
+be_app | clinic | UPDATE | 51
+be_app | clinic_agent | SELECT | 10
+plpgsql
+vector

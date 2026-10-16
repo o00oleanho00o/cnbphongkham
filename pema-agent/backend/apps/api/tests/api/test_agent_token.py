@@ -158,3 +158,15 @@ async def test_an_admin_gets_a_token_others_are_refused_and_the_key_set_is_open(
     claims = _verify(for_manager.json()["token"], jwks.json())
     assert (claims["role"], claims["scope"]) == ("manager", "admin")
     assert (key_dir / agent_token.KEY_FILE).is_file()
+
+
+def test_an_agent_token_is_never_a_staff_session(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """L2 of .claude/rules/agent-crm-boundary.md: a token minted for the agent (``aud = pema-agent``), even one a
+    jailbroken agent replays at this API, opens nothing here. The session cookie is HS256 with the API's own
+    secret; the agent token is EdDSA, so the shapes never meet."""
+    from pema.api.dashboard_auth import parse_session_token
+
+    monkeypatch.setenv("PEMA_JWT_SECRET", "a-secret-of-thirty-two-characters!!")
+    token, _ = agent_token.mint(agent_token.load_or_create_key(tmp_path), _user(), DEMO_NOW)
+
+    assert parse_session_token(token, DEMO_NOW) is None

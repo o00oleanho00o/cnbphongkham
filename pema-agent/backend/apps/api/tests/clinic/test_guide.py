@@ -1,4 +1,4 @@
-"""The staff guide and "Hoi Pema": articles are knowledge-base sources tagged ``guide`` (package U, step U7)."""
+"""The staff guide and "Hoi Pema": rows of ``clinic.guide_article`` tagged ``guide`` (package U, step U7)."""
 
 from __future__ import annotations
 
@@ -27,24 +27,15 @@ def add_source(
     *,
     tags: list[str],
     body: str = "Nội dung mẫu.",
-    status: str = "san_sang",
 ) -> str:
     source_id = f"src-{uuid4().hex[:10]}"
     with admin.begin() as conn:
         conn.execute(
             text(
-                "INSERT INTO agent.kb_document "
-                "(clinic_id, id, name, kind, format, raw_text, byte_size, status, tags) "
-                "VALUES (:c, :id, :name, 'text', 'md', :body, 10, :status, CAST(:tags AS text[]))"
+                "INSERT INTO clinic.guide_article (clinic_id, id, title, body, tags) "
+                "VALUES (:c, :id, :name, :body, CAST(:tags AS text[]))"
             ),
-            {
-                "c": world.clinic_id,
-                "id": source_id,
-                "name": name,
-                "body": body,
-                "status": status,
-                "tags": tags,
-            },
+            {"c": world.clinic_id, "id": source_id, "name": name, "body": body, "tags": tags},
         )
     return source_id
 
@@ -94,14 +85,6 @@ async def test_a_source_without_the_guide_tag_is_not_an_article(
     assert plain not in [row["id"] for row in (await owner.get("/api/v1/guide/articles")).json()]
 
 
-async def test_a_failed_source_is_hidden_from_the_guide(
-    client_factory: ClientFactory, admin: Engine, world: SeedResult
-) -> None:
-    broken = add_source(admin, world, "Bài hỏng", tags=["guide"], status="hong")
-    owner = await client_factory(OWNER)
-    assert (await owner.get(f"/api/v1/guide/articles/{broken}")).status_code == 404
-
-
 async def test_a_manager_tags_a_source_and_it_becomes_an_article_with_an_audit_row(
     client_factory: ClientFactory, admin: Engine, world: SeedResult
 ) -> None:
@@ -119,7 +102,7 @@ async def test_a_manager_tags_a_source_and_it_becomes_an_article_with_an_audit_r
     assert (await cs.get(f"/api/v1/guide/articles/{source}")).status_code == 200
     with admin.begin() as conn:
         row = conn.execute(
-            text("SELECT details FROM clinic.audit_log WHERE action = 'kb.tags' AND entity_id = :id"),
+            text("SELECT details FROM clinic.audit_log WHERE action = 'guide.tags' AND entity_id = :id"),
             {"id": source},
         ).one()
     assert row.details == {"tags": ["guide", "Lễ tân"]}

@@ -286,7 +286,7 @@ async def record_inbound(
     ctx = ActionContext(clinic_id=world.clinic_id, actor_type=ActorType.SYSTEM, source=ActionSource.WEBHOOK)
     message = InboundMessage(
         channel=ChannelKind.ZALO_BOT,
-        account_id="bot-1",
+        account_id="",  # no account: a test that needs one sets clinic.conversation.account_id itself
         update_id=update_id or uuid4().hex,
         thread_id=thread or uuid4().hex,
         sender_id=uid,

@@ -93,7 +93,6 @@ class Settings(BaseSettings):
     retention_link_attempt_days: int = Field(default=30, ge=0)
     """``clinic.identity_link_attempt`` (failure log of the link flow); never younger than one hour."""
 
-
     @field_validator("clinic_id", mode="before")
     @classmethod
     def _empty_clinic_id_is_unset(cls, value: object) -> object:

@@ -115,55 +115,6 @@ async def test_no_identity_when_the_thread_has_no_account_and_the_channel_has_no
     assert delivery.requests == []  # nothing reached the channel
 
 
-async def test_no_identity_when_the_channel_has_two_customer_accounts(
-    db: ClinicDatabase, admin: Engine, world: SeedResult, add_account: Any, staff_ctx: Any
-) -> None:
-    add_account("long")
-    add_account("hoa")
-    cid = await new_thread(db, admin, world, account=None)
-    delivery = real_like()
-
-    queued = await conversations.send_message(
-        db, staff_ctx("cs.maianh"), cid, MessageCreate(text=TEXT), delivery=delivery
-    )
-
-    assert queued.status is MessageStatus.QUEUED
-    assert queued.error_code == ErrorCode.NO_IDENTITY.value
-    assert delivery.requests == []
-
-
-async def test_a_single_customer_account_is_the_identity_of_a_thread_without_one(
-    db: ClinicDatabase, admin: Engine, world: SeedResult, add_account: Any, staff_ctx: Any
-) -> None:
-    add_account("long")
-    add_account("notifier", purpose="internal")  # an internal account does not count
-    cid = await new_thread(db, admin, world, account=None)
-    delivery = real_like()
-
-    sent = await conversations.send_message(
-        db, staff_ctx("cs.maianh"), cid, MessageCreate(text=TEXT), delivery=delivery
-    )
-
-    assert sent.status is MessageStatus.SENT
-    assert [r.account_id for r in delivery.requests] == ["long"]
-
-
-async def test_an_internal_account_is_never_chosen_for_a_customer(
-    db: ClinicDatabase, admin: Engine, world: SeedResult, add_account: Any, staff_ctx: Any
-) -> None:
-    add_account("notifier", purpose="internal")  # the only account of the channel
-    cid = await new_thread(db, admin, world, account=None)
-    delivery = real_like()
-
-    queued = await conversations.send_message(
-        db, staff_ctx("cs.maianh"), cid, MessageCreate(text=TEXT), delivery=delivery
-    )
-
-    assert queued.status is MessageStatus.QUEUED
-    assert queued.error_code == ErrorCode.NO_IDENTITY.value
-    assert delivery.requests == []
-
-
 async def test_a_takeover_between_queue_and_send_blocks_the_old_holders_message(
     db: ClinicDatabase, admin: Engine, world: SeedResult, add_account: Any, staff_ctx: Any
 ) -> None:

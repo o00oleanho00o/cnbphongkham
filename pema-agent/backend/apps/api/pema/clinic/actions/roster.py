@@ -46,8 +46,6 @@ from pema_contracts.ops import (
 from pema_contracts.roles import Permission, Role
 
 INVALID_USER_MESSAGE = "Người trực phải là nhân viên đang hoạt động có vai trò xử lý hội thoại."
-UNKNOWN_IDENTITY_MESSAGE = "Danh tính không tồn tại."
-INTERNAL_IDENTITY_MESSAGE = "Danh tính nội bộ không có lịch trực."
 ONE_KIND_MESSAGE = "Chọn lịch lặp theo thứ hoặc một ngày cụ thể, không chọn cả hai."
 SAME_TIME_MESSAGE = "Giờ bắt đầu và giờ kết thúc phải khác nhau."
 
@@ -112,17 +110,6 @@ def _audit_details(row: AccountRoster) -> dict[str, object]:
     }
 
 
-async def _require_customer_identity(session: AsyncSession, ctx: ActionContext, account_id: str) -> None:
-    purpose = await session.scalar(
-        text("SELECT purpose FROM agent.accounts WHERE clinic_id = :clinic_id AND id = :account_id"),
-        {"clinic_id": ctx.clinic_id, "account_id": account_id},
-    )
-    if purpose is None:
-        raise DomainError(ErrorCode.NOT_FOUND, UNKNOWN_IDENTITY_MESSAGE)
-    if purpose != "customer":
-        raise DomainError(ErrorCode.INVALID_STATE, INTERNAL_IDENTITY_MESSAGE)
-
-
 async def _load_entry(session: AsyncSession, ctx: ActionContext, entry_id: UUID) -> AccountRoster:
     row = await session.scalar(
         select(AccountRoster).where(AccountRoster.id == entry_id, AccountRoster.clinic_id == ctx.clinic_id)
@@ -173,7 +160,6 @@ async def list_roster(
 async def create_entry(db: ClinicDatabase, ctx: ActionContext, body: RosterEntryCreate) -> RosterEntryOut:
     require(ctx, Permission.ROSTER_MANAGE)
     async with db.session() as session:
-        await _require_customer_identity(session, ctx, body.account_id)
         user = await load_assignable_user(session, ctx, body.user_id, message=INVALID_USER_MESSAGE)
         row = AccountRoster(
             clinic_id=ctx.clinic_id,
@@ -290,13 +276,6 @@ async def who_is_on(
 async def on_duty(db: ClinicDatabase, ctx: ActionContext, account_id: str, at: datetime) -> OnDutyOut:
     """``GET /identities/{id}/on-duty``: who covers the identity at ``at`` (every operator may ask)."""
     require(ctx, Permission.ROSTER_READ)
-    async with db.session() as session:
-        known = await session.scalar(
-            text("SELECT 1 FROM agent.accounts WHERE clinic_id = :clinic_id AND id = :account_id"),
-            {"clinic_id": ctx.clinic_id, "account_id": account_id},
-        )
-    if known is None:
-        raise DomainError(ErrorCode.NOT_FOUND, UNKNOWN_IDENTITY_MESSAGE)
     return OnDutyOut(
         account_id=account_id, at=at, operators=await who_is_on(db, ctx.clinic_id, account_id, at)
     )
@@ -311,8 +290,7 @@ async def identity_of_patient(db: ClinicDatabase, clinic_id: UUID, patient_id: U
         found = await session.scalar(
             text(
                 "SELECT c.account_id FROM clinic.conversation c "
-                "JOIN agent.accounts a ON a.clinic_id = c.clinic_id AND a.id = c.account_id "
-                "WHERE c.clinic_id = :clinic_id AND c.patient_id = :patient_id AND a.purpose = 'customer' "
+                "WHERE c.clinic_id = :clinic_id AND c.patient_id = :patient_id AND c.account_id IS NOT NULL "
                 "ORDER BY c.last_inbound_at DESC NULLS LAST, c.id LIMIT 1"
             ),
             {"clinic_id": clinic_id, "patient_id": patient_id},

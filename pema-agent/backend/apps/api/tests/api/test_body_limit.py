@@ -18,10 +18,6 @@ def _app(limit: int) -> FastAPI:
     async def echo(request: Request) -> dict[str, Any]:
         return {"size": len(await request.body())}
 
-    @app.post("/api/v1/admin/kb/sources/file")
-    async def upload(request: Request) -> dict[str, Any]:
-        return {"size": len(await request.body())}
-
     app.add_middleware(BodyLimitMiddleware, max_bytes=limit)
     return app
 
@@ -56,11 +52,3 @@ async def test_a_chunked_body_over_the_ceiling_is_cut_while_it_streams() -> None
     async with _client(_app(100)) as client:
         response = await client.post("/echo", content=chunks())
     assert response.status_code == 413
-
-
-async def test_the_knowledge_base_upload_keeps_its_own_larger_limit() -> None:
-    """route tải file Kho tri thức có trần riêng, không bị cắt ở đây"""
-    async with _client(_app(100)) as client:
-        response = await client.post("/api/v1/admin/kb/sources/file", content=b"z" * 5000)
-    assert response.status_code == 200
-    assert response.json() == {"size": 5000}

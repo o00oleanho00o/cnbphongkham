@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DB làm lại từ đầu · Kế hoạch</title>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&amp;family=Geist:wght@400;500;600&amp;family=Geist+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --paper: #f5f5f5; --ink: #2d3142; --muted: #4f5d75; --soft: #5a6580; --accent: #bf4520;
+      --accent-tint: rgba(191,69,32,.08); --rule: rgba(45,49,66,.12); --label-rule: rgba(45,49,66,.20);
+      --lane: rgba(45,49,66,.018); --node: #fff; --node-stroke: rgba(45,49,66,.25); --chip: rgba(45,49,66,.12);
+      --dot: rgba(45,49,66,.10);
+      --sans: 'Geist', system-ui, sans-serif; --serif: 'Instrument Serif', serif; --mono: 'Geist Mono', ui-monospace, monospace;
+    }
+    body { font-family: var(--sans); color: var(--ink); background: var(--paper); padding: 3rem 2rem; }
+    .frame { width: 100%; max-width: 1200px; margin: 0 auto; }
+    .eyebrow { font: 500 .66rem var(--mono); letter-spacing: .18em; text-transform: uppercase; color: var(--muted); margin-bottom: .75rem; }
+    h1 { font: 400 clamp(1.75rem, 3vw + 1rem, 2.25rem)/1.1 var(--serif); letter-spacing: -.02em; margin-bottom: 1rem; }
+    h2 { font: 400 1.5rem/1.2 var(--serif); margin: 3rem 0 .5rem; }
+    .subtitle { max-width: 72ch; font-size: .9375rem; line-height: 1.6; color: var(--muted); margin-bottom: 1.5rem; }
+    .diagram-container { width: 100%; overflow-x: auto; }
+    .diagram-container:focus-visible { outline: 2px solid var(--muted); outline-offset: 4px; }
+    svg { display: block; width: 100%; }
+    #delta svg { min-width: 1200px; }
+    #phases svg { min-width: 952px; }
+    #boundary svg { min-width: 992px; }
+    .scroll-hint { display: none; margin: .75rem 0 0; font-size: .8125rem; color: var(--muted); }
+    @media (max-width: 700px) { body { padding: 2rem 1rem; } .scroll-hint { display: block; } }
+    /* process type classes */
+    svg text { font-family: var(--sans); }
+    .lane { fill: var(--lane); } .rule { stroke: var(--rule); } .label-rule { stroke: var(--label-rule); }
+    .actor { fill: var(--muted); font: 500 8px var(--mono); letter-spacing: .08em; }
+    .step-label { fill: var(--muted); font: 500 6px var(--mono); letter-spacing: .12em; }
+    .step-chip { fill: var(--chip); } .step-num { fill: var(--ink); font: 600 7px var(--mono); }
+    .connector { fill: none; stroke: var(--muted); stroke-width: 1; }
+    .connector.focal { stroke: var(--accent); stroke-width: 1.2; }
+    .node-mask { fill: var(--paper); } .node { fill: var(--node); stroke: var(--node-stroke); }
+    .node.focal { fill: var(--accent-tint); stroke: var(--accent); stroke-width: 1.2; }
+    .role { fill: rgba(45,49,66,.10); } .role.focal { fill: rgba(191,69,32,.25); }
+    .role-text { fill: var(--ink); font: 600 6px var(--mono); } .role-text.focal { fill: var(--accent); }
+    .node-title { fill: var(--ink); font: 600 9px var(--sans); }
+    .node-sub { fill: var(--muted); font: 6.5px var(--mono); } .node-tool { fill: var(--soft); font: 6.5px var(--mono); }
+    .pause { fill: var(--muted); } .pause-text { fill: #fff; font: 700 5px var(--mono); }
+    .legend-key { fill: var(--muted); font: 500 7px var(--mono); letter-spacing: .12em; }
+    .legend-text { fill: var(--muted); font: 8px var(--sans); }
+  </style>
+</head>
+<body>
+  <main class="frame">
+    <p class="eyebrow">Pema · cơ sở dữ liệu · kế hoạch chờ "go"</p>
+    <h1>Làm lại DB từ đầu, sạch triệt để</h1>
+    <p class="subtitle">Bạn xóa DB, mỗi app còn một migration gốc, schema <code>agent</code> của app zalo-agent cũ bị bỏ hẳn. Chi tiết và các quyết định D1–D6 ở <code>docs/PLAN-db-baseline.md</code>.</p>
+
+    <section id="delta">
+      <h2>DB trước và sau</h2>
+      <div class="diagram-container" role="region" aria-label="So sánh DB trước và sau; cuộn ngang trên màn hình hẹp" tabindex="0">
+        <svg viewBox="0 0 1200 540" xmlns="http://www.w3.org/2000/svg" data-diagram="architecture-delta" role="img" aria-labelledby="db-baseline-delta-title db-baseline-delta-desc">
+          <title id="db-baseline-delta-title">DB của Pema, trước và sau khi làm lại</title>
+          <desc id="db-baseline-delta-desc">Schema agent cũ cùng hai liên kết tới nó bị bỏ; API bỏ code đọc schema đó; schema clinic gộp 30 revision thành một baseline; agent_rt gộp 25 file migration thành một baseline và mỗi plugin một file; agent app và các liên kết SQL, JWKS giữ nguyên.</desc>
+          <defs>
+            <marker id="db-baseline-delta-arrow" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto" markerUnits="userSpaceOnUse"><polygon points="0 0, 8 3, 0 6" fill="#4f5d75"/></marker>
+          </defs>
+          <rect width="1200" height="540" fill="#f5f5f5"/>
+          <text x="24" y="28" fill="#2d3142" font-size="14" font-weight="600">Trước</text>
+          <text x="24" y="52" fill="#4f5d75" font-size="10">DB demo hiện nay · 42 revision + 13 file plugin</text>
+          <text x="424" y="28" fill="#2d3142" font-size="14" font-weight="600">Thay đổi</text>
+          <text x="424" y="52" fill="#4f5d75" font-size="10">4 thành phần · 2 liên kết</text>
+          <text x="840" y="28" fill="#2d3142" font-size="14" font-weight="600">Sau</text>
+          <text x="840" y="52" fill="#4f5d75" font-size="10">DB mới · mỗi app một baseline</text>
+          <path d="M 392 8 V 448 M 808 8 V 448" stroke="rgba(45,49,66,0.12)" stroke-width="1"/>
+
+          <g data-snapshot="before" transform="translate(24 96)" data-grid="336 320 4">
+            <path data-kind="relationship" data-object-id="r1" data-status="unchanged" data-signature="sql" data-from="api" data-to="clinic" d="M 48 64 V 192" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#db-baseline-delta-arrow)"/>
+            <path data-kind="relationship" data-object-id="r2" data-status="removed" data-signature="sql:read-legacy" data-from="api" data-to="legacy" d="M 96 64 V 120 Q 96 128 104 128 H 160 Q 168 128 168 136 V 192" fill="none" stroke="#4f5d75" stroke-width="1.2" stroke-dasharray="4 4" marker-end="url(#db-baseline-delta-arrow)"/>
+            <path data-kind="relationship" data-object-id="r3" data-status="removed" data-signature="fk:accounts" data-from="clinic" data-to="legacy" d="M 96 224 H 120" fill="none" stroke="#4f5d75" stroke-width="1.2" stroke-dasharray="4 4" marker-end="url(#db-baseline-delta-arrow)"/>
+            <path data-kind="relationship" data-object-id="r4" data-status="unchanged" data-signature="sql" data-from="agent" data-to="rt" d="M 288 64 V 192" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#db-baseline-delta-arrow)"/>
+            <path data-kind="relationship" data-object-id="r5" data-status="unchanged" data-signature="https:jwks" data-from="agent" data-to="api" d="M 192 32 H 144" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#db-baseline-delta-arrow)"/>
+            <rect x="0" y="120" width="40" height="16" rx="2" fill="#f5f5f5"/>
+            <text x="4" y="132" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace">r1 · SQL</text>
+            <rect x="104" y="104" width="56" height="16" rx="2" fill="#f5f5f5"/>
+            <text x="108" y="116" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace">r2 · ĐỌC</text>
+            <rect x="296" y="120" width="40" height="16" rx="2" fill="#f5f5f5"/>
+            <text x="300" y="132" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace">r4 · SQL</text>
+            <rect x="146" y="8" width="44" height="16" rx="2" fill="#f5f5f5"/>
+            <text x="148" y="20" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace">r5 · JWKS</text>
+            <g data-kind="component" data-object-id="api" data-status="changed" data-signature="apps/api;legacy-code=yes">
+              <rect data-role="bounds" x="0" y="0" width="144" height="64" rx="6" fill="#ffffff" stroke="#4f5d75" stroke-width="1.2"/>
+              <path d="M 1 12 V 52" fill="none" stroke="#4f5d75" stroke-width="3"/>
+              <text x="12" y="15" fill="#4f5d75" font-size="7.5" font-family="'Geist Mono', monospace">~ api · CHANGED</text>
+              <text x="12" y="36" fill="#2d3142" font-size="12" font-weight="600">API phòng khám</text>
+              <text x="12" y="53" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace">apps/api · còn code cũ</text>
+            </g>
+            <g data-kind="component" data-object-id="agent" data-status="unchanged" data-signature="apps/agent">
+              <rect data-role="bounds" x="192" y="0" width="144" height="64" rx="6" fill="#ffffff" stroke="#4f5d75" stroke-width="1.2"/>
+              <text x="204" y="15" fill="#4f5d75" font-size="7.5" font-family="'Geist Mono', monospace">= agent · UNCHANGED</text>
+              <text x="204" y="36" fill="#2d3142" font-size="12" font-weight="600">Agent app</text>
+              <text x="204" y="53" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace">apps/agent</text>
+            </g>
+            <g data-kind="component" data-object-id="clinic" data-status="changed" data-signature="schema=clinic;history=30-revisions">
+              <rect data-role="bounds" x="0" y="192" width="96" height="64" rx="6" fill="#ffffff" stroke="#4f5d75" stroke-width="1.2"/>
+              <path d="M 1 204 V 244" fill="none" stroke="#4f5d75" stroke-width="3"/>
+              <text x="10" y="207" fill="#4f5d75" font-size="7.5" font-family="'Geist Mono', monospace">~ clinic · CHANGED</text>
+              <text x="10" y="228" fill="#2d3142" font-size="12" font-weight="600">clinic</text>
+              <text x="10" y="245" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace">30 revision</text>
+            </g>
+            <g data-kind="component" data-object-id="legacy" data-status="removed" data-signature="schema=agent;zalo-agent-port">
+              <rect data-role="bounds" x="120" y="192" width="96" height="64" rx="6" fill="#ffffff" stroke="#4f5d75" stroke-width="1.2" stroke-dasharray="4 4"/>
+              <text x="130" y="207" fill="#4f5d75" font-size="7.5" font-family="'Geist Mono', monospace">− legacy · REMOVED</text>
+              <text x="130" y="228" fill="#2d3142" font-size="12" font-weight="600">agent (cũ)</text>
+              <text x="130" y="245" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace">28 bảng</text>
+            </g>
+            <g data-kind="component" data-object-id="rt" data-status="changed" data-signature="schema=agent_rt;history=12-revisions+13-sql">
+              <rect data-role="bounds" x="240" y="192" width="96" height="64" rx="6" fill="#ffffff" stroke="#4f5d75" stroke-width="1.2"/>
+              <path d="M 241 204 V 244" fill="none" stroke="#4f5d75" stroke-width="3"/>
+              <text x="250" y="207" fill="#4f5d75" font-size="7.5" font-family="'Geist Mono', monospace">~ rt · CHANGED</text>
+              <text x="250" y="228" fill="#2d3142" font-size="12" font-weight="600">agent_rt</text>
+              <text x="250" y="245" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace">12 rev + 13 SQL</text>
+            </g>
+            <text x="0" y="300" fill="#4f5d75" font-size="11">Còn sống trong agent cũ: Hướng dẫn, JOIN của CRM,</text>
+            <text x="0" y="316" fill="#4f5d75" font-size="11">FK tài khoản Zalo, runtime_settings.</text>
+          </g>
+
+          <text x="424" y="110" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace">01</text>
+          <text x="456" y="108" data-change="CHANGED" data-target="api" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.06em">CHANGED · api<tspan x="456" y="131" fill="#2d3142" font-size="12" font-family="'Geist', sans-serif" letter-spacing="0">Bỏ code đọc schema agent cũ</tspan></text>
+          <path d="M 456 148 H 776" stroke="rgba(45,49,66,0.12)" stroke-width="0.8"/>
+          <text x="424" y="170" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace">02</text>
+          <text x="456" y="168" data-change="CHANGED" data-target="clinic" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.06em">CHANGED · clinic<tspan x="456" y="191" fill="#2d3142" font-size="12" font-family="'Geist', sans-serif" letter-spacing="0">30 rev → 1 baseline, bỏ clinic_agent</tspan></text>
+          <path d="M 456 208 H 776" stroke="rgba(45,49,66,0.12)" stroke-width="0.8"/>
+          <text x="424" y="230" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace">03</text>
+          <text x="456" y="228" data-change="CHANGED" data-target="rt" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.06em">CHANGED · rt<tspan x="456" y="251" fill="#2d3142" font-size="12" font-family="'Geist', sans-serif" letter-spacing="0">1 + 1/plugin, DB riêng pema_agent</tspan></text>
+          <path d="M 456 268 H 776" stroke="rgba(45,49,66,0.12)" stroke-width="0.8"/>
+          <text x="424" y="290" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace">04</text>
+          <text x="456" y="288" data-change="REMOVED" data-target="legacy" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.06em">REMOVED · legacy<tspan x="456" y="311" fill="#2d3142" font-size="12" font-family="'Geist', sans-serif" letter-spacing="0">Bỏ hẳn schema agent (28 bảng)</tspan></text>
+          <path d="M 456 328 H 776" stroke="rgba(45,49,66,0.12)" stroke-width="0.8"/>
+          <text x="424" y="350" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace">05</text>
+          <text x="456" y="348" data-change="REMOVED" data-target="r2" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.06em">REMOVED · r2<tspan x="456" y="371" fill="#2d3142" font-size="12" font-family="'Geist', sans-serif" letter-spacing="0">Hướng dẫn, CRM thôi đọc agent.*</tspan></text>
+          <path d="M 456 388 H 776" stroke="rgba(45,49,66,0.12)" stroke-width="0.8"/>
+          <text x="424" y="410" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace">06</text>
+          <text x="456" y="408" data-change="REMOVED" data-target="r3" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.06em">REMOVED · r3<tspan x="456" y="431" fill="#2d3142" font-size="12" font-family="'Geist', sans-serif" letter-spacing="0">FK tới agent.accounts → cột text</tspan></text>
+
+          <g data-snapshot="after" transform="translate(840 96)" data-grid="336 320 4">
+            <path data-kind="relationship" data-object-id="r1" data-status="unchanged" data-signature="sql" data-from="api" data-to="clinic" d="M 48 64 V 192" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#db-baseline-delta-arrow)"/>
+            <path data-kind="relationship" data-object-id="r4" data-status="unchanged" data-signature="sql" data-from="agent" data-to="rt" d="M 288 64 V 192" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#db-baseline-delta-arrow)"/>
+            <path data-kind="relationship" data-object-id="r5" data-status="unchanged" data-signature="https:jwks" data-from="agent" data-to="api" d="M 192 32 H 144" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#db-baseline-delta-arrow)"/>
+            <rect x="0" y="120" width="40" height="16" rx="2" fill="#f5f5f5"/>
+            <text x="4" y="132" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace">r1 · SQL</text>
+            <rect x="296" y="120" width="40" height="16" rx="2" fill="#f5f5f5"/>
+            <text x="300" y="132" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace">r4 · SQL</text>
+            <rect x="146" y="8" width="44" height="16" rx="2" fill="#f5f5f5"/>
+            <text x="148" y="20" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace">r5 · JWKS</text>
+            <g data-kind="component" data-object-id="api" data-status="changed" data-signature="apps/api;legacy-code=no">
+              <rect data-role="bounds" x="0" y="0" width="144" height="64" rx="6" fill="#ffffff" stroke="#4f5d75" stroke-width="1.2"/>
+              <path d="M 1 12 V 52" fill="none" stroke="#4f5d75" stroke-width="3"/>
+              <text x="12" y="15" fill="#4f5d75" font-size="7.5" font-family="'Geist Mono', monospace">~ api · CHANGED</text>
+              <text x="12" y="36" fill="#2d3142" font-size="12" font-weight="600">API phòng khám</text>
+              <text x="12" y="53" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace">apps/api · gọn</text>
+            </g>
+            <g data-kind="component" data-object-id="agent" data-status="unchanged" data-signature="apps/agent">
+              <rect data-role="bounds" x="192" y="0" width="144" height="64" rx="6" fill="#ffffff" stroke="#4f5d75" stroke-width="1.2"/>
+              <text x="204" y="15" fill="#4f5d75" font-size="7.5" font-family="'Geist Mono', monospace">= agent · UNCHANGED</text>
+              <text x="204" y="36" fill="#2d3142" font-size="12" font-weight="600">Agent app</text>
+              <text x="204" y="53" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace">apps/agent</text>
+            </g>
+            <g data-kind="component" data-object-id="clinic" data-status="changed" data-signature="schema=clinic;baseline=1">
+              <rect data-role="bounds" x="0" y="192" width="96" height="64" rx="6" fill="rgba(191,69,32,0.08)" stroke="#bf4520" stroke-width="1.2"/>
+              <path d="M 1 204 V 244" fill="none" stroke="#bf4520" stroke-width="3"/>
+              <text x="10" y="207" fill="#4f5d75" font-size="7.5" font-family="'Geist Mono', monospace">~ clinic · CHANGED</text>
+              <text x="10" y="228" fill="#2d3142" font-size="12" font-weight="600">clinic</text>
+              <text x="10" y="245" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace">1 baseline</text>
+            </g>
+            <g data-kind="component" data-object-id="rt" data-status="changed" data-signature="schema=agent_rt;baseline=1+1-per-plugin">
+              <rect data-role="bounds" x="240" y="192" width="96" height="64" rx="6" fill="rgba(191,69,32,0.08)" stroke="#bf4520" stroke-width="1.2"/>
+              <path d="M 241 204 V 244" fill="none" stroke="#bf4520" stroke-width="3"/>
+              <text x="250" y="207" fill="#4f5d75" font-size="7.5" font-family="'Geist Mono', monospace">~ rt · CHANGED</text>
+              <text x="250" y="228" fill="#2d3142" font-size="12" font-weight="600">agent_rt</text>
+              <text x="250" y="245" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace">1 + 1/plugin</text>
+            </g>
+            <text x="120" y="228" fill="#4f5d75" font-size="11">(trống)</text>
+            <text x="0" y="300" fill="#4f5d75" font-size="11">Hai database riêng: pema, pema_agent;</text>
+            <text x="0" y="316" fill="#4f5d75" font-size="11">agent không có khóa API của CRM.</text>
+          </g>
+
+          <path d="M 24 464 H 1176" stroke="rgba(45,49,66,0.12)" stroke-width="1"/>
+          <rect x="24" y="480" width="20" height="16" rx="3" fill="none" stroke="#4f5d75" stroke-width="1"/>
+          <text x="56" y="492" fill="#4f5d75" font-size="11">= Giữ nguyên</text>
+          <rect x="220" y="480" width="20" height="16" rx="3" fill="none" stroke="#4f5d75" stroke-width="1" stroke-dasharray="4 4"/>
+          <text x="252" y="492" fill="#4f5d75" font-size="11">− Bỏ</text>
+          <rect x="416" y="480" width="20" height="16" rx="3" fill="none" stroke="#4f5d75" stroke-width="1"/>
+          <path d="M 417 484 V 492" stroke="#4f5d75" stroke-width="3"/>
+          <text x="448" y="492" fill="#4f5d75" font-size="11">~ Đổi</text>
+          <rect x="612" y="480" width="20" height="16" rx="3" fill="rgba(191,69,32,0.08)" stroke="#bf4520" stroke-width="1"/>
+          <text x="644" y="492" fill="#4f5d75" font-size="11">Trọng tâm: hai baseline mới</text>
+          <text x="24" y="520" fill="#4f5d75" font-size="9">ID giữ nguyên giữa hai bên. Nét đứt là bị bỏ, không phải giao thức.</text>
+          <text x="1176" y="520" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace" text-anchor="end">5 thành phần · 5 liên kết · 6 thay đổi</text>
+        </svg>
+      </div>
+      <p class="scroll-hint">Cuộn ngang để xem cả hai bên và danh sách thay đổi.</p>
+    </section>
+
+    <section id="boundary">
+      <h2>Ranh giới: agent bị jailbreak cũng không chạm được CRM</h2>
+      <p class="subtitle">Agent nói chuyện với người ngoài nên coi như có ngày bị chiếm. Hai đường vào CRM bị chặn bằng hạ tầng, không bằng lời dặn model: database riêng (không có quyền CONNECT vào <code>pema</code>) và không có khóa API. Dữ liệu phòng khám vào agent chỉ qua tài liệu nhân viên tải lên.</p>
+      <div class="diagram-container" role="region" aria-label="Ranh giới tin cậy giữa agent và CRM; cuộn ngang trên màn hình hẹp" tabindex="0">
+        <svg viewBox="0 0 992 528" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="db-baseline-boundary-title db-baseline-boundary-desc">
+          <title id="db-baseline-boundary-title">Ranh giới agent và CRM</title>
+          <desc id="db-baseline-boundary-desc">Khách chỉ nói với agent; agent chỉ đọc ghi database pema_agent và chỉ lấy khóa công khai JWKS từ API; hai đường agent đọc database pema và agent gọi route CRM bị chặn ở ranh giới; nhân viên dùng API và trang của agent qua web.</desc>
+          <defs>
+            <marker id="db-baseline-boundary-arrow" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto" markerUnits="userSpaceOnUse"><polygon points="0 0, 8 3, 0 6" fill="#4f5d75"/></marker>
+          </defs>
+          <rect width="992" height="528" fill="#f5f5f5"/>
+          <!-- zones -->
+          <rect x="24" y="120" width="184" height="320" rx="8" fill="rgba(45,49,66,0.02)" stroke="rgba(45,49,66,0.25)" stroke-width="0.8" stroke-dasharray="4 3"/>
+          <rect x="256" y="120" width="256" height="320" rx="8" fill="rgba(45,49,66,0.02)" stroke="rgba(45,49,66,0.25)" stroke-width="0.8" stroke-dasharray="4 3"/>
+          <rect x="592" y="120" width="376" height="320" rx="8" fill="rgba(45,49,66,0.02)" stroke="rgba(45,49,66,0.25)" stroke-width="0.8" stroke-dasharray="4 3"/>
+          <rect x="52" y="124" width="128" height="12" rx="2" fill="#f5f5f5"/>
+          <text x="116" y="133" fill="#5a6580" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.14em">KHÁCH · KHÔNG TIN</text>
+          <rect x="296" y="124" width="176" height="12" rx="2" fill="#f5f5f5"/>
+          <text x="384" y="133" fill="#5a6580" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.14em">AGENT · CÓ THỂ BỊ JAILBREAK</text>
+          <rect x="680" y="124" width="200" height="12" rx="2" fill="#f5f5f5"/>
+          <text x="780" y="133" fill="#5a6580" font-size="7" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.14em">CRM · DỮ LIỆU PHÒNG KHÁM</text>
+          <!-- permitted paths -->
+          <path d="M 416 52 H 392 Q 384 52 384 60 V 168" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#db-baseline-boundary-arrow)"/>
+          <path d="M 576 52 H 776 Q 784 52 784 60 V 168" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#db-baseline-boundary-arrow)"/>
+          <path d="M 184 224 H 296" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#db-baseline-boundary-arrow)"/>
+          <path d="M 384 232 V 328" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#db-baseline-boundary-arrow)"/>
+          <path d="M 784 232 V 328" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#db-baseline-boundary-arrow)"/>
+          <path d="M 472 200 H 696" fill="none" stroke="#4f5d75" stroke-width="1" stroke-dasharray="4 3" marker-end="url(#db-baseline-boundary-arrow)"/>
+          <!-- forbidden paths: stop before the CRM boundary -->
+          <path d="M 472 184 H 580" fill="none" stroke="#bf4520" stroke-width="1.4" stroke-dasharray="2 3"/>
+          <path d="M 586 176 V 192" stroke="#bf4520" stroke-width="2.5"/>
+          <path d="M 472 216 H 544 Q 552 216 552 224 V 352 Q 552 360 560 360 H 580" fill="none" stroke="#bf4520" stroke-width="1.4" stroke-dasharray="2 3"/>
+          <path d="M 586 352 V 368" stroke="#bf4520" stroke-width="2.5"/>
+          <!-- labels -->
+          <rect x="212" y="200" width="48" height="16" rx="2" fill="#f5f5f5"/>
+          <text x="236" y="212" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">TIN NHẮN</text>
+          <rect x="300" y="104" width="76" height="16" rx="2" fill="#f5f5f5"/>
+          <text x="338" y="116" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">SSO · TÀI LIỆU</text>
+          <rect x="792" y="104" width="84" height="16" rx="2" fill="#f5f5f5"/>
+          <text x="834" y="116" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">PHIÊN NHÂN VIÊN</text>
+          <rect x="392" y="272" width="68" height="16" rx="2" fill="#f5f5f5"/>
+          <text x="426" y="284" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">agent_rt_app</text>
+          <rect x="792" y="272" width="40" height="16" rx="2" fill="#f5f5f5"/>
+          <text x="812" y="284" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">be_app</text>
+          <rect x="604" y="208" width="48" height="16" rx="2" fill="#f5f5f5"/>
+          <text x="628" y="220" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">CHỈ JWKS</text>
+          <rect x="480" y="160" width="68" height="16" rx="2" fill="#f5f5f5"/>
+          <text x="514" y="172" fill="#bf4520" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">CẤM · GỌI CRM</text>
+          <rect x="480" y="280" width="64" height="16" rx="2" fill="#f5f5f5"/>
+          <text x="512" y="292" fill="#bf4520" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle">CẤM · ĐỌC DB</text>
+          <!-- nodes -->
+          <rect x="416" y="24" width="160" height="56" rx="6" fill="#f5f5f5"/>
+          <rect x="416" y="24" width="160" height="56" rx="6" fill="#ffffff" stroke="#4f5d75" stroke-width="1.2"/>
+          <text x="428" y="38" fill="#4f5d75" font-size="7.5" font-family="'Geist Mono', monospace">NHÂN VIÊN</text>
+          <text x="428" y="56" fill="#2d3142" font-size="12" font-weight="600">Web nhân viên</text>
+          <text x="428" y="71" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace">frontend · trình duyệt</text>
+          <rect x="48" y="216" width="136" height="64" rx="6" fill="#f5f5f5"/>
+          <rect x="48" y="216" width="136" height="64" rx="6" fill="#ffffff" stroke="#4f5d75" stroke-width="1.2" stroke-dasharray="4 3"/>
+          <text x="60" y="231" fill="#4f5d75" font-size="7.5" font-family="'Geist Mono', monospace">NGƯỜI NGOÀI</text>
+          <text x="60" y="252" fill="#2d3142" font-size="12" font-weight="600">Khách</text>
+          <text x="60" y="269" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace">Zalo · chat web</text>
+          <rect x="296" y="168" width="176" height="64" rx="6" fill="#f5f5f5"/>
+          <rect x="296" y="168" width="176" height="64" rx="6" fill="#ffffff" stroke="#4f5d75" stroke-width="1.2"/>
+          <text x="308" y="183" fill="#4f5d75" font-size="7.5" font-family="'Geist Mono', monospace">AGENT</text>
+          <text x="308" y="204" fill="#2d3142" font-size="12" font-weight="600">Agent app</text>
+          <text x="308" y="221" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace">không giữ khóa API</text>
+          <rect x="296" y="328" width="176" height="64" rx="6" fill="#f5f5f5"/>
+          <rect x="296" y="328" width="176" height="64" rx="6" fill="rgba(45,49,66,0.04)" stroke="#4f5d75" stroke-width="1.2"/>
+          <text x="308" y="343" fill="#4f5d75" font-size="7.5" font-family="'Geist Mono', monospace">DATABASE</text>
+          <text x="308" y="364" fill="#2d3142" font-size="12" font-weight="600">pema_agent</text>
+          <text x="308" y="381" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace">schema agent_rt</text>
+          <rect x="696" y="168" width="176" height="64" rx="6" fill="#f5f5f5"/>
+          <rect x="696" y="168" width="176" height="64" rx="6" fill="#ffffff" stroke="#4f5d75" stroke-width="1.2"/>
+          <text x="708" y="183" fill="#4f5d75" font-size="7.5" font-family="'Geist Mono', monospace">API</text>
+          <text x="708" y="204" fill="#2d3142" font-size="12" font-weight="600">API phòng khám</text>
+          <text x="708" y="221" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace">chỉ nhận phiên nhân viên</text>
+          <rect x="696" y="328" width="176" height="64" rx="6" fill="#f5f5f5"/>
+          <rect x="696" y="328" width="176" height="64" rx="6" fill="rgba(45,49,66,0.04)" stroke="#4f5d75" stroke-width="1.2"/>
+          <text x="708" y="343" fill="#4f5d75" font-size="7.5" font-family="'Geist Mono', monospace">DATABASE</text>
+          <text x="708" y="364" fill="#2d3142" font-size="12" font-weight="600">pema</text>
+          <text x="708" y="381" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace">schema ctx, clinic</text>
+          <!-- legend -->
+          <path d="M 24 456 H 968" stroke="rgba(45,49,66,0.12)" stroke-width="1"/>
+          <path d="M 24 480 H 52" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#db-baseline-boundary-arrow)"/>
+          <text x="64" y="484" fill="#4f5d75" font-size="11">Được phép</text>
+          <path d="M 184 480 H 212" fill="none" stroke="#4f5d75" stroke-width="1" stroke-dasharray="4 3" marker-end="url(#db-baseline-boundary-arrow)"/>
+          <text x="224" y="484" fill="#4f5d75" font-size="11">Hẹp: chỉ khóa công khai</text>
+          <path d="M 408 480 H 430" fill="none" stroke="#bf4520" stroke-width="1.4" stroke-dasharray="2 3"/>
+          <path d="M 436 472 V 488" stroke="#bf4520" stroke-width="2.5"/>
+          <text x="448" y="484" fill="#4f5d75" font-size="11">Bị chặn trước ranh giới</text>
+          <rect x="632" y="472" width="24" height="16" rx="3" fill="none" stroke="rgba(45,49,66,0.25)" stroke-width="0.8" stroke-dasharray="4 3"/>
+          <text x="668" y="484" fill="#4f5d75" font-size="11">Ranh giới tin cậy</text>
+          <text x="24" y="512" fill="#4f5d75" font-size="9">Chặn bằng hạ tầng: role agent_rt_app không có CONNECT vào pema; agent không giữ khóa API; test T1–T4 đỏ là không merge.</text>
+        </svg>
+      </div>
+      <p class="scroll-hint">Cuộn ngang để xem cả ba vùng.</p>
+    </section>
+
+    <section id="phases">
+      <h2>Làm theo thứ tự nào</h2>
+      <p class="subtitle">13 bước gom thành 7 chặng. Ô có nhãn DỪNG: tôi dừng chờ bạn xem rồi mới đi tiếp. Migration cũ chỉ bị xóa sau khi code API đã thôi dùng schema <code>agent</code> và test xanh.</p>
+      <div class="diagram-container" role="region" aria-label="Các chặng làm lại DB; cuộn ngang trên màn hình hẹp" tabindex="0">
+        <svg viewBox="0 0 952 356" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="db-baseline-phases-title db-baseline-phases-desc">
+          <title id="db-baseline-phases-title">Bảy chặng làm lại DB</title>
+          <desc id="db-baseline-phases-desc">Chụp mốc schema, cắt dây code API khỏi schema agent cũ, xóa code chết, viết baseline API, viết baseline agent, cập nhật tài liệu và hạ tầng, rồi bạn xóa DB và dựng lại.</desc>
+          <defs>
+            <pattern id="db-baseline-dots" width="22" height="22" patternUnits="userSpaceOnUse"><circle cx="11" cy="11" r="0.8" fill="rgba(45,49,66,.10)"/></pattern>
+            <marker id="db-baseline-arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#4f5d75"/></marker>
+            <marker id="db-baseline-arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#bf4520"/></marker>
+          </defs>
+          <rect width="952" height="356" fill="#f5f5f5"/><rect width="952" height="356" fill="url(#db-baseline-dots)" opacity=".55"/>
+          <rect class="lane" x="140" y="36" width="812" height="80"/><rect class="lane" x="140" y="196" width="812" height="80"/>
+          <g class="rule" stroke-width=".8"><line x1="0" y1="36" x2="952" y2="36"/><line x1="0" y1="116" x2="952" y2="116"/><line x1="0" y1="196" x2="952" y2="196"/><line x1="0" y1="276" x2="952" y2="276"/></g>
+          <line class="label-rule" x1="140" y1="36" x2="140" y2="276"/>
+          <g class="actor" text-anchor="middle"><text x="70" y="80">CODE</text><text x="70" y="160">MIGRATION</text><text x="70" y="240">BẠN</text></g>
+          <g text-anchor="middle">
+            <rect class="step-chip" x="190" y="8" width="16" height="16" rx="8"/><text class="step-num" x="198" y="19">1</text><text class="step-label" x="198" y="32">MỐC</text>
+            <rect class="step-chip" x="302" y="8" width="16" height="16" rx="8"/><text class="step-num" x="310" y="19">2</text><text class="step-label" x="310" y="32">CẮT DÂY</text>
+            <rect class="step-chip" x="414" y="8" width="16" height="16" rx="8"/><text class="step-num" x="422" y="19">3</text><text class="step-label" x="422" y="32">XÓA CODE</text>
+            <rect x="526" y="8" width="16" height="16" rx="8" fill="rgba(191,69,32,.20)"/><text x="534" y="19" fill="#bf4520" font-size="7" font-weight="600" font-family="'Geist Mono', monospace">4</text><text x="534" y="32" fill="#bf4520" font-size="6" font-weight="500" letter-spacing=".12em" font-family="'Geist Mono', monospace">BASE API</text>
+            <rect class="step-chip" x="638" y="8" width="16" height="16" rx="8"/><text class="step-num" x="646" y="19">5</text><text class="step-label" x="646" y="32">BASE AGT</text>
+            <rect class="step-chip" x="750" y="8" width="16" height="16" rx="8"/><text class="step-num" x="758" y="19">6</text><text class="step-label" x="758" y="32">TÀI LIỆU</text>
+            <rect class="step-chip" x="862" y="8" width="16" height="16" rx="8"/><text class="step-num" x="870" y="19">7</text><text class="step-label" x="870" y="32">DỰNG LẠI</text>
+          </g>
+          <path class="connector" d="M248 156 H302 Q310 156 310 148 V108" marker-end="url(#db-baseline-arrow)"/>
+          <line class="connector" x1="360" y1="76" x2="372" y2="76" marker-end="url(#db-baseline-arrow)"/>
+          <path class="connector focal" d="M472 76 H526 Q534 76 534 84 V124" marker-end="url(#db-baseline-arrow-accent)"/>
+          <line class="connector focal" x1="584" y1="156" x2="596" y2="156" marker-end="url(#db-baseline-arrow-accent)"/>
+          <path class="connector" d="M696 156 H750 Q758 156 758 148 V108" marker-end="url(#db-baseline-arrow)"/>
+          <path class="connector" d="M808 76 H862 Q870 76 870 84 V204" marker-end="url(#db-baseline-arrow)"/>
+          <g text-anchor="middle">
+            <g><rect class="node-mask" x="148" y="124" width="100" height="64" rx="6"/><rect class="node" x="148" y="124" width="100" height="64" rx="6"/><rect class="role" x="152" y="128" width="20" height="10" rx="2"/><text class="role-text" x="162" y="136">MIG</text><text class="node-title" x="198" y="150">Chụp mốc</text><text class="node-sub" x="198" y="164">pg_dump -s · số test</text><text class="node-tool" x="198" y="176">bước 1–2 · luật L1–L5</text><rect class="pause" x="220" y="178" width="24" height="8" rx="2"/><text class="pause-text" x="232" y="184">DỪNG</text></g>
+            <g><rect class="node-mask" x="260" y="44" width="100" height="64" rx="6"/><rect class="node" x="260" y="44" width="100" height="64" rx="6"/><rect class="role" x="264" y="48" width="20" height="10" rx="2"/><text class="role-text" x="274" y="56">COD</text><text class="node-title" x="310" y="70">Cắt dây agent.*</text><text class="node-sub" x="310" y="84">guide · CRM · settings</text><text class="node-tool" x="310" y="96">bước 3–5 · apps/api</text><rect class="pause" x="332" y="98" width="24" height="8" rx="2"/><text class="pause-text" x="344" y="104">DỪNG</text></g>
+            <g><rect class="node-mask" x="372" y="44" width="100" height="64" rx="6"/><rect class="node" x="372" y="44" width="100" height="64" rx="6"/><rect class="role" x="376" y="48" width="20" height="10" rx="2"/><text class="role-text" x="386" y="56">COD</text><text class="node-title" x="422" y="70">Xóa code chết</text><text class="node-sub" x="422" y="84">KB cũ · clinic_agent</text><text class="node-tool" x="422" y="96">bước 6–7 · apps/api</text></g>
+            <g><rect class="node-mask" x="484" y="124" width="100" height="64" rx="6"/><rect class="node focal" x="484" y="124" width="100" height="64" rx="6"/><rect class="role focal" x="488" y="128" width="20" height="10" rx="2"/><text class="role-text focal" x="498" y="136">MIG</text><text class="node-title" x="534" y="150">Baseline API</text><text class="node-sub" x="534" y="164">30 rev → 1</text><text class="node-tool" x="534" y="176">bước 8–9 · so dump</text><rect class="pause" x="556" y="178" width="24" height="8" rx="2"/><text class="pause-text" x="568" y="184">DỪNG</text></g>
+            <g><rect class="node-mask" x="596" y="124" width="100" height="64" rx="6"/><rect class="node" x="596" y="124" width="100" height="64" rx="6"/><rect class="role" x="600" y="128" width="20" height="10" rx="2"/><text class="role-text" x="610" y="136">MIG</text><text class="node-title" x="646" y="150">Baseline agent</text><text class="node-sub" x="646" y="164">DB riêng pema_agent</text><text class="node-tool" x="646" y="176">bước 10–11 · T1, T2</text><rect class="pause" x="668" y="178" width="24" height="8" rx="2"/><text class="pause-text" x="680" y="184">DỪNG</text></g>
+            <g><rect class="node-mask" x="708" y="44" width="100" height="64" rx="6"/><rect class="node" x="708" y="44" width="100" height="64" rx="6"/><rect class="role" x="712" y="48" width="20" height="10" rx="2"/><text class="role-text" x="722" y="56">COD</text><text class="node-title" x="758" y="70">Tài liệu, hạ tầng</text><text class="node-sub" x="758" y="84">README · compose</text><text class="node-tool" x="758" y="96">bước 12</text></g>
+            <g><rect class="node-mask" x="820" y="204" width="100" height="64" rx="6"/><rect class="node" x="820" y="204" width="100" height="64" rx="6"/><rect class="role" x="824" y="208" width="20" height="10" rx="2"/><text class="role-text" x="834" y="216">BẠN</text><text class="node-title" x="870" y="230">Xóa DB, dựng lại</text><text class="node-sub" x="870" y="244">smoke · thử phá rào</text><text class="node-tool" x="870" y="256">bước 13</text><rect class="pause" x="892" y="258" width="24" height="8" rx="2"/><text class="pause-text" x="904" y="264">DỪNG</text></g>
+          </g>
+          <g>
+            <text class="legend-key" x="144" y="300">FLOW</text>
+            <line x1="200" y1="296" x2="228" y2="296" stroke="#bf4520" stroke-width="1.2" marker-end="url(#db-baseline-arrow-accent)"/><text class="legend-text" x="240" y="300">Chặng rủi ro nhất</text>
+            <line x1="360" y1="296" x2="388" y2="296" stroke="#4f5d75" marker-end="url(#db-baseline-arrow)"/><text class="legend-text" x="400" y="300">Chặng kế tiếp</text>
+            <text class="legend-key" x="144" y="324">DỪNG</text>
+            <rect class="pause" x="200" y="318" width="24" height="8" rx="2"/><text class="pause-text" x="212" y="324">DỪNG</text><text class="legend-text" x="240" y="324">Tôi dừng, bạn xem, nói "go" mới đi tiếp</text>
+            <text class="legend-key" x="144" y="344">MỖI BƯỚC</text><text class="legend-text" x="240" y="344">một commit · test xanh · app vẫn chạy</text>
+          </g>
+        </svg>
+      </div>
+      <p class="scroll-hint">Cuộn ngang để xem đủ bảy chặng.</p>
+    </section>
+  </main>
+</body>
+</html>

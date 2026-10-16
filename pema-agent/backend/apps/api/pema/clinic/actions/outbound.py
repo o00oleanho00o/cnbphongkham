@@ -120,40 +120,16 @@ class _Resolved:
 async def _resolve_identity(
     session: AsyncSession, ctx: ActionContext, conv: Conversation, *, required: bool
 ) -> _Resolved:
-    """The identity a message leaves through. Reads ``agent.accounts`` with ``id`` and ``purpose`` only
-    (never a credential column)."""
+    """The identity a message leaves through: the account the conversation came in on, or none."""
     # ``account_id`` is a column of O1 that the ORM model of ``Conversation`` does not map: read it by SQL
     account_id: str | None = await session.scalar(
         text("SELECT account_id FROM clinic.conversation WHERE clinic_id = :clinic_id AND id = :id"),
         {"clinic_id": ctx.clinic_id, "id": conv.id},
     )
     if account_id is not None:
-        purpose = await session.scalar(
-            text("SELECT purpose FROM agent.accounts WHERE clinic_id = :clinic_id AND id = :account_id"),
-            {"clinic_id": ctx.clinic_id, "account_id": account_id},
-        )
-        if purpose == _INTERNAL:
-            return _Resolved(
-                refusal=SendResult(
-                    status=SendStatus.REJECTED,
-                    error_code=ErrorCode.POLICY_DENIED,
-                    detail="internal_identity",
-                )
-            )
         return _Resolved(account_id=account_id)
     if not required:
         return _Resolved()
-    ids = (
-        await session.scalars(
-            text(
-                "SELECT id FROM agent.accounts WHERE clinic_id = :clinic_id AND channel = :channel "
-                "AND purpose = 'customer' AND enabled ORDER BY id"
-            ),
-            {"clinic_id": ctx.clinic_id, "channel": conv.channel},
-        )
-    ).all()
-    if len(ids) == 1:
-        return _Resolved(account_id=ids[0])
     return _Resolved(
         refusal=SendResult(
             status=SendStatus.QUEUED, error_code=ErrorCode.NO_IDENTITY, detail=NO_IDENTITY_DETAIL

@@ -1,7 +1,7 @@
 """Staff guide and "Hoi Pema" (package U, step U7): articles of the knowledge base tagged ``guide``.
 
 Thin routes over ``pema.clinic.actions.guide``. Reading needs ``kb.read`` (every staff role), tagging needs
-``kb.manage``; the article text itself is edited in ``/admin/kb``.
+``kb.manage``; the articles come from the seed.
 """
 
 from __future__ import annotations

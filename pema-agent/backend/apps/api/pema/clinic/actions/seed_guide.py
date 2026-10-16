@@ -1,10 +1,9 @@
 # ported from: prototype/shared/guide.js (articles roles, crm01, records; rewritten for this app)
 # ruff: noqa: E501  (the article texts are prose; a line break would change the Markdown)
-"""Three synthetic articles for the staff guide (package U, step U7): text sources of ``agent.kb_document``
-tagged ``guide``. Everything is invented for the demo (AGENT.md): no patient data, no real clinic protocol.
+"""Three synthetic articles for the staff guide (package U, step U7): rows of ``clinic.guide_article`` tagged
+``guide``. Everything is invented for the demo (AGENT.md): no patient data, no real clinic protocol.
 
-The rows are inserted with status ``cho_xu_ly`` so the ingest worker cuts them into chunks like any source
-typed in ``/admin/kb``; the guide itself reads the text of the row, so it works before that. The ids are fixed
+The ids are fixed
 (``guide-...``) and the insert is ``ON CONFLICT DO NOTHING``: running it twice, or after a clinic edited an
 article, changes nothing.
 
@@ -114,8 +113,8 @@ async def seed_guide_articles(db: ClinicDatabase) -> int:
         for article_id, title, topic, body in ARTICLES:
             result = await session.execute(
                 text(
-                    "INSERT INTO agent.kb_document (clinic_id, id, name, kind, format, raw_text, byte_size, tags) "
-                    "VALUES (:c, :id, :name, 'text', 'md', :body, :size, CAST(:tags AS text[])) "
+                    "INSERT INTO clinic.guide_article (clinic_id, id, title, body, tags) "
+                    "VALUES (:c, :id, :name, :body, CAST(:tags AS text[])) "
                     "ON CONFLICT (clinic_id, id) DO NOTHING"
                 ),
                 {
@@ -123,7 +122,6 @@ async def seed_guide_articles(db: ClinicDatabase) -> int:
                     "id": article_id,
                     "name": title,
                     "body": body,
-                    "size": len(body.encode("utf-8")),
                     "tags": ["guide", topic],
                 },
             )

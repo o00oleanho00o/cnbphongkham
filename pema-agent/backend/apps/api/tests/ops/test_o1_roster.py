@@ -225,18 +225,6 @@ class TestRosterDatabase:
             )
         assert (locked.value.code, str(locked.value)) == (unknown.value.code, str(unknown.value))
 
-    async def test_an_internal_or_unknown_identity_has_no_roster(
-        self, db: ClinicDatabase, world: SeedResult, add_account: Any, staff_ctx: Any
-    ) -> None:
-        add_account("bell", purpose="internal")
-        manager = staff_ctx("manager")
-        with pytest.raises(DomainError) as internal:
-            await self._entry(db, manager, world, "cs.thu", account_id="bell")
-        assert internal.value.code is ErrorCode.INVALID_STATE
-        with pytest.raises(DomainError) as unknown:
-            await self._entry(db, manager, world, "cs.thu", account_id="ghost")
-        assert unknown.value.code is ErrorCode.NOT_FOUND
-
     async def test_owner_and_manager_write_and_operators_only_read(
         self, db: ClinicDatabase, world: SeedResult, add_account: Any, staff_ctx: Any
     ) -> None:
@@ -363,15 +351,6 @@ class TestRosterDatabase:
             await roster.delete_entry(db, manager, created.id)
         assert missing.value.code is ErrorCode.NOT_FOUND
 
-    async def test_deleting_an_account_removes_its_roster_and_a_user_leaves_theirs_behind_never(
-        self, db: ClinicDatabase, admin: Engine, world: SeedResult, add_account: Any, staff_ctx: Any
-    ) -> None:
-        add_account("long")
-        await self._entry(db, staff_ctx("manager"), world, "cs.thu")
-        with admin.begin() as conn:
-            conn.execute(text("DELETE FROM agent.accounts WHERE id = 'long'"))
-            assert conn.execute(text("SELECT count(*) FROM clinic.account_roster")).scalar() == 0
-
     async def test_the_table_refuses_a_bad_shape(
         self, admin: Engine, world: SeedResult, add_account: Any
     ) -> None:
@@ -428,7 +407,8 @@ class TestRosterDatabase:
             "/api/v1/identities/long/on-duty", params={"at": "2026-09-21T13:00:00+07:00"}
         )
         assert nobody.json()["operators"] == []
-        assert (await doctor.get("/api/v1/identities/ghost/on-duty")).status_code == 404
+        ghost = await doctor.get("/api/v1/identities/ghost/on-duty")
+        assert (ghost.status_code, ghost.json()["operators"]) == (200, [])  # an id nobody covers
 
         patched = await manager.patch(f"/api/v1/roster/{entry['id']}", json={"version": 1, "end": "13:00"})
         assert patched.status_code == 200, patched.text

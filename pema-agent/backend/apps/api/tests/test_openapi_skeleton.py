@@ -30,7 +30,6 @@ EXPECTED_PATHS = [
     "/api/v1/admin/logs/audit",
     "/api/v1/admin/templates",
     "/api/v1/admin/templates/{template_id}/approve",
-    "/api/v1/admin/kb/sources",
 ]
 
 
