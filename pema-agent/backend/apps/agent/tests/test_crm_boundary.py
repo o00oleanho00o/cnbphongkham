@@ -33,11 +33,12 @@ def test_the_clinic_profile_holds_no_way_into_the_api_but_its_public_keys() -> N
 
 
 CRM_DATABASE = "pema"
+AGENT_DATABASE = "pema_agent"
 
 
 @pytest.mark.db
 def test_the_agents_role_cannot_connect_to_the_crm_database_nor_use_another_schema() -> None:
-    """T1 (L1): no CONNECT on the clinic's database, no USAGE on schemas but its own, no way across databases"""
+    """T1 (L1): CONNECT on its own database only, no USAGE on schemas but its own, no way across databases"""
     url = os.environ.get("PEMA_TEST_DATABASE_URL")
     if url is None:
         pytest.skip("PEMA_TEST_DATABASE_URL not set; no Postgres to test against")
@@ -49,12 +50,18 @@ def test_the_agents_role_cannot_connect_to_the_crm_database_nor_use_another_sche
                 is None
             ):
                 pytest.skip(f"{RUNTIME_ROLE} does not exist on this server")
-            crm_connect = conn.execute(
-                sql(
-                    "SELECT has_database_privilege(:r, datname, 'CONNECT') FROM pg_database WHERE datname = :db"
-                ),
-                {"r": RUNTIME_ROLE, "db": CRM_DATABASE},
-            ).scalar_one_or_none()
+            reachable = set(
+                conn.execute(
+                    sql(
+                        "SELECT datname FROM pg_database WHERE datallowconn "
+                        "AND has_database_privilege(:r, datname, 'CONNECT')"
+                    ),
+                    {"r": RUNTIME_ROLE},
+                )
+                .scalars()
+                .all()
+            )
+            own = conn.execute(sql("SELECT current_database()")).scalar_one()
             schemas = (
                 conn.execute(
                     sql(
@@ -72,6 +79,7 @@ def test_the_agents_role_cannot_connect_to_the_crm_database_nor_use_another_sche
     finally:
         engine.dispose()
 
-    assert crm_connect is not True, f"{RUNTIME_ROLE} may connect to the CRM database {CRM_DATABASE}"
+    assert CRM_DATABASE not in reachable, f"{RUNTIME_ROLE} may connect to the CRM database {CRM_DATABASE}"
+    assert reachable <= {own, AGENT_DATABASE}, f"{RUNTIME_ROLE} may connect to {sorted(reachable)}"
     assert set(schemas) <= {SCHEMA, "public"}
     assert bridges == []

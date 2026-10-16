@@ -31,8 +31,8 @@ revision files `0001_agent_rt` … `0012_*` or plugin files `0002_*`/`0003_*`, t
 - **Checked on the rebuilt demo (2026-10-16):** from the agent container `pema` refuses `agent_rt_app` (no CONNECT),
   `CREATE EXTENSION dblink` is refused; the API answers 401 to the SSO token (`aud = pema-agent`) on every route
   tried, also sent as the session cookie; the web reaches the agent with it; a document upload lands in
-  `pema_agent`. T1 passes against the live cluster. Open: the agent role may still connect to the empty maintenance
-  database `postgres` (PUBLIC's default CONNECT).
+  `pema_agent`. T1 passes against the live cluster. `agent db bootstrap-role` also revokes PUBLIC's CONNECT on
+  `postgres` and `template1`, so `agent_rt_app` reaches `pema_agent` only (T1 asserts the whole list).
 - **Front end:** still calls the removed inbox, review, template routes (D8); `schema.d.ts` is stale. Clean-up is a
   separate branch with `pema-ui-builder` and entries in `web-design-changes.md`; design (canvas, specs) untouched (D9).
 

@@ -40,6 +40,8 @@ GRANTS: Final[tuple[tuple[tuple[str, ...], LiteralString], ...]] = (
 )
 PLUGIN_TABLE_RIGHTS: Final = "SELECT, INSERT, UPDATE, DELETE"
 MIN_PASSWORD_CHARS: Final = 16
+# superusers still connect to them (backups, migrations); no other role needs to
+MAINTENANCE_DATABASES: Final = ("postgres", "template1")
 
 
 def bootstrap_role(migration_url: str, password: str) -> list[str]:
@@ -93,17 +95,30 @@ def bootstrap_role(migration_url: str, password: str) -> list[str]:
 
 
 def ensure_database(migration_url: str) -> list[str]:
-    """Creates the database the URL names when the server lacks it (asked on the database ``postgres``)."""
+    """Creates the database the URL names when the server lacks it, and shuts PUBLIC out of the maintenance
+    databases (``postgres``, ``template1``), so the runtime role can connect to its own database only."""
     url = make_url(migration_url)
     name = url.database
     if not name:
         raise ValueError(f"{MIGRATION_URL_ENV} must name a database")
     maintenance = url.set(database="postgres").render_as_string(hide_password=False)
+    done: list[str] = []
     with psycopg.connect(libpq_url(maintenance), autocommit=True) as conn:
-        if conn.execute("SELECT 1 FROM pg_database WHERE datname = %s", (name,)).fetchone() is not None:
-            return []
-        conn.execute(sql.SQL("CREATE DATABASE {}").format(sql.Identifier(name)))
-    return [f"created database {name}"]
+        if conn.execute("SELECT 1 FROM pg_database WHERE datname = %s", (name,)).fetchone() is None:
+            conn.execute(sql.SQL("CREATE DATABASE {}").format(sql.Identifier(name)))
+            done.append(f"created database {name}")
+        for database in MAINTENANCE_DATABASES:
+            try:
+                conn.execute(
+                    sql.SQL("REVOKE CONNECT ON DATABASE {} FROM PUBLIC").format(sql.Identifier(database))
+                )
+            except psycopg.errors.InsufficientPrivilege:
+                done.append(
+                    f"could not revoke CONNECT on {database} from PUBLIC (not its owner): ask the DBA"
+                )
+            else:
+                done.append(f"revoked CONNECT on {database} from PUBLIC")
+    return done
 
 
 def _grant_plugin_tables(conn: psycopg.Connection) -> list[str]:
