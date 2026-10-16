@@ -1,6 +1,6 @@
 # Kế hoạch: tool web chung cho agent (web_search, web_fetch) và vòng chăm sóc lại
 
-**Trạng thái (2026-10-16): kế hoạch bản 5 (thêm mục 2b: cài đặt agent lên UI). Bước 0, 0a và 0b đã làm; chờ bước 1 (`netguard`, T5). Bước 0 (bỏ `allow_internet`, `ToolSpec.network`) đã làm; các bước sau chờ chủ.**
+**Trạng thái (2026-10-16): kế hoạch bản 5 (thêm mục 2b: cài đặt agent lên UI). Bước 0, 0a, 0b và 1 đã làm (bước 1 đúng như kế hoạch; phần đề xuất thêm ở mục 2c chờ chủ xem xét); chờ bước 2 (`web_search`, `web_fetch`). Bước 0 (bỏ `allow_internet`, `ToolSpec.network`) đã làm; các bước sau chờ chủ.**
 
 Nguồn để port (chỉ đọc): `zalo-agent/src/agent/tools/web-*.ts`, `wrap-untrusted-content.ts`, `shared/safe-remote-download.ts`.
 Bản ghi quy tắc tool: `project-agent-tool-rule` (2026-10-12; sẽ sửa ở bước cuối).
@@ -70,6 +70,51 @@ vẫn cộng thêm như hôm nay; ô "Vai trò" và "Quy tắc" ở đây là ph
 - Admin trên UI giờ sửa được vai trò/quy tắc và bật tool internet: ai có quyền admin (chủ, quản lý qua SSO) là đổi được hành vi agent
   với khách. Mỗi lần lưu ghi `updated_by` + thời điểm; chưa có lịch sử từng phiên bản (để sau).
 - Tắt `memory` trên UI bỏ cả tool và phần nhớ trong prompt (cùng một cờ `memory_enabled`).
+
+## 2c. Đề xuất thêm cho phần bảo mật của bước 1 (GHI ĐỂ XEM XÉT, chưa làm)
+
+Bước 1 đã làm đúng như mục 2 và 3 (`netguard.py`, `untrusted.py` trong `agentcore/harness/tools/builtin/`, T5 trong
+`test_crm_boundary.py`, luật L6). Các mục dưới đây là chỗ còn thiếu hoặc nên cân nhắc; chủ chọn mục nào thì làm mục đó.
+
+### A. Chỗ thủng đã đo được trong bản đã làm (nên vá, rẻ)
+1. **NAT64 và 6to4 bị coi là công khai.** `ipaddress.is_global` trả `True` cho `64:ff9b::7f00:1` (che 127.0.0.1) và `2002:7f00:1::`
+   (6to4 che 127.0.0.1), và cho multicast `224.0.0.1`. Kẻ tấn công dựng được một tên miền trỏ AAAA vào dạng này; có đi được tới địa chỉ
+   nội bộ hay không còn tùy mạng có cổng NAT64/6to4, hiếm trong Docker nhưng không loại trừ. Vá: tự viết danh sách chặn (`64:ff9b::/96`,
+   `2002::/16`, Teredo `2001::/32`, multicast, lấy IPv4 ra khỏi IPv6 che trước khi kiểm). Thêm vào T5.
+2. **Chỉ cần MỘT địa chỉ công khai là đi.** Tên miền trả cả IP công khai lẫn nội bộ: hiện code chỉ nối tới IP công khai (không bao giờ
+   nối tới IP nội bộ), nên an toàn; nhưng có thể chọn "từ chối nếu bất kỳ IP nào là nội bộ" để phát hiện sớm tên miền đáng ngờ.
+3. **Chưa giới hạn cổng và userinfo.** Cổng nào cũng đi (nếu tới được một IP công khai), `http://user:pass@host` cũng đi. Vá: chỉ 80 và
+   443, từ chối URL có `user:pass@`.
+4. **Chưa lọc loại nội dung.** Mới cắt theo byte; `web_fetch` (bước 2) nên chỉ nhận HTML, văn bản, JSON, XML và từ chối nhị phân.
+5. **Chưa có trần số lần gọi.** Ai nhắn Zalo cũng có thể bắt agent tải hàng loạt URL (quét, đánh vào site khác, tốn băng thông). Vá:
+   tối đa N lần mỗi lượt, M lần mỗi cuộc chat mỗi giờ, và trần đồng thời toàn hệ thống (hằng số trong code).
+6. **Log:** chỉ ghi tên host, không ghi cả URL (có thể chứa dữ liệu bơm ra).
+7. **Hiện chỉ tin vào kiểm tra khi kết nối + kiểm trước mỗi chặng.** Không có tầng thứ hai ở mạng (xem C).
+
+### B. Chặn ghi sau khi đọc web (rủi ro prompt injection, chưa có trong kế hoạch)
+Một trang web độc có thể ra lệnh cho agent gọi `memory`, `skill_write`, `skill_patch` để ghi đè vai trò hoặc nhớ lệnh lâu dài. `untrusted`
+chỉ giảm, không chặn được model làm theo lệnh ẩn; `injection_guard` hiện chỉ chặn theo mẫu từ, dễ lách. Đề xuất: một `PreToolHook`: khi
+lượt đã gọi `web_fetch` hoặc `web_search`, từ chối ba tool ghi đó trong phần còn lại của lượt. Khung hook có sẵn
+(`agentcore.harness.hooks`), việc nhỏ. Quy tắc "không cổng chặn tool" của bản demo là về xác thực người dùng, không phải về nội dung ngoài.
+
+### C. Danh sách tên miền cho phép / chặn (đã bỏ khỏi kế hoạch, nên cân nhắc lại)
+Rủi ro còn lại lớn nhất của tool ra internet là bơm dữ liệu ra ngoài: agent bị lừa đọc tài liệu kho tri thức rồi nhét vào query string của
+một URL. Giới hạn độ dài URL chỉ làm chậm. Một danh sách tên miền cho phép (rỗng = mọi tên miền công khai) giảm thật; cần một chỗ cài
+đặt (trang "Cài đặt" của bước 0b là nơi hợp lý).
+
+### D. Chặn ở tầng mạng Docker (việc hạ tầng, chưa có trong kế hoạch)
+`netguard` chỉ là chặn ở tầng ứng dụng. Container agent nằm chung mạng với `api`, `db`, `redis`. Muốn chắc hơn: luật egress chặn container
+agent ra các dải riêng ngoại trừ `db` và `api:8000/.well-known`, hoặc một proxy đi ra ngoài là đường duy nhất ra internet. Cần trước khi có
+bệnh nhân thật (cũng ghi trong handoff, rủi ro 5 và 6).
+
+### Đã kiểm trong bước 1
+- `netguard` chạy thật với TLS qua kết nối ghim địa chỉ (`https://example.com/` 200, `http://localhost:8000/` bị chặn); không cần
+  kết nối nào tới địa chỉ chưa kiểm (backend ghim từ chối tên chưa kiểm).
+- T5: 25 URL nội bộ (localhost, 127.x, `::1`, `::ffff:127.0.0.1`, `fe80::`, `fd00::`, 10/172.16-31/192.168, 169.254.169.254, tên docker `api`
+  `db` `postgres` `redis` `agent` `frontend`, tên trả IP nội bộ, tên trả cả IP riêng lẫn công khai) bị từ chối khi gọi thẳng **và** khi
+  đến từ chuyển hướng của một site công khai; file/ftp/gopher/dict bị từ chối; site công khai vẫn vào được.
+- Không kiểm: DNS rebinding thật trên mạng (có test mô phỏng bằng bảng DNS và backend ghim, không có kẻ tấn công thật); hành vi trên
+  Docker thật; NAT64/6to4 (mục A1).
 
 ## 3. Tool web là tool thường
 
@@ -172,7 +217,7 @@ Chọn từng tài khoản Zalo sẽ làm cùng giao diện (hoãn); trước m�
 | 0 | Bỏ `allow_internet` và `ToolSpec.network` (**đã làm**, `64e85e15`) | — |
 | 0a (**đã làm**) | `agent_settings` (`0002`), kho, resolve, `LiveAgent` dựng lại, lọc tool, `failure_reply` và biến đọc lúc dựng; API + CLI | test mới, `test_agent_app.py`, `test_channel_hub.py`, `test_gateway.py`, profile; test DB chỉ trên `scratch_*` |
 | 0b (**đã làm**) | Trang "Cài đặt" và "Công cụ" (`pema-ui-builder`) | `pnpm test`, `contract.test.ts`, `pnpm visual`, `pending-web.cjs` |
-| 1 | `netguard`, `untrusted` + T5 | test mới + `test_crm_boundary.py` |
+| 1 (**đã làm**, đúng kế hoạch) | `netguard`, `untrusted` + T5 | test mới + `test_crm_boundary.py` |
 | 2 | `web_search`, `web_fetch` (trang giả, không gọi mạng thật) | test mới |
 | 3 | Vòng chăm sóc lại: bảng `0003`, bước XÉT (model giả), khung cứng | test mới (luật khung là hàm thuần, test kỹ nhất) |
 | 4 | Bước LÀM: đưa tin nội bộ vào ingress, `proactive` ở Zalo cá nhân | test mới, `tests/zalo/*`, `test_dispatcher*`, `test_channel_hub.py`; test DB chỉ trên cơ sở `scratch_*` hoặc container tạm |
