@@ -221,42 +221,6 @@ def register(ctx):
 """
 
 
-WEB_PLUGIN = """
-from pydantic import BaseModel
-from agentcore import ToolOutput, ToolSpec
-
-class Args(BaseModel):
-    url: str
-
-async def fetch(args, ctx):
-    return ToolOutput(text="page")
-
-def register(ctx):
-    ctx.register_tool(
-        ToolSpec(name="fetch_url", description="Read a page.", args_model=Args, handler=fetch, network="internet")
-    )
-"""
-
-
-def test_a_plugin_tool_that_reaches_the_internet_is_refused_by_default(tmp_path: Path) -> None:
-    _plugin(tmp_path, "web_reader", WEB_PLUGIN)
-    host = PluginHost(discover([("agent", tmp_path)]).plugins, {})
-
-    with pytest.raises(PluginError, match="reaches the internet"):
-        host.enable("web_reader")
-
-    assert host.enabled() == []
-
-
-def test_an_agent_that_allows_the_internet_takes_such_a_tool(tmp_path: Path) -> None:
-    _plugin(tmp_path, "web_reader", WEB_PLUGIN)
-    host = PluginHost(discover([("agent", tmp_path)]).plugins, {}, allow_internet=True)
-
-    host.enable("web_reader")
-
-    assert [spec.name for spec in host.contributions().tools] == ["fetch_url"]
-
-
 def test_a_plugin_seals_secrets_with_the_service_key_it_cannot_read(tmp_path: Path) -> None:
     _plugin(tmp_path, "sealer", SEALING_PLUGIN)
     sources = discover([("agent", tmp_path)]).plugins

@@ -166,7 +166,6 @@ def start_plugins(
         found.plugins,
         env,
         storage=storage,
-        allow_internet=profile.agent.allow_internet,
         database=database,
     )
     try:

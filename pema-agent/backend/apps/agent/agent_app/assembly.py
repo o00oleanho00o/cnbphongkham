@@ -56,10 +56,6 @@ def build_agent(
         tools.register(make_memory_tool(memory, agent=name))
     for spec in added.tools:
         tools.register(spec)
-    specs = [spec for name in tools.names() if (spec := tools.get(name)) is not None]
-    refused = [spec.name for spec in specs if spec.network == "internet"]
-    if refused and not profile.agent.allow_internet:
-        raise ValueError(f"tools that reach the internet are not allowed here: {', '.join(refused)}")
     prompt = build_prompt(profile, tool_names=tools.names(), memory=memory, extra_sections=added.sections)
     context_policy = profile.context_policy()
     context = ContextManager(context_policy, client) if context_policy else None

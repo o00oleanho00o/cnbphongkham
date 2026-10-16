@@ -8,8 +8,6 @@ name = "clinic"
 tools = ["get_datetime"]
 timezone = "Asia/Ho_Chi_Minh"
 failure_reply = "Xin lỗi, hiện tôi chưa trả lời được. Bạn vui lòng thử lại sau ít phút."
-# every tool of the system may be called; tools that reach the internet are refused
-allow_internet = false
 
 [agent.variables]
 # filled into {{...}} of SOUL.md and AGENTS.md when the profile loads (demo values, not a real clinic)

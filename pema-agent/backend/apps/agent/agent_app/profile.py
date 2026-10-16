@@ -47,9 +47,6 @@ class AgentSection(_Section):
     failure_reply: str = Field(default="", max_length=1000)
     """Sent through a chat channel when a turn fails, so the person is not left without an answer; empty
     sends nothing."""
-    allow_internet: bool = False
-    """Tools that reach the internet (``ToolSpec.network``) are refused unless this is on. Every other tool of
-    the agent and its plugins may be called freely."""
     variables: dict[str, str] = Field(default_factory=dict[str, str])
     """Values for the ``{{name}}`` placeholders of the persona and the rules."""
 
