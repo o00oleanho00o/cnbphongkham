@@ -1,6 +1,6 @@
 """Test helpers for the one clinic of an installation (single tenant, package ST-A).
 
-New module (not a port); imported by tests and test fixtures only. After migration ``st_0009_single_tenant``
+New module (not a port); imported by tests and test fixtures only. After migration ``0001_baseline``
 a database holds exactly ONE clinic, so a fixture no longer creates "a fresh clinic per test": it takes the
 installation clinic and cleans the data between tests.
 
@@ -8,7 +8,7 @@ installation clinic and cleans the data between tests.
   ``UUID``; also stored as the process installation id, so ``ActionContext()`` and the other DTOs that default
   ``clinic_id`` get it. ``conn`` is a sync ``sqlalchemy.Connection`` of the owner / superuser role (the usual
   ``admin_engine``); ``ensure_test_clinic_async`` takes an ``AsyncConnection``.
-* ``truncate_installation_data(conn)``: empties every table of ``clinic.*`` and ``agent.*`` EXCEPT
+* ``truncate_installation_data(conn)``: empties every table of ``clinic.*`` EXCEPT
   ``clinic.clinic`` (so the clinic row and its id survive) in one statement. It needs a superuser: it sets
   ``session_replication_role = replica`` for the transaction so the append-only trigger of
   ``clinic.audit_log`` does not refuse the TRUNCATE (production never truncates the audit trail; this is
@@ -32,7 +32,7 @@ SYNTHETIC_CLINIC_NAME = "Synthetic clinic"
 
 _TABLES_SQL = text(
     "SELECT format('%I.%I', schemaname, tablename) FROM pg_tables "
-    "WHERE schemaname IN ('clinic', 'agent') AND NOT (schemaname = 'clinic' AND tablename = 'clinic') "
+    "WHERE schemaname = 'clinic' AND tablename <> 'clinic' "
     "ORDER BY 1"
 )
 
@@ -52,7 +52,7 @@ async def ensure_test_clinic_async(conn: AsyncConnection, name: str = SYNTHETIC_
 
 
 def truncate_installation_data(conn: Connection) -> None:
-    """Empty every table of ``clinic.*`` and ``agent.*`` except ``clinic.clinic`` (superuser, tests only)."""
+    """Empty every table of ``clinic.*`` except ``clinic.clinic`` (superuser, tests only)."""
     tables = conn.execute(_TABLES_SQL).scalars().all()
     if not tables:
         return

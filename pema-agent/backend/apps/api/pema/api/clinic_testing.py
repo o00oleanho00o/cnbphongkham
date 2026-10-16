@@ -8,8 +8,7 @@ shares, so the conftest files only import them:
 * ``pg_url``: the throwaway Postgres of ``PEMA_TEST_DATABASE_URL`` (superuser URL), migrated to ``heads``
   once per session; the test is SKIPPED when the variable is not set. The first use DROPS every Pema schema
   of that database, so never point it at data you care about;
-* ``db`` / ``worker_db``: a ``ClinicDatabase`` as role ``be_app`` (API process) or ``agent_worker`` (worker),
-  the roles of production (there is no row level security any more);
+* ``db``: a ``ClinicDatabase`` as role ``be_app``, the role of the API in production;
 * ``world``: THE clinic of the database (single tenant: one installation is one clinic) emptied with
   ``truncate_installation_data`` and seeded with ``seed_demo`` (all synthetic), one set of users per role.
   Every test that uses it starts from the same data; a test never inserts a second clinic;
@@ -46,7 +45,6 @@ from pema_contracts.common import VN_TZ
 
 ENV_URL = "PEMA_TEST_DATABASE_URL"
 BE_PASSWORD = "be-app-test-secret"  # noqa: S105  - throwaway test database only
-WORKER_PASSWORD = "agent-worker-test-secret"  # noqa: S105
 ACCOUNT_PASSWORD = "demo-account-test-secret"  # noqa: S105
 JWT_SECRET = "test-only-jwt-secret-with-at-least-32-chars"  # noqa: S105
 API_INI = Path(__file__).resolve().parents[2] / "alembic.ini"
@@ -63,12 +61,11 @@ def _role_url(admin: str, role: str, password: str) -> str:
 def _migrate(admin: str, *, fresh: bool) -> None:
     os.environ["PEMA_MIGRATION_DATABASE_URL"] = admin
     os.environ["PEMA_BE_APP_PASSWORD"] = BE_PASSWORD
-    os.environ["PEMA_AGENT_WORKER_PASSWORD"] = WORKER_PASSWORD
     engine = create_engine(admin)
     try:
         if fresh:
             with engine.begin() as conn:
-                for schema in ("clinic_agent", "agent", "clinic", "ctx"):
+                for schema in ("clinic", "ctx"):
                     conn.execute(text(f"DROP SCHEMA IF EXISTS {schema} CASCADE"))
                 conn.execute(text(f"DROP TABLE IF EXISTS public.{HEAD_TABLE}"))
         command.upgrade(Config(str(API_INI)), "heads")
@@ -139,15 +136,6 @@ def jwt_env(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
 @pytest_asyncio.fixture
 async def db(pg_url: str) -> AsyncIterator[ClinicDatabase]:
     database = ClinicDatabase(_role_url(pg_url, "be_app", BE_PASSWORD), pool_size=3)
-    try:
-        yield database
-    finally:
-        await database.dispose()
-
-
-@pytest_asyncio.fixture
-async def worker_db(pg_url: str) -> AsyncIterator[ClinicDatabase]:
-    database = ClinicDatabase(_role_url(pg_url, "agent_worker", WORKER_PASSWORD), pool_size=3)
     try:
         yield database
     finally:

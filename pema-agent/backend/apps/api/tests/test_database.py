@@ -1,9 +1,9 @@
 """DDL acceptance tests on a clean Postgres (pgvector image).
 
 Single tenant (package ST-A): one installation is ONE clinic. These tests prove that ``clinic.clinic`` accepts
-exactly one row, that there is no row level security and no clinic context any more, that ``agent_worker``
-is still shut out of ``clinic.*`` and keeps its door (``clinic_agent``), and that the migration builds a
-database with the clinic from the environment.
+exactly one row, that there is no row level security and no clinic context, that the migration builds a
+database with the clinic from the environment, and (T2 of .claude/rules/agent-crm-boundary.md) that this database
+holds no schema, role, extension or grant for the agent service.
 
 Set ``PEMA_TEST_DATABASE_URL`` to a superuser URL of a throwaway database, for example::
 
@@ -12,7 +12,7 @@ Set ``PEMA_TEST_DATABASE_URL`` to a superuser URL of a throwaway database, for e
     PEMA_TEST_DATABASE_URL=postgresql+psycopg://postgres:testpw@127.0.0.1:55432/pema make test-db
 
 Without the variable every test here is skipped. The fixture drops every Pema schema first and re-runs
-the alembic history, so never point it at data you care about.
+the baseline, so never point it at data you care about.
 """
 
 from __future__ import annotations
@@ -45,9 +45,7 @@ from pema_contracts.roles import ActorType
 API_DIR = Path(__file__).resolve().parents[1]
 API_INI = API_DIR / "alembic.ini"
 BE_PASSWORD = "be-app-test-secret"
-WORKER_PASSWORD = "agent-worker-test-secret"
 CLINIC_NAME = "Phong kham thu nghiem"
-PRE_SINGLE_TENANT_REVISION = "h_0008_merge_heads"
 
 pytestmark = pytest.mark.db
 
@@ -57,20 +55,13 @@ if not ADMIN_URL:
 
 CLINIC_TABLES = {
     "clinic", "user_account", "patient", "episode", "treatment_plan", "treatment_session",
-    "appointment", "crm_rule", "crm_task", "crm_activity", "channel_setting", "channel_identity",
-    "conversation", "message", "review_item", "consent", "message_template", "audit_log",
-}  # fmt: skip
-AGENT_TABLES = {
-    "runtime_settings", "agents", "accounts", "threads", "history", "contacts", "memories",
-    "image_descriptions", "friend_requests", "usage", "usage_steps", "jobs", "job_runs",
-    "proactive_send_counters", "kb_document", "kb_chunk", "agent_kb_document", "mcp_servers",
-    "agent_mcp_servers", "channel_update_seen",
+    "appointment", "crm_rule", "crm_task", "crm_activity", "consent", "audit_log", "guide_article",
 }  # fmt: skip
 
 
 def _reset(engine: Engine) -> None:
     with engine.begin() as conn:
-        for schema in ("clinic_agent", "agent", "clinic", "ctx"):
+        for schema in ("clinic", "ctx"):
             conn.execute(text(f"DROP SCHEMA IF EXISTS {schema} CASCADE"))
         conn.execute(text("DROP TABLE IF EXISTS public.alembic_version_pema"))
 
@@ -80,7 +71,6 @@ def admin_engine() -> Iterator[Engine]:
     assert ADMIN_URL is not None
     os.environ["PEMA_MIGRATION_DATABASE_URL"] = ADMIN_URL
     os.environ["PEMA_BE_APP_PASSWORD"] = BE_PASSWORD
-    os.environ["PEMA_AGENT_WORKER_PASSWORD"] = WORKER_PASSWORD
     os.environ["PEMA_CLINIC_NAME"] = CLINIC_NAME
     os.environ.pop("PEMA_CLINIC_ID", None)
     get_settings.cache_clear()
@@ -111,40 +101,14 @@ def be_engine(admin_engine: Engine) -> Iterator[Engine]:
 
 
 @pytest.fixture(scope="module")
-def worker_engine(admin_engine: Engine) -> Iterator[Engine]:
-    engine = _role_engine("agent_worker", WORKER_PASSWORD)
-    yield engine
-    engine.dispose()
-
-
-@pytest.fixture(scope="module")
 def clinic(admin_engine: Engine) -> uuid.UUID:
-    """THE clinic of the installation, with one synthetic patient, one agent/account and one verified identity."""
+    """THE clinic of the installation, with one synthetic patient."""
     with admin_engine.begin() as conn:
         clinic_id = ensure_test_clinic(conn)
-        patient_id = conn.execute(
+        conn.execute(
             text(
                 "INSERT INTO clinic.patient (clinic_id, code, full_name, phone, birth_date) "
                 "VALUES (:c, 'P001', 'Synthetic Patient', '0000000000', '1990-01-01') RETURNING id"
-            ),
-            {"c": clinic_id},
-        ).scalar_one()
-        conn.execute(
-            text(
-                "INSERT INTO clinic.channel_identity (clinic_id, channel, external_user_id, patient_id, "
-                "verification_status, verified_at) "
-                "VALUES (:c, 'zalo_bot', 'uid-1', :p, 'verified', now())"
-            ),
-            {"c": clinic_id, "p": patient_id},
-        )
-        conn.execute(
-            text("INSERT INTO agent.agents (clinic_id, id, name) VALUES (:c, 'default', 'Default')"),
-            {"c": clinic_id},
-        )
-        conn.execute(
-            text(
-                "INSERT INTO agent.accounts (clinic_id, id, label, channel, agent_id) "
-                "VALUES (:c, 'bot-1', 'Bot', 'zalo_bot', 'default')"
             ),
             {"c": clinic_id},
         )
@@ -175,7 +139,6 @@ def _count(conn: Connection, sql: str) -> int:
 # ------------------------------------------------------------------ schema
 def test_schemas_contain_expected_tables_and_views(admin_engine: Engine) -> None:
     assert _tables(admin_engine, "clinic") >= CLINIC_TABLES
-    assert _tables(admin_engine, "agent") >= AGENT_TABLES
 
 
 def test_no_table_has_row_level_security_or_a_policy(admin_engine: Engine) -> None:
@@ -185,12 +148,11 @@ def test_no_table_has_row_level_security_or_a_policy(admin_engine: Engine) -> No
             text(
                 "SELECT n.nspname, c.relname, c.relrowsecurity, c.relforcerowsecurity "
                 "FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace "
-                "WHERE n.nspname IN ('clinic', 'agent') AND c.relkind = 'r'"
+                "WHERE n.nspname = 'clinic' AND c.relkind = 'r'"
             )
         ).all()
         policies = _count(conn, "SELECT count(*) FROM pg_policy")
     assert {r[1] for r in rows if r[0] == "clinic"} >= CLINIC_TABLES
-    assert {r[1] for r in rows if r[0] == "agent"} >= AGENT_TABLES
     assert [(r[0], r[1]) for r in rows if r[2] or r[3]] == []
     assert policies == 0
 
@@ -212,7 +174,7 @@ def test_the_multi_tenant_functions_are_gone(admin_engine: Engine) -> None:
             conn.execute(
                 text(
                     "SELECT p.oid::regprocedure::text FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace "
-                    "WHERE n.nspname IN ('ctx', 'clinic', 'clinic_agent', 'agent') "
+                    "WHERE n.nspname IN ('ctx', 'clinic') "
                     "AND (p.prosrc LIKE '%current_clinic_id%' OR p.prosrc LIKE '%app.clinic_id%' "
                     "OR p.prosrc LIKE '%resolve_clinic%' OR p.prosrc LIKE '%list_active_clinic_ids%')"
                 )
@@ -223,7 +185,7 @@ def test_the_multi_tenant_functions_are_gone(admin_engine: Engine) -> None:
         views = (
             conn.execute(
                 text(
-                    "SELECT viewname FROM pg_views WHERE schemaname IN ('clinic', 'clinic_agent', 'agent') "
+                    "SELECT viewname FROM pg_views WHERE schemaname = 'clinic' "
                     "AND (definition LIKE '%current_clinic_id%' OR definition LIKE '%app.clinic_id%')"
                 )
             )
@@ -241,7 +203,7 @@ def test_every_table_carries_clinic_id(admin_engine: Engine) -> None:
         rows = conn.execute(
             text(
                 "SELECT t.table_schema, t.table_name FROM information_schema.tables t "
-                "WHERE t.table_schema IN ('clinic', 'agent') AND t.table_type = 'BASE TABLE' "
+                "WHERE t.table_schema = 'clinic' AND t.table_type = 'BASE TABLE' "
                 "AND NOT EXISTS (SELECT 1 FROM information_schema.columns c WHERE c.table_schema = t.table_schema "
                 "AND c.table_name = t.table_name AND c.column_name IN ('clinic_id') ) "
                 "AND NOT (t.table_schema = 'clinic' AND t.table_name = 'clinic')"
@@ -320,35 +282,12 @@ def test_ensure_test_clinic_returns_the_clinic_and_sets_the_installation_id(
     assert context.clinic_id == clinic
 
 
-def test_runtime_roles_cannot_run_ensure_clinic(
-    be_engine: Engine, worker_engine: Engine, clinic: uuid.UUID
-) -> None:
-    for engine in (be_engine, worker_engine):
-        with engine.connect() as conn, pytest.raises(ProgrammingError):
-            conn.execute(text("SELECT clinic.ensure_clinic('X')"))
+def test_the_runtime_role_cannot_run_ensure_clinic(be_engine: Engine, clinic: uuid.UUID) -> None:
+    with be_engine.connect() as conn, pytest.raises(ProgrammingError):
+        conn.execute(text("SELECT clinic.ensure_clinic('X')"))
 
 
-# ------------------------------------------------------------------ grants (unchanged by the removal of RLS)
-def test_agent_worker_has_no_privilege_on_clinic_schema(admin_engine: Engine) -> None:
-    with admin_engine.connect() as conn:
-        assert (
-            conn.execute(text("SELECT has_schema_privilege('agent_worker', 'clinic', 'USAGE')")).scalar()
-            is False
-        )
-        for table in CLINIC_TABLES:
-            for priv in ("SELECT", "INSERT", "UPDATE", "DELETE"):
-                allowed = conn.execute(
-                    text("SELECT has_table_privilege('agent_worker', :t, :p)"),
-                    {"t": f"clinic.{table}", "p": priv},
-                ).scalar()
-                assert allowed is False, (table, priv)
-
-
-def test_agent_worker_cannot_write_clinic_tables_directly(worker_engine: Engine, clinic: uuid.UUID) -> None:
-    with worker_engine.connect() as conn, pytest.raises(ProgrammingError):
-        conn.execute(text("UPDATE clinic.patient SET marketing_opt_out = true"))
-
-
+# ------------------------------------------------------------------ grants
 def test_be_app_reads_the_installation_data_without_any_context(be_engine: Engine, clinic: uuid.UUID) -> None:
     """không còn RLS: be_app đọc mọi dòng của bảng nó được cấp quyền, đây là chấp nhận được vì chỉ một phòng khám"""
     with be_engine.begin() as conn:
@@ -357,21 +296,9 @@ def test_be_app_reads_the_installation_data_without_any_context(be_engine: Engin
         assert conn.execute(text("SELECT clinic_id FROM clinic.patient")).scalar_one() == clinic
 
 
-def test_agent_tables_are_open_to_both_roles_without_context(
-    be_engine: Engine, worker_engine: Engine, clinic: uuid.UUID
-) -> None:
-    for engine in (be_engine, worker_engine):
-        with engine.begin() as conn:
-            assert _count(conn, "SELECT count(*) FROM agent.accounts") == 1
-            assert conn.execute(text("SELECT clinic_id FROM agent.accounts")).scalar_one() == clinic
-
-
-def test_the_clinic_id_function_is_open_to_both_runtime_roles(
-    be_engine: Engine, worker_engine: Engine, clinic: uuid.UUID
-) -> None:
-    for engine in (be_engine, worker_engine):
-        with engine.begin() as conn:
-            assert conn.execute(text("SELECT ctx.the_clinic_id()")).scalar_one() == clinic
+def test_the_clinic_id_function_is_open_to_the_runtime_role(be_engine: Engine, clinic: uuid.UUID) -> None:
+    with be_engine.begin() as conn:
+        assert conn.execute(text("SELECT ctx.the_clinic_id()")).scalar_one() == clinic
 
 
 def test_the_clinic_id_function_fails_closed_when_no_clinic_is_installed(
@@ -410,28 +337,6 @@ def test_audit_log_is_append_only(be_engine: Engine, clinic: uuid.UUID) -> None:
         conn.execute(text("DELETE FROM clinic.audit_log"))
 
 
-def test_birthday_rule_can_never_be_auto_send(admin_engine: Engine, clinic: uuid.UUID) -> None:
-    with admin_engine.connect() as conn, pytest.raises(IntegrityError):
-        conn.execute(
-            text(
-                "INSERT INTO clinic.crm_rule (clinic_id, rule_key, name, trigger, suggested_action, send_mode) "
-                "VALUES (:c, 'birthday', 'Birthday', 'birthday', 'greet', 'auto_reminder')"
-            ),
-            {"c": clinic},
-        )
-
-
-def test_verified_identity_needs_a_patient(admin_engine: Engine, clinic: uuid.UUID) -> None:
-    with admin_engine.connect() as conn, pytest.raises(IntegrityError):
-        conn.execute(
-            text(
-                "INSERT INTO clinic.channel_identity (clinic_id, channel, external_user_id, verification_status) "
-                "VALUES (:c, 'zalo_bot', 'nobody', 'verified')"
-            ),
-            {"c": clinic},
-        )
-
-
 def test_a_row_cannot_point_at_a_clinic_that_does_not_exist(be_engine: Engine, clinic: uuid.UUID) -> None:
     """clinic_id vẫn là khóa ngoại về dòng duy nhất"""
     with be_engine.connect() as conn, pytest.raises(IntegrityError):
@@ -441,87 +346,32 @@ def test_a_row_cannot_point_at_a_clinic_that_does_not_exist(be_engine: Engine, c
         )
 
 
-def test_once_job_must_run_exactly_once(worker_engine: Engine, clinic: uuid.UUID) -> None:
-    insert = text(
-        "INSERT INTO agent.jobs (clinic_id, id, account_id, thread_id, thread_type, name, kind, payload, "
-        "schedule_kind, max_runs, dedupe_key) VALUES (:c, :id, 'bot-1', 't1', 0, 'n', 'message', 'p', 'once', "
-        ":max_runs, :dedupe)"
-    )
-    with worker_engine.begin() as conn:
-        conn.execute(insert, {"c": clinic, "id": "job-ok", "max_runs": 1, "dedupe": "d1:P001:evt"})
-    with worker_engine.connect() as conn, pytest.raises(IntegrityError):
-        conn.execute(insert, {"c": clinic, "id": "job-bad", "max_runs": 5, "dedupe": None})
-    with worker_engine.connect() as conn, pytest.raises(IntegrityError):
-        conn.execute(insert, {"c": clinic, "id": "job-dup", "max_runs": 1, "dedupe": "d1:P001:evt"})
-
-
-def test_kb_chunk_supports_fts_and_vector_search(worker_engine: Engine, clinic: uuid.UUID) -> None:
-    vec = "[" + ",".join(["0.1"] * 1024) + "]"
-    with worker_engine.begin() as conn:
-        conn.execute(
-            text(
-                "INSERT INTO agent.kb_document (clinic_id, id, name, kind) VALUES (:c, 'doc1', 'Faq', 'text')"
-            ),
-            {"c": clinic},
-        )
-        conn.execute(
-            text(
-                "INSERT INTO agent.kb_chunk (clinic_id, source_id, ord, content, folded, embedding) "
-                "VALUES (:c, 'doc1', 0, 'Cham soc sau laser', 'cham soc sau laser', CAST(:v AS vector))"
-            ),
-            {"c": clinic, "v": vec},
-        )
-        fts = conn.execute(
-            text("SELECT count(*) FROM agent.kb_chunk WHERE tsv @@ plainto_tsquery('simple', 'laser')")
-        ).scalar()
-        assert fts == 1
-        nearest = conn.execute(
-            text("SELECT source_id FROM agent.kb_chunk ORDER BY embedding <=> CAST(:v AS vector) LIMIT 1"),
-            {"v": vec},
-        ).scalar()
-        assert nearest == "doc1"
-
-
-def test_default_binding_is_closed(worker_engine: Engine, clinic: uuid.UUID) -> None:
-    """Default-deny of KB and MCP: no binding rows exist until someone creates them."""
-    with worker_engine.begin() as conn:
-        assert _count(conn, "SELECT count(*) FROM agent.agent_kb_document") == 0
-        assert _count(conn, "SELECT count(*) FROM agent.agent_mcp_servers") == 0
-
-
 # ------------------------------------------------------------------ pema.core.db
-async def test_clinic_database_session_needs_no_clinic_for_both_roles(clinic: uuid.UUID) -> None:
-    """``pema.core.db.ClinicDatabase``: ``session()`` takes no clinic for either role"""
+async def test_clinic_database_session_needs_no_clinic(clinic: uuid.UUID) -> None:
+    """``pema.core.db.ClinicDatabase``: ``session()`` takes no clinic"""
     be_db = ClinicDatabase(_role_url("be_app", BE_PASSWORD))
-    worker_db = ClinicDatabase(_role_url("agent_worker", WORKER_PASSWORD))
     try:
         async with be_db.session() as session:
             rows = (await session.execute(text("SELECT code FROM clinic.patient"))).scalars().all()
             assert rows == ["P001"]
-        async with worker_db.session() as session:
-            assert (await session.execute(text("SELECT count(*) FROM agent.accounts"))).scalar() == 1
     finally:
         await be_db.dispose()
-        await worker_db.dispose()
 
 
 async def test_get_installation_clinic_id_reads_the_database_once_and_caches(
     clinic: uuid.UUID, clean_settings_and_cache: None
 ) -> None:
     be_db = ClinicDatabase(_role_url("be_app", BE_PASSWORD))
-    worker_db = ClinicDatabase(_role_url("agent_worker", WORKER_PASSWORD))
     try:
         assert be_db.installation_clinic_id is None
         assert await get_installation_clinic_id(be_db) == clinic
         assert be_db.installation_clinic_id == clinic
         assert installation_clinic_id() == clinic
-        assert await get_installation_clinic_id(worker_db) == clinic  # the worker role may call it too
         # cached: a closed engine no longer matters
         await be_db.dispose()
         assert await get_installation_clinic_id(be_db) == clinic
     finally:
         await be_db.dispose()
-        await worker_db.dispose()
 
 
 async def test_installation_id_from_the_environment_is_used_and_verified(
@@ -608,63 +458,9 @@ def test_migration_on_an_empty_database_generates_the_id_once(monkeypatch: pytes
         with engine.connect() as conn:
             first = conn.execute(text("SELECT id FROM clinic.clinic")).scalar_one()
             assert conn.execute(text("SELECT name FROM clinic.clinic")).scalar_one() == "Pema Clinic"
-        command.downgrade(cfg, PRE_SINGLE_TENANT_REVISION)
-        command.upgrade(cfg, "heads")
-        with engine.connect() as conn:
-            assert conn.execute(text("SELECT id FROM clinic.clinic")).scalar_one() == first
-
-
-def test_the_upgrade_refuses_a_database_that_already_holds_two_clinics(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    with _scratch_database(monkeypatch) as (engine, cfg):
-        command.upgrade(cfg, PRE_SINGLE_TENANT_REVISION)
-        with engine.begin() as conn:
-            for slug in ("a", "b"):
-                conn.execute(
-                    text("INSERT INTO clinic.clinic (id, slug, name) VALUES (:id, :slug, 'X')"),
-                    {"id": uuid.uuid4(), "slug": slug},
-                )
-        with pytest.raises(DBAPIError, match="more than one clinic"):
-            command.upgrade(cfg, "heads")
-        with engine.connect() as conn:  # the failed upgrade left no half-done change behind
-            assert (
-                _count(
-                    conn,
-                    "SELECT count(*) FROM information_schema.columns "
-                    "WHERE table_schema = 'clinic' AND table_name = 'clinic' AND column_name = 'singleton'",
-                )
-                == 0
-            )
-
-
-def test_single_tenant_migration_downgrades_to_rls_and_upgrades_again(
-    admin_engine: Engine, clinic: uuid.UUID
-) -> None:
-    """downgrade về h_0008 trả lại RLS và hàm cũ, upgrade lại giữ nguyên phòng khám"""
-    cfg = Config(str(API_INI))
-    command.downgrade(cfg, PRE_SINGLE_TENANT_REVISION)
-    with admin_engine.connect() as conn:
-        assert _count(conn, "SELECT count(*) FROM pg_policy") == 41
-        assert (
-            _count(
-                conn,
-                "SELECT count(*) FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace "
-                "WHERE n.nspname IN ('clinic', 'agent') AND c.relkind = 'r' AND c.relrowsecurity",
-            )
-            == 41
-        )
-        assert _count(conn, "SELECT count(*) FROM pg_proc WHERE proname = 'current_clinic_id'") == 1
-        assert (
-            _count(conn, "SELECT count(*) FROM pg_proc WHERE proname IN ('the_clinic_id', 'ensure_clinic')")
-            == 0
-        )
-        assert _count(conn, "SELECT count(*) FROM clinic.clinic") == 1
-    command.upgrade(cfg, "heads")
-    with admin_engine.connect() as conn:
-        assert conn.execute(text("SELECT id FROM clinic.clinic")).scalar_one() == clinic
-        assert _count(conn, "SELECT count(*) FROM pg_policy") == 0
-        assert _count(conn, "SELECT count(*) FROM clinic.patient") == 1
+        with engine.begin() as conn:  # the seed and the tests call it again: the row and its id stay
+            ensure_clinic(conn, "Another name")
+            assert conn.execute(text("SELECT id, name FROM clinic.clinic")).one() == (first, "Pema Clinic")
 
 
 def test_downgrade_then_upgrade_round_trips(admin_engine: Engine) -> None:
@@ -686,10 +482,10 @@ def test_every_security_definer_function_pins_a_search_path_ending_in_pg_temp(ad
                 "SELECT p.oid::regprocedure::text AS sig, "
                 "(SELECT substr(c, 13) FROM unnest(p.proconfig) AS c WHERE c LIKE 'search_path=%') AS sp "
                 "FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace "
-                "WHERE p.prosecdef AND n.nspname IN ('ctx', 'clinic_agent', 'clinic', 'agent')"
+                "WHERE p.prosecdef AND n.nspname IN ('ctx', 'clinic')"
             )
         ).all()
-    assert len(rows) >= 6, "the definer functions of the migrations must be found"
+    assert len(rows) >= 2, "the definer functions of the baseline must be found"
     assert "ctx.the_clinic_id()" in {sig for sig, _ in rows}
     for sig, search_path in rows:
         assert search_path is not None, f"{sig} has no fixed search_path"
@@ -697,7 +493,7 @@ def test_every_security_definer_function_pins_a_search_path_ending_in_pg_temp(ad
         assert search_path.split(",")[-1].strip() == "pg_temp", sig
 
 
-def test_no_function_of_the_agent_door_is_executable_by_public(admin_engine: Engine) -> None:
+def test_no_definer_function_is_executable_by_public(admin_engine: Engine) -> None:
     """không hàm nào của ctx, không hàm SECURITY DEFINER nào mở cho PUBLIC"""
     with admin_engine.connect() as conn:
         public = (
@@ -721,6 +517,39 @@ def test_no_function_of_the_agent_door_is_executable_by_public(admin_engine: Eng
             )
         ).scalar_one()
     assert temp_for_public is False
+
+
+# ------------------------------------------------------------------ T2: no window for the agent (rule L1, L3)
+def test_the_crm_database_holds_nothing_for_the_agent(admin_engine: Engine) -> None:
+    """DB của CRM không có schema, role, extension hay quyền nào cho agent (luật L1, L3)"""
+    with admin_engine.connect() as conn:
+        schemas = set(
+            conn.execute(
+                text(
+                    "SELECT nspname FROM pg_namespace "
+                    "WHERE nspname NOT LIKE 'pg\\_%' AND nspname <> 'information_schema'"
+                )
+            )
+            .scalars()
+            .all()
+        )
+        extensions = set(conn.execute(text("SELECT extname FROM pg_extension")).scalars().all())
+        grantees = set(
+            conn.execute(
+                text(
+                    "SELECT DISTINCT grantee FROM information_schema.role_table_grants "
+                    "WHERE table_schema IN ('clinic', 'ctx') UNION "
+                    "SELECT DISTINCT grantee FROM information_schema.routine_privileges "
+                    "WHERE routine_schema IN ('clinic', 'ctx') AND grantee <> 'PUBLIC'"
+                )
+            )
+            .scalars()
+            .all()
+        )
+        owner = conn.execute(text("SELECT current_user")).scalar_one()
+    assert schemas == {"public", "clinic", "ctx"}
+    assert extensions == {"plpgsql"}, "no dblink, no postgres_fdw, nothing the agent could use"
+    assert grantees <= {"be_app", owner}  # PUBLIC may run trigger functions only (definer ones: test above)
 
 
 # ------------------------------------------------------------------ last: it empties the tables
@@ -747,7 +576,6 @@ def test_truncate_installation_data_keeps_the_clinic_row(admin_engine: Engine) -
     with admin_engine.connect() as conn:
         assert _count(conn, "SELECT count(*) FROM clinic.patient") == 0
         assert _count(conn, "SELECT count(*) FROM clinic.audit_log") == 0
-        assert _count(conn, "SELECT count(*) FROM agent.accounts") == 0
         assert conn.execute(text("SELECT id FROM clinic.clinic")).scalar_one() == clinic
     with admin_engine.connect() as conn, pytest.raises(DBAPIError):  # the append-only guard is back
         conn.execute(text("TRUNCATE clinic.audit_log"))

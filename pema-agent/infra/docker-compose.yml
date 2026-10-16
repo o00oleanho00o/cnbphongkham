@@ -133,7 +133,7 @@ services:
       retries: 20
 
   # One-shot: create/refresh roles and passwords, then `alembic upgrade heads` as the owner role. The migration
-  # `st_0009_single_tenant` creates the ONE clinic row from PEMA_CLINIC_NAME / PEMA_CLINIC_ID on an empty database;
+  # `0001_baseline` creates the ONE clinic row from PEMA_CLINIC_NAME / PEMA_CLINIC_ID on an empty database;
   # the script then checks that clinic.clinic holds exactly one row and prints its name.
   migrate:
     build: *backend-build
@@ -145,7 +145,6 @@ services:
     environment:
       PEMA_MIGRATION_DATABASE_URL: postgresql+psycopg://postgres:${PEMA_PG_SUPERUSER_PASSWORD:?set it in infra/.env}@postgres:5432/pema
       PEMA_BE_APP_PASSWORD: ${PEMA_BE_APP_PASSWORD:?set it in infra/.env}
-      PEMA_AGENT_WORKER_PASSWORD: ${PEMA_AGENT_WORKER_PASSWORD:?set it in infra/.env}
       PEMA_CLINIC_NAME: ${PEMA_CLINIC_NAME:-Pema Clinic}
       PEMA_CLINIC_ID: ${PEMA_CLINIC_ID:-}
     command: ["/opt/pema/scripts/migrate.sh"]

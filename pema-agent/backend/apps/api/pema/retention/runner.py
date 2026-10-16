@@ -2,10 +2,7 @@
 no TS source).
 
 Single tenant: one installation is one clinic, so there is no loop over clinics and no clinic argument; one
-run is one ``scope``. Scope ``agent`` is what the worker may do (``agent.*`` rows and the image
-files of the local volume, role ``agent_worker``); scope ``clinic`` is what the API process may do
-(``clinic.*`` rows, role ``be_app``). Neither process gets a wider right than it had: see
-``pema.retention.policy``.
+run is one ``scope``; the only scope is ``clinic`` (``clinic.*`` rows, role ``be_app``, the API process).
 
 Properties the tests pin down:
 
@@ -19,7 +16,7 @@ Properties the tests pin down:
   ``skipped_locked``. (Rows are also picked with ``FOR UPDATE SKIP LOCKED``, so even without the lock two
   batches could never delete the same row twice.)
 * **Dry run.** Counts what a real run would delete (``SELECT count(*)``), deletes nothing, writes no audit
-  row, removes no file.
+  row.
 * **One audit row per real run and scope**, through ``clinic.record_retention_run``: counters only, no
   PII. ``clinic.audit_log`` itself is never purged.
 * **A failing group does not stop the others**; it is logged (no PII: the group name) and
@@ -51,12 +48,11 @@ log = create_logger("retention")
 
 MAX_BATCHES_PER_GROUP = 1000
 LOCK_NAMESPACE = 0x50454D41
-"""First key of the advisory locks (``"PEMA"``); the scope is added so the two scopes never wait for each
-other."""
+"""First key of the advisory locks (``"PEMA"``); the index of the scope is added to it."""
 LOCK_INSTALLATION_KEY = 0
 """Second key of the advisory locks: fixed, there is one clinic per installation (it used to be a hash of the
 clinic id)."""
-_SCOPE_ORDER = (Scope.AGENT, Scope.CLINIC)
+_SCOPE_ORDER = (Scope.CLINIC,)
 
 
 class RunStatus(StrEnum):
@@ -73,11 +69,11 @@ class ScopeReport:
     dry_run: bool
     status: RunStatus = RunStatus.DONE
     counts: dict[str, int] = field(default_factory=dict[str, int])
-    """Rows (or files) deleted per group; in a dry run, the number that WOULD be deleted."""
+    """Rows deleted per group; in a dry run, the number that WOULD be deleted."""
     capped: list[str] = field(default_factory=list[str])
     """Groups that hit the per-run batch cap; the next run continues."""
     disabled: list[str] = field(default_factory=list[str])
-    """Groups kept forever by configuration (0 days, or no media volume)."""
+    """Groups kept forever by configuration (0 days)."""
     failed: list[str] = field(default_factory=list[str])
 
     def add(self, group: str, n: int) -> None:

@@ -5,8 +5,7 @@ protocol and one room block. EVERYTHING here is fictional (AGENT.md); it is the 
 not the clinic's real price list (the owner supplies that: open item of PLAN-AI01-U section 6).
 
 ``seed_default_catalog`` is idempotent: when the clinic already has a service it does nothing. The protocol
-row ``laser-co2`` is created by the migration; it is created here only when it is missing (a test database is
-emptied between tests).
+row ``laser-co2`` is created here when it is missing (the migration creates no data but the clinic row).
 """
 
 from __future__ import annotations

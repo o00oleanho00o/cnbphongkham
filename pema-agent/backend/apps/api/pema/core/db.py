@@ -3,11 +3,10 @@
 New module (not a port: zalo-agent had one SQLite file, no tenants). Contract used by EVERY package that
 touches Postgres:
 
-* one engine per runtime role: ``ClinicDatabase(settings.database_url)`` (role ``be_app``, API process)
-  or ``ClinicDatabase(settings.worker_database_url)`` (role ``agent_worker``, worker process);
+* one engine for the runtime role: ``ClinicDatabase(settings.database_url)`` (role ``be_app``, API process);
 * every unit of work runs in ``async with db.session() as session:``. It opens a transaction, commits when the
   block exits normally and rolls back on any exception. There is NO clinic context and NO row level security
-  any more (migration ``st_0009_single_tenant``): the ``clinic_id`` column stays in every table as the fixed
+  any more: the ``clinic_id`` column stays in every table as the fixed
   installation id, and ``get_installation_clinic_id`` is the single source of truth for its value;
 * ``get_installation_clinic_id(db)`` reads the id once per process (``PEMA_CLINIC_ID`` when set, otherwise the
   only row of ``clinic.clinic`` through ``ctx.the_clinic_id()``, which both runtime roles may call) and

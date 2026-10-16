@@ -16,19 +16,7 @@ pytestmark = pytest.mark.db
 
 
 def _policy(**days: int) -> RetentionPolicy:
-    keep = dict.fromkeys(
-        (
-            "history_days",
-            "memory_days",
-            "usage_days",
-            "trace_days",
-            "media_days",
-            "job_run_days",
-            "auth_session_days",
-        ),
-        0,
-    )
-    return RetentionPolicy(**(keep | days), batch_size=50)
+    return RetentionPolicy(**days, batch_size=50)
 
 
 async def _run(env: RetentionEnv, policy: RetentionPolicy, *, dry_run: bool = False) -> ScopeReport:
@@ -54,7 +42,7 @@ async def test_patients_appointments_consent_and_audit_are_never_touched(
         p=patient,
     )
     seed.audit(c, age=3000)
-    report = await _run(env, _policy(auth_session_days=1, history_days=1))
+    report = await _run(env, _policy(auth_session_days=1))
     assert not report.failed
     assert seed.count("clinic.patient", c) == 1
     assert seed.count("clinic.appointment", c) == 1

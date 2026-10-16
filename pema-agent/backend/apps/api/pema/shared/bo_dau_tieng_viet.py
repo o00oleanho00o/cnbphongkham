@@ -1,6 +1,6 @@
 # ported from: src/shared/bo-dau-tieng-viet.ts
-"""Strip Vietnamese diacritics: used for the folded column of ``agent.kb_chunk`` (the FTS side) and for the
-customer's question before searching. An FTS index does not know that "hoa hồng" and "hoa hong" are the
+"""Strip Vietnamese diacritics: used for the passages of the staff guide and for the question before
+searching. An FTS index does not know that "hoa hồng" and "hoa hong" are the
 same phrase.
 
 The letter ``đ``/``Đ`` must be replaced EXPLICITLY, by a string replacement done AFTER ``NFD``: U+0111 is a

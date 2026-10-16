@@ -30,7 +30,6 @@ from pema.clinic.crm_rules.runner import CrmRulesRunner
 from pema.clinic.crm_rules.sql_store import SqlCrmRuleStore
 from pema.composition.auth_bridge import resolve_staff_context
 from pema.config.env import Settings
-from pema.config.runtime_tuning_settings import get_tuning_int
 from pema.core.db import ClinicDatabase, get_installation_clinic_id
 from pema.live.publisher import install_live_publisher, installed_live_publisher
 from pema.live.services import LiveServices, build_redis_live_services
@@ -129,7 +128,7 @@ class AppLifecycle:
         retention = start_retention_loop(
             RetentionRunner(
                 rt.db,
-                lambda: policy_from_settings(rt.settings, get_tuning_int),
+                lambda: policy_from_settings(rt.settings),
                 scopes=(Scope.CLINIC,),
             ),
             interval_seconds=rt.settings.retention_interval_seconds,

@@ -10,7 +10,6 @@ from pema.api.clinic_testing import (
     demo_clock,
     jwt_env,
     pg_url,
-    worker_db,
     world,
 )
 
@@ -22,6 +21,5 @@ __all__ = [
     "demo_clock",
     "jwt_env",
     "pg_url",
-    "worker_db",
     "world",
 ]

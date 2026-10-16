@@ -39,40 +39,16 @@ def _tuning(values: dict[str, int]) -> Callable[[str], int]:
 
 
 # ------------------------------------------------------------------------------------------------ policy
-def test_defaults_keep_clinical_data_and_give_technical_data_a_short_life() -> None:
-    policy = policy_from_settings(
-        Settings(), _tuning({"AGENT_TRACE_RETENTION_DAYS": 7, "MEDIA_RETENTION_DAYS": 7})
-    )
-    assert (policy.history_days, policy.memory_days, policy.usage_days) == (0, 0, 0)
-    assert policy.trace_days == 7
-    assert policy.media_days == 7
-    assert policy.job_run_days > 0
+def test_defaults_give_expired_sessions_a_short_life() -> None:
+    policy = policy_from_settings(Settings())
     assert policy.auth_session_days > 0
-
-
-def test_trace_and_media_follow_the_tuning_keys_until_a_retention_setting_overrides_them() -> None:
-    tuning = _tuning({"AGENT_TRACE_RETENTION_DAYS": 14, "MEDIA_RETENTION_DAYS": 21})
-    followed = policy_from_settings(Settings(), tuning)
-    assert (followed.trace_days, followed.media_days) == (14, 21)
-    overridden = policy_from_settings(Settings(retention_trace_days=0, retention_media_days=3), tuning)
-    assert (overridden.trace_days, overridden.media_days) == (0, 3), "0 keeps forever, also for these two"
-
-
-def test_an_empty_trace_or_media_variable_from_compose_means_unset(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("PEMA_RETENTION_TRACE_DAYS", "")
-    monkeypatch.setenv("PEMA_RETENTION_MEDIA_DAYS", "  ")
-    settings = Settings()
-    assert settings.retention_trace_days is None
-    assert settings.retention_media_days is None
-    monkeypatch.setenv("PEMA_RETENTION_TRACE_DAYS", "0")
-    assert Settings().retention_trace_days == 0, "an explicit 0 still keeps the group forever"
 
 
 def test_a_negative_number_of_days_is_refused_by_the_settings_and_by_the_policy() -> None:
     with pytest.raises(ValidationError):
-        Settings(retention_history_days=-1)
-    with pytest.raises(ValueError, match="history_days"):
-        RetentionPolicy(history_days=-1)
+        Settings(retention_auth_session_days=-1)
+    with pytest.raises(ValueError, match="auth_session_days"):
+        RetentionPolicy(auth_session_days=-1)
     with pytest.raises(ValueError, match="batch_size"):
         RetentionPolicy(batch_size=0)
 
@@ -131,20 +107,17 @@ def test_no_retention_sql_names_the_audit_log_in_a_delete() -> None:
 
 
 # ------------------------------------------------------------------------------------------ command line
-def _settings(env: RetentionEnv, *, history_days: int = 0) -> Settings:
-    return Settings(
-        database_url=env.server.role_url("be_app", BE_PASSWORD), retention_history_days=history_days
-    )
+def _settings(env: RetentionEnv) -> Settings:
+    return Settings(database_url=env.server.role_url("be_app", BE_PASSWORD))
 
 
 @pytest.mark.db
 async def test_cli_dry_run_prints_the_counts_and_changes_nothing(env: RetentionEnv, seed: Seed) -> None:
-    seed.history(env.clinic_id, age=40, n=2)
     seed.auth_session(env.clinic_id, seed.user(env.clinic_id), expired_days_ago=9)
     out = io.StringIO()
     code = await run_cli(
         ["--dry-run"],
-        settings=_settings(env, history_days=30),
+        settings=_settings(env),
         out=out,
     )
     printed = out.getvalue()
@@ -157,13 +130,10 @@ async def test_cli_dry_run_prints_the_counts_and_changes_nothing(env: RetentionE
 
 @pytest.mark.db
 async def test_cli_has_no_clinic_option_one_installation_is_one_clinic(env: RetentionEnv, seed: Seed) -> None:
-    seed.history(env.clinic_id, age=40)
     with pytest.raises(SystemExit):
-        await run_cli(
-            ["--clinic", str(env.clinic_id)], settings=_settings(env, history_days=30), out=io.StringIO()
-        )
+        await run_cli(["--clinic", str(env.clinic_id)], settings=_settings(env), out=io.StringIO())
     out = io.StringIO()
-    code = await run_cli([], settings=_settings(env, history_days=30), out=out)
+    code = await run_cli([], settings=_settings(env), out=out)
     assert code == 0
     assert "scope=clinic status=done" in out.getvalue()
     assert "scope=agent" not in out.getvalue()

@@ -2,8 +2,8 @@
 
 Set ``PEMA_TEST_DATABASE_URL`` to a SUPERUSER URL of a throwaway server (see ``tests/test_database.py``); without
 it every test that uses ``env`` is skipped. Rows are seeded as the superuser with explicit ages;
-the code under test always runs as a runtime role: ``env.worker_db`` (``agent_worker``) for scope ``agent`` and
-``env.db`` (``be_app``) for scope ``clinic``, so a missing grant fails the test instead of passing silently.
+the code under test always runs as ``env.db`` (``be_app``), so a missing grant fails the test instead of passing
+silently.
 """
 
 from __future__ import annotations

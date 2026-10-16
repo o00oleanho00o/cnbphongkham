@@ -4,8 +4,7 @@
 ``CrmRuleStore`` is the only thing the runner needs from the database: load a clinic's rules, patient
 snapshots and stored tasks in a few bulk reads, and apply the outcome of a run in ONE
 transaction. ``SqlCrmRuleStore`` (``sql_store.py``) implements it over Postgres as role ``be_app``
-(CONTRACTS section 7, decision 7: the rules read broad clinic data, so they run in the API process or a CLI,
-never as ``agent_worker``).
+(CONTRACTS section 7, decision 7: the rules read broad clinic data, so they run in the API process or a CLI).
 
 ``apply`` MUST be idempotent: a task whose key exists is skipped (``ON CONFLICT DO NOTHING``), a task is
 superseded only while it is still open or rescheduled, a patient update is a plain overwrite of the same

@@ -68,7 +68,7 @@ trap 'rm -rf "$TMP" "$OUT.part"' EXIT
 
 # 2. Verify before trusting it: pg_restore must be able to list the archive and it must contain the schemas.
 "${COMPOSE[@]}" exec -T "$SERVICE" pg_restore --list <"$TMP/db.dump" >"$TMP/db.list"
-for schema in clinic agent clinic_agent; do
+for schema in clinic ctx; do
   grep -q " SCHEMA - $schema " "$TMP/db.list" || { echo "backup check failed: schema $schema missing" >&2; exit 2; }
 done
 # the installation's clinic row must be in the archive (restoring without it would leave an unusable system)

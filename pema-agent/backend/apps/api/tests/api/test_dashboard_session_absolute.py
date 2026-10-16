@@ -11,21 +11,16 @@ import re
 from collections.abc import Iterator
 from datetime import datetime, timedelta
 from typing import Any
-from uuid import uuid4
 
 import httpx
 import jwt
 import pytest
-from alembic import command
-from alembic.config import Config
 from pydantic import SecretStr, ValidationError
 from sqlalchemy import text
-from sqlalchemy.engine import Engine
 
 from pema.api import dashboard_auth as auth
 from pema.api.clinic_testing import (
     ACCOUNT_PASSWORD,
-    API_INI,
     DEMO_NOW,
     JWT_SECRET,
     add_staff_account,
@@ -320,41 +315,3 @@ async def test_login_prunes_sessions_past_their_ceiling(
                 text("SELECT count(*) FROM clinic.auth_session WHERE id = :i"), {"i": claims["sid"]}
             )
     assert left == 0
-
-
-# ---------------------------------------------------------------- migration backfill
-
-
-@pytest.mark.db
-async def test_the_migration_backfills_existing_sessions_with_created_at_plus_seven_days(
-    world: SeedResult, admin: Engine
-) -> None:
-    """migration thêm cột và backfill phiên đang có = created_at + 7 ngày; cột NOT NULL"""
-    config = Config(str(API_INI))
-    session_id = uuid4()
-    command.downgrade(config, "g_0006_definer_search_path")
-    try:
-        with admin.begin() as conn:
-            conn.execute(
-                text(
-                    "INSERT INTO clinic.auth_session "
-                    "(id, clinic_id, user_id, password_fingerprint, created_at, expires_at) "
-                    "VALUES (:i, :c, :u, 'fp', '2026-09-01T00:00:00+00', '2026-09-01T08:00:00+00')"
-                ),
-                {"i": session_id, "c": world.clinic_id, "u": world.users["reception.lan"]},
-            )
-    finally:
-        command.upgrade(config, "heads")
-    with admin.begin() as conn:
-        absolute = conn.execute(
-            text("SELECT absolute_expires_at FROM clinic.auth_session WHERE id = :i"), {"i": session_id}
-        ).scalar_one()
-        nullable = conn.execute(
-            text(
-                "SELECT is_nullable FROM information_schema.columns WHERE table_schema = 'clinic' "
-                "AND table_name = 'auth_session' AND column_name = 'absolute_expires_at'"
-            )
-        ).scalar_one()
-        conn.execute(text("DELETE FROM clinic.auth_session WHERE id = :i"), {"i": session_id})
-    assert absolute.isoformat() == "2026-09-08T00:00:00+00:00"
-    assert nullable == "NO"

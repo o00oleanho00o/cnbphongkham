@@ -35,16 +35,16 @@ esac
 
 psql_in() { "${COMPOSE[@]}" exec -T "$SERVICE" psql -U postgres -v ON_ERROR_STOP=1 "$@"; }
 
-# Roles first (be_app / agent_worker with their password hashes). "already exists" for postgres is expected.
+# Roles first (be_app and the agent's role with their password hashes). "already exists" for postgres is expected.
 psql_in -d postgres <"$TMP/globals.sql" >/dev/null 2>&1 || true
 
 psql_in -d postgres -c "CREATE DATABASE \"$TARGET\"" >/dev/null
 # --no-owner is NOT used: owners and GRANTs come back as dumped.
 "${COMPOSE[@]}" exec -T "$SERVICE" pg_restore -U postgres -d "$TARGET" --exit-on-error <"$TMP/db.dump"
 
-TABLES="$(psql_in -d "$TARGET" -At -c "SELECT count(*) FROM information_schema.tables WHERE table_schema IN ('clinic','agent','clinic_agent','ctx')")"
+TABLES="$(psql_in -d "$TARGET" -At -c "SELECT count(*) FROM information_schema.tables WHERE table_schema IN ('clinic','ctx')")"
 REV="$(psql_in -d "$TARGET" -At -c "SELECT string_agg(version_num, ',') FROM public.alembic_version_pema")"
-echo "restored into $TARGET: $TABLES tables/views in clinic/agent/clinic_agent/ctx, alembic revision(s): $REV"
+echo "restored into $TARGET: $TABLES tables/views in clinic/ctx, alembic revision(s): $REV"
 
 # One installation = one clinic: a restored database must hold exactly one clinic row.
 CLINICS="$(psql_in -d "$TARGET" -At -c "SELECT count(*) FROM clinic.clinic")"

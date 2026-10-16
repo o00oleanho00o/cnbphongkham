@@ -23,7 +23,6 @@ from alembic import command
 from alembic.config import Config
 from sqlalchemy import Engine, create_engine, text
 from sqlalchemy.engine import make_url
-from sqlalchemy.exc import ProgrammingError
 
 from pema.clinic.crm_rules.admin import SqlCrmRuleAdminService
 from pema.clinic.crm_rules.engine import SUPERSEDED_RESOLUTION
@@ -46,7 +45,6 @@ if not ADMIN_URL:
 
 API_INI = Path(__file__).resolve().parents[3] / "alembic.ini"
 BE_PASSWORD = "be-app-test-secret"
-WORKER_PASSWORD = "agent-worker-test-secret"
 VN = "+07:00"
 
 Ids = dict[str, uuid.UUID]
@@ -61,7 +59,6 @@ def admin_engine() -> Iterator[Engine]:
     assert ADMIN_URL is not None
     os.environ["PEMA_MIGRATION_DATABASE_URL"] = ADMIN_URL
     os.environ["PEMA_BE_APP_PASSWORD"] = BE_PASSWORD
-    os.environ["PEMA_AGENT_WORKER_PASSWORD"] = WORKER_PASSWORD
     engine = create_engine(ADMIN_URL)
     with engine.begin() as conn:
         for schema in ("clinic_agent", "agent", "clinic", "ctx"):
@@ -155,13 +152,6 @@ def clinic(admin_engine: Engine) -> Ids:
             p=ids["P028"],
             t=_ts(f"2026-09-18T10:00:00{VN}"),
             m=_ts(f"2026-09-18T10:00:00{VN}"),
-        )
-        _run(
-            conn,
-            "INSERT INTO clinic.channel_identity (clinic_id, channel, external_user_id, patient_id, "
-            "verification_status, verified_at) VALUES (:c, 'zalo_bot', 'uid-025', :p, 'verified', now())",
-            c=c,
-            p=ids["P025"],
         )
         _run(
             conn,
@@ -330,14 +320,3 @@ async def test_opting_out_supersedes_the_marketing_task_and_keeps_the_clinical_o
     status = {k.split(":")[1]: t["status"] for k, t in tasks.items() if ":P030:" in k}
     assert status["dormant180"] == "superseded"
     assert status["abandoned"] == "open"
-
-
-async def test_the_worker_role_cannot_read_the_crm_task_table(db: ClinicDatabase, clinic: Ids) -> None:
-    """Vai trò agent_worker không đọc được bảng việc CRM."""
-    await _runner(db).run_clinic(clinic["clinic"], NOW)
-    worker = create_engine(_role_url("agent_worker", WORKER_PASSWORD))
-    try:
-        with pytest.raises(ProgrammingError), worker.connect() as conn:
-            conn.execute(text("SELECT count(*) FROM clinic.crm_task"))
-    finally:
-        worker.dispose()

@@ -1,7 +1,7 @@
 """Create the one clinic of an installation (single tenant, package ST-A). Idempotent.
 
 New module (not a port). ``clinic.clinic`` holds exactly one row (``singleton`` column, ``CHECK`` and
-``UNIQUE`` in the database, migration ``st_0009_single_tenant``). The migration creates it from
+``UNIQUE`` in the database, migration ``0001_baseline``). The migration creates it from
 ``PEMA_CLINIC_NAME`` on an empty database; this module is the same operation for the seed, the bootstrap and
 the tests, through the SQL function ``clinic.ensure_clinic`` (the only place that INSERTs the row):
 

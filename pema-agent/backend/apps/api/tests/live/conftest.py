@@ -17,7 +17,6 @@ from pema.api.clinic_testing import (
     demo_clock,
     jwt_env,
     pg_url,
-    worker_db,
     world,
 )
 from pema.live.bus import InMemoryLiveEventBus
@@ -34,7 +33,6 @@ __all__ = [
     "jwt_env",
     "live",
     "pg_url",
-    "worker_db",
     "world",
 ]
 

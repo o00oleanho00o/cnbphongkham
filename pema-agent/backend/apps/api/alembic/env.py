@@ -1,4 +1,4 @@
-"""Alembic environment for schemas ``ctx``, ``clinic``, ``clinic_agent`` and ``agent``.
+"""Alembic environment for schemas ``ctx`` and ``clinic`` (one revision chain from ``0001_baseline``).
 
 Runs as a migration/owner role (``PEMA_MIGRATION_DATABASE_URL``), never as ``be_app`` or
 ``agent_worker``. The version table lives in ``public`` and neither runtime role is granted access to it.

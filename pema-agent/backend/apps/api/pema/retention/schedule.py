@@ -1,6 +1,6 @@
 """The periodic retention run of a process (new module, no TS source).
 
-The worker starts it with scope ``agent`` and the API process with scope ``clinic`` (see
+The API process starts it with scope ``clinic`` (see
 ``pema.retention.runner`` for why). Like ``start_daily_task`` of the original: an error in a pass is logged
 and the loop goes on, a failing cleanup must not take the process down; the returned task is the handle to
 cancel at shutdown.

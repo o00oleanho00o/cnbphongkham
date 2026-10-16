@@ -26,7 +26,7 @@ help:
 	@echo "test-db     pytest against PEMA_TEST_DATABASE_URL (a THROWAWAY Postgres with pgvector)"
 	@echo "openapi     regenerate $(OPENAPI)"
 	@echo "types       regenerate frontend TypeScript types from the OpenAPI file"
-	@echo "db-upgrade  alembic upgrade heads for ctx, clinic, clinic_agent, agent (reads infra/.env)"
+	@echo "db-upgrade  alembic upgrade heads for ctx and clinic (reads infra/.env)"
 	@echo "infra-secrets  create infra/.env with random secrets (refuses to overwrite)"
 	@echo "infra-config   docker compose config (every profile, also proxy with the override; uses infra/.env or a throwaway one)"
 	@echo "up / down      start / stop postgres, redis, migrate, api (profile: frontend)"

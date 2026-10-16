@@ -1,4 +1,4 @@
-"""``clinic.clinic``, ``clinic.user_account`` and ``clinic.auth_session`` (migration b1_0004)."""
+"""``clinic.clinic``, ``clinic.user_account`` and ``clinic.auth_session`` (baseline)."""
 
 from __future__ import annotations
 

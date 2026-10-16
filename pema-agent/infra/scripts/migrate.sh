@@ -2,16 +2,13 @@
 # Run the database migrations: wait for Postgres, bootstrap the roles, `alembic upgrade heads`, then check that
 # the database holds exactly ONE clinic (one installation = one clinic) and print its name.
 #
-# The clinic row is created by the migration `st_0009_single_tenant` from PEMA_CLINIC_NAME (default "Pema Clinic")
+# The clinic row is created by the migration `0001_baseline` from PEMA_CLINIC_NAME (default "Pema Clinic")
 # and, when set, PEMA_CLINIC_ID, on a database that has none. Rerunning never renames it or changes its id.
 #
-# `heads` (plural) applies every branch head, because parallel packages add revisions with
-# down_revision = "0003_clinic_agent_access" and package G merges them later (CONTRACTS-AI01 section 5). When
-# G has produced a single head this command is identical to `upgrade head`. The script reports how many heads
-# it found; it never creates a merge revision itself (that is a reviewed change, not a deploy step).
+# `heads` (plural) applies every branch head; with one chain it is identical to `upgrade head`. The script
+# reports how many heads it found; it never creates a merge revision itself (that is a reviewed change).
 #
-# Environment: PEMA_MIGRATION_DATABASE_URL (owner/superuser URL), PEMA_BE_APP_PASSWORD,
-# PEMA_AGENT_WORKER_PASSWORD; optional PEMA_CLINIC_NAME, PEMA_CLINIC_ID, PEMA_SKIP_ROLE_BOOTSTRAP=true,
+# Environment: PEMA_MIGRATION_DATABASE_URL (owner/superuser URL), PEMA_BE_APP_PASSWORD; optional PEMA_CLINIC_NAME, PEMA_CLINIC_ID, PEMA_SKIP_ROLE_BOOTSTRAP=true,
 # PEMA_MIGRATE_WAIT_SECONDS (default 60).
 # Working directory: the folder that holds apps/api/alembic.ini (/app in the image, backend/ in the repo).
 set -euo pipefail

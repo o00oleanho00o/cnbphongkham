@@ -20,7 +20,6 @@ from collections.abc import Sequence
 from typing import TextIO
 
 from pema.config.env import Settings, get_settings
-from pema.config.runtime_tuning_settings import get_tuning_int
 from pema.core.db import ClinicDatabase
 from pema.core.event_loop import ensure_selector_event_loop_policy
 from pema.retention.policy import Scope, policy_from_settings
@@ -61,9 +60,7 @@ async def run_cli(
     stream = out or sys.stdout
     db = ClinicDatabase(config.database_url, pool_size=3)
     try:
-        runner = RetentionRunner(
-            db, lambda: policy_from_settings(config, get_tuning_int), scopes=(Scope.CLINIC,)
-        )
+        runner = RetentionRunner(db, lambda: policy_from_settings(config), scopes=(Scope.CLINIC,))
         reports = await runner.run_all(dry_run=bool(args.dry_run))
     finally:
         await db.dispose()
