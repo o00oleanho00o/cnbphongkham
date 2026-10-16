@@ -39,11 +39,11 @@ revision files `0001_agent_rt` … `0012_*` or plugin files `0002_*`/`0003_*`, t
   its speakers. The group's name is still looked up so the page can offer it; it shows after the group's first
   message (the bridge cannot list all groups). A new group starts off the list. Answering is unchanged: an @mention
   in a group off the list is still answered. No keyword filter: a listened group is kept whole.
-- **Front end:** still calls the removed inbox, review, template routes (D8); `schema.d.ts` is stale. Clean-up is a
-  separate branch with `pema-ui-builder` and entries in `web-design-changes.md`; design (canvas, specs) untouched (D9).
-
-## Where things are
-
+- **Front end (done 2026-10-16, commit ccf9d6b9):** `schema.d.ts` is generated from the current API; the inbox, the
+  follow-up queue, `/me/notifications`, the "Nhắn tin" button and dialog and the "Hội thoại" card of Patient 360, the
+  send-mode badge of the CRM rules and the live presence helpers are gone; the mock backend serves the current
+  contract (`mock/contract.test.ts` green). Logged in `web-design-changes.md`; the design (canvas, specs) is untouched (D9).
+  Open: the Patient 360 overview now has an odd number of cards, so "Dòng thời gian" sits alone in its row.
 - Repo: `E:\Desktop\cnbphongkham` (Pema Digital Clinic). Agent work lives in `pema-agent/backend` (uv workspace).
 - Branch: `feat/agent-v2` — the branch made to rewrite the agent from scratch (commits `588f18fc`, `eadaac30`
   removed the old agent layer; see their messages and `pema-agent/backend/apps/api/pema/composition/app_runtime.py`
