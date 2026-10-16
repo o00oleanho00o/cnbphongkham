@@ -2,8 +2,9 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DB làm lại từ đầu · Kế hoạch</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Pema DB baseline</title>
+  <meta name="claude:viewport-fit-sides" content="cover">
   <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&amp;family=Geist:wght@400;500;600&amp;family=Geist+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -14,7 +15,7 @@
       --dot: rgba(45,49,66,.10);
       --sans: 'Geist', system-ui, sans-serif; --serif: 'Instrument Serif', serif; --mono: 'Geist Mono', ui-monospace, monospace;
     }
-    body { font-family: var(--sans); color: var(--ink); background: var(--paper); padding: 3rem 2rem; }
+    body { font-family: var(--sans); color: var(--ink); background: var(--paper); padding-block: 3rem; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
     .frame { width: 100%; max-width: 1200px; margin: 0 auto; }
     .eyebrow { font: 500 .66rem var(--mono); letter-spacing: .18em; text-transform: uppercase; color: var(--muted); margin-bottom: .75rem; }
     h1 { font: 400 clamp(1.75rem, 3vw + 1rem, 2.25rem)/1.1 var(--serif); letter-spacing: -.02em; margin-bottom: 1rem; }
@@ -27,7 +28,7 @@
     #phases svg { min-width: 952px; }
     #boundary svg { min-width: 992px; }
     .scroll-hint { display: none; margin: .75rem 0 0; font-size: .8125rem; color: var(--muted); }
-    @media (max-width: 700px) { body { padding: 2rem 1rem; } .scroll-hint { display: block; } }
+    @media (max-width: 700px) { body { padding-block: 2rem; } .scroll-hint { display: block; } }
     /* process type classes */
     svg text { font-family: var(--sans); }
     .lane { fill: var(--lane); } .rule { stroke: var(--rule); } .label-rule { stroke: var(--label-rule); }
@@ -49,9 +50,9 @@
 </head>
 <body>
   <main class="frame">
-    <p class="eyebrow">Pema · cơ sở dữ liệu · kế hoạch chờ "go"</p>
+    <p class="eyebrow">Pema · cơ sở dữ liệu · xong bước 1–9, chờ "go" cho bước 10</p>
     <h1>Làm lại DB từ đầu, sạch triệt để</h1>
-    <p class="subtitle">Bạn xóa DB, mỗi app còn một migration gốc, schema <code>agent</code> của app zalo-agent cũ bị bỏ hẳn. Chi tiết và các quyết định D1–D6 ở <code>docs/PLAN-db-baseline.md</code>.</p>
+    <p class="subtitle">Bạn xóa DB, mỗi app còn một migration gốc, schema <code>agent</code> của app zalo-agent cũ bị bỏ hẳn. Chi tiết và các quyết định D1–D9 ở <code>docs/PLAN-db-baseline.md</code>. Sơ đồ bảng chi tiết ở cuối trang được sinh từ catalog Postgres thật.</p>
 
     <section id="delta">
       <h2>DB trước và sau</h2>
@@ -103,7 +104,7 @@
               <path d="M 1 204 V 244" fill="none" stroke="#4f5d75" stroke-width="3"/>
               <text x="10" y="207" fill="#4f5d75" font-size="7.5" font-family="'Geist Mono', monospace">~ clinic · CHANGED</text>
               <text x="10" y="228" fill="#2d3142" font-size="12" font-weight="600">clinic</text>
-              <text x="10" y="245" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace">30 revision</text>
+              <text x="10" y="245" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace">30 rev · 53 bảng</text>
             </g>
             <g data-kind="component" data-object-id="legacy" data-status="removed" data-signature="schema=agent;zalo-agent-port">
               <rect data-role="bounds" x="120" y="192" width="96" height="64" rx="6" fill="#ffffff" stroke="#4f5d75" stroke-width="1.2" stroke-dasharray="4 4"/>
@@ -126,7 +127,7 @@
           <text x="456" y="108" data-change="CHANGED" data-target="api" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.06em">CHANGED · api<tspan x="456" y="131" fill="#2d3142" font-size="12" font-family="'Geist', sans-serif" letter-spacing="0">Bỏ code đọc schema agent cũ</tspan></text>
           <path d="M 456 148 H 776" stroke="rgba(45,49,66,0.12)" stroke-width="0.8"/>
           <text x="424" y="170" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace">02</text>
-          <text x="456" y="168" data-change="CHANGED" data-target="clinic" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.06em">CHANGED · clinic<tspan x="456" y="191" fill="#2d3142" font-size="12" font-family="'Geist', sans-serif" letter-spacing="0">30 rev → 1 baseline, bỏ clinic_agent</tspan></text>
+          <text x="456" y="168" data-change="CHANGED" data-target="clinic" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.06em">CHANGED · clinic<tspan x="456" y="191" fill="#2d3142" font-size="12" font-family="'Geist', sans-serif" letter-spacing="0">30 rev → 1 baseline, 53 → 35 bảng (D8)</tspan></text>
           <path d="M 456 208 H 776" stroke="rgba(45,49,66,0.12)" stroke-width="0.8"/>
           <text x="424" y="230" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace">03</text>
           <text x="456" y="228" data-change="CHANGED" data-target="rt" fill="#4f5d75" font-size="8" font-family="'Geist Mono', monospace" letter-spacing="0.06em">CHANGED · rt<tspan x="456" y="251" fill="#2d3142" font-size="12" font-family="'Geist', sans-serif" letter-spacing="0">1 + 1/plugin, DB riêng pema_agent</tspan></text>
@@ -168,7 +169,7 @@
               <path d="M 1 204 V 244" fill="none" stroke="#bf4520" stroke-width="3"/>
               <text x="10" y="207" fill="#4f5d75" font-size="7.5" font-family="'Geist Mono', monospace">~ clinic · CHANGED</text>
               <text x="10" y="228" fill="#2d3142" font-size="12" font-weight="600">clinic</text>
-              <text x="10" y="245" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace">1 baseline</text>
+              <text x="10" y="245" fill="#4f5d75" font-size="9" font-family="'Geist Mono', monospace">1 rev · 35 bảng</text>
             </g>
             <g data-kind="component" data-object-id="rt" data-status="changed" data-signature="schema=agent_rt;baseline=1+1-per-plugin">
               <rect data-role="bounds" x="240" y="192" width="96" height="64" rx="6" fill="rgba(191,69,32,0.08)" stroke="#bf4520" stroke-width="1.2"/>
@@ -299,7 +300,7 @@
 
     <section id="phases">
       <h2>Làm theo thứ tự nào</h2>
-      <p class="subtitle">13 bước gom thành 7 chặng. Ô có nhãn DỪNG: tôi dừng chờ bạn xem rồi mới đi tiếp. Migration cũ chỉ bị xóa sau khi code API đã thôi dùng schema <code>agent</code> và test xanh.</p>
+      <p class="subtitle"><strong>Đã xong chặng 1–4</strong> (bước 1–9, các commit 5504ab85, f48148ad, 98e3028e, ddf81272; bộ test API đầy đủ 1048 xanh). Kế tiếp: chặng 5, baseline agent và DB riêng <code>pema_agent</code>. 13 bước gom thành 7 chặng. Ô có nhãn DỪNG: tôi dừng chờ bạn xem rồi mới đi tiếp. Migration cũ chỉ bị xóa sau khi code API đã thôi dùng schema <code>agent</code> và test xanh.</p>
       <div class="diagram-container" role="region" aria-label="Các chặng làm lại DB; cuộn ngang trên màn hình hẹp" tabindex="0">
         <svg viewBox="0 0 952 356" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="db-baseline-phases-title db-baseline-phases-desc">
           <title id="db-baseline-phases-title">Bảy chặng làm lại DB</title>
@@ -330,10 +331,10 @@
           <path class="connector" d="M696 156 H750 Q758 156 758 148 V108" marker-end="url(#db-baseline-arrow)"/>
           <path class="connector" d="M808 76 H862 Q870 76 870 84 V204" marker-end="url(#db-baseline-arrow)"/>
           <g text-anchor="middle">
-            <g><rect class="node-mask" x="148" y="124" width="100" height="64" rx="6"/><rect class="node" x="148" y="124" width="100" height="64" rx="6"/><rect class="role" x="152" y="128" width="20" height="10" rx="2"/><text class="role-text" x="162" y="136">MIG</text><text class="node-title" x="198" y="150">Chụp mốc</text><text class="node-sub" x="198" y="164">pg_dump -s · số test</text><text class="node-tool" x="198" y="176">bước 1–2 · luật L1–L5</text><rect class="pause" x="220" y="178" width="24" height="8" rx="2"/><text class="pause-text" x="232" y="184">DỪNG</text></g>
-            <g><rect class="node-mask" x="260" y="44" width="100" height="64" rx="6"/><rect class="node" x="260" y="44" width="100" height="64" rx="6"/><rect class="role" x="264" y="48" width="20" height="10" rx="2"/><text class="role-text" x="274" y="56">COD</text><text class="node-title" x="310" y="70">Cắt dây agent.*</text><text class="node-sub" x="310" y="84">guide · CRM · settings</text><text class="node-tool" x="310" y="96">bước 3–5 · apps/api</text><rect class="pause" x="332" y="98" width="24" height="8" rx="2"/><text class="pause-text" x="344" y="104">DỪNG</text></g>
-            <g><rect class="node-mask" x="372" y="44" width="100" height="64" rx="6"/><rect class="node" x="372" y="44" width="100" height="64" rx="6"/><rect class="role" x="376" y="48" width="20" height="10" rx="2"/><text class="role-text" x="386" y="56">COD</text><text class="node-title" x="422" y="70">Xóa code chết</text><text class="node-sub" x="422" y="84">KB cũ · clinic_agent</text><text class="node-tool" x="422" y="96">bước 6–7 · apps/api</text></g>
-            <g><rect class="node-mask" x="484" y="124" width="100" height="64" rx="6"/><rect class="node focal" x="484" y="124" width="100" height="64" rx="6"/><rect class="role focal" x="488" y="128" width="20" height="10" rx="2"/><text class="role-text focal" x="498" y="136">MIG</text><text class="node-title" x="534" y="150">Baseline API</text><text class="node-sub" x="534" y="164">30 rev → 1</text><text class="node-tool" x="534" y="176">bước 8–9 · so dump</text><rect class="pause" x="556" y="178" width="24" height="8" rx="2"/><text class="pause-text" x="568" y="184">DỪNG</text></g>
+            <g><rect class="node-mask" x="148" y="124" width="100" height="64" rx="6"/><rect class="node" x="148" y="124" width="100" height="64" rx="6"/><rect class="role" x="152" y="128" width="20" height="10" rx="2"/><text class="role-text" x="162" y="136">MIG</text><text class="node-title" x="198" y="150">Chụp mốc</text><text class="node-sub" x="198" y="164">pg_dump -s · số test</text><text class="node-tool" x="198" y="176">bước 1–2 · ĐÃ XONG</text><rect class="pause" x="220" y="178" width="24" height="8" rx="2"/><text class="pause-text" x="232" y="184">DỪNG</text></g>
+            <g><rect class="node-mask" x="260" y="44" width="100" height="64" rx="6"/><rect class="node" x="260" y="44" width="100" height="64" rx="6"/><rect class="role" x="264" y="48" width="20" height="10" rx="2"/><text class="role-text" x="274" y="56">COD</text><text class="node-title" x="310" y="70">Cắt dây agent.*</text><text class="node-sub" x="310" y="84">guide · CRM · settings</text><text class="node-tool" x="310" y="96">bước 3–5 · ĐÃ XONG</text><rect class="pause" x="332" y="98" width="24" height="8" rx="2"/><text class="pause-text" x="344" y="104">DỪNG</text></g>
+            <g><rect class="node-mask" x="372" y="44" width="100" height="64" rx="6"/><rect class="node" x="372" y="44" width="100" height="64" rx="6"/><rect class="role" x="376" y="48" width="20" height="10" rx="2"/><text class="role-text" x="386" y="56">COD</text><text class="node-title" x="422" y="70">Xóa code chết</text><text class="node-sub" x="422" y="84">KB cũ · clinic_agent</text><text class="node-tool" x="422" y="96">bước 6–7b · ĐÃ XONG</text></g>
+            <g><rect class="node-mask" x="484" y="124" width="100" height="64" rx="6"/><rect class="node focal" x="484" y="124" width="100" height="64" rx="6"/><rect class="role focal" x="488" y="128" width="20" height="10" rx="2"/><text class="role-text focal" x="498" y="136">MIG</text><text class="node-title" x="534" y="150">Baseline API</text><text class="node-sub" x="534" y="164">30 rev → 1</text><text class="node-tool" x="534" y="176">bước 8–9 · ĐÃ XONG</text><rect class="pause" x="556" y="178" width="24" height="8" rx="2"/><text class="pause-text" x="568" y="184">DỪNG</text></g>
             <g><rect class="node-mask" x="596" y="124" width="100" height="64" rx="6"/><rect class="node" x="596" y="124" width="100" height="64" rx="6"/><rect class="role" x="600" y="128" width="20" height="10" rx="2"/><text class="role-text" x="610" y="136">MIG</text><text class="node-title" x="646" y="150">Baseline agent</text><text class="node-sub" x="646" y="164">DB riêng pema_agent</text><text class="node-tool" x="646" y="176">bước 10–11 · T1, T2</text><rect class="pause" x="668" y="178" width="24" height="8" rx="2"/><text class="pause-text" x="680" y="184">DỪNG</text></g>
             <g><rect class="node-mask" x="708" y="44" width="100" height="64" rx="6"/><rect class="node" x="708" y="44" width="100" height="64" rx="6"/><rect class="role" x="712" y="48" width="20" height="10" rx="2"/><text class="role-text" x="722" y="56">COD</text><text class="node-title" x="758" y="70">Tài liệu, hạ tầng</text><text class="node-sub" x="758" y="84">README · compose</text><text class="node-tool" x="758" y="96">bước 12</text></g>
             <g><rect class="node-mask" x="820" y="204" width="100" height="64" rx="6"/><rect class="node" x="820" y="204" width="100" height="64" rx="6"/><rect class="role" x="824" y="208" width="20" height="10" rx="2"/><text class="role-text" x="834" y="216">BẠN</text><text class="node-title" x="870" y="230">Xóa DB, dựng lại</text><text class="node-sub" x="870" y="244">smoke · thử phá rào</text><text class="node-tool" x="870" y="256">bước 13</text><rect class="pause" x="892" y="258" width="24" height="8" rx="2"/><text class="pause-text" x="904" y="264">DỪNG</text></g>
@@ -350,6 +351,1023 @@
       </div>
       <p class="scroll-hint">Cuộn ngang để xem đủ bảy chặng.</p>
     </section>
+<!-- erd:start -->
+<style>
+  .erd-db { margin-top: 3.5rem; }
+  .erd-db > h2 { margin-top: 0; }
+  .erd-tag { font: 500 .66rem var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--accent); }
+  .erd-group { margin-top: 2.25rem; display: grid; gap: .75rem; }
+  .erd-group h3 { font: 600 1rem/1.3 var(--sans); text-wrap: balance; }
+  .erd-group h3 small { font: 500 .7rem var(--mono); color: var(--muted); letter-spacing: .08em; margin-left: .5rem; }
+  .erd-group > p { max-width: 72ch; font-size: .875rem; line-height: 1.55; color: var(--muted); }
+  .erd-figure { background: #fff; border: 1px solid var(--rule); border-radius: 6px; padding: 1rem; overflow-x: auto; }
+  .erd-figure pre.mermaid { min-width: 640px; background: transparent; color: var(--ink); font-size: 12px; }
+  .tgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); gap: .75rem; align-items: start; }
+  .tcard { background: #fff; border: 1px solid var(--rule); border-radius: 6px; min-width: 0; }
+  .tcard header { display: flex; justify-content: space-between; align-items: baseline; gap: .5rem; padding: .6rem .75rem; border-bottom: 1px solid var(--rule); }
+  .tcard h4 { font: 600 .82rem var(--mono); color: var(--ink); overflow-wrap: anywhere; }
+  .tcard header span { font: .68rem var(--mono); color: var(--muted); white-space: nowrap; }
+  .tnote { padding: .4rem .75rem 0; font-size: .75rem; color: var(--muted); }
+  .tscroll { overflow-x: auto; }
+  .tcard table { width: 100%; border-collapse: collapse; font: .7rem/1.35 var(--mono); }
+  .tcard td { padding: .22rem .5rem; border-bottom: 1px solid rgba(45,49,66,.06); vertical-align: top; }
+  .tcard td.k { width: 2.2rem; color: var(--accent); font-weight: 600; }
+  .tcard td.c { color: var(--ink); }
+  .tcard td.ty { color: var(--soft); white-space: nowrap; }
+  .tcard td.nn { color: var(--muted); }
+  .tcard td.x { color: var(--muted); overflow-wrap: anywhere; }
+  .tcard details { padding: .45rem .75rem .6rem; font-size: .72rem; color: var(--muted); }
+  .tcard summary { cursor: pointer; }
+  .tcard summary:focus-visible { outline: 2px solid var(--muted); outline-offset: 2px; }
+  .tcard details ul { list-style: none; display: grid; gap: .3rem; margin-top: .4rem; }
+  .tcard details code { font: .68rem/1.4 var(--mono); color: var(--ink); overflow-wrap: anywhere; }
+  .diff { width: 100%; border-collapse: collapse; font-size: .85rem; margin-top: .75rem; }
+  .diff th, .diff td { text-align: left; padding: .5rem .6rem; border-bottom: 1px solid var(--rule); vertical-align: top; }
+  .diff th { font: 500 .66rem var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+  .diff td:last-child { color: var(--muted); white-space: nowrap; }
+  .diff-wrap { overflow-x: auto; }
+  .legend-keys { display: flex; flex-wrap: wrap; gap: .4rem 1.25rem; font: .72rem var(--mono); color: var(--muted); margin-top: .5rem; }
+  .legend-keys b { color: var(--accent); }
+  .db-nav { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .75rem; }
+  .db-nav a { font: .72rem var(--mono); color: var(--ink); text-decoration: none; border: 1px solid var(--rule); border-radius: 4px; padding: .2rem .5rem; background: #fff; }
+  .db-nav a:hover, .db-nav a:focus-visible { border-color: var(--accent); color: var(--accent); }
+</style>
+<section id="diff"><h2>Schema <code>clinic</code> đã đổi gì</h2><p class="subtitle">So bản dump trước (<code>docs/db-baseline/before</code>) với baseline mới (<code>docs/db-baseline/after</code>). Ngoài các dòng này, mọi bảng, cột, ràng buộc, trigger và quyền <code>be_app</code> giữ nguyên.</p><div class="diff-wrap"><table class="diff"><tr><th>Khác biệt</th><th>Vì</th></tr><tr><td>Không còn schema <code>agent</code> (28 bảng), <code>clinic_agent</code> (13 view, 12 hàm)</td><td>C1–C7, D5, luật L3</td></tr><tr><td>Không còn role <code>agent_worker</code>, không grant nào cho nó</td><td>D5, L1</td></tr><tr><td>Bỏ extension <code>vector</code> khỏi DB của CRM</td><td>Agent tự tạo trong DB riêng</td></tr><tr><td>Bỏ 19 bảng: hộp thư, review, mẫu tin, thông báo O3, liên kết danh tính, cài đặt kênh…</td><td>D8</td></tr><tr><td><code>record_retention_run</code> chuyển sang <code>clinic</code>, chỉ phạm vi <code>clinic</code></td><td>C7</td></tr><tr><td>Thêm <code>clinic.guide_article</code></td><td>D1 (trang Hướng dẫn)</td></tr><tr><td><code>crm_rule</code> bỏ <code>send_mode</code>; <code>staff_profiles</code> bỏ cột của care agent</td><td>D8</td></tr><tr><td><code>patient_app_event.kind</code> chỉ còn <code>aftercare</code></td><td>D8: bỏ “Nhắn tin” vào app</td></tr><tr><td>Dòng <code>protocol</code> <code>laser-co2</code> chuyển sang seed demo</td><td>D4</td></tr></table></div></section>
+<section class="erd-db" id="erd-pema"><p class="erd-tag">Sơ đồ chi tiết</p><h2>DB <code>pema</code> · schema <code>clinic</code></h2><p class="subtitle">35 bảng, sau baseline <code>0001_baseline</code>. Role <code>be_app</code> có DML; không role, schema hay extension nào cho agent (test T2). Schema <code>ctx</code> chỉ có hàm <code>the_clinic_id()</code>.</p><div class="legend-keys"><span><b>PK</b> khóa chính</span><span><b>FK</b> khóa ngoại → bảng.cột</span><span><b>UK</b> nằm trong UNIQUE</span><span>null: cột được để trống</span><span>||--o{ bắt buộc · |o--o{ được trống</span></div><nav class="db-nav" aria-label="Nhóm bảng"><a href="#g-core">Cốt lõi, tài khoản, nhật ký</a><a href="#g-patient">Bệnh nhân và điều trị</a><a href="#g-schedule">Lịch hẹn và phòng</a><a href="#g-catalog">Dịch vụ, sản phẩm, đơn</a><a href="#g-finance">Tài chính</a><a href="#g-crm">CRM</a></nav>
+<div class="erd-group" id="g-core"><h3>Cốt lõi, tài khoản, nhật ký<small>6 bảng</small></h3><p>Một dòng <code>clinic</code> duy nhất; mọi bảng khác có <code>clinic_id</code> trỏ về nó (không vẽ lại ở các nhóm sau).</p><div class="erd-figure"><pre class="mermaid">
+erDiagram
+    clinic {
+        uuid id PK
+        text slug UK
+        text name
+        text timezone
+        boolean active
+        timestamptz created_at
+        timestamptz updated_at
+        boolean singleton UK
+    }
+    user_account {
+        uuid id PK,UK
+        uuid clinic_id FK,UK
+        text email UK
+        text display_name
+        text role
+        text password_hash
+        boolean active
+        timestamptz last_login_at
+        integer version
+        timestamptz created_at
+        timestamptz updated_at
+    }
+    staff_profiles {
+        uuid id PK
+        uuid clinic_id FK
+        uuid user_id FK,UK
+        text role
+        jsonb shift
+        integer version
+        timestamptz created_at
+        timestamptz updated_at
+    }
+    auth_session {
+        uuid id PK,UK
+        uuid clinic_id FK,UK
+        uuid user_id FK
+        text password_fingerprint
+        timestamptz created_at
+        timestamptz expires_at
+        timestamptz absolute_expires_at
+    }
+    audit_log {
+        bigint id PK
+        uuid clinic_id FK
+        timestamptz occurred_at
+        text actor_type
+        uuid actor_user_id
+        text actor_role
+        text action
+        text entity_type
+        text entity_id
+        text request_id
+        jsonb details
+    }
+    guide_article {
+        uuid clinic_id PK,FK
+        text id PK
+        text title
+        text body
+        text[] tags
+        timestamptz created_at
+        timestamptz updated_at
+    }
+    clinic ||--o{ user_account : &quot;clinic_id&quot;
+    clinic ||--o{ staff_profiles : &quot;clinic_id&quot;
+    user_account ||--o{ staff_profiles : &quot;user_id&quot;
+    clinic ||--o{ auth_session : &quot;clinic_id&quot;
+    user_account ||--o{ auth_session : &quot;user_id&quot;
+    clinic ||--o{ audit_log : &quot;clinic_id&quot;
+    clinic ||--o{ guide_article : &quot;clinic_id&quot;
+</pre></div><div class="tgrid"><article class="tcard" id="clinic-clinic"><header><h4>clinic</h4><span>8 cột</span></header><div class="tscroll"><table><tr><td class="k">PK</td><td class="c">id</td><td class="ty">uuid</td><td class="nn"></td><td class="x">gen_random_uuid()</td></tr><tr><td class="k"></td><td class="c">slug</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">name</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">timezone</td><td class="ty">text</td><td class="nn"></td><td class="x">&#x27;Asia/Ho_Chi_Minh&#x27;::text</td></tr><tr><td class="k"></td><td class="c">active</td><td class="ty">boolean</td><td class="nn"></td><td class="x">true</td></tr><tr><td class="k"></td><td class="c">created_at</td><td class="ty">timestamptz</td><td class="nn"></td><td class="x">now()</td></tr><tr><td class="k"></td><td class="c">updated_at</td><td class="ty">timestamptz</td><td class="nn"></td><td class="x">now()</td></tr><tr><td class="k"></td><td class="c">singleton</td><td class="ty">boolean</td><td class="nn"></td><td class="x">true</td></tr></table></div><details><summary>4 ràng buộc UNIQUE / CHECK</summary><ul><li><code>UNIQUE (singleton)</code></li><li><code>UNIQUE (slug)</code></li><li><code>CHECK (singleton)</code></li><li><code>CHECK ((slug ~ &#x27;^[a-z0-9][a-z0-9-]*$&#x27;::text))</code></li></ul></details></article><article class="tcard" id="clinic-user_account"><header><h4>user_account</h4><span>11 cột</span></header><div class="tscroll"><table><tr><td class="k">PK</td><td class="c">id</td><td class="ty">uuid</td><td class="nn"></td><td class="x">gen_random_uuid()</td></tr><tr><td class="k">FK</td><td class="c">clinic_id</td><td class="ty">uuid</td><td class="nn"></td><td class="x">→ clinic.id</td></tr><tr><td class="k"></td><td class="c">email</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">display_name</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">role</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">password_hash</td><td class="ty">text</td><td class="nn">null</td><td class="x"></td></tr><tr><td class="k"></td><td class="c">active</td><td class="ty">boolean</td><td class="nn"></td><td class="x">true</td></tr><tr><td class="k"></td><td class="c">last_login_at</td><td class="ty">timestamptz</td><td class="nn">null</td><td class="x"></td></tr><tr><td class="k"></td><td class="c">version</td><td class="ty">integer</td><td class="nn"></td><td class="x">1</td></tr><tr><td class="k"></td><td class="c">created_at</td><td class="ty">timestamptz</td><td class="nn"></td><td class="x">now()</td></tr><tr><td class="k"></td><td class="c">updated_at</td><td class="ty">timestamptz</td><td class="nn"></td><td class="x">now()</td></tr></table></div><details><summary>4 ràng buộc UNIQUE / CHECK</summary><ul><li><code>UNIQUE (clinic_id, email)</code></li><li><code>UNIQUE (clinic_id, id)</code></li><li><code>CHECK ((email = lower(email)))</code></li><li><code>CHECK ((role = ANY (ARRAY[&#x27;owner&#x27;::text, &#x27;manager&#x27;::text, &#x27;doctor&#x27;::text, &#x27;cs_staff&#x27;::text, &#x27;reception&#x27;::text, &#x27;accountant&#x27;::text, &#x27;patient&#x27;::text])))</code></li></ul></details></article><article class="tcard" id="clinic-staff_profiles"><header><h4>staff_profiles</h4><span>8 cột</span></header><div class="tscroll"><table><tr><td class="k">PK</td><td class="c">id</td><td class="ty">uuid</td><td class="nn"></td><td class="x">gen_random_uuid()</td></tr><tr><td class="k">FK</td><td class="c">clinic_id</td><td class="ty">uuid</td><td class="nn"></td><td class="x">→ clinic.id</td></tr><tr><td class="k">FK</td><td class="c">user_id</td><td class="ty">uuid</td><td class="nn"></td><td class="x">→ user_account.clinic_id</td></tr><tr><td class="k"></td><td class="c">role</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">shift</td><td class="ty">jsonb</td><td class="nn"></td><td class="x">&#x27;{}&#x27;::jsonb</td></tr><tr><td class="k"></td><td class="c">version</td><td class="ty">integer</td><td class="nn"></td><td class="x">1</td></tr><tr><td class="k"></td><td class="c">created_at</td><td class="ty">timestamptz</td><td class="nn"></td><td class="x">now()</td></tr><tr><td class="k"></td><td class="c">updated_at</td><td class="ty">timestamptz</td><td class="nn"></td><td class="x">now()</td></tr></table></div><details><summary>3 ràng buộc UNIQUE / CHECK</summary><ul><li><code>UNIQUE (user_id)</code></li><li><code>CHECK ((role = ANY (ARRAY[&#x27;owner&#x27;::text, &#x27;manager&#x27;::text, &#x27;doctor&#x27;::text, &#x27;cs_staff&#x27;::text, &#x27;reception&#x27;::text, &#x27;accountant&#x27;::text])))</code></li><li><code>CHECK ((jsonb_typeof(shift) = &#x27;object&#x27;::text))</code></li></ul></details></article><article class="tcard" id="clinic-auth_session"><header><h4>auth_session</h4><span>7 cột</span></header><div class="tscroll"><table><tr><td class="k">PK</td><td class="c">id</td><td class="ty">uuid</td><td class="nn"></td><td class="x">gen_random_uuid()</td></tr><tr><td class="k">FK</td><td class="c">clinic_id</td><td class="ty">uuid</td><td class="nn"></td><td class="x">→ clinic.id</td></tr><tr><td class="k">FK</td><td class="c">user_id</td><td class="ty">uuid</td><td class="nn"></td><td class="x">→ user_account.clinic_id · CASCADE</td></tr><tr><td class="k"></td><td class="c">password_fingerprint</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">created_at</td><td class="ty">timestamptz</td><td class="nn"></td><td class="x">now()</td></tr><tr><td class="k"></td><td class="c">expires_at</td><td class="ty">timestamptz</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">absolute_expires_at</td><td class="ty">timestamptz</td><td class="nn"></td><td class="x"></td></tr></table></div><details><summary>1 ràng buộc UNIQUE / CHECK</summary><ul><li><code>UNIQUE (clinic_id, id)</code></li></ul></details></article><article class="tcard" id="clinic-audit_log"><header><h4>audit_log</h4><span>11 cột</span></header><div class="tscroll"><table><tr><td class="k">PK</td><td class="c">id</td><td class="ty">bigint</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k">FK</td><td class="c">clinic_id</td><td class="ty">uuid</td><td class="nn"></td><td class="x">→ clinic.id</td></tr><tr><td class="k"></td><td class="c">occurred_at</td><td class="ty">timestamptz</td><td class="nn"></td><td class="x">now()</td></tr><tr><td class="k"></td><td class="c">actor_type</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">actor_user_id</td><td class="ty">uuid</td><td class="nn">null</td><td class="x"></td></tr><tr><td class="k"></td><td class="c">actor_role</td><td class="ty">text</td><td class="nn">null</td><td class="x"></td></tr><tr><td class="k"></td><td class="c">action</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">entity_type</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">entity_id</td><td class="ty">text</td><td class="nn">null</td><td class="x"></td></tr><tr><td class="k"></td><td class="c">request_id</td><td class="ty">text</td><td class="nn">null</td><td class="x"></td></tr><tr><td class="k"></td><td class="c">details</td><td class="ty">jsonb</td><td class="nn">null</td><td class="x"></td></tr></table></div><details><summary>2 ràng buộc UNIQUE / CHECK</summary><ul><li><code>CHECK ((actor_role = ANY (ARRAY[&#x27;owner&#x27;::text, &#x27;manager&#x27;::text, &#x27;doctor&#x27;::text, &#x27;cs_staff&#x27;::text, &#x27;reception&#x27;::text, &#x27;accountant&#x27;::text, &#x27;patient&#x27;::text])))</code></li><li><code>CHECK ((actor_type = ANY (ARRAY[&#x27;user&#x27;::text, &#x27;agent&#x27;::text, &#x27;scheduler&#x27;::text, &#x27;system&#x27;::text])))</code></li></ul></details></article><article class="tcard" id="clinic-guide_article"><header><h4>guide_article</h4><span>7 cột</span></header><div class="tscroll"><table><tr><td class="k">PK</td><td class="c">clinic_id</td><td class="ty">uuid</td><td class="nn"></td><td class="x">→ clinic.id</td></tr><tr><td class="k">PK</td><td class="c">id</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">title</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">body</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">tags</td><td class="ty">text[]</td><td class="nn"></td><td class="x">&#x27;{}&#x27;::text[]</td></tr><tr><td class="k"></td><td class="c">created_at</td><td class="ty">timestamptz</td><td class="nn"></td><td class="x">now()</td></tr><tr><td class="k"></td><td class="c">updated_at</td><td class="ty">timestamptz</td><td class="nn"></td><td class="x">now()</td></tr></table></div><details><summary>3 ràng buộc UNIQUE / CHECK</summary><ul><li><code>CHECK (((char_length(body) &gt;= 1) AND (char_length(body) &lt;= 200000)))</code></li><li><code>CHECK ((id ~ &#x27;^[a-z0-9][a-z0-9-]{0,79}$&#x27;::text))</code></li><li><code>CHECK (((char_length(title) &gt;= 1) AND (char_length(title) &lt;= 200)))</code></li></ul></details></article></div></div>
+<div class="erd-group" id="g-patient"><h3>Bệnh nhân và điều trị<small>11 bảng</small></h3><p>Hồ sơ, đồng ý, đợt điều trị, buổi làm, ảnh, ghi chú bác sĩ. Ảnh gắn với đồng ý chụp ảnh.</p><div class="erd-figure"><pre class="mermaid">
+erDiagram
+    patient {
+        uuid id PK,UK
+        uuid clinic_id FK,UK
+        text code UK
+        text full_name
+        text phone
+        date birth_date
+        text gender
+        uuid doctor_id FK
+        uuid cs_owner_id FK
+        boolean marketing_opt_out
+        date first_contact_at
+        text source
+        date recommendation_at
+        text expected_visit_source
+        text expected_visit_reason
+        timestamptz reactivated_at
+        timestamptz last_contact_at
+        text latest_outcome
+        timestamptz next_action_at
+        text next_action_type
+        integer version
+        timestamptz created_at
+        timestamptz updated_at
+        text last_protocol_session_id
+        text[] alerts
+    }
+    consent {
+        uuid id PK,UK
+        uuid clinic_id FK,UK
+        uuid patient_id FK
+        text kind
+        boolean granted
+        timestamptz granted_at
+        timestamptz revoked_at
+        text source
+        uuid recorded_by FK
+        timestamptz created_at
+    }
+    episode {
+        uuid id PK,UK
+        uuid clinic_id FK,UK
+        uuid patient_id FK
+        text title
+        text status
+        date started_on
+        date closed_on
+        integer version
+        timestamptz created_at
+        timestamptz updated_at
+    }
+    treatment_plan {
+        uuid id PK,UK
+        uuid clinic_id FK,UK
+        uuid patient_id FK
+        uuid episode_id FK
+        uuid doctor_id FK
+        text service_code
+        text title
+        integer total_sessions
+        integer completed_sessions
+        text status
+        integer version
+        timestamptz created_at
+        timestamptz updated_at
+        text goal
+        bigint unit_price_vnd
+        bigint discount_vnd
+        bigint agreed_price_vnd
+        integer service_terms_version
+    }
+    treatment_session {
+        uuid id PK,UK
+        uuid clinic_id FK,UK
+        uuid patient_id FK
+        uuid plan_id FK
+        uuid doctor_id FK
+        timestamptz performed_at
+        text protocol_id
+        text title
+        text note
+        text status
+        timestamptz created_at
+        text session_type
+        text region
+        text view
+        date next_visit_on
+        text aftercare
+        uuid consent_id FK
+        boolean reviewed
+        uuid reviewed_by FK
+        timestamptz reviewed_at
+        uuid created_by FK
+        integer version
+        timestamptz updated_at
+    }
+    media {
+        uuid id PK,UK
+        uuid clinic_id FK,UK
+        uuid patient_id FK
+        uuid session_id FK
+        text stage
+        text region
+        text view
+        text storage_key UK
+        text mime
+        bigint size_bytes
+        text sha256
+        uuid consent_id FK
+        text status
+        uuid uploaded_by FK
+        timestamptz created_at
+        timestamptz uploaded_at
+        timestamptz confirmed_at
+        integer version
+        timestamptz updated_at
+    }
+    protocol {
+        uuid id PK
+        uuid clinic_id FK,UK
+        text code UK
+        text name
+        jsonb milestones
+        integer followup_days
+        integer window_days
+        boolean active
+        integer version
+        timestamptz created_at
+        timestamptz updated_at
+    }
+    consult_note {
+        uuid id PK,UK
+        uuid clinic_id FK,UK
+        uuid patient_id FK
+        text status
+        text source_text
+        text body
+        uuid created_by FK
+        uuid approved_by FK
+        timestamptz approved_at
+        integer version
+        timestamptz created_at
+        timestamptz updated_at
+    }
+    patient_brief {
+        uuid id PK,UK
+        uuid clinic_id FK,UK
+        uuid patient_id FK
+        text body
+        text[] source_ids
+        uuid approved_by FK
+        timestamptz approved_at
+    }
+    patient_clinical_note {
+        uuid id PK,UK
+        uuid clinic_id FK,UK
+        uuid patient_id FK,UK
+        text history
+        text diagnosis
+        uuid reviewed_by FK
+        timestamptz reviewed_at
+        integer version
+    }
+    patient_app_event {
+        uuid id PK,UK
+        uuid clinic_id FK,UK
+        uuid patient_id FK
+        text kind
+        text body
+        uuid created_by FK
+        timestamptz created_at
+    }
+    user_account {
+        ref xem_nhom_khac
+    }
+    user_account |o--o{ patient : &quot;cs_owner_id, doctor_id&quot;
+    patient ||--o{ consent : &quot;patient_id&quot;
+    user_account |o--o{ consent : &quot;recorded_by&quot;
+    patient ||--o{ episode : &quot;patient_id&quot;
+    user_account |o--o{ treatment_plan : &quot;doctor_id&quot;
+    episode |o--o{ treatment_plan : &quot;episode_id&quot;
+    patient ||--o{ treatment_plan : &quot;patient_id&quot;
+    user_account |o--o{ treatment_session : &quot;doctor_id, created_by, reviewed_by&quot;
+    patient ||--o{ treatment_session : &quot;patient_id&quot;
+    treatment_plan |o--o{ treatment_session : &quot;plan_id&quot;
+    consent |o--o{ treatment_session : &quot;consent_id&quot;
+    consent ||--o{ media : &quot;consent_id&quot;
+    patient ||--o{ media : &quot;patient_id&quot;
+    treatment_session |o--o{ media : &quot;session_id&quot;
+    user_account |o--o{ media : &quot;uploaded_by&quot;
+    user_account |o--o{ consult_note : &quot;approved_by, created_by&quot;
+    patient ||--o{ consult_note : &quot;patient_id&quot;
+    user_account |o--o{ patient_brief : &quot;approved_by&quot;
+    patient ||--o{ patient_brief : &quot;patient_id&quot;
+    patient ||--o{ patient_clinical_note : &quot;patient_id&quot;
+    user_account |o--o{ patient_clinical_note : &quot;reviewed_by&quot;
+    user_account |o--o{ patient_app_event : &quot;created_by&quot;
+    patient ||--o{ patient_app_event : &quot;patient_id&quot;
+</pre></div><div class="tgrid"><article class="tcard" id="clinic-patient"><header><h4>patient</h4><span>25 cột</span></header><div class="tscroll"><table><tr><td class="k">PK</td><td class="c">id</td><td class="ty">uuid</td><td class="nn"></td><td class="x">gen_random_uuid()</td></tr><tr><td class="k">FK</td><td class="c">clinic_id</td><td class="ty">uuid</td><td class="nn"></td><td class="x">→ clinic.id</td></tr><tr><td class="k"></td><td class="c">code</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">full_name</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">phone</td><td class="ty">text</td><td class="nn">null</td><td class="x"></td></tr><tr><td class="k"></td><td class="c">birth_date</td><td class="ty">date</td><td class="nn">null</td><td class="x"></td></tr><tr><td class="k"></td><td class="c">gender</td><td class="ty">text</td><td class="nn"></td><td class="x">&#x27;unknown&#x27;::text</td></tr><tr><td class="k">FK</td><td class="c">doctor_id</td><td class="ty">uuid</td><td class="nn">null</td><td class="x">→ user_account.clinic_id</td></tr><tr><td class="k">FK</td><td class="c">cs_owner_id</td><td class="ty">uuid</td><td class="nn">null</td><td class="x">→ user_account.clinic_id</td></tr><tr><td class="k"></td><td class="c">marketing_opt_out</td><td class="ty">boolean</td><td class="nn"></td><td class="x">false</td></tr><tr><td class="k"></td><td class="c">first_contact_at</td><td class="ty">date</td><td class="nn">null</td><td class="x"></td></tr><tr><td class="k"></td><td class="c">source</td><td class="ty">text</td><td class="nn">null</td><td class="x"></td></tr><tr><td class="k"></td><td class="c">recommendation_at</td><td class="ty">date</td><td class="nn">null</td><td class="x"></td></tr><tr><td class="k"></td><td class="c">expected_visit_source</td><td class="ty">text</td><td class="nn">null</td><td class="x"></td></tr><tr><td class="k"></td><td class="c">expected_visit_reason</td><td class="ty">text</td><td class="nn">null</td><td class="x"></td></tr><tr><td class="k"></td><td class="c">reactivated_at</td><td class="ty">timestamptz</td><td class="nn">null</td><td class="x"></td></tr><tr><td class="k"></td><td class="c">last_contact_at</td><td class="ty">timestamptz</td><td class="nn">null</td><td class="x"></td></tr><tr><td class="k"></td><td class="c">latest_outcome</td><td class="ty">text</td><td class="nn">null</td><td class="x"></td></tr><tr><td class="k"></td><td class="c">next_action_at</td><td class="ty">timestamptz</td><td class="nn">null</td><td class="x"></td></tr><tr><td class="k"></td><td class="c">next_action_type</td><td class="ty">text</td><td class="nn">null</td><td class="x"></td></tr><tr><td class="k"></td><td class="c">version</td><td class="ty">integer</td><td class="nn"></td><td class="x">1</td></tr><tr><td class="k"></td><td class="c">created_at</td><td class="ty">timestamptz</td><td class="nn"></td><td class="x">now()</td></tr><tr><td class="k"></td><td class="c">updated_at</td><td class="ty">timestamptz</td><td class="nn"></td><td class="x">now()</td></tr><tr><td class="k"></td><td class="c">last_protocol_session_id</td><td class="ty">text</td><td class="nn">null</td><td class="x"></td></tr><tr><td class="k"></td><td class="c">alerts</td><td class="ty">text[]</td><td class="nn"></td><td class="x">&#x27;{}&#x27;::text[]</td></tr></table></div><details><summary>5 ràng buộc UNIQUE / CHECK</summary><ul><li><code>UNIQUE (clinic_id, code)</code></li><li><code>UNIQUE (clinic_id, id)</code></li><li><code>CHECK ((COALESCE(cardinality(alerts), 0) &lt;= 20))</code></li><li><code>CHECK ((expected_visit_source = ANY (ARRAY[&#x27;doctor_recommendation&#x27;::text, &#x27;service_protocol&#x27;::text, &#x27;treatment_plan&#x27;::text, &#x27;appointment&#x27;::text, &#x27;followup_automation&#x27;::text])))</code></li><li><code>CHECK ((gender = ANY (ARRAY[&#x27;female&#x27;::text, &#x27;male&#x27;::text, &#x27;other&#x27;::text, &#x27;unknown&#x27;::text])))</code></li></ul></details></article><article class="tcard" id="clinic-consent"><header><h4>consent</h4><span>10 cột</span></header><div class="tscroll"><table><tr><td class="k">PK</td><td class="c">id</td><td class="ty">uuid</td><td class="nn"></td><td class="x">gen_random_uuid()</td></tr><tr><td class="k">FK</td><td class="c">clinic_id</td><td class="ty">uuid</td><td class="nn"></td><td class="x">→ clinic.id</td></tr><tr><td class="k">FK</td><td class="c">patient_id</td><td class="ty">uuid</td><td class="nn"></td><td class="x">→ patient.clinic_id</td></tr><tr><td class="k"></td><td class="c">kind</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">granted</td><td class="ty">boolean</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">granted_at</td><td class="ty">timestamptz</td><td class="nn">null</td><td class="x"></td></tr><tr><td class="k"></td><td class="c">revoked_at</td><td class="ty">timestamptz</td><td class="nn">null</td><td class="x"></td></tr><tr><td class="k"></td><td class="c">source</td><td class="ty">text</td><td class="nn">null</td><td class="x"></td></tr><tr><td class="k">FK</td><td class="c">recorded_by</td><td class="ty">uuid</td><td class="nn">null</td><td class="x">→ user_account.clinic_id</td></tr><tr><td class="k"></td><td class="c">created_at</td><td class="ty">timestamptz</td><td class="nn"></td><td class="x">now()</td></tr></table></div><details><summary>2 ràng buộc UNIQUE / CHECK</summary><ul><li><code>UNIQUE (clinic_id, id)</code></li><li><code>CHECK ((kind = ANY (ARRAY[&#x27;messaging&#x27;::text, &#x27;marketing&#x27;::text, &#x27;media&#x27;::text, &#x27;data_processing&#x27;::text])))</code></li></ul></details></article><article class="tcard" id="clinic-episode"><header><h4>episode</h4><span>10 cột</span></header><div class="tscroll"><table><tr><td class="k">PK</td><td class="c">id</td><td class="ty">uuid</td><td class="nn"></td><td class="x">gen_random_uuid()</td></tr><tr><td class="k">FK</td><td class="c">clinic_id</td><td class="ty">uuid</td><td class="nn"></td><td class="x">→ clinic.id</td></tr><tr><td class="k">FK</td><td class="c">patient_id</td><td class="ty">uuid</td><td class="nn"></td><td class="x">→ patient.clinic_id</td></tr><tr><td class="k"></td><td class="c">title</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">status</td><td class="ty">text</td><td class="nn"></td><td class="x">&#x27;active&#x27;::text</td></tr><tr><td class="k"></td><td class="c">started_on</td><td class="ty">date</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">closed_on</td><td class="ty">date</td><td class="nn">null</td><td class="x"></td></tr><tr><td class="k"></td><td class="c">version</td><td class="ty">integer</td><td class="nn"></td><td class="x">1</td></tr><tr><td class="k"></td><td class="c">created_at</td><td class="ty">timestamptz</td><td class="nn"></td><td class="x">now()</td></tr><tr><td class="k"></td><td class="c">updated_at</td><td class="ty">timestamptz</td><td class="nn"></td><td class="x">now()</td></tr></table></div><details><summary>2 ràng buộc UNIQUE / CHECK</summary><ul><li><code>UNIQUE (clinic_id, id)</code></li><li><code>CHECK ((status = ANY (ARRAY[&#x27;active&#x27;::text, &#x27;closed&#x27;::text])))</code></li></ul></details></article><article class="tcard" id="clinic-treatment_plan"><header><h4>treatment_plan</h4><span>18 cột</span></header><div class="tscroll"><table><tr><td class="k">PK</td><td class="c">id</td><td class="ty">uuid</td><td class="nn"></td><td class="x">gen_random_uuid()</td></tr><tr><td class="k">FK</td><td class="c">clinic_id</td><td class="ty">uuid</td><td class="nn"></td><td class="x">→ clinic.id</td></tr><tr><td class="k">FK</td><td class="c">patient_id</td><td class="ty">uuid</td><td class="nn"></td><td class="x">→ patient.clinic_id</td></tr><tr><td class="k">FK</td><td class="c">episode_id</td><td class="ty">uuid</td><td class="nn">null</td><td class="x">→ episode.clinic_id</td></tr><tr><td class="k">FK</td><td class="c">doctor_id</td><td class="ty">uuid</td><td class="nn">null</td><td class="x">→ user_account.clinic_id</td></tr><tr><td class="k"></td><td class="c">service_code</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">title</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">total_sessions</td><td class="ty">integer</td><td class="nn"></td><td class="x">1</td></tr><tr><td class="k"></td><td class="c">completed_sessions</td><td class="ty">integer</td><td class="nn"></td><td class="x">0</td></tr><tr><td class="k"></td><td class="c">status</td><td class="ty">text</td><td class="nn"></td><td class="x">&#x27;active&#x27;::text</td></tr><tr><td class="k"></td><td class="c">version</td><td class="ty">integer</td><td class="nn"></td><td class="x">1</td></tr><tr><td class="k"></td><td class="c">created_at</td><td class="ty">timestamptz</td><td class="nn"></td><td class="x">now()</td></tr><tr><td class="k"></td><td class="c">updated_at</td><td class="ty">timestamptz</td><td class="nn"></td><td class="x">now()</td></tr><tr><td class="k"></td><td class="c">goal</td><td class="ty">text</td><td class="nn">null</td><td class="x"></td></tr><tr><td class="k"></td><td class="c">unit_price_vnd</td><td class="ty">bigint</td><td class="nn">null</td><td class="x"></td></tr><tr><td class="k"></td><td class="c">discount_vnd</td><td class="ty">bigint</td><td class="nn">null</td><td class="x"></td></tr><tr><td class="k"></td><td class="c">agreed_price_vnd</td><td class="ty">bigint</td><td class="nn">null</td><td class="x"></td></tr><tr><td class="k"></td><td class="c">service_terms_version</td><td class="ty">integer</td><td class="nn">null</td><td class="x"></td></tr></table></div><details><summary>8 ràng buộc UNIQUE / CHECK</summary><ul><li><code>UNIQUE (clinic_id, id)</code></li><li><code>CHECK ((agreed_price_vnd &gt;= 0))</code></li><li><code>CHECK ((completed_sessions &gt;= 0))</code></li><li><code>CHECK ((discount_vnd &gt;= 0))</code></li><li><code>CHECK ((((unit_price_vnd IS NULL) = (discount_vnd IS NULL)) AND ((unit_price_vnd IS NULL) = (agreed_price_vnd IS NULL)) AND ((unit_price_vnd IS NULL) = (service_terms_version IS NULL))))</code></li><li><code>CHECK ((status = ANY (ARRAY[&#x27;planned&#x27;::text, &#x27;active&#x27;::text, &#x27;completed&#x27;::text, &#x27;abandoned&#x27;::text, &#x27;cancelled&#x27;::text])))</code></li><li><code>CHECK ((total_sessions &gt;= 0))</code></li><li><code>CHECK ((unit_price_vnd &gt;= 0))</code></li></ul></details></article><article class="tcard" id="clinic-treatment_session"><header><h4>treatment_session</h4><span>23 cột</span></header><div class="tscroll"><table><tr><td class="k">PK</td><td class="c">id</td><td class="ty">uuid</td><td class="nn"></td><td class="x">gen_random_uuid()</td></tr><tr><td class="k">FK</td><td class="c">clinic_id</td><td class="ty">uuid</td><td class="nn"></td><td class="x">→ clinic.id</td></tr><tr><td class="k">FK</td><td class="c">patient_id</td><td class="ty">uuid</td><td class="nn"></td><td class="x">→ patient.clinic_id</td></tr><tr><td class="k">FK</td><td class="c">plan_id</td><td class="ty">uuid</td><td class="nn">null</td><td class="x">→ treatment_plan.clinic_id</td></tr><tr><td class="k">FK</td><td class="c">doctor_id</td><td class="ty">uuid</td><td class="nn">null</td><td class="x">→ user_account.clinic_id</td></tr><tr><td class="k"></td><td class="c">performed_at</td><td class="ty">timestamptz</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">protocol_id</td><td class="ty">text</td><td class="nn">null</td><td class="x"></td></tr><tr><td class="k"></td><td class="c">title</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">note</td><td class="ty">text</td><td class="nn">null</td><td class="x"></td></tr><tr><td class="k"></td><td class="c">status</td><td class="ty">text</td><td class="nn"></td><td class="x">&#x27;completed&#x27;::text</td></tr><tr><td class="k"></td><td class="c">created_at</td><td class="ty">timestamptz</td><td class="nn"></td><td class="x">now()</td></tr><tr><td class="k"></td><td class="c">session_type</td><td class="ty">text</td><td class="nn">null</td><td class="x"></td></tr><tr><td class="k"></td><td class="c">region</td><td class="ty">text</td><td class="nn">null</td><td class="x"></td></tr><tr><td class="k"></td><td class="c">view</td><td class="ty">text</td><td class="nn">null</td><td class="x"></td></tr><tr><td class="k"></td><td class="c">next_visit_on</td><td class="ty">date</td><td class="nn">null</td><td class="x"></td></tr><tr><td class="k"></td><td class="c">aftercare</td><td class="ty">text</td><td class="nn">null</td><td class="x"></td></tr><tr><td class="k">FK</td><td class="c">consent_id</td><td class="ty">uuid</td><td class="nn">null</td><td class="x">→ consent.clinic_id</td></tr><tr><td class="k"></td><td class="c">reviewed</td><td class="ty">boolean</td><td class="nn"></td><td class="x">false</td></tr><tr><td class="k">FK</td><td class="c">reviewed_by</td><td class="ty">uuid</td><td class="nn">null</td><td class="x">→ user_account.clinic_id</td></tr><tr><td class="k"></td><td class="c">reviewed_at</td><td class="ty">timestamptz</td><td class="nn">null</td><td class="x"></td></tr><tr><td class="k">FK</td><td class="c">created_by</td><td class="ty">uuid</td><td class="nn">null</td><td class="x">→ user_account.clinic_id</td></tr><tr><td class="k"></td><td class="c">version</td><td class="ty">integer</td><td class="nn"></td><td class="x">1</td></tr><tr><td class="k"></td><td class="c">updated_at</td><td class="ty">timestamptz</td><td class="nn"></td><td class="x">now()</td></tr></table></div><details><summary>2 ràng buộc UNIQUE / CHECK</summary><ul><li><code>UNIQUE (clinic_id, id)</code></li><li><code>CHECK ((status = ANY (ARRAY[&#x27;scheduled&#x27;::text, &#x27;completed&#x27;::text, &#x27;cancelled&#x27;::text])))</code></li></ul></details></article><article class="tcard" id="clinic-media"><header><h4>media</h4><span>19 cột</span></header><div class="tscroll"><table><tr><td class="k">PK</td><td class="c">id</td><td class="ty">uuid</td><td class="nn"></td><td class="x">gen_random_uuid()</td></tr><tr><td class="k">FK</td><td class="c">clinic_id</td><td class="ty">uuid</td><td class="nn"></td><td class="x">→ clinic.id</td></tr><tr><td class="k">FK</td><td class="c">patient_id</td><td class="ty">uuid</td><td class="nn"></td><td class="x">→ patient.clinic_id</td></tr><tr><td class="k">FK</td><td class="c">session_id</td><td class="ty">uuid</td><td class="nn">null</td><td class="x">→ treatment_session.clinic_id</td></tr><tr><td class="k"></td><td class="c">stage</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">region</td><td class="ty">text</td><td class="nn">null</td><td class="x"></td></tr><tr><td class="k"></td><td class="c">view</td><td class="ty">text</td><td class="nn">null</td><td class="x"></td></tr><tr><td class="k"></td><td class="c">storage_key</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">mime</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">size_bytes</td><td class="ty">bigint</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">sha256</td><td class="ty">text</td><td class="nn">null</td><td class="x"></td></tr><tr><td class="k">FK</td><td class="c">consent_id</td><td class="ty">uuid</td><td class="nn"></td><td class="x">→ consent.clinic_id</td></tr><tr><td class="k"></td><td class="c">status</td><td class="ty">text</td><td class="nn"></td><td class="x">&#x27;pending&#x27;::text</td></tr><tr><td class="k">FK</td><td class="c">uploaded_by</td><td class="ty">uuid</td><td class="nn">null</td><td class="x">→ user_account.clinic_id</td></tr><tr><td class="k"></td><td class="c">created_at</td><td class="ty">timestamptz</td><td class="nn"></td><td class="x">now()</td></tr><tr><td class="k"></td><td class="c">uploaded_at</td><td class="ty">timestamptz</td><td class="nn">null</td><td class="x"></td></tr><tr><td class="k"></td><td class="c">confirmed_at</td><td class="ty">timestamptz</td><td class="nn">null</td><td class="x"></td></tr><tr><td class="k"></td><td class="c">version</td><td class="ty">integer</td><td class="nn"></td><td class="x">1</td></tr><tr><td class="k"></td><td class="c">updated_at</td><td class="ty">timestamptz</td><td class="nn"></td><td class="x">now()</td></tr></table></div><details><summary>6 ràng buộc UNIQUE / CHECK</summary><ul><li><code>UNIQUE (clinic_id, id)</code></li><li><code>UNIQUE (clinic_id, storage_key)</code></li><li><code>CHECK ((mime = ANY (ARRAY[&#x27;image/jpeg&#x27;::text, &#x27;image/png&#x27;::text, &#x27;image/webp&#x27;::text])))</code></li><li><code>CHECK ((size_bytes &gt; 0))</code></li><li><code>CHECK ((stage = ANY (ARRAY[&#x27;before&#x27;::text, &#x27;after&#x27;::text])))</code></li><li><code>CHECK ((status = ANY (ARRAY[&#x27;pending&#x27;::text, &#x27;uploaded&#x27;::text, &#x27;confirmed&#x27;::text])))</code></li></ul></details></article><article class="tcard" id="clinic-protocol"><header><h4>protocol</h4><span>11 cột</span></header><div class="tscroll"><table><tr><td class="k">PK</td><td class="c">id</td><td class="ty">uuid</td><td class="nn"></td><td class="x">gen_random_uuid()</td></tr><tr><td class="k">FK</td><td class="c">clinic_id</td><td class="ty">uuid</td><td class="nn"></td><td class="x">→ clinic.id</td></tr><tr><td class="k"></td><td class="c">code</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">name</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">milestones</td><td class="ty">jsonb</td><td class="nn"></td><td class="x">&#x27;[]&#x27;::jsonb</td></tr><tr><td class="k"></td><td class="c">followup_days</td><td class="ty">integer</td><td class="nn">null</td><td class="x"></td></tr><tr><td class="k"></td><td class="c">window_days</td><td class="ty">integer</td><td class="nn"></td><td class="x">45</td></tr><tr><td class="k"></td><td class="c">active</td><td class="ty">boolean</td><td class="nn"></td><td class="x">true</td></tr><tr><td class="k"></td><td class="c">version</td><td class="ty">integer</td><td class="nn"></td><td class="x">1</td></tr><tr><td class="k"></td><td class="c">created_at</td><td class="ty">timestamptz</td><td class="nn"></td><td class="x">now()</td></tr><tr><td class="k"></td><td class="c">updated_at</td><td class="ty">timestamptz</td><td class="nn"></td><td class="x">now()</td></tr></table></div><details><summary>6 ràng buộc UNIQUE / CHECK</summary><ul><li><code>UNIQUE (clinic_id, code)</code></li><li><code>CHECK ((code ~ &#x27;^[a-z0-9][a-z0-9-]{1,39}$&#x27;::text))</code></li><li><code>CHECK (((followup_days IS NULL) OR ((followup_days &gt;= 1) AND (followup_days &lt;= 365))))</code></li><li><code>CHECK ((jsonb_typeof(milestones) = &#x27;array&#x27;::text))</code></li><li><code>CHECK (((length(name) &gt;= 1) AND (length(name) &lt;= 120)))</code></li><li><code>CHECK (((window_days &gt;= 1) AND (window_days &lt;= 365)))</code></li></ul></details></article><article class="tcard" id="clinic-consult_note"><header><h4>consult_note</h4><span>12 cột</span></header><div class="tscroll"><table><tr><td class="k">PK</td><td class="c">id</td><td class="ty">uuid</td><td class="nn"></td><td class="x">gen_random_uuid()</td></tr><tr><td class="k">FK</td><td class="c">clinic_id</td><td class="ty">uuid</td><td class="nn"></td><td class="x">→ clinic.id</td></tr><tr><td class="k">FK</td><td class="c">patient_id</td><td class="ty">uuid</td><td class="nn"></td><td class="x">→ patient.clinic_id</td></tr><tr><td class="k"></td><td class="c">status</td><td class="ty">text</td><td class="nn"></td><td class="x">&#x27;draft&#x27;::text</td></tr><tr><td class="k"></td><td class="c">source_text</td><td class="ty">text</td><td class="nn"></td><td class="x">&#x27;&#x27;::text</td></tr><tr><td class="k"></td><td class="c">body</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k">FK</td><td class="c">created_by</td><td class="ty">uuid</td><td class="nn">null</td><td class="x">→ user_account.clinic_id</td></tr><tr><td class="k">FK</td><td class="c">approved_by</td><td class="ty">uuid</td><td class="nn">null</td><td class="x">→ user_account.clinic_id</td></tr><tr><td class="k"></td><td class="c">approved_at</td><td class="ty">timestamptz</td><td class="nn">null</td><td class="x"></td></tr><tr><td class="k"></td><td class="c">version</td><td class="ty">integer</td><td class="nn"></td><td class="x">1</td></tr><tr><td class="k"></td><td class="c">created_at</td><td class="ty">timestamptz</td><td class="nn"></td><td class="x">now()</td></tr><tr><td class="k"></td><td class="c">updated_at</td><td class="ty">timestamptz</td><td class="nn"></td><td class="x">now()</td></tr></table></div><details><summary>4 ràng buộc UNIQUE / CHECK</summary><ul><li><code>UNIQUE (clinic_id, id)</code></li><li><code>CHECK (((length(body) &gt;= 1) AND (length(body) &lt;= 4000)))</code></li><li><code>CHECK (((status &lt;&gt; &#x27;approved&#x27;::text) OR (approved_at IS NOT NULL)))</code></li><li><code>CHECK ((status = ANY (ARRAY[&#x27;draft&#x27;::text, &#x27;approved&#x27;::text])))</code></li></ul></details></article><article class="tcard" id="clinic-patient_brief"><header><h4>patient_brief</h4><span>7 cột</span></header><div class="tscroll"><table><tr><td class="k">PK</td><td class="c">id</td><td class="ty">uuid</td><td class="nn"></td><td class="x">gen_random_uuid()</td></tr><tr><td class="k">FK</td><td class="c">clinic_id</td><td class="ty">uuid</td><td class="nn"></td><td class="x">→ clinic.id</td></tr><tr><td class="k">FK</td><td class="c">patient_id</td><td class="ty">uuid</td><td class="nn"></td><td class="x">→ patient.clinic_id</td></tr><tr><td class="k"></td><td class="c">body</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">source_ids</td><td class="ty">text[]</td><td class="nn"></td><td class="x">&#x27;{}&#x27;::text[]</td></tr><tr><td class="k">FK</td><td class="c">approved_by</td><td class="ty">uuid</td><td class="nn">null</td><td class="x">→ user_account.clinic_id</td></tr><tr><td class="k"></td><td class="c">approved_at</td><td class="ty">timestamptz</td><td class="nn"></td><td class="x">now()</td></tr></table></div><details><summary>2 ràng buộc UNIQUE / CHECK</summary><ul><li><code>UNIQUE (clinic_id, id)</code></li><li><code>CHECK (((length(body) &gt;= 1) AND (length(body) &lt;= 4000)))</code></li></ul></details></article><article class="tcard" id="clinic-patient_clinical_note"><header><h4>patient_clinical_note</h4><span>8 cột</span></header><div class="tscroll"><table><tr><td class="k">PK</td><td class="c">id</td><td class="ty">uuid</td><td class="nn"></td><td class="x">gen_random_uuid()</td></tr><tr><td class="k">FK</td><td class="c">clinic_id</td><td class="ty">uuid</td><td class="nn"></td><td class="x">→ clinic.id</td></tr><tr><td class="k">FK</td><td class="c">patient_id</td><td class="ty">uuid</td><td class="nn"></td><td class="x">→ patient.clinic_id</td></tr><tr><td class="k"></td><td class="c">history</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">diagnosis</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k">FK</td><td class="c">reviewed_by</td><td class="ty">uuid</td><td class="nn">null</td><td class="x">→ user_account.clinic_id</td></tr><tr><td class="k"></td><td class="c">reviewed_at</td><td class="ty">timestamptz</td><td class="nn"></td><td class="x">now()</td></tr><tr><td class="k"></td><td class="c">version</td><td class="ty">integer</td><td class="nn"></td><td class="x">1</td></tr></table></div><details><summary>4 ràng buộc UNIQUE / CHECK</summary><ul><li><code>UNIQUE (clinic_id, id)</code></li><li><code>UNIQUE (clinic_id, patient_id)</code></li><li><code>CHECK (((length(diagnosis) &gt;= 1) AND (length(diagnosis) &lt;= 4000)))</code></li><li><code>CHECK (((length(history) &gt;= 1) AND (length(history) &lt;= 4000)))</code></li></ul></details></article><article class="tcard" id="clinic-patient_app_event"><header><h4>patient_app_event</h4><span>7 cột</span></header><div class="tscroll"><table><tr><td class="k">PK</td><td class="c">id</td><td class="ty">uuid</td><td class="nn"></td><td class="x">gen_random_uuid()</td></tr><tr><td class="k">FK</td><td class="c">clinic_id</td><td class="ty">uuid</td><td class="nn"></td><td class="x">→ clinic.id</td></tr><tr><td class="k">FK</td><td class="c">patient_id</td><td class="ty">uuid</td><td class="nn"></td><td class="x">→ patient.clinic_id</td></tr><tr><td class="k"></td><td class="c">kind</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">body</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k">FK</td><td class="c">created_by</td><td class="ty">uuid</td><td class="nn">null</td><td class="x">→ user_account.clinic_id</td></tr><tr><td class="k"></td><td class="c">created_at</td><td class="ty">timestamptz</td><td class="nn"></td><td class="x">now()</td></tr></table></div><details><summary>3 ràng buộc UNIQUE / CHECK</summary><ul><li><code>UNIQUE (clinic_id, id)</code></li><li><code>CHECK (((length(body) &gt;= 1) AND (length(body) &lt;= 2000)))</code></li><li><code>CHECK ((kind = &#x27;aftercare&#x27;::text))</code></li></ul></details></article></div></div>
+<div class="erd-group" id="g-schedule"><h3>Lịch hẹn và phòng<small>3 bảng</small></h3><p>Lịch hẹn của bệnh nhân với bác sĩ, phòng và giờ khóa phòng.</p><div class="erd-figure"><pre class="mermaid">
+erDiagram
+    appointment {
+        uuid id PK,UK
+        uuid clinic_id FK,UK
+        uuid patient_id FK
+        uuid doctor_id FK
+        timestamptz starts_at
+        integer duration_min
+        text status
+        text note
+        text cancel_reason
+        timestamptz cancelled_at
+        timestamptz missed_at
+        uuid created_by FK
+        integer version
+        timestamptz created_at
+        timestamptz updated_at
+        uuid room_id FK
+    }
+    room {
+        uuid id PK,UK
+        uuid clinic_id FK,UK
+        text name UK
+        integer capacity
+        boolean active
+        integer version
+        timestamptz created_at
+        timestamptz updated_at
+    }
+    room_block {
+        uuid id PK
+        uuid clinic_id FK
+        uuid room_id FK
+        date day
+        time starts_at
+        time ends_at
+        text reason
+        uuid created_by FK
+        timestamptz created_at
+    }
+    patient {
+        ref xem_nhom_khac
+    }
+    user_account {
+        ref xem_nhom_khac
+    }
+    user_account |o--o{ appointment : &quot;created_by, doctor_id&quot;
+    patient ||--o{ appointment : &quot;patient_id&quot;
+    room |o--o{ appointment : &quot;room_id&quot;
+    user_account |o--o{ room_block : &quot;created_by&quot;
+    room ||--o{ room_block : &quot;room_id&quot;
+</pre></div><div class="tgrid"><article class="tcard" id="clinic-appointment"><header><h4>appointment</h4><span>16 cột</span></header><div class="tscroll"><table><tr><td class="k">PK</td><td class="c">id</td><td class="ty">uuid</td><td class="nn"></td><td class="x">gen_random_uuid()</td></tr><tr><td class="k">FK</td><td class="c">clinic_id</td><td class="ty">uuid</td><td class="nn"></td><td class="x">→ clinic.id</td></tr><tr><td class="k">FK</td><td class="c">patient_id</td><td class="ty">uuid</td><td class="nn"></td><td class="x">→ patient.clinic_id</td></tr><tr><td class="k">FK</td><td class="c">doctor_id</td><td class="ty">uuid</td><td class="nn">null</td><td class="x">→ user_account.clinic_id</td></tr><tr><td class="k"></td><td class="c">starts_at</td><td class="ty">timestamptz</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">duration_min</td><td class="ty">integer</td><td class="nn"></td><td class="x">30</td></tr><tr><td class="k"></td><td class="c">status</td><td class="ty">text</td><td class="nn"></td><td class="x">&#x27;booked&#x27;::text</td></tr><tr><td class="k"></td><td class="c">note</td><td class="ty">text</td><td class="nn">null</td><td class="x"></td></tr><tr><td class="k"></td><td class="c">cancel_reason</td><td class="ty">text</td><td class="nn">null</td><td class="x"></td></tr><tr><td class="k"></td><td class="c">cancelled_at</td><td class="ty">timestamptz</td><td class="nn">null</td><td class="x"></td></tr><tr><td class="k"></td><td class="c">missed_at</td><td class="ty">timestamptz</td><td class="nn">null</td><td class="x"></td></tr><tr><td class="k">FK</td><td class="c">created_by</td><td class="ty">uuid</td><td class="nn">null</td><td class="x">→ user_account.clinic_id</td></tr><tr><td class="k"></td><td class="c">version</td><td class="ty">integer</td><td class="nn"></td><td class="x">1</td></tr><tr><td class="k"></td><td class="c">created_at</td><td class="ty">timestamptz</td><td class="nn"></td><td class="x">now()</td></tr><tr><td class="k"></td><td class="c">updated_at</td><td class="ty">timestamptz</td><td class="nn"></td><td class="x">now()</td></tr><tr><td class="k">FK</td><td class="c">room_id</td><td class="ty">uuid</td><td class="nn">null</td><td class="x">→ room.clinic_id</td></tr></table></div><details><summary>3 ràng buộc UNIQUE / CHECK</summary><ul><li><code>UNIQUE (clinic_id, id)</code></li><li><code>CHECK ((duration_min &gt; 0))</code></li><li><code>CHECK ((status = ANY (ARRAY[&#x27;booked&#x27;::text, &#x27;confirmed&#x27;::text, &#x27;arrived&#x27;::text, &#x27;in_progress&#x27;::text, &#x27;completed&#x27;::text, &#x27;cancelled&#x27;::text, &#x27;missed&#x27;::text])))</code></li></ul></details></article><article class="tcard" id="clinic-room"><header><h4>room</h4><span>8 cột</span></header><div class="tscroll"><table><tr><td class="k">PK</td><td class="c">id</td><td class="ty">uuid</td><td class="nn"></td><td class="x">gen_random_uuid()</td></tr><tr><td class="k">FK</td><td class="c">clinic_id</td><td class="ty">uuid</td><td class="nn"></td><td class="x">→ clinic.id</td></tr><tr><td class="k"></td><td class="c">name</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">capacity</td><td class="ty">integer</td><td class="nn"></td><td class="x">1</td></tr><tr><td class="k"></td><td class="c">active</td><td class="ty">boolean</td><td class="nn"></td><td class="x">true</td></tr><tr><td class="k"></td><td class="c">version</td><td class="ty">integer</td><td class="nn"></td><td class="x">1</td></tr><tr><td class="k"></td><td class="c">created_at</td><td class="ty">timestamptz</td><td class="nn"></td><td class="x">now()</td></tr><tr><td class="k"></td><td class="c">updated_at</td><td class="ty">timestamptz</td><td class="nn"></td><td class="x">now()</td></tr></table></div><details><summary>4 ràng buộc UNIQUE / CHECK</summary><ul><li><code>UNIQUE (clinic_id, id)</code></li><li><code>UNIQUE (clinic_id, name)</code></li><li><code>CHECK (((capacity &gt;= 1) AND (capacity &lt;= 20)))</code></li><li><code>CHECK (((length(name) &gt;= 1) AND (length(name) &lt;= 120)))</code></li></ul></details></article><article class="tcard" id="clinic-room_block"><header><h4>room_block</h4><span>9 cột</span></header><div class="tscroll"><table><tr><td class="k">PK</td><td class="c">id</td><td class="ty">uuid</td><td class="nn"></td><td class="x">gen_random_uuid()</td></tr><tr><td class="k">FK</td><td class="c">clinic_id</td><td class="ty">uuid</td><td class="nn"></td><td class="x">→ clinic.id</td></tr><tr><td class="k">FK</td><td class="c">room_id</td><td class="ty">uuid</td><td class="nn"></td><td class="x">→ room.clinic_id</td></tr><tr><td class="k"></td><td class="c">day</td><td class="ty">date</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">starts_at</td><td class="ty">time</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">ends_at</td><td class="ty">time</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">reason</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k">FK</td><td class="c">created_by</td><td class="ty">uuid</td><td class="nn">null</td><td class="x">→ user_account.clinic_id</td></tr><tr><td class="k"></td><td class="c">created_at</td><td class="ty">timestamptz</td><td class="nn"></td><td class="x">now()</td></tr></table></div><details><summary>2 ràng buộc UNIQUE / CHECK</summary><ul><li><code>CHECK ((starts_at &lt; ends_at))</code></li><li><code>CHECK (((length(reason) &gt;= 1) AND (length(reason) &lt;= 200)))</code></li></ul></details></article></div></div>
+<div class="erd-group" id="g-catalog"><h3>Dịch vụ, sản phẩm, đơn<small>6 bảng</small></h3><p>Bảng giá dịch vụ có phiên bản chỉ thêm, sản phẩm, đơn kê và các dòng đơn.</p><div class="erd-figure"><pre class="mermaid">
+erDiagram
+    service {
+        uuid id PK,UK
+        uuid clinic_id FK,UK
+        text code UK
+        text name
+        boolean active
+        text protocol_code
+        uuid[] room_ids
+        integer terms_version
+        integer version
+        timestamptz created_at
+        timestamptz updated_at
+    }
+    service_version {
+        uuid id PK
+        uuid clinic_id FK
+        uuid service_id FK,UK
+        integer version_no UK
+        bigint price_vnd
+        integer rate_bp
+        text basis
+        integer duration_min
+        integer buffer_min
+        uuid changed_by FK
+        timestamptz created_at
+    }
+    product {
+        uuid clinic_id PK,FK
+        text code PK
+        text name
+        text unit
+        text source_type
+        text route
+        bigint price_vnd
+        numeric vat
+        numeric price_before_tax
+        integer row_number
+        text batch
+        text serial
+        boolean active
+        text catalog_hash
+        timestamptz created_at
+        timestamptz updated_at
+    }
+    catalog_import {
+        uuid id PK
+        uuid clinic_id FK
+        text source_name
+        text sha256
+        text source_sha256
+        integer total_rows
+        integer prescription_rows
+        timestamptz imported_at
+    }
+    order {
+        uuid id PK,UK
+        uuid clinic_id FK,UK
+        uuid patient_id FK
+        uuid doctor_id FK
+        text status
+        date order_date
+        text diagnosis
+        text note
+        bigint total_vnd
+        text catalog_hash
+        uuid reviewed_by FK
+        timestamptz reviewed_at
+        uuid invoice_id
+        bigint received_vnd
+        boolean paid
+        uuid created_by FK
+        integer version
+        timestamptz created_at
+        timestamptz updated_at
+    }
+    order_item {
+        uuid id PK
+        uuid clinic_id FK
+        uuid order_id FK,UK
+        integer line_no UK
+        text product_code
+        text name
+        text source_type
+        text unit
+        integer row_number
+        text catalog_route
+        text route
+        text route_reason
+        integer quantity
+        bigint unit_price_vnd
+        text usage
+        text note
+    }
+    patient {
+        ref xem_nhom_khac
+    }
+    user_account {
+        ref xem_nhom_khac
+    }
+    user_account |o--o{ service_version : &quot;changed_by&quot;
+    service ||--o{ service_version : &quot;service_id&quot;
+    user_account |o--o{ order : &quot;created_by, doctor_id, reviewed_by&quot;
+    patient ||--o{ order : &quot;patient_id&quot;
+    order ||--o{ order_item : &quot;order_id&quot;
+</pre></div><div class="tgrid"><article class="tcard" id="clinic-service"><header><h4>service</h4><span>11 cột</span></header><div class="tscroll"><table><tr><td class="k">PK</td><td class="c">id</td><td class="ty">uuid</td><td class="nn"></td><td class="x">gen_random_uuid()</td></tr><tr><td class="k">FK</td><td class="c">clinic_id</td><td class="ty">uuid</td><td class="nn"></td><td class="x">→ clinic.id</td></tr><tr><td class="k"></td><td class="c">code</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">name</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">active</td><td class="ty">boolean</td><td class="nn"></td><td class="x">true</td></tr><tr><td class="k"></td><td class="c">protocol_code</td><td class="ty">text</td><td class="nn">null</td><td class="x"></td></tr><tr><td class="k"></td><td class="c">room_ids</td><td class="ty">uuid[]</td><td class="nn"></td><td class="x">&#x27;{}&#x27;::uuid[]</td></tr><tr><td class="k"></td><td class="c">terms_version</td><td class="ty">integer</td><td class="nn"></td><td class="x">1</td></tr><tr><td class="k"></td><td class="c">version</td><td class="ty">integer</td><td class="nn"></td><td class="x">1</td></tr><tr><td class="k"></td><td class="c">created_at</td><td class="ty">timestamptz</td><td class="nn"></td><td class="x">now()</td></tr><tr><td class="k"></td><td class="c">updated_at</td><td class="ty">timestamptz</td><td class="nn"></td><td class="x">now()</td></tr></table></div><details><summary>5 ràng buộc UNIQUE / CHECK</summary><ul><li><code>UNIQUE (clinic_id, code)</code></li><li><code>UNIQUE (clinic_id, id)</code></li><li><code>CHECK ((code ~ &#x27;^[a-z0-9][a-z0-9-]{1,39}$&#x27;::text))</code></li><li><code>CHECK (((length(name) &gt;= 1) AND (length(name) &lt;= 120)))</code></li><li><code>CHECK ((terms_version &gt;= 1))</code></li></ul></details></article><article class="tcard" id="clinic-service_version"><header><h4>service_version</h4><span>11 cột</span></header><div class="tscroll"><table><tr><td class="k">PK</td><td class="c">id</td><td class="ty">uuid</td><td class="nn"></td><td class="x">gen_random_uuid()</td></tr><tr><td class="k">FK</td><td class="c">clinic_id</td><td class="ty">uuid</td><td class="nn"></td><td class="x">→ clinic.id</td></tr><tr><td class="k">FK</td><td class="c">service_id</td><td class="ty">uuid</td><td class="nn"></td><td class="x">→ service.clinic_id</td></tr><tr><td class="k"></td><td class="c">version_no</td><td class="ty">integer</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">price_vnd</td><td class="ty">bigint</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">rate_bp</td><td class="ty">integer</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">basis</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">duration_min</td><td class="ty">integer</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">buffer_min</td><td class="ty">integer</td><td class="nn"></td><td class="x">0</td></tr><tr><td class="k">FK</td><td class="c">changed_by</td><td class="ty">uuid</td><td class="nn">null</td><td class="x">→ user_account.clinic_id</td></tr><tr><td class="k"></td><td class="c">created_at</td><td class="ty">timestamptz</td><td class="nn"></td><td class="x">now()</td></tr></table></div><details><summary>7 ràng buộc UNIQUE / CHECK</summary><ul><li><code>UNIQUE (service_id, version_no)</code></li><li><code>CHECK ((basis = ANY (ARRAY[&#x27;net&#x27;::text, &#x27;list&#x27;::text, &#x27;collected&#x27;::text])))</code></li><li><code>CHECK (((buffer_min &gt;= 0) AND (buffer_min &lt;= 120)))</code></li><li><code>CHECK (((duration_min &gt;= 5) AND (duration_min &lt;= 480)))</code></li><li><code>CHECK ((price_vnd &gt;= 0))</code></li><li><code>CHECK (((rate_bp &gt;= 0) AND (rate_bp &lt;= 10000)))</code></li><li><code>CHECK ((version_no &gt;= 1))</code></li></ul></details></article><article class="tcard" id="clinic-product"><header><h4>product</h4><span>16 cột</span></header><div class="tscroll"><table><tr><td class="k">PK</td><td class="c">clinic_id</td><td class="ty">uuid</td><td class="nn"></td><td class="x">→ clinic.id</td></tr><tr><td class="k">PK</td><td class="c">code</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">name</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">unit</td><td class="ty">text</td><td class="nn"></td><td class="x">&#x27;&#x27;::text</td></tr><tr><td class="k"></td><td class="c">source_type</td><td class="ty">text</td><td class="nn"></td><td class="x">&#x27;&#x27;::text</td></tr><tr><td class="k"></td><td class="c">route</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">price_vnd</td><td class="ty">bigint</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">vat</td><td class="ty">numeric</td><td class="nn"></td><td class="x">0</td></tr><tr><td class="k"></td><td class="c">price_before_tax</td><td class="ty">numeric</td><td class="nn"></td><td class="x">0</td></tr><tr><td class="k"></td><td class="c">row_number</td><td class="ty">integer</td><td class="nn"></td><td class="x">0</td></tr><tr><td class="k"></td><td class="c">batch</td><td class="ty">text</td><td class="nn"></td><td class="x">&#x27;&#x27;::text</td></tr><tr><td class="k"></td><td class="c">serial</td><td class="ty">text</td><td class="nn"></td><td class="x">&#x27;&#x27;::text</td></tr><tr><td class="k"></td><td class="c">active</td><td class="ty">boolean</td><td class="nn"></td><td class="x">true</td></tr><tr><td class="k"></td><td class="c">catalog_hash</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">created_at</td><td class="ty">timestamptz</td><td class="nn"></td><td class="x">now()</td></tr><tr><td class="k"></td><td class="c">updated_at</td><td class="ty">timestamptz</td><td class="nn"></td><td class="x">now()</td></tr></table></div><details><summary>10 ràng buộc UNIQUE / CHECK</summary><ul><li><code>CHECK ((catalog_hash ~ &#x27;^[0-9a-f]{64}$&#x27;::text))</code></li><li><code>CHECK ((code ~ &#x27;^[A-Z0-9][A-Z0-9._-]{0,39}$&#x27;::text))</code></li><li><code>CHECK (((length(name) &gt;= 1) AND (length(name) &lt;= 400)))</code></li><li><code>CHECK ((price_before_tax &gt;= (0)::numeric))</code></li><li><code>CHECK ((price_vnd &gt;= 0))</code></li><li><code>CHECK ((route = ANY (ARRAY[&#x27;PRESCRIPTION&#x27;::text, &#x27;CONSULTATION&#x27;::text, &#x27;NONE&#x27;::text, &#x27;UNRESOLVED&#x27;::text])))</code></li><li><code>CHECK ((row_number &gt;= 0))</code></li><li><code>CHECK ((length(source_type) &lt;= 60))</code></li><li><code>CHECK ((length(unit) &lt;= 40))</code></li><li><code>CHECK ((vat &gt;= (0)::numeric))</code></li></ul></details></article><article class="tcard" id="clinic-catalog_import"><header><h4>catalog_import</h4><span>8 cột</span></header><div class="tscroll"><table><tr><td class="k">PK</td><td class="c">id</td><td class="ty">uuid</td><td class="nn"></td><td class="x">gen_random_uuid()</td></tr><tr><td class="k">FK</td><td class="c">clinic_id</td><td class="ty">uuid</td><td class="nn"></td><td class="x">→ clinic.id</td></tr><tr><td class="k"></td><td class="c">source_name</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">sha256</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">source_sha256</td><td class="ty">text</td><td class="nn">null</td><td class="x"></td></tr><tr><td class="k"></td><td class="c">total_rows</td><td class="ty">integer</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">prescription_rows</td><td class="ty">integer</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">imported_at</td><td class="ty">timestamptz</td><td class="nn"></td><td class="x">now()</td></tr></table></div><details><summary>5 ràng buộc UNIQUE / CHECK</summary><ul><li><code>CHECK ((prescription_rows &gt;= 0))</code></li><li><code>CHECK ((sha256 ~ &#x27;^[0-9a-f]{64}$&#x27;::text))</code></li><li><code>CHECK (((length(source_name) &gt;= 1) AND (length(source_name) &lt;= 200)))</code></li><li><code>CHECK (((source_sha256 IS NULL) OR (source_sha256 ~ &#x27;^[0-9a-f]{64}$&#x27;::text)))</code></li><li><code>CHECK ((total_rows &gt;= 1))</code></li></ul></details></article><article class="tcard" id="clinic-order"><header><h4>order</h4><span>19 cột</span></header><div class="tscroll"><table><tr><td class="k">PK</td><td class="c">id</td><td class="ty">uuid</td><td class="nn"></td><td class="x">gen_random_uuid()</td></tr><tr><td class="k">FK</td><td class="c">clinic_id</td><td class="ty">uuid</td><td class="nn"></td><td class="x">→ clinic.id</td></tr><tr><td class="k">FK</td><td class="c">patient_id</td><td class="ty">uuid</td><td class="nn"></td><td class="x">→ patient.clinic_id</td></tr><tr><td class="k">FK</td><td class="c">doctor_id</td><td class="ty">uuid</td><td class="nn"></td><td class="x">→ user_account.clinic_id</td></tr><tr><td class="k"></td><td class="c">status</td><td class="ty">text</td><td class="nn"></td><td class="x">&#x27;draft&#x27;::text</td></tr><tr><td class="k"></td><td class="c">order_date</td><td class="ty">date</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">diagnosis</td><td class="ty">text</td><td class="nn"></td><td class="x">&#x27;&#x27;::text</td></tr><tr><td class="k"></td><td class="c">note</td><td class="ty">text</td><td class="nn"></td><td class="x">&#x27;&#x27;::text</td></tr><tr><td class="k"></td><td class="c">total_vnd</td><td class="ty">bigint</td><td class="nn"></td><td class="x">0</td></tr><tr><td class="k"></td><td class="c">catalog_hash</td><td class="ty">text</td><td class="nn">null</td><td class="x"></td></tr><tr><td class="k">FK</td><td class="c">reviewed_by</td><td class="ty">uuid</td><td class="nn">null</td><td class="x">→ user_account.clinic_id</td></tr><tr><td class="k"></td><td class="c">reviewed_at</td><td class="ty">timestamptz</td><td class="nn">null</td><td class="x"></td></tr><tr><td class="k"></td><td class="c">invoice_id</td><td class="ty">uuid</td><td class="nn">null</td><td class="x"></td></tr><tr><td class="k"></td><td class="c">received_vnd</td><td class="ty">bigint</td><td class="nn"></td><td class="x">0</td></tr><tr><td class="k"></td><td class="c">paid</td><td class="ty">boolean</td><td class="nn"></td><td class="x">false</td></tr><tr><td class="k">FK</td><td class="c">created_by</td><td class="ty">uuid</td><td class="nn">null</td><td class="x">→ user_account.clinic_id</td></tr><tr><td class="k"></td><td class="c">version</td><td class="ty">integer</td><td class="nn"></td><td class="x">1</td></tr><tr><td class="k"></td><td class="c">created_at</td><td class="ty">timestamptz</td><td class="nn"></td><td class="x">now()</td></tr><tr><td class="k"></td><td class="c">updated_at</td><td class="ty">timestamptz</td><td class="nn"></td><td class="x">now()</td></tr></table></div><details><summary>8 ràng buộc UNIQUE / CHECK</summary><ul><li><code>UNIQUE (clinic_id, id)</code></li><li><code>CHECK (((catalog_hash IS NULL) OR (catalog_hash ~ &#x27;^[0-9a-f]{64}$&#x27;::text)))</code></li><li><code>CHECK (((status = &#x27;draft&#x27;::text) OR ((reviewed_by IS NOT NULL) AND (reviewed_at IS NOT NULL))))</code></li><li><code>CHECK ((length(diagnosis) &lt;= 2000))</code></li><li><code>CHECK ((length(note) &lt;= 2000))</code></li><li><code>CHECK ((received_vnd &gt;= 0))</code></li><li><code>CHECK ((status = ANY (ARRAY[&#x27;draft&#x27;::text, &#x27;approved&#x27;::text])))</code></li><li><code>CHECK ((total_vnd &gt;= 0))</code></li></ul></details></article><article class="tcard" id="clinic-order_item"><header><h4>order_item</h4><span>16 cột</span></header><div class="tscroll"><table><tr><td class="k">PK</td><td class="c">id</td><td class="ty">uuid</td><td class="nn"></td><td class="x">gen_random_uuid()</td></tr><tr><td class="k">FK</td><td class="c">clinic_id</td><td class="ty">uuid</td><td class="nn"></td><td class="x">→ clinic.id</td></tr><tr><td class="k">FK</td><td class="c">order_id</td><td class="ty">uuid</td><td class="nn"></td><td class="x">→ order.clinic_id · CASCADE</td></tr><tr><td class="k"></td><td class="c">line_no</td><td class="ty">integer</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">product_code</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">name</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">source_type</td><td class="ty">text</td><td class="nn"></td><td class="x">&#x27;&#x27;::text</td></tr><tr><td class="k"></td><td class="c">unit</td><td class="ty">text</td><td class="nn"></td><td class="x">&#x27;&#x27;::text</td></tr><tr><td class="k"></td><td class="c">row_number</td><td class="ty">integer</td><td class="nn"></td><td class="x">0</td></tr><tr><td class="k"></td><td class="c">catalog_route</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">route</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">route_reason</td><td class="ty">text</td><td class="nn"></td><td class="x">&#x27;&#x27;::text</td></tr><tr><td class="k"></td><td class="c">quantity</td><td class="ty">integer</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">unit_price_vnd</td><td class="ty">bigint</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">usage</td><td class="ty">text</td><td class="nn"></td><td class="x">&#x27;&#x27;::text</td></tr><tr><td class="k"></td><td class="c">note</td><td class="ty">text</td><td class="nn"></td><td class="x">&#x27;&#x27;::text</td></tr></table></div><details><summary>10 ràng buộc UNIQUE / CHECK</summary><ul><li><code>UNIQUE (order_id, line_no)</code></li><li><code>CHECK ((catalog_route = ANY (ARRAY[&#x27;PRESCRIPTION&#x27;::text, &#x27;CONSULTATION&#x27;::text, &#x27;NONE&#x27;::text, &#x27;UNRESOLVED&#x27;::text])))</code></li><li><code>CHECK ((line_no &gt;= 1))</code></li><li><code>CHECK (((length(name) &gt;= 1) AND (length(name) &lt;= 400)))</code></li><li><code>CHECK ((length(note) &lt;= 1000))</code></li><li><code>CHECK (((quantity &gt;= 1) AND (quantity &lt;= 9999)))</code></li><li><code>CHECK ((route = ANY (ARRAY[&#x27;PRESCRIPTION&#x27;::text, &#x27;CONSULTATION&#x27;::text, &#x27;NONE&#x27;::text, &#x27;UNRESOLVED&#x27;::text])))</code></li><li><code>CHECK ((length(route_reason) &lt;= 500))</code></li><li><code>CHECK ((unit_price_vnd &gt;= 0))</code></li><li><code>CHECK ((length(usage) &lt;= 2000))</code></li></ul></details></article></div></div>
+<div class="erd-group" id="g-finance"><h3>Tài chính<small>6 bảng</small></h3><p>Hóa đơn, thu tiền, thủ thuật tính hoa hồng, kỳ khóa sổ.</p><div class="erd-figure"><pre class="mermaid">
+erDiagram
+    invoice {
+        uuid id PK,UK
+        uuid clinic_id FK,UK
+        text number UK
+        uuid patient_id FK
+        text source
+        uuid order_id FK,UK
+        bigint amount_vnd
+        bigint received_vnd
+        date invoice_date
+        uuid created_by FK
+        integer version
+        timestamptz created_at
+        timestamptz updated_at
+    }
+    payment {
+        uuid id PK,UK
+        uuid clinic_id FK,UK
+        text idempotency_key UK
+        uuid invoice_id FK
+        uuid patient_id FK
+        bigint amount_vnd
+        text method
+        date paid_on
+        uuid received_by FK
+        timestamptz created_at
+    }
+    procedure_entry {
+        uuid id PK,UK
+        uuid clinic_id FK,UK
+        uuid patient_id FK
+        uuid service_id FK
+        text service_name
+        integer terms_version FK
+        text basis
+        date entry_date
+        uuid invoice_id FK
+        boolean owns_invoice
+        bigint list_vnd
+        bigint discount_vnd
+        bigint net_vnd
+        text status
+        text note
+        text void_reason
+        uuid created_by FK
+        uuid approved_by FK
+        timestamptz approved_at
+        integer version
+        timestamptz created_at
+        timestamptz updated_at
+    }
+    procedure_entry_person {
+        uuid id PK
+        uuid clinic_id FK
+        uuid entry_id FK,UK
+        integer position UK
+        uuid doctor_id FK,UK
+        integer share_bp
+        integer rate_bp
+    }
+    finance_period {
+        uuid clinic_id PK,FK
+        text month PK
+        text status
+        timestamptz closed_at
+        uuid closed_by FK
+        timestamptz paid_at
+        uuid paid_by FK
+        text reference
+        jsonb snapshot
+    }
+    finance_notification {
+        uuid id PK
+        uuid clinic_id FK
+        uuid payment_id FK,UK
+        text title
+        text body
+        bigint amount_vnd
+        uuid invoice_id FK
+        boolean is_read
+        timestamptz read_at
+        timestamptz created_at
+    }
+    order {
+        ref xem_nhom_khac
+    }
+    patient {
+        ref xem_nhom_khac
+    }
+    service {
+        ref xem_nhom_khac
+    }
+    service_version {
+        ref xem_nhom_khac
+    }
+    user_account {
+        ref xem_nhom_khac
+    }
+    user_account |o--o{ invoice : &quot;created_by&quot;
+    order |o--o{ invoice : &quot;order_id&quot;
+    patient ||--o{ invoice : &quot;patient_id&quot;
+    invoice ||--o{ payment : &quot;invoice_id&quot;
+    patient ||--o{ payment : &quot;patient_id&quot;
+    user_account |o--o{ payment : &quot;received_by&quot;
+    user_account |o--o{ procedure_entry : &quot;approved_by, created_by&quot;
+    invoice ||--o{ procedure_entry : &quot;invoice_id&quot;
+    patient ||--o{ procedure_entry : &quot;patient_id&quot;
+    service ||--o{ procedure_entry : &quot;service_id&quot;
+    service_version ||--o{ procedure_entry : &quot;service_id, terms_version&quot;
+    user_account ||--o{ procedure_entry_person : &quot;doctor_id&quot;
+    procedure_entry ||--o{ procedure_entry_person : &quot;entry_id&quot;
+    user_account |o--o{ finance_period : &quot;closed_by, paid_by&quot;
+    invoice ||--o{ finance_notification : &quot;invoice_id&quot;
+    payment ||--o{ finance_notification : &quot;payment_id&quot;
+</pre></div><div class="tgrid"><article class="tcard" id="clinic-invoice"><header><h4>invoice</h4><span>13 cột</span></header><div class="tscroll"><table><tr><td class="k">PK</td><td class="c">id</td><td class="ty">uuid</td><td class="nn"></td><td class="x">gen_random_uuid()</td></tr><tr><td class="k">FK</td><td class="c">clinic_id</td><td class="ty">uuid</td><td class="nn"></td><td class="x">→ clinic.id</td></tr><tr><td class="k"></td><td class="c">number</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k">FK</td><td class="c">patient_id</td><td class="ty">uuid</td><td class="nn"></td><td class="x">→ patient.clinic_id</td></tr><tr><td class="k"></td><td class="c">source</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k">FK</td><td class="c">order_id</td><td class="ty">uuid</td><td class="nn">null</td><td class="x">→ order.clinic_id</td></tr><tr><td class="k"></td><td class="c">amount_vnd</td><td class="ty">bigint</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">received_vnd</td><td class="ty">bigint</td><td class="nn"></td><td class="x">0</td></tr><tr><td class="k"></td><td class="c">invoice_date</td><td class="ty">date</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k">FK</td><td class="c">created_by</td><td class="ty">uuid</td><td class="nn">null</td><td class="x">→ user_account.clinic_id</td></tr><tr><td class="k"></td><td class="c">version</td><td class="ty">integer</td><td class="nn"></td><td class="x">1</td></tr><tr><td class="k"></td><td class="c">created_at</td><td class="ty">timestamptz</td><td class="nn"></td><td class="x">now()</td></tr><tr><td class="k"></td><td class="c">updated_at</td><td class="ty">timestamptz</td><td class="nn"></td><td class="x">now()</td></tr></table></div><details><summary>9 ràng buộc UNIQUE / CHECK</summary><ul><li><code>UNIQUE (clinic_id, id)</code></li><li><code>UNIQUE (clinic_id, number)</code></li><li><code>UNIQUE (order_id)</code></li><li><code>CHECK ((amount_vnd &gt;= 0))</code></li><li><code>CHECK ((received_vnd &lt;= amount_vnd))</code></li><li><code>CHECK (((source = &#x27;order&#x27;::text) = (order_id IS NOT NULL)))</code></li><li><code>CHECK (((length(number) &gt;= 3) AND (length(number) &lt;= 40)))</code></li><li><code>CHECK ((received_vnd &gt;= 0))</code></li><li><code>CHECK ((source = ANY (ARRAY[&#x27;finance&#x27;::text, &#x27;order&#x27;::text])))</code></li></ul></details></article><article class="tcard" id="clinic-payment"><header><h4>payment</h4><span>10 cột</span></header><div class="tscroll"><table><tr><td class="k">PK</td><td class="c">id</td><td class="ty">uuid</td><td class="nn"></td><td class="x">gen_random_uuid()</td></tr><tr><td class="k">FK</td><td class="c">clinic_id</td><td class="ty">uuid</td><td class="nn"></td><td class="x">→ clinic.id</td></tr><tr><td class="k"></td><td class="c">idempotency_key</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k">FK</td><td class="c">invoice_id</td><td class="ty">uuid</td><td class="nn"></td><td class="x">→ invoice.clinic_id</td></tr><tr><td class="k">FK</td><td class="c">patient_id</td><td class="ty">uuid</td><td class="nn"></td><td class="x">→ patient.clinic_id</td></tr><tr><td class="k"></td><td class="c">amount_vnd</td><td class="ty">bigint</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">method</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">paid_on</td><td class="ty">date</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k">FK</td><td class="c">received_by</td><td class="ty">uuid</td><td class="nn">null</td><td class="x">→ user_account.clinic_id</td></tr><tr><td class="k"></td><td class="c">created_at</td><td class="ty">timestamptz</td><td class="nn"></td><td class="x">now()</td></tr></table></div><details><summary>5 ràng buộc UNIQUE / CHECK</summary><ul><li><code>UNIQUE (clinic_id, id)</code></li><li><code>UNIQUE (clinic_id, idempotency_key)</code></li><li><code>CHECK ((amount_vnd &gt;= 1))</code></li><li><code>CHECK (((length(idempotency_key) &gt;= 3) AND (length(idempotency_key) &lt;= 160)))</code></li><li><code>CHECK ((method = ANY (ARRAY[&#x27;cash&#x27;::text, &#x27;transfer&#x27;::text])))</code></li></ul></details></article><article class="tcard" id="clinic-procedure_entry"><header><h4>procedure_entry</h4><span>22 cột</span></header><div class="tscroll"><table><tr><td class="k">PK</td><td class="c">id</td><td class="ty">uuid</td><td class="nn"></td><td class="x">gen_random_uuid()</td></tr><tr><td class="k">FK</td><td class="c">clinic_id</td><td class="ty">uuid</td><td class="nn"></td><td class="x">→ clinic.id</td></tr><tr><td class="k">FK</td><td class="c">patient_id</td><td class="ty">uuid</td><td class="nn"></td><td class="x">→ patient.clinic_id</td></tr><tr><td class="k">FK</td><td class="c">service_id</td><td class="ty">uuid</td><td class="nn"></td><td class="x">→ service_version.service_id</td></tr><tr><td class="k"></td><td class="c">service_name</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k">FK</td><td class="c">terms_version</td><td class="ty">integer</td><td class="nn"></td><td class="x">→ service_version.version_no</td></tr><tr><td class="k"></td><td class="c">basis</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">entry_date</td><td class="ty">date</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k">FK</td><td class="c">invoice_id</td><td class="ty">uuid</td><td class="nn"></td><td class="x">→ invoice.clinic_id</td></tr><tr><td class="k"></td><td class="c">owns_invoice</td><td class="ty">boolean</td><td class="nn"></td><td class="x">true</td></tr><tr><td class="k"></td><td class="c">list_vnd</td><td class="ty">bigint</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">discount_vnd</td><td class="ty">bigint</td><td class="nn"></td><td class="x">0</td></tr><tr><td class="k"></td><td class="c">net_vnd</td><td class="ty">bigint</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">status</td><td class="ty">text</td><td class="nn"></td><td class="x">&#x27;pending&#x27;::text</td></tr><tr><td class="k"></td><td class="c">note</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">void_reason</td><td class="ty">text</td><td class="nn">null</td><td class="x"></td></tr><tr><td class="k">FK</td><td class="c">created_by</td><td class="ty">uuid</td><td class="nn">null</td><td class="x">→ user_account.clinic_id</td></tr><tr><td class="k">FK</td><td class="c">approved_by</td><td class="ty">uuid</td><td class="nn">null</td><td class="x">→ user_account.clinic_id</td></tr><tr><td class="k"></td><td class="c">approved_at</td><td class="ty">timestamptz</td><td class="nn">null</td><td class="x"></td></tr><tr><td class="k"></td><td class="c">version</td><td class="ty">integer</td><td class="nn"></td><td class="x">1</td></tr><tr><td class="k"></td><td class="c">created_at</td><td class="ty">timestamptz</td><td class="nn"></td><td class="x">now()</td></tr><tr><td class="k"></td><td class="c">updated_at</td><td class="ty">timestamptz</td><td class="nn"></td><td class="x">now()</td></tr></table></div><details><summary>13 ràng buộc UNIQUE / CHECK</summary><ul><li><code>UNIQUE (clinic_id, id)</code></li><li><code>CHECK ((basis = ANY (ARRAY[&#x27;net&#x27;::text, &#x27;list&#x27;::text, &#x27;collected&#x27;::text])))</code></li><li><code>CHECK ((discount_vnd &lt;= list_vnd))</code></li><li><code>CHECK ((net_vnd = (list_vnd - discount_vnd)))</code></li><li><code>CHECK (((status = &#x27;void&#x27;::text) = (void_reason IS NOT NULL)))</code></li><li><code>CHECK ((discount_vnd &gt;= 0))</code></li><li><code>CHECK ((list_vnd &gt;= 1))</code></li><li><code>CHECK ((net_vnd &gt;= 0))</code></li><li><code>CHECK (((length(note) &gt;= 1) AND (length(note) &lt;= 500)))</code></li><li><code>CHECK (((length(service_name) &gt;= 1) AND (length(service_name) &lt;= 200)))</code></li><li><code>CHECK ((status = ANY (ARRAY[&#x27;pending&#x27;::text, &#x27;approved&#x27;::text, &#x27;void&#x27;::text])))</code></li><li><code>CHECK ((terms_version &gt;= 1))</code></li><li><code>CHECK (((void_reason IS NULL) OR ((length(void_reason) &gt;= 1) AND (length(void_reason) &lt;= 500))))</code></li></ul></details></article><article class="tcard" id="clinic-procedure_entry_person"><header><h4>procedure_entry_person</h4><span>7 cột</span></header><div class="tscroll"><table><tr><td class="k">PK</td><td class="c">id</td><td class="ty">uuid</td><td class="nn"></td><td class="x">gen_random_uuid()</td></tr><tr><td class="k">FK</td><td class="c">clinic_id</td><td class="ty">uuid</td><td class="nn"></td><td class="x">→ clinic.id</td></tr><tr><td class="k">FK</td><td class="c">entry_id</td><td class="ty">uuid</td><td class="nn"></td><td class="x">→ procedure_entry.clinic_id</td></tr><tr><td class="k"></td><td class="c">position</td><td class="ty">integer</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k">FK</td><td class="c">doctor_id</td><td class="ty">uuid</td><td class="nn"></td><td class="x">→ user_account.clinic_id</td></tr><tr><td class="k"></td><td class="c">share_bp</td><td class="ty">integer</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">rate_bp</td><td class="ty">integer</td><td class="nn"></td><td class="x"></td></tr></table></div><details><summary>5 ràng buộc UNIQUE / CHECK</summary><ul><li><code>UNIQUE (entry_id, doctor_id)</code></li><li><code>UNIQUE (entry_id, &quot;position&quot;)</code></li><li><code>CHECK (((&quot;position&quot; &gt;= 1) AND (&quot;position&quot; &lt;= 4)))</code></li><li><code>CHECK (((rate_bp &gt;= 0) AND (rate_bp &lt;= 10000)))</code></li><li><code>CHECK (((share_bp &gt;= 1) AND (share_bp &lt;= 10000)))</code></li></ul></details></article><article class="tcard" id="clinic-finance_period"><header><h4>finance_period</h4><span>9 cột</span></header><div class="tscroll"><table><tr><td class="k">PK</td><td class="c">clinic_id</td><td class="ty">uuid</td><td class="nn"></td><td class="x">→ clinic.id</td></tr><tr><td class="k">PK</td><td class="c">month</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">status</td><td class="ty">text</td><td class="nn"></td><td class="x">&#x27;closed&#x27;::text</td></tr><tr><td class="k"></td><td class="c">closed_at</td><td class="ty">timestamptz</td><td class="nn"></td><td class="x">now()</td></tr><tr><td class="k">FK</td><td class="c">closed_by</td><td class="ty">uuid</td><td class="nn">null</td><td class="x">→ user_account.clinic_id</td></tr><tr><td class="k"></td><td class="c">paid_at</td><td class="ty">timestamptz</td><td class="nn">null</td><td class="x"></td></tr><tr><td class="k">FK</td><td class="c">paid_by</td><td class="ty">uuid</td><td class="nn">null</td><td class="x">→ user_account.clinic_id</td></tr><tr><td class="k"></td><td class="c">reference</td><td class="ty">text</td><td class="nn">null</td><td class="x"></td></tr><tr><td class="k"></td><td class="c">snapshot</td><td class="ty">jsonb</td><td class="nn"></td><td class="x"></td></tr></table></div><details><summary>4 ràng buộc UNIQUE / CHECK</summary><ul><li><code>CHECK (((status = &#x27;paid&#x27;::text) = ((reference IS NOT NULL) AND (paid_at IS NOT NULL))))</code></li><li><code>CHECK ((month ~ &#x27;^[0-9]{4}-(0[1-9]|1[0-2])$&#x27;::text))</code></li><li><code>CHECK (((reference IS NULL) OR ((length(reference) &gt;= 1) AND (length(reference) &lt;= 120))))</code></li><li><code>CHECK ((status = ANY (ARRAY[&#x27;closed&#x27;::text, &#x27;paid&#x27;::text])))</code></li></ul></details></article><article class="tcard" id="clinic-finance_notification"><header><h4>finance_notification</h4><span>10 cột</span></header><div class="tscroll"><table><tr><td class="k">PK</td><td class="c">id</td><td class="ty">uuid</td><td class="nn"></td><td class="x">gen_random_uuid()</td></tr><tr><td class="k">FK</td><td class="c">clinic_id</td><td class="ty">uuid</td><td class="nn"></td><td class="x">→ clinic.id</td></tr><tr><td class="k">FK</td><td class="c">payment_id</td><td class="ty">uuid</td><td class="nn"></td><td class="x">→ payment.clinic_id</td></tr><tr><td class="k"></td><td class="c">title</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">body</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">amount_vnd</td><td class="ty">bigint</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k">FK</td><td class="c">invoice_id</td><td class="ty">uuid</td><td class="nn"></td><td class="x">→ invoice.clinic_id</td></tr><tr><td class="k"></td><td class="c">is_read</td><td class="ty">boolean</td><td class="nn"></td><td class="x">false</td></tr><tr><td class="k"></td><td class="c">read_at</td><td class="ty">timestamptz</td><td class="nn">null</td><td class="x"></td></tr><tr><td class="k"></td><td class="c">created_at</td><td class="ty">timestamptz</td><td class="nn"></td><td class="x">now()</td></tr></table></div><details><summary>4 ràng buộc UNIQUE / CHECK</summary><ul><li><code>UNIQUE (payment_id)</code></li><li><code>CHECK ((amount_vnd &gt;= 1))</code></li><li><code>CHECK (((length(body) &gt;= 1) AND (length(body) &lt;= 500)))</code></li><li><code>CHECK (((length(title) &gt;= 1) AND (length(title) &lt;= 200)))</code></li></ul></details></article></div></div>
+<div class="erd-group" id="g-crm"><h3>CRM<small>3 bảng</small></h3><p>Luật CRM chỉ tạo việc cho nhân viên (D8), không tự gửi tin.</p><div class="erd-figure"><pre class="mermaid">
+erDiagram
+    crm_rule {
+        uuid id PK,UK
+        uuid clinic_id FK,UK
+        text rule_key UK
+        text name
+        text trigger
+        integer delay_days
+        text suggested_action
+        text priority
+        boolean active
+        jsonb conditions
+        integer version
+        timestamptz created_at
+        timestamptz updated_at
+    }
+    crm_task {
+        uuid id PK,UK
+        uuid clinic_id FK,UK
+        text task_key UK
+        uuid patient_id FK
+        text rule_key
+        text reason
+        text priority
+        text status
+        uuid owner_user_id FK
+        timestamptz due_at
+        text suggested_action
+        text source_event_id
+        uuid related_appointment_id FK
+        uuid related_plan_id FK
+        text resolution
+        timestamptz resolved_at
+        integer version
+        timestamptz created_at
+        timestamptz updated_at
+    }
+    crm_activity {
+        uuid id PK,UK
+        uuid clinic_id FK,UK
+        uuid patient_id FK
+        uuid task_id FK
+        text kind
+        text channel
+        text outcome
+        text note
+        uuid actor_user_id FK
+        timestamptz occurred_at
+        timestamptz next_action_at
+        text next_action_type
+        uuid related_appointment_id FK
+        timestamptz created_at
+    }
+    appointment {
+        ref xem_nhom_khac
+    }
+    patient {
+        ref xem_nhom_khac
+    }
+    treatment_plan {
+        ref xem_nhom_khac
+    }
+    user_account {
+        ref xem_nhom_khac
+    }
+    user_account |o--o{ crm_task : &quot;owner_user_id&quot;
+    patient ||--o{ crm_task : &quot;patient_id&quot;
+    appointment |o--o{ crm_task : &quot;related_appointment_id&quot;
+    treatment_plan |o--o{ crm_task : &quot;related_plan_id&quot;
+    user_account |o--o{ crm_activity : &quot;actor_user_id&quot;
+    patient ||--o{ crm_activity : &quot;patient_id&quot;
+    appointment |o--o{ crm_activity : &quot;related_appointment_id&quot;
+    crm_task |o--o{ crm_activity : &quot;task_id&quot;
+</pre></div><div class="tgrid"><article class="tcard" id="clinic-crm_rule"><header><h4>crm_rule</h4><span>13 cột</span></header><div class="tscroll"><table><tr><td class="k">PK</td><td class="c">id</td><td class="ty">uuid</td><td class="nn"></td><td class="x">gen_random_uuid()</td></tr><tr><td class="k">FK</td><td class="c">clinic_id</td><td class="ty">uuid</td><td class="nn"></td><td class="x">→ clinic.id</td></tr><tr><td class="k"></td><td class="c">rule_key</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">name</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">trigger</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">delay_days</td><td class="ty">integer</td><td class="nn"></td><td class="x">0</td></tr><tr><td class="k"></td><td class="c">suggested_action</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">priority</td><td class="ty">text</td><td class="nn"></td><td class="x">&#x27;normal&#x27;::text</td></tr><tr><td class="k"></td><td class="c">active</td><td class="ty">boolean</td><td class="nn"></td><td class="x">true</td></tr><tr><td class="k"></td><td class="c">conditions</td><td class="ty">jsonb</td><td class="nn"></td><td class="x">&#x27;{}&#x27;::jsonb</td></tr><tr><td class="k"></td><td class="c">version</td><td class="ty">integer</td><td class="nn"></td><td class="x">1</td></tr><tr><td class="k"></td><td class="c">created_at</td><td class="ty">timestamptz</td><td class="nn"></td><td class="x">now()</td></tr><tr><td class="k"></td><td class="c">updated_at</td><td class="ty">timestamptz</td><td class="nn"></td><td class="x">now()</td></tr></table></div><details><summary>5 ràng buộc UNIQUE / CHECK</summary><ul><li><code>UNIQUE (clinic_id, id)</code></li><li><code>UNIQUE (clinic_id, rule_key)</code></li><li><code>CHECK ((delay_days &gt;= 0))</code></li><li><code>CHECK ((priority = ANY (ARRAY[&#x27;high&#x27;::text, &#x27;normal&#x27;::text, &#x27;low&#x27;::text])))</code></li><li><code>CHECK ((rule_key = ANY (ARRAY[&#x27;d1&#x27;::text, &#x27;d3&#x27;::text, &#x27;d7&#x27;::text, &#x27;due&#x27;::text, &#x27;overdue&#x27;::text, &#x27;no_show&#x27;::text, &#x27;abandoned&#x27;::text, &#x27;dormant90&#x27;::text, &#x27;dormant180&#x27;::text, &#x27;birthday&#x27;::text])))</code></li></ul></details></article><article class="tcard" id="clinic-crm_task"><header><h4>crm_task</h4><span>19 cột</span></header><div class="tscroll"><table><tr><td class="k">PK</td><td class="c">id</td><td class="ty">uuid</td><td class="nn"></td><td class="x">gen_random_uuid()</td></tr><tr><td class="k">FK</td><td class="c">clinic_id</td><td class="ty">uuid</td><td class="nn"></td><td class="x">→ clinic.id</td></tr><tr><td class="k"></td><td class="c">task_key</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k">FK</td><td class="c">patient_id</td><td class="ty">uuid</td><td class="nn"></td><td class="x">→ patient.clinic_id</td></tr><tr><td class="k"></td><td class="c">rule_key</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">reason</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">priority</td><td class="ty">text</td><td class="nn"></td><td class="x">&#x27;normal&#x27;::text</td></tr><tr><td class="k"></td><td class="c">status</td><td class="ty">text</td><td class="nn"></td><td class="x">&#x27;open&#x27;::text</td></tr><tr><td class="k">FK</td><td class="c">owner_user_id</td><td class="ty">uuid</td><td class="nn">null</td><td class="x">→ user_account.clinic_id</td></tr><tr><td class="k"></td><td class="c">due_at</td><td class="ty">timestamptz</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">suggested_action</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">source_event_id</td><td class="ty">text</td><td class="nn">null</td><td class="x"></td></tr><tr><td class="k">FK</td><td class="c">related_appointment_id</td><td class="ty">uuid</td><td class="nn">null</td><td class="x">→ appointment.clinic_id</td></tr><tr><td class="k">FK</td><td class="c">related_plan_id</td><td class="ty">uuid</td><td class="nn">null</td><td class="x">→ treatment_plan.clinic_id</td></tr><tr><td class="k"></td><td class="c">resolution</td><td class="ty">text</td><td class="nn">null</td><td class="x"></td></tr><tr><td class="k"></td><td class="c">resolved_at</td><td class="ty">timestamptz</td><td class="nn">null</td><td class="x"></td></tr><tr><td class="k"></td><td class="c">version</td><td class="ty">integer</td><td class="nn"></td><td class="x">1</td></tr><tr><td class="k"></td><td class="c">created_at</td><td class="ty">timestamptz</td><td class="nn"></td><td class="x">now()</td></tr><tr><td class="k"></td><td class="c">updated_at</td><td class="ty">timestamptz</td><td class="nn"></td><td class="x">now()</td></tr></table></div><details><summary>5 ràng buộc UNIQUE / CHECK</summary><ul><li><code>UNIQUE (clinic_id, id)</code></li><li><code>UNIQUE (clinic_id, task_key)</code></li><li><code>CHECK ((priority = ANY (ARRAY[&#x27;high&#x27;::text, &#x27;normal&#x27;::text, &#x27;low&#x27;::text])))</code></li><li><code>CHECK ((rule_key = ANY (ARRAY[&#x27;d1&#x27;::text, &#x27;d3&#x27;::text, &#x27;d7&#x27;::text, &#x27;due&#x27;::text, &#x27;overdue&#x27;::text, &#x27;no_show&#x27;::text, &#x27;abandoned&#x27;::text, &#x27;dormant90&#x27;::text, &#x27;dormant180&#x27;::text, &#x27;birthday&#x27;::text, &#x27;manual&#x27;::text])))</code></li><li><code>CHECK ((status = ANY (ARRAY[&#x27;open&#x27;::text, &#x27;rescheduled&#x27;::text, &#x27;resolved&#x27;::text, &#x27;superseded&#x27;::text])))</code></li></ul></details></article><article class="tcard" id="clinic-crm_activity"><header><h4>crm_activity</h4><span>14 cột</span></header><div class="tscroll"><table><tr><td class="k">PK</td><td class="c">id</td><td class="ty">uuid</td><td class="nn"></td><td class="x">gen_random_uuid()</td></tr><tr><td class="k">FK</td><td class="c">clinic_id</td><td class="ty">uuid</td><td class="nn"></td><td class="x">→ clinic.id</td></tr><tr><td class="k">FK</td><td class="c">patient_id</td><td class="ty">uuid</td><td class="nn"></td><td class="x">→ patient.clinic_id</td></tr><tr><td class="k">FK</td><td class="c">task_id</td><td class="ty">uuid</td><td class="nn">null</td><td class="x">→ crm_task.clinic_id</td></tr><tr><td class="k"></td><td class="c">kind</td><td class="ty">text</td><td class="nn"></td><td class="x">&#x27;cskh&#x27;::text</td></tr><tr><td class="k"></td><td class="c">channel</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">outcome</td><td class="ty">text</td><td class="nn">null</td><td class="x"></td></tr><tr><td class="k"></td><td class="c">note</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k">FK</td><td class="c">actor_user_id</td><td class="ty">uuid</td><td class="nn">null</td><td class="x">→ user_account.clinic_id</td></tr><tr><td class="k"></td><td class="c">occurred_at</td><td class="ty">timestamptz</td><td class="nn"></td><td class="x">now()</td></tr><tr><td class="k"></td><td class="c">next_action_at</td><td class="ty">timestamptz</td><td class="nn">null</td><td class="x"></td></tr><tr><td class="k"></td><td class="c">next_action_type</td><td class="ty">text</td><td class="nn">null</td><td class="x"></td></tr><tr><td class="k">FK</td><td class="c">related_appointment_id</td><td class="ty">uuid</td><td class="nn">null</td><td class="x">→ appointment.clinic_id</td></tr><tr><td class="k"></td><td class="c">created_at</td><td class="ty">timestamptz</td><td class="nn"></td><td class="x">now()</td></tr></table></div><details><summary>4 ràng buộc UNIQUE / CHECK</summary><ul><li><code>UNIQUE (clinic_id, id)</code></li><li><code>CHECK ((channel = ANY (ARRAY[&#x27;call&#x27;::text, &#x27;zalo&#x27;::text, &#x27;sms&#x27;::text, &#x27;internal_note&#x27;::text])))</code></li><li><code>CHECK ((kind = ANY (ARRAY[&#x27;cskh&#x27;::text, &#x27;complaint&#x27;::text, &#x27;note&#x27;::text])))</code></li><li><code>CHECK ((outcome = ANY (ARRAY[&#x27;unanswered&#x27;::text, &#x27;callback&#x27;::text, &#x27;no_need&#x27;::text, &#x27;busy&#x27;::text, &#x27;booked&#x27;::text, &#x27;doctor&#x27;::text, &#x27;reaction&#x27;::text, &#x27;complaint&#x27;::text, &#x27;optout&#x27;::text, &#x27;invalid&#x27;::text])))</code></li></ul></details></article></div></div>
+</section>
+<section class="erd-db" id="erd-pema_agent"><p class="erd-tag">Sơ đồ chi tiết</p><h2>DB <code>pema_agent</code> · schema <code>agent_rt</code></h2><p class="subtitle">24 bảng, hiện vẫn nằm chung database với CRM. Bước 10–11 gộp thành một baseline, mỗi plugin một file SQL, và chuyển sang database riêng <code>pema_agent</code>; role <code>agent_rt_app</code> không có CONNECT vào <code>pema</code> (L1). Khóa <code>tenant_id</code> + <code>agent</code> có trong mọi bảng.</p><div class="legend-keys"><span><b>PK</b> khóa chính</span><span><b>FK</b> khóa ngoại → bảng.cột</span><span><b>UK</b> nằm trong UNIQUE</span><span>null: cột được để trống</span><span>||--o{ bắt buộc · |o--o{ được trống</span></div><nav class="db-nav" aria-label="Nhóm bảng"><a href="#g-runtime">Phiên, lượt, bộ nhớ</a><a href="#g-config">Cấu hình model và plugin</a><a href="#g-cv">Plugin hội thoại (cv_)</a><a href="#g-kb">Plugin kho tri thức (kb_)</a><a href="#g-sk">Plugin kỹ năng (sk_)</a></nav>
+<div class="erd-group" id="g-runtime"><h3>Phiên, lượt, bộ nhớ<small>7 bảng</small></h3><p>Lõi chạy agent: phiên chat, tin nhắn, lượt chạy model và sự kiện của lượt.</p><div class="erd-figure"><pre class="mermaid">
+erDiagram
+    agent_session {
+        text tenant_id PK
+        text session_id PK
+        text agent
+        text channel
+        text user_id
+        integer message_count
+        text prompt_text
+        text prompt_fingerprint
+        text summary
+        integer first_kept
+        timestamptz created_at
+        timestamptz updated_at
+    }
+    agent_message {
+        text tenant_id PK,FK
+        text session_id PK,FK
+        integer seq PK
+        uuid uid UK
+        jsonb message
+        timestamptz created_at
+    }
+    agent_turn {
+        uuid turn_id PK
+        text tenant_id
+        text session_id
+        text agent
+        text model
+        text channel
+        text user_id
+        timestamptz started_at
+        integer duration_ms
+        text stop
+        integer steps
+        text error_kind
+        integer compactions
+        integer input_tokens
+        integer output_tokens
+        integer cache_read_tokens
+        integer cache_write_tokens
+        integer reasoning_tokens
+    }
+    agent_turn_event {
+        uuid turn_id PK,FK
+        integer seq PK
+        text kind
+        integer step
+        text name
+        integer duration_ms
+        boolean is_error
+        jsonb detail
+    }
+    agent_conversation {
+        text tenant_id PK
+        text agent PK
+        text channel PK
+        text conversation_id PK
+        integer epoch
+        timestamptz updated_at
+    }
+    agent_ingress {
+        bigint id PK
+        text tenant_id UK
+        text agent UK
+        text channel UK
+        text external_id UK
+        text conversation_id
+        text user_id
+        text session_id
+        text text
+        jsonb metadata
+        text status
+        integer attempts
+        text error_kind
+        jsonb reply
+        timestamptz received_at
+        timestamptz started_at
+        timestamptz finished_at
+        text delivery
+        integer delivery_attempts
+        integer delivered_parts
+        text delivery_error
+        timestamptz delivery_at
+        timestamptz delivery_after
+    }
+    agent_memory {
+        text tenant_id PK
+        text agent PK
+        text target PK
+        text user_id PK
+        text content
+        integer version
+        timestamptz updated_at
+    }
+    agent_session ||--o{ agent_message : &quot;tenant_id, session_id&quot;
+    agent_turn ||--o{ agent_turn_event : &quot;turn_id&quot;
+</pre></div><div class="tgrid"><article class="tcard" id="agent_rt-agent_session"><header><h4>agent_session</h4><span>12 cột</span></header><div class="tscroll"><table><tr><td class="k">PK</td><td class="c">tenant_id</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k">PK</td><td class="c">session_id</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">agent</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">channel</td><td class="ty">text</td><td class="nn">null</td><td class="x"></td></tr><tr><td class="k"></td><td class="c">user_id</td><td class="ty">text</td><td class="nn">null</td><td class="x"></td></tr><tr><td class="k"></td><td class="c">message_count</td><td class="ty">integer</td><td class="nn"></td><td class="x">0</td></tr><tr><td class="k"></td><td class="c">prompt_text</td><td class="ty">text</td><td class="nn">null</td><td class="x"></td></tr><tr><td class="k"></td><td class="c">prompt_fingerprint</td><td class="ty">text</td><td class="nn">null</td><td class="x"></td></tr><tr><td class="k"></td><td class="c">summary</td><td class="ty">text</td><td class="nn">null</td><td class="x"></td></tr><tr><td class="k"></td><td class="c">first_kept</td><td class="ty">integer</td><td class="nn">null</td><td class="x"></td></tr><tr><td class="k"></td><td class="c">created_at</td><td class="ty">timestamptz</td><td class="nn"></td><td class="x">now()</td></tr><tr><td class="k"></td><td class="c">updated_at</td><td class="ty">timestamptz</td><td class="nn"></td><td class="x">now()</td></tr></table></div><details><summary>4 ràng buộc UNIQUE / CHECK</summary><ul><li><code>CHECK (((summary IS NULL) = (first_kept IS NULL)))</code></li><li><code>CHECK (((char_length(session_id) &gt;= 1) AND (char_length(session_id) &lt;= 200)))</code></li><li><code>CHECK ((message_count &gt;= 0))</code></li><li><code>CHECK (((prompt_text IS NULL) = (prompt_fingerprint IS NULL)))</code></li></ul></details></article><article class="tcard" id="agent_rt-agent_message"><header><h4>agent_message</h4><span>6 cột</span></header><div class="tscroll"><table><tr><td class="k">PK</td><td class="c">tenant_id</td><td class="ty">text</td><td class="nn"></td><td class="x">→ agent_session.tenant_id · CASCADE</td></tr><tr><td class="k">PK</td><td class="c">session_id</td><td class="ty">text</td><td class="nn"></td><td class="x">→ agent_session.session_id · CASCADE</td></tr><tr><td class="k">PK</td><td class="c">seq</td><td class="ty">integer</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">uid</td><td class="ty">uuid</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">message</td><td class="ty">jsonb</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">created_at</td><td class="ty">timestamptz</td><td class="nn"></td><td class="x">now()</td></tr></table></div><details><summary>2 ràng buộc UNIQUE / CHECK</summary><ul><li><code>UNIQUE (uid)</code></li><li><code>CHECK ((seq &gt;= 1))</code></li></ul></details></article><article class="tcard" id="agent_rt-agent_turn"><header><h4>agent_turn</h4><span>18 cột</span></header><div class="tscroll"><table><tr><td class="k">PK</td><td class="c">turn_id</td><td class="ty">uuid</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">tenant_id</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">session_id</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">agent</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">model</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">channel</td><td class="ty">text</td><td class="nn">null</td><td class="x"></td></tr><tr><td class="k"></td><td class="c">user_id</td><td class="ty">text</td><td class="nn">null</td><td class="x"></td></tr><tr><td class="k"></td><td class="c">started_at</td><td class="ty">timestamptz</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">duration_ms</td><td class="ty">integer</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">stop</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">steps</td><td class="ty">integer</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">error_kind</td><td class="ty">text</td><td class="nn">null</td><td class="x"></td></tr><tr><td class="k"></td><td class="c">compactions</td><td class="ty">integer</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">input_tokens</td><td class="ty">integer</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">output_tokens</td><td class="ty">integer</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">cache_read_tokens</td><td class="ty">integer</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">cache_write_tokens</td><td class="ty">integer</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">reasoning_tokens</td><td class="ty">integer</td><td class="nn"></td><td class="x"></td></tr></table></div><details><summary>2 ràng buộc UNIQUE / CHECK</summary><ul><li><code>CHECK (((stop = &#x27;error&#x27;::text) = (error_kind IS NOT NULL)))</code></li><li><code>CHECK ((stop = ANY (ARRAY[&#x27;completed&#x27;::text, &#x27;max_steps&#x27;::text, &#x27;deadline&#x27;::text, &#x27;budget&#x27;::text, &#x27;loop&#x27;::text, &#x27;error&#x27;::text])))</code></li></ul></details></article><article class="tcard" id="agent_rt-agent_turn_event"><header><h4>agent_turn_event</h4><span>8 cột</span></header><div class="tscroll"><table><tr><td class="k">PK</td><td class="c">turn_id</td><td class="ty">uuid</td><td class="nn"></td><td class="x">→ agent_turn.turn_id · CASCADE</td></tr><tr><td class="k">PK</td><td class="c">seq</td><td class="ty">integer</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">kind</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">step</td><td class="ty">integer</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">name</td><td class="ty">text</td><td class="nn"></td><td class="x">&#x27;&#x27;::text</td></tr><tr><td class="k"></td><td class="c">duration_ms</td><td class="ty">integer</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">is_error</td><td class="ty">boolean</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">detail</td><td class="ty">jsonb</td><td class="nn"></td><td class="x">&#x27;{}&#x27;::jsonb</td></tr></table></div><details><summary>1 ràng buộc UNIQUE / CHECK</summary><ul><li><code>CHECK ((kind = ANY (ARRAY[&#x27;model_call&#x27;::text, &#x27;tool_call&#x27;::text, &#x27;compaction&#x27;::text, &#x27;memory_flush&#x27;::text, &#x27;repair&#x27;::text, &#x27;model_retry&#x27;::text, &#x27;guard&#x27;::text, &#x27;inbox&#x27;::text])))</code></li></ul></details></article><article class="tcard" id="agent_rt-agent_conversation"><header><h4>agent_conversation</h4><span>6 cột</span></header><div class="tscroll"><table><tr><td class="k">PK</td><td class="c">tenant_id</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k">PK</td><td class="c">agent</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k">PK</td><td class="c">channel</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k">PK</td><td class="c">conversation_id</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">epoch</td><td class="ty">integer</td><td class="nn"></td><td class="x">0</td></tr><tr><td class="k"></td><td class="c">updated_at</td><td class="ty">timestamptz</td><td class="nn"></td><td class="x">now()</td></tr></table></div><details><summary>2 ràng buộc UNIQUE / CHECK</summary><ul><li><code>CHECK ((epoch &gt;= 0))</code></li><li><code>CHECK (((char_length(conversation_id) &gt;= 1) AND (char_length(conversation_id) &lt;= 500)))</code></li></ul></details></article><article class="tcard" id="agent_rt-agent_ingress"><header><h4>agent_ingress</h4><span>23 cột</span></header><div class="tscroll"><table><tr><td class="k">PK</td><td class="c">id</td><td class="ty">bigint</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">tenant_id</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">agent</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">channel</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">external_id</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">conversation_id</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">user_id</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">session_id</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">text</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">metadata</td><td class="ty">jsonb</td><td class="nn"></td><td class="x">&#x27;{}&#x27;::jsonb</td></tr><tr><td class="k"></td><td class="c">status</td><td class="ty">text</td><td class="nn"></td><td class="x">&#x27;queued&#x27;::text</td></tr><tr><td class="k"></td><td class="c">attempts</td><td class="ty">integer</td><td class="nn"></td><td class="x">0</td></tr><tr><td class="k"></td><td class="c">error_kind</td><td class="ty">text</td><td class="nn">null</td><td class="x"></td></tr><tr><td class="k"></td><td class="c">reply</td><td class="ty">jsonb</td><td class="nn">null</td><td class="x"></td></tr><tr><td class="k"></td><td class="c">received_at</td><td class="ty">timestamptz</td><td class="nn"></td><td class="x">now()</td></tr><tr><td class="k"></td><td class="c">started_at</td><td class="ty">timestamptz</td><td class="nn">null</td><td class="x"></td></tr><tr><td class="k"></td><td class="c">finished_at</td><td class="ty">timestamptz</td><td class="nn">null</td><td class="x"></td></tr><tr><td class="k"></td><td class="c">delivery</td><td class="ty">text</td><td class="nn">null</td><td class="x"></td></tr><tr><td class="k"></td><td class="c">delivery_attempts</td><td class="ty">integer</td><td class="nn"></td><td class="x">0</td></tr><tr><td class="k"></td><td class="c">delivered_parts</td><td class="ty">integer</td><td class="nn"></td><td class="x">0</td></tr><tr><td class="k"></td><td class="c">delivery_error</td><td class="ty">text</td><td class="nn">null</td><td class="x"></td></tr><tr><td class="k"></td><td class="c">delivery_at</td><td class="ty">timestamptz</td><td class="nn">null</td><td class="x"></td></tr><tr><td class="k"></td><td class="c">delivery_after</td><td class="ty">timestamptz</td><td class="nn">null</td><td class="x"></td></tr></table></div><details><summary>8 ràng buộc UNIQUE / CHECK</summary><ul><li><code>UNIQUE (tenant_id, agent, channel, external_id)</code></li><li><code>CHECK ((attempts &gt;= 0))</code></li><li><code>CHECK (((delivery IS NULL) OR (delivery = ANY (ARRAY[&#x27;pending&#x27;::text, &#x27;sending&#x27;::text, &#x27;sent&#x27;::text, &#x27;failed&#x27;::text, &#x27;skipped&#x27;::text]))))</code></li><li><code>CHECK (((delivery_error IS NULL) OR (char_length(delivery_error) &lt;= 1000)))</code></li><li><code>CHECK (((char_length(external_id) &gt;= 1) AND (char_length(external_id) &lt;= 200)))</code></li><li><code>CHECK (((status = &#x27;done&#x27;::text) = (reply IS NOT NULL)))</code></li><li><code>CHECK ((status = ANY (ARRAY[&#x27;queued&#x27;::text, &#x27;processing&#x27;::text, &#x27;done&#x27;::text, &#x27;failed&#x27;::text, &#x27;dead&#x27;::text])))</code></li><li><code>CHECK (((char_length(text) &gt;= 1) AND (char_length(text) &lt;= 20000)))</code></li></ul></details></article><article class="tcard" id="agent_rt-agent_memory"><header><h4>agent_memory</h4><span>7 cột</span></header><div class="tscroll"><table><tr><td class="k">PK</td><td class="c">tenant_id</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k">PK</td><td class="c">agent</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k">PK</td><td class="c">target</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k">PK</td><td class="c">user_id</td><td class="ty">text</td><td class="nn"></td><td class="x">&#x27;&#x27;::text</td></tr><tr><td class="k"></td><td class="c">content</td><td class="ty">text</td><td class="nn"></td><td class="x">&#x27;&#x27;::text</td></tr><tr><td class="k"></td><td class="c">version</td><td class="ty">integer</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">updated_at</td><td class="ty">timestamptz</td><td class="nn"></td><td class="x">now()</td></tr></table></div><details><summary>4 ràng buộc UNIQUE / CHECK</summary><ul><li><code>CHECK ((char_length(content) &lt;= 20000))</code></li><li><code>CHECK ((target = ANY (ARRAY[&#x27;agent&#x27;::text, &#x27;user&#x27;::text])))</code></li><li><code>CHECK (((target = &#x27;agent&#x27;::text) = (user_id = &#x27;&#x27;::text)))</code></li><li><code>CHECK ((version &gt;= 1))</code></li></ul></details></article></div></div>
+<div class="erd-group" id="g-config"><h3>Cấu hình model và plugin<small>5 bảng</small></h3><p>Model nào dùng cho agent nào, plugin nào bật, migration riêng của từng plugin.</p><div class="erd-figure"><pre class="mermaid">
+erDiagram
+    agent_model_entry {
+        text tenant_id PK
+        text agent PK
+        text id PK
+        text label
+        text provider
+        text model
+        text base_url
+        text reasoning
+        text dialect
+        text api_key_enc
+        timestamptz created_at
+        timestamptz updated_at
+    }
+    agent_model_settings {
+        text tenant_id PK
+        text agent PK
+        text provider
+        text model
+        text base_url
+        text reasoning
+        text dialect
+        text api_key_enc
+        integer version
+        timestamptz updated_at
+        text entry_id
+    }
+    agent_plugin {
+        text tenant_id PK
+        text agent PK
+        text name PK
+        boolean enabled
+        jsonb config
+        text secrets_enc
+        jsonb install
+        text last_error
+        timestamptz updated_at
+    }
+    agent_plugin_migration {
+        text plugin PK
+        integer version PK
+        text name
+        text checksum
+        text table_prefix
+        timestamptz applied_at
+    }
+    agent_plugin_record {
+        text tenant_id PK
+        text agent PK
+        text plugin PK
+        text key PK
+        jsonb value
+        timestamptz updated_at
+    }
+</pre></div><div class="tgrid"><article class="tcard" id="agent_rt-agent_model_entry"><header><h4>agent_model_entry</h4><span>12 cột</span></header><div class="tscroll"><table><tr><td class="k">PK</td><td class="c">tenant_id</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k">PK</td><td class="c">agent</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k">PK</td><td class="c">id</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">label</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">provider</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">model</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">base_url</td><td class="ty">text</td><td class="nn">null</td><td class="x"></td></tr><tr><td class="k"></td><td class="c">reasoning</td><td class="ty">text</td><td class="nn">null</td><td class="x"></td></tr><tr><td class="k"></td><td class="c">dialect</td><td class="ty">text</td><td class="nn">null</td><td class="x"></td></tr><tr><td class="k"></td><td class="c">api_key_enc</td><td class="ty">text</td><td class="nn">null</td><td class="x"></td></tr><tr><td class="k"></td><td class="c">created_at</td><td class="ty">timestamptz</td><td class="nn"></td><td class="x">now()</td></tr><tr><td class="k"></td><td class="c">updated_at</td><td class="ty">timestamptz</td><td class="nn"></td><td class="x">now()</td></tr></table></div><details><summary>7 ràng buộc UNIQUE / CHECK</summary><ul><li><code>CHECK (((base_url IS NULL) OR ((base_url ~ &#x27;^https?://&#x27;::text) AND (char_length(base_url) &lt;= 500))))</code></li><li><code>CHECK (((dialect IS NULL) OR (dialect = ANY (ARRAY[&#x27;deepseek&#x27;::text, &#x27;openai&#x27;::text]))))</code></li><li><code>CHECK ((id ~ &#x27;^[0-9a-f]{32}$&#x27;::text))</code></li><li><code>CHECK (((char_length(label) &gt;= 1) AND (char_length(label) &lt;= 100)))</code></li><li><code>CHECK (((char_length(model) &gt;= 1) AND (char_length(model) &lt;= 200)))</code></li><li><code>CHECK ((provider = ANY (ARRAY[&#x27;openai-compatible&#x27;::text, &#x27;anthropic&#x27;::text])))</code></li><li><code>CHECK (((reasoning IS NULL) OR (reasoning = ANY (ARRAY[&#x27;off&#x27;::text, &#x27;low&#x27;::text, &#x27;medium&#x27;::text, &#x27;high&#x27;::text]))))</code></li></ul></details></article><article class="tcard" id="agent_rt-agent_model_settings"><header><h4>agent_model_settings</h4><span>11 cột</span></header><div class="tscroll"><table><tr><td class="k">PK</td><td class="c">tenant_id</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k">PK</td><td class="c">agent</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">provider</td><td class="ty">text</td><td class="nn">null</td><td class="x"></td></tr><tr><td class="k"></td><td class="c">model</td><td class="ty">text</td><td class="nn">null</td><td class="x"></td></tr><tr><td class="k"></td><td class="c">base_url</td><td class="ty">text</td><td class="nn">null</td><td class="x"></td></tr><tr><td class="k"></td><td class="c">reasoning</td><td class="ty">text</td><td class="nn">null</td><td class="x"></td></tr><tr><td class="k"></td><td class="c">dialect</td><td class="ty">text</td><td class="nn">null</td><td class="x"></td></tr><tr><td class="k"></td><td class="c">api_key_enc</td><td class="ty">text</td><td class="nn">null</td><td class="x"></td></tr><tr><td class="k"></td><td class="c">version</td><td class="ty">integer</td><td class="nn"></td><td class="x">1</td></tr><tr><td class="k"></td><td class="c">updated_at</td><td class="ty">timestamptz</td><td class="nn"></td><td class="x">now()</td></tr><tr><td class="k"></td><td class="c">entry_id</td><td class="ty">text</td><td class="nn">null</td><td class="x"></td></tr></table></div><details><summary>6 ràng buộc UNIQUE / CHECK</summary><ul><li><code>CHECK (((base_url IS NULL) OR ((base_url ~ &#x27;^https?://&#x27;::text) AND (char_length(base_url) &lt;= 500))))</code></li><li><code>CHECK (((dialect IS NULL) OR (dialect = ANY (ARRAY[&#x27;deepseek&#x27;::text, &#x27;openai&#x27;::text]))))</code></li><li><code>CHECK (((model IS NULL) OR ((char_length(model) &gt;= 1) AND (char_length(model) &lt;= 200))))</code></li><li><code>CHECK (((provider IS NULL) OR (provider = ANY (ARRAY[&#x27;openai-compatible&#x27;::text, &#x27;anthropic&#x27;::text]))))</code></li><li><code>CHECK (((reasoning IS NULL) OR (reasoning = ANY (ARRAY[&#x27;off&#x27;::text, &#x27;low&#x27;::text, &#x27;medium&#x27;::text, &#x27;high&#x27;::text]))))</code></li><li><code>CHECK ((version &gt;= 1))</code></li></ul></details></article><article class="tcard" id="agent_rt-agent_plugin"><header><h4>agent_plugin</h4><span>9 cột</span></header><div class="tscroll"><table><tr><td class="k">PK</td><td class="c">tenant_id</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k">PK</td><td class="c">agent</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k">PK</td><td class="c">name</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">enabled</td><td class="ty">boolean</td><td class="nn"></td><td class="x">false</td></tr><tr><td class="k"></td><td class="c">config</td><td class="ty">jsonb</td><td class="nn"></td><td class="x">&#x27;{}&#x27;::jsonb</td></tr><tr><td class="k"></td><td class="c">secrets_enc</td><td class="ty">text</td><td class="nn">null</td><td class="x"></td></tr><tr><td class="k"></td><td class="c">install</td><td class="ty">jsonb</td><td class="nn">null</td><td class="x"></td></tr><tr><td class="k"></td><td class="c">last_error</td><td class="ty">text</td><td class="nn">null</td><td class="x"></td></tr><tr><td class="k"></td><td class="c">updated_at</td><td class="ty">timestamptz</td><td class="nn"></td><td class="x">now()</td></tr></table></div><details><summary>4 ràng buộc UNIQUE / CHECK</summary><ul><li><code>CHECK ((jsonb_typeof(config) = &#x27;object&#x27;::text))</code></li><li><code>CHECK ((pg_column_size(config) &lt;= 65536))</code></li><li><code>CHECK (((last_error IS NULL) OR (char_length(last_error) &lt;= 4000)))</code></li><li><code>CHECK ((name ~ &#x27;^[a-z0-9][a-z0-9_-]{0,63}$&#x27;::text))</code></li></ul></details></article><article class="tcard" id="agent_rt-agent_plugin_migration"><header><h4>agent_plugin_migration</h4><span>6 cột</span></header><div class="tscroll"><table><tr><td class="k">PK</td><td class="c">plugin</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k">PK</td><td class="c">version</td><td class="ty">integer</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">name</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">checksum</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">table_prefix</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">applied_at</td><td class="ty">timestamptz</td><td class="nn"></td><td class="x">now()</td></tr></table></div><details><summary>2 ràng buộc UNIQUE / CHECK</summary><ul><li><code>CHECK ((table_prefix ~ &#x27;^[a-z][a-z0-9]*_$&#x27;::text))</code></li><li><code>CHECK ((version &gt; 0))</code></li></ul></details></article><article class="tcard" id="agent_rt-agent_plugin_record"><header><h4>agent_plugin_record</h4><span>6 cột</span></header><div class="tscroll"><table><tr><td class="k">PK</td><td class="c">tenant_id</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k">PK</td><td class="c">agent</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k">PK</td><td class="c">plugin</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k">PK</td><td class="c">key</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">value</td><td class="ty">jsonb</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">updated_at</td><td class="ty">timestamptz</td><td class="nn"></td><td class="x">now()</td></tr></table></div><details><summary>3 ràng buộc UNIQUE / CHECK</summary><ul><li><code>CHECK (((char_length(key) &gt;= 1) AND (char_length(key) &lt;= 300)))</code></li><li><code>CHECK ((plugin ~ &#x27;^[a-z0-9][a-z0-9_-]{0,63}$&#x27;::text))</code></li><li><code>CHECK ((pg_column_size(value) &lt;= 262144))</code></li></ul></details></article></div></div>
+<div class="erd-group" id="g-cv"><h3>Plugin hội thoại (cv_)<small>4 bảng</small></h3><p>Lưu hội thoại theo kênh và tóm tắt từng đoạn kèm vector để nhớ lại.</p><div class="erd-figure"><pre class="mermaid">
+erDiagram
+    cv_conversation {
+        text tenant_id PK,UK
+        text agent PK,UK
+        text id PK
+        text channel UK
+        text external_id UK
+        boolean is_group
+        text title
+        boolean excluded
+        integer message_count
+        timestamptz first_at
+        timestamptz last_at
+        bigint cut_upto
+    }
+    cv_message {
+        text tenant_id PK,FK,UK
+        text agent PK,FK,UK
+        bigint seq PK
+        text conversation_id FK,UK
+        text external_id UK
+        text sender_id
+        text sender_name
+        text role
+        text origin
+        timestamptz at
+        text text
+        boolean answered
+        jsonb meta
+    }
+    cv_episode {
+        text tenant_id PK
+        text agent PK
+        text id PK
+        text channel
+        text plugin
+        text conversation_id
+        timestamptz started_at
+        timestamptz ended_at
+        bigint first_seq
+        bigint last_seq
+        text ask
+        jsonb transcript
+        text fingerprint
+        tsvector terms
+        integer repeats
+        boolean enabled
+        timestamptz created_at
+        timestamptz updated_at
+    }
+    cv_episode_vector {
+        text tenant_id PK,FK
+        text agent PK,FK
+        text space PK
+        text episode_id PK,FK
+        vector vector
+        timestamptz created_at
+    }
+    cv_conversation ||--o{ cv_message : &quot;tenant_id, agent, conversation_id&quot;
+    cv_episode ||--o{ cv_episode_vector : &quot;tenant_id, agent, episode_id&quot;
+</pre></div><div class="tgrid"><article class="tcard" id="agent_rt-cv_conversation"><header><h4>cv_conversation</h4><span>12 cột</span></header><div class="tscroll"><table><tr><td class="k">PK</td><td class="c">tenant_id</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k">PK</td><td class="c">agent</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k">PK</td><td class="c">id</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">channel</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">external_id</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">is_group</td><td class="ty">boolean</td><td class="nn"></td><td class="x">false</td></tr><tr><td class="k"></td><td class="c">title</td><td class="ty">text</td><td class="nn"></td><td class="x">&#x27;&#x27;::text</td></tr><tr><td class="k"></td><td class="c">excluded</td><td class="ty">boolean</td><td class="nn"></td><td class="x">false</td></tr><tr><td class="k"></td><td class="c">message_count</td><td class="ty">integer</td><td class="nn"></td><td class="x">0</td></tr><tr><td class="k"></td><td class="c">first_at</td><td class="ty">timestamptz</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">last_at</td><td class="ty">timestamptz</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">cut_upto</td><td class="ty">bigint</td><td class="nn"></td><td class="x">0</td></tr></table></div><details><summary>1 ràng buộc UNIQUE / CHECK</summary><ul><li><code>UNIQUE (tenant_id, agent, channel, external_id)</code></li></ul></details></article><article class="tcard" id="agent_rt-cv_message"><header><h4>cv_message</h4><span>13 cột</span></header><div class="tscroll"><table><tr><td class="k">PK</td><td class="c">tenant_id</td><td class="ty">text</td><td class="nn"></td><td class="x">→ cv_conversation.tenant_id · CASCADE</td></tr><tr><td class="k">PK</td><td class="c">agent</td><td class="ty">text</td><td class="nn"></td><td class="x">→ cv_conversation.agent · CASCADE</td></tr><tr><td class="k">PK</td><td class="c">seq</td><td class="ty">bigint</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k">FK</td><td class="c">conversation_id</td><td class="ty">text</td><td class="nn"></td><td class="x">→ cv_conversation.id · CASCADE</td></tr><tr><td class="k"></td><td class="c">external_id</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">sender_id</td><td class="ty">text</td><td class="nn"></td><td class="x">&#x27;&#x27;::text</td></tr><tr><td class="k"></td><td class="c">sender_name</td><td class="ty">text</td><td class="nn"></td><td class="x">&#x27;&#x27;::text</td></tr><tr><td class="k"></td><td class="c">role</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">origin</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">at</td><td class="ty">timestamptz</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">text</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">answered</td><td class="ty">boolean</td><td class="nn"></td><td class="x">false</td></tr><tr><td class="k"></td><td class="c">meta</td><td class="ty">jsonb</td><td class="nn"></td><td class="x">&#x27;{}&#x27;::jsonb</td></tr></table></div><details><summary>3 ràng buộc UNIQUE / CHECK</summary><ul><li><code>UNIQUE (tenant_id, agent, conversation_id, external_id)</code></li><li><code>CHECK ((origin = ANY (ARRAY[&#x27;inbound&#x27;::text, &#x27;own&#x27;::text, &#x27;agent&#x27;::text])))</code></li><li><code>CHECK ((role = ANY (ARRAY[&#x27;customer&#x27;::text, &#x27;staff&#x27;::text, &#x27;agent&#x27;::text])))</code></li></ul></details></article><article class="tcard" id="agent_rt-cv_episode"><header><h4>cv_episode</h4><span>18 cột</span></header><div class="tscroll"><table><tr><td class="k">PK</td><td class="c">tenant_id</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k">PK</td><td class="c">agent</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k">PK</td><td class="c">id</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">channel</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">plugin</td><td class="ty">text</td><td class="nn"></td><td class="x">&#x27;&#x27;::text</td></tr><tr><td class="k"></td><td class="c">conversation_id</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">started_at</td><td class="ty">timestamptz</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">ended_at</td><td class="ty">timestamptz</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">first_seq</td><td class="ty">bigint</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">last_seq</td><td class="ty">bigint</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">ask</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">transcript</td><td class="ty">jsonb</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">fingerprint</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">terms</td><td class="ty">tsvector</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">repeats</td><td class="ty">integer</td><td class="nn"></td><td class="x">1</td></tr><tr><td class="k"></td><td class="c">enabled</td><td class="ty">boolean</td><td class="nn"></td><td class="x">true</td></tr><tr><td class="k"></td><td class="c">created_at</td><td class="ty">timestamptz</td><td class="nn"></td><td class="x">now()</td></tr><tr><td class="k"></td><td class="c">updated_at</td><td class="ty">timestamptz</td><td class="nn"></td><td class="x">now()</td></tr></table></div><details><summary>1 ràng buộc UNIQUE / CHECK</summary><ul><li><code>CHECK ((repeats &gt;= 1))</code></li></ul></details></article><article class="tcard" id="agent_rt-cv_episode_vector"><header><h4>cv_episode_vector</h4><span>6 cột</span></header><div class="tscroll"><table><tr><td class="k">PK</td><td class="c">tenant_id</td><td class="ty">text</td><td class="nn"></td><td class="x">→ cv_episode.tenant_id · CASCADE</td></tr><tr><td class="k">PK</td><td class="c">agent</td><td class="ty">text</td><td class="nn"></td><td class="x">→ cv_episode.agent · CASCADE</td></tr><tr><td class="k">PK</td><td class="c">space</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k">PK</td><td class="c">episode_id</td><td class="ty">text</td><td class="nn"></td><td class="x">→ cv_episode.id · CASCADE</td></tr><tr><td class="k"></td><td class="c">vector</td><td class="ty">vector</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">created_at</td><td class="ty">timestamptz</td><td class="nn"></td><td class="x">now()</td></tr></table></div><details><summary>1 ràng buộc UNIQUE / CHECK</summary><ul><li><code>CHECK ((space ~ &#x27;^[0-9a-f]{16}$&#x27;::text))</code></li></ul></details></article></div></div>
+<div class="erd-group" id="g-kb"><h3>Plugin kho tri thức (kb_)<small>6 bảng</small></h3><p>Đường duy nhất dữ liệu phòng khám vào agent (L4): tài liệu nhân viên tải lên, cắt đoạn, nhúng vector.</p><div class="erd-figure"><pre class="mermaid">
+erDiagram
+    kb_source {
+        text tenant_id PK
+        text agent PK
+        text id PK
+        text title
+        text doc_code
+        text kind
+        text format
+        integer size
+        text[] services
+        text audience
+        text processing
+        jsonb progress
+        text error
+        text lifecycle
+        text version
+        date effective_from
+        date effective_to
+        boolean approved
+        text approved_by
+        timestamptz approved_at
+        integer chunk_count
+        text note
+        text markdown
+        text content_hash
+        text supersedes
+        text created_by
+        timestamptz created_at
+        timestamptz updated_at
+    }
+    kb_chunk {
+        text tenant_id PK,FK
+        text agent PK,FK
+        text id PK
+        text source_id FK
+        integer ordinal
+        text path
+        text body
+        integer chars
+        text[] services
+        text kind
+        tsvector terms
+        text embed_text
+        text embed_hash
+        integer terms_len
+        jsonb term_counts
+    }
+    kb_embedding {
+        text tenant_id PK
+        text agent PK
+        text space PK
+        text text_hash PK
+        vector vector
+        timestamptz created_at
+    }
+    kb_event {
+        text tenant_id PK
+        text agent PK
+        text id PK
+        text source_id
+        timestamptz at
+        text kind
+        text by_whom
+        text note
+    }
+    kb_gap {
+        text tenant_id PK,UK
+        text agent PK,UK
+        text id PK
+        text folded UK
+        text question
+        integer count
+        text channel
+        timestamptz last_asked_at
+        text state
+    }
+    kb_service {
+        text tenant_id PK,UK
+        text agent PK,UK
+        text id PK
+        text code UK
+        text name
+        text[] aliases
+        text description
+        text[] branches
+        boolean enabled
+    }
+    kb_source ||--o{ kb_chunk : &quot;tenant_id, agent, source_id&quot;
+</pre></div><div class="tgrid"><article class="tcard" id="agent_rt-kb_source"><header><h4>kb_source</h4><span>28 cột</span></header><div class="tscroll"><table><tr><td class="k">PK</td><td class="c">tenant_id</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k">PK</td><td class="c">agent</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k">PK</td><td class="c">id</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">title</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">doc_code</td><td class="ty">text</td><td class="nn">null</td><td class="x"></td></tr><tr><td class="k"></td><td class="c">kind</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">format</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">size</td><td class="ty">integer</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">services</td><td class="ty">text[]</td><td class="nn"></td><td class="x">&#x27;{}&#x27;::text[]</td></tr><tr><td class="k"></td><td class="c">audience</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">processing</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">progress</td><td class="ty">jsonb</td><td class="nn"></td><td class="x">&#x27;{&quot;chunks&quot;: 0, &quot;embedded&quot;: 0, &quot;l…</td></tr><tr><td class="k"></td><td class="c">error</td><td class="ty">text</td><td class="nn">null</td><td class="x"></td></tr><tr><td class="k"></td><td class="c">lifecycle</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">version</td><td class="ty">text</td><td class="nn">null</td><td class="x"></td></tr><tr><td class="k"></td><td class="c">effective_from</td><td class="ty">date</td><td class="nn">null</td><td class="x"></td></tr><tr><td class="k"></td><td class="c">effective_to</td><td class="ty">date</td><td class="nn">null</td><td class="x"></td></tr><tr><td class="k"></td><td class="c">approved</td><td class="ty">boolean</td><td class="nn"></td><td class="x">true</td></tr><tr><td class="k"></td><td class="c">approved_by</td><td class="ty">text</td><td class="nn">null</td><td class="x"></td></tr><tr><td class="k"></td><td class="c">approved_at</td><td class="ty">timestamptz</td><td class="nn">null</td><td class="x"></td></tr><tr><td class="k"></td><td class="c">chunk_count</td><td class="ty">integer</td><td class="nn"></td><td class="x">0</td></tr><tr><td class="k"></td><td class="c">note</td><td class="ty">text</td><td class="nn"></td><td class="x">&#x27;&#x27;::text</td></tr><tr><td class="k"></td><td class="c">markdown</td><td class="ty">text</td><td class="nn"></td><td class="x">&#x27;&#x27;::text</td></tr><tr><td class="k"></td><td class="c">content_hash</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">supersedes</td><td class="ty">text</td><td class="nn">null</td><td class="x"></td></tr><tr><td class="k"></td><td class="c">created_by</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">created_at</td><td class="ty">timestamptz</td><td class="nn"></td><td class="x">now()</td></tr><tr><td class="k"></td><td class="c">updated_at</td><td class="ty">timestamptz</td><td class="nn"></td><td class="x">now()</td></tr></table></div><details><summary>8 ràng buộc UNIQUE / CHECK</summary><ul><li><code>CHECK ((audience = ANY (ARRAY[&#x27;patient&#x27;::text, &#x27;staff&#x27;::text])))</code></li><li><code>CHECK (((doc_code IS NULL) OR ((char_length(doc_code) &gt;= 1) AND (char_length(doc_code) &lt;= 120))))</code></li><li><code>CHECK ((format = ANY (ARRAY[&#x27;md&#x27;::text, &#x27;txt&#x27;::text, &#x27;docx&#x27;::text, &#x27;xlsx&#x27;::text, &#x27;pdf&#x27;::text, &#x27;text&#x27;::text])))</code></li><li><code>CHECK ((kind = ANY (ARRAY[&#x27;file&#x27;::text, &#x27;text&#x27;::text])))</code></li><li><code>CHECK ((lifecycle = ANY (ARRAY[&#x27;active&#x27;::text, &#x27;draft&#x27;::text, &#x27;superseded&#x27;::text, &#x27;expired&#x27;::text, &#x27;adversarial&#x27;::text])))</code></li><li><code>CHECK ((processing = ANY (ARRAY[&#x27;queued&#x27;::text, &#x27;processing&#x27;::text, &#x27;ready&#x27;::text, &#x27;error&#x27;::text])))</code></li><li><code>CHECK ((size &gt;= 0))</code></li><li><code>CHECK (((char_length(title) &gt;= 1) AND (char_length(title) &lt;= 300)))</code></li></ul></details></article><article class="tcard" id="agent_rt-kb_chunk"><header><h4>kb_chunk</h4><span>15 cột</span></header><div class="tscroll"><table><tr><td class="k">PK</td><td class="c">tenant_id</td><td class="ty">text</td><td class="nn"></td><td class="x">→ kb_source.tenant_id · CASCADE</td></tr><tr><td class="k">PK</td><td class="c">agent</td><td class="ty">text</td><td class="nn"></td><td class="x">→ kb_source.agent · CASCADE</td></tr><tr><td class="k">PK</td><td class="c">id</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k">FK</td><td class="c">source_id</td><td class="ty">text</td><td class="nn"></td><td class="x">→ kb_source.id · CASCADE</td></tr><tr><td class="k"></td><td class="c">ordinal</td><td class="ty">integer</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">path</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">body</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">chars</td><td class="ty">integer</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">services</td><td class="ty">text[]</td><td class="nn"></td><td class="x">&#x27;{}&#x27;::text[]</td></tr><tr><td class="k"></td><td class="c">kind</td><td class="ty">text</td><td class="nn"></td><td class="x">&#x27;info&#x27;::text</td></tr><tr><td class="k"></td><td class="c">terms</td><td class="ty">tsvector</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">embed_text</td><td class="ty">text</td><td class="nn"></td><td class="x">&#x27;&#x27;::text</td></tr><tr><td class="k"></td><td class="c">embed_hash</td><td class="ty">text</td><td class="nn"></td><td class="x">&#x27;&#x27;::text</td></tr><tr><td class="k"></td><td class="c">terms_len</td><td class="ty">integer</td><td class="nn"></td><td class="x">0</td></tr><tr><td class="k"></td><td class="c">term_counts</td><td class="ty">jsonb</td><td class="nn"></td><td class="x">&#x27;{}&#x27;::jsonb</td></tr></table></div><details><summary>1 ràng buộc UNIQUE / CHECK</summary><ul><li><code>CHECK ((ordinal &gt;= 1))</code></li></ul></details></article><article class="tcard" id="agent_rt-kb_embedding"><header><h4>kb_embedding</h4><span>6 cột</span></header><div class="tscroll"><table><tr><td class="k">PK</td><td class="c">tenant_id</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k">PK</td><td class="c">agent</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k">PK</td><td class="c">space</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k">PK</td><td class="c">text_hash</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">vector</td><td class="ty">vector</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">created_at</td><td class="ty">timestamptz</td><td class="nn"></td><td class="x">now()</td></tr></table></div><details><summary>2 ràng buộc UNIQUE / CHECK</summary><ul><li><code>CHECK ((space ~ &#x27;^[0-9a-f]{16}$&#x27;::text))</code></li><li><code>CHECK ((text_hash ~ &#x27;^[0-9a-f]{64}$&#x27;::text))</code></li></ul></details></article><article class="tcard" id="agent_rt-kb_event"><header><h4>kb_event</h4><span>8 cột</span></header><div class="tscroll"><table><tr><td class="k">PK</td><td class="c">tenant_id</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k">PK</td><td class="c">agent</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k">PK</td><td class="c">id</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">source_id</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">at</td><td class="ty">timestamptz</td><td class="nn"></td><td class="x">now()</td></tr><tr><td class="k"></td><td class="c">kind</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">by_whom</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">note</td><td class="ty">text</td><td class="nn"></td><td class="x">&#x27;&#x27;::text</td></tr></table></div></article><article class="tcard" id="agent_rt-kb_gap"><header><h4>kb_gap</h4><span>9 cột</span></header><div class="tscroll"><table><tr><td class="k">PK</td><td class="c">tenant_id</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k">PK</td><td class="c">agent</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k">PK</td><td class="c">id</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">folded</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">question</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">count</td><td class="ty">integer</td><td class="nn"></td><td class="x">1</td></tr><tr><td class="k"></td><td class="c">channel</td><td class="ty">text</td><td class="nn"></td><td class="x">&#x27;&#x27;::text</td></tr><tr><td class="k"></td><td class="c">last_asked_at</td><td class="ty">timestamptz</td><td class="nn"></td><td class="x">now()</td></tr><tr><td class="k"></td><td class="c">state</td><td class="ty">text</td><td class="nn"></td><td class="x">&#x27;open&#x27;::text</td></tr></table></div><details><summary>2 ràng buộc UNIQUE / CHECK</summary><ul><li><code>UNIQUE (tenant_id, agent, folded)</code></li><li><code>CHECK ((state = ANY (ARRAY[&#x27;open&#x27;::text, &#x27;ignored&#x27;::text, &#x27;answered&#x27;::text])))</code></li></ul></details></article><article class="tcard" id="agent_rt-kb_service"><header><h4>kb_service</h4><span>9 cột</span></header><div class="tscroll"><table><tr><td class="k">PK</td><td class="c">tenant_id</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k">PK</td><td class="c">agent</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k">PK</td><td class="c">id</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">code</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">name</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">aliases</td><td class="ty">text[]</td><td class="nn"></td><td class="x">&#x27;{}&#x27;::text[]</td></tr><tr><td class="k"></td><td class="c">description</td><td class="ty">text</td><td class="nn"></td><td class="x">&#x27;&#x27;::text</td></tr><tr><td class="k"></td><td class="c">branches</td><td class="ty">text[]</td><td class="nn"></td><td class="x">&#x27;{}&#x27;::text[]</td></tr><tr><td class="k"></td><td class="c">enabled</td><td class="ty">boolean</td><td class="nn"></td><td class="x">true</td></tr></table></div><details><summary>3 ràng buộc UNIQUE / CHECK</summary><ul><li><code>UNIQUE (tenant_id, agent, code)</code></li><li><code>CHECK ((code ~ &#x27;^[A-Z0-9_]{1,40}$&#x27;::text))</code></li><li><code>CHECK (((char_length(name) &gt;= 1) AND (char_length(name) &lt;= 200)))</code></li></ul></details></article></div></div>
+<div class="erd-group" id="g-sk"><h3>Plugin kỹ năng (sk_)<small>2 bảng</small></h3><p>Kỹ năng viết sẵn cho agent, có lịch sử phiên bản.</p><div class="erd-figure"><pre class="mermaid">
+erDiagram
+    sk_item {
+        text tenant_id PK,UK
+        text agent PK,UK
+        text id PK
+        text kind UK
+        text name UK
+        text description
+        text body
+        text status
+        text origin
+        text[] scopes
+        jsonb meta
+        jsonb usage
+        integer version
+        text updated_by
+        timestamptz created_at
+        timestamptz updated_at
+    }
+    sk_item_version {
+        text tenant_id PK,FK
+        text agent PK,FK
+        text item_id PK,FK
+        integer version PK
+        jsonb snapshot
+        text changed_by
+        text reason
+        timestamptz created_at
+    }
+    sk_item ||--o{ sk_item_version : &quot;tenant_id, agent, item_id&quot;
+</pre></div><div class="tgrid"><article class="tcard" id="agent_rt-sk_item"><header><h4>sk_item</h4><span>16 cột</span></header><div class="tscroll"><table><tr><td class="k">PK</td><td class="c">tenant_id</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k">PK</td><td class="c">agent</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k">PK</td><td class="c">id</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">kind</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">name</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">description</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">body</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">status</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">origin</td><td class="ty">text</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">scopes</td><td class="ty">text[]</td><td class="nn"></td><td class="x">&#x27;{}&#x27;::text[]</td></tr><tr><td class="k"></td><td class="c">meta</td><td class="ty">jsonb</td><td class="nn"></td><td class="x">&#x27;{}&#x27;::jsonb</td></tr><tr><td class="k"></td><td class="c">usage</td><td class="ty">jsonb</td><td class="nn"></td><td class="x">&#x27;{}&#x27;::jsonb</td></tr><tr><td class="k"></td><td class="c">version</td><td class="ty">integer</td><td class="nn"></td><td class="x">1</td></tr><tr><td class="k"></td><td class="c">updated_by</td><td class="ty">text</td><td class="nn"></td><td class="x">&#x27;&#x27;::text</td></tr><tr><td class="k"></td><td class="c">created_at</td><td class="ty">timestamptz</td><td class="nn"></td><td class="x">now()</td></tr><tr><td class="k"></td><td class="c">updated_at</td><td class="ty">timestamptz</td><td class="nn"></td><td class="x">now()</td></tr></table></div><details><summary>8 ràng buộc UNIQUE / CHECK</summary><ul><li><code>UNIQUE (tenant_id, agent, kind, name)</code></li><li><code>CHECK (((char_length(body) &gt;= 1) AND (char_length(body) &lt;= 20000)))</code></li><li><code>CHECK (((char_length(description) &gt;= 1) AND (char_length(description) &lt;= 300)))</code></li><li><code>CHECK ((kind = ANY (ARRAY[&#x27;skill&#x27;::text, &#x27;rules&#x27;::text, &#x27;persona&#x27;::text])))</code></li><li><code>CHECK ((name ~ &#x27;^[a-z0-9][a-z0-9._-]{0,63}$&#x27;::text))</code></li><li><code>CHECK ((origin = ANY (ARRAY[&#x27;admin&#x27;::text, &#x27;plugin&#x27;::text, &#x27;agent&#x27;::text])))</code></li><li><code>CHECK ((status = ANY (ARRAY[&#x27;draft&#x27;::text, &#x27;active&#x27;::text, &#x27;archived&#x27;::text])))</code></li><li><code>CHECK ((version &gt;= 1))</code></li></ul></details></article><article class="tcard" id="agent_rt-sk_item_version"><header><h4>sk_item_version</h4><span>8 cột</span></header><div class="tscroll"><table><tr><td class="k">PK</td><td class="c">tenant_id</td><td class="ty">text</td><td class="nn"></td><td class="x">→ sk_item.tenant_id · CASCADE</td></tr><tr><td class="k">PK</td><td class="c">agent</td><td class="ty">text</td><td class="nn"></td><td class="x">→ sk_item.agent · CASCADE</td></tr><tr><td class="k">PK</td><td class="c">item_id</td><td class="ty">text</td><td class="nn"></td><td class="x">→ sk_item.id · CASCADE</td></tr><tr><td class="k">PK</td><td class="c">version</td><td class="ty">integer</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">snapshot</td><td class="ty">jsonb</td><td class="nn"></td><td class="x"></td></tr><tr><td class="k"></td><td class="c">changed_by</td><td class="ty">text</td><td class="nn"></td><td class="x">&#x27;&#x27;::text</td></tr><tr><td class="k"></td><td class="c">reason</td><td class="ty">text</td><td class="nn"></td><td class="x">&#x27;&#x27;::text</td></tr><tr><td class="k"></td><td class="c">created_at</td><td class="ty">timestamptz</td><td class="nn"></td><td class="x">now()</td></tr></table></div></article></div></div>
+</section>
+<script data-local-only src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+<script data-local-only>mermaid.initialize({ startOnLoad: true, theme: "neutral", er: { useMaxWidth: false } });</script>
+<!-- erd:end -->
   </main>
 </body>
 </html>
