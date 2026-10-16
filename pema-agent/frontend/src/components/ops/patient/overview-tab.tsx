@@ -273,7 +273,6 @@ export function OverviewTab({
           </ul>
         </Card>
 
-
         <Card title="Đồng ý của khách">
           {(data.consents ?? []).length === 0 && <Muted>Chưa ghi nhận đồng ý nào.</Muted>}
           <ul className="space-y-2">
