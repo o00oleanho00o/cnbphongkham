@@ -22,14 +22,9 @@ EXPECTED_PATHS = [
     "/api/v1/appointments",
     "/api/v1/crm/tasks",
     "/api/v1/crm/activities",
-    "/api/v1/conversations/{conversation_id}/messages",
-    "/api/v1/conversations/{conversation_id}/presence",
     "/api/v1/events",
-    "/api/v1/review-items/{item_id}/approve",
     "/api/v1/admin/rules",
     "/api/v1/admin/logs/audit",
-    "/api/v1/admin/templates",
-    "/api/v1/admin/templates/{template_id}/approve",
 ]
 
 
@@ -100,11 +95,8 @@ def _fill_path(path: str) -> str:
             return "1"
         if name.endswith("_id") and name not in {
             "patient_id",
-            "conversation_id",
-            "item_id",
             "appointment_id",
             "task_id",
-            "template_id",
         }:
             return "synthetic-id"
         if name == "clinic_slug":
@@ -173,6 +165,6 @@ async def test_validation_errors_use_the_error_envelope_without_echoing_input(
 
 async def test_a_mutating_staff_route_refuses_an_anonymous_caller(client: httpx.AsyncClient) -> None:
     """POST của nhân viên không có phiên -> 401, không chạm tới nghiệp vụ"""
-    resp = await client.post(f"/api/v1/review-items/{uuid4()}/reject", json={"version": 1, "reason": "x"})
+    resp = await client.post(f"/api/v1/crm/tasks/{uuid4()}/resolve", json={"version": 1})
     assert resp.status_code == 401
     assert resp.json()["error"]["code"] == "unauthenticated"

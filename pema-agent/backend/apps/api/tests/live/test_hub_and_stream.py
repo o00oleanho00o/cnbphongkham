@@ -42,7 +42,7 @@ async def test_an_event_reaches_every_open_stream() -> None:
     hub = await _started_hub(bus)
     first = hub.subscribe(uuid4())
     second = hub.subscribe(uuid4())
-    event = LiveEvent(type=LiveEventType.INBOX_CHANGED, id=uuid4())
+    event = LiveEvent(type=LiveEventType.APPOINTMENTS_CHANGED, id=uuid4())
     await bus.publish(event)
     assert await first.next_batch(1) == [event]
     assert await second.next_batch(1) == [event]
@@ -63,9 +63,9 @@ async def test_a_burst_of_identical_events_is_one_event_per_stream() -> None:
     bus = InMemoryLiveEventBus()
     hub = await _started_hub(bus)
     sub = hub.subscribe(uuid4())
-    conversation_id = uuid4()
+    object_id = uuid4()
     for _ in range(20):
-        await bus.publish(LiveEvent(type=LiveEventType.INBOX_CHANGED, id=conversation_id))
+        await bus.publish(LiveEvent(type=LiveEventType.APPOINTMENTS_CHANGED, id=object_id))
     await asyncio.sleep(0.05)
     assert len(await sub.next_batch(1)) == 1
     await hub.aclose()
@@ -76,7 +76,7 @@ async def test_a_slow_stream_keeps_a_bounded_set_and_then_only_the_types() -> No
     hub = await _started_hub(bus)
     sub = hub.subscribe(uuid4())
     for _ in range(MAX_PENDING_KEYS + 50):
-        await bus.publish(LiveEvent(type=LiveEventType.INBOX_CHANGED, id=uuid4()))
+        await bus.publish(LiveEvent(type=LiveEventType.APPOINTMENTS_CHANGED, id=uuid4()))
     await asyncio.sleep(0.2)
     batch = await sub.next_batch(1)
     assert len(batch) <= MAX_PENDING_KEYS + 1
@@ -154,12 +154,12 @@ async def test_the_stream_opens_with_a_retry_line_and_sends_events_as_data_frame
     sub = hub.subscribe(uuid4())
     stream = event_stream(hub, sub, access=EVERYTHING, refresh_access=_always_valid, keepalive_s=5)
     assert await _next(stream) == "retry: 3000\n\n"
-    conversation_id = uuid4()
-    await bus.publish(LiveEvent(type=LiveEventType.INBOX_CHANGED, id=conversation_id))
+    object_id = uuid4()
+    await bus.publish(LiveEvent(type=LiveEventType.APPOINTMENTS_CHANGED, id=object_id))
     frame = await _next(stream)
     assert frame.startswith("data: ")
     assert frame.endswith("\n\n")
-    assert json.loads(frame.removeprefix("data: ")) == {"type": "inbox.changed", "id": str(conversation_id)}
+    assert json.loads(frame.removeprefix("data: ")) == {"type": "appointments.changed", "id": str(object_id)}
     await stream.aclose()
     await hub.aclose()
 
@@ -200,7 +200,7 @@ async def test_a_person_gets_only_the_event_types_they_may_read() -> None:
     access = StreamAccess(types=frozenset({LiveEventType.TASKS_CHANGED}), with_ids=True)
     stream = event_stream(hub, sub, access=access, refresh_access=_always_valid, keepalive_s=0.2)
     await _next(stream)
-    await bus.publish(LiveEvent(type=LiveEventType.INBOX_CHANGED, id=uuid4()))
+    await bus.publish(LiveEvent(type=LiveEventType.APPOINTMENTS_CHANGED, id=uuid4()))
     await bus.publish(LiveEvent(type=LiveEventType.TASKS_CHANGED, id=None))
     await asyncio.sleep(0.05)
     frame = await _next(stream)
@@ -216,9 +216,9 @@ async def test_a_stream_without_ids_names_no_object() -> None:
     access = StreamAccess(types=ALL, with_ids=False)
     stream = event_stream(hub, sub, access=access, refresh_access=_always_valid, keepalive_s=5)
     await _next(stream)
-    await bus.publish(LiveEvent(type=LiveEventType.INBOX_CHANGED, id=uuid4()))
+    await bus.publish(LiveEvent(type=LiveEventType.APPOINTMENTS_CHANGED, id=uuid4()))
     frame = await _next(stream)
-    assert json.loads(frame.removeprefix("data: ")) == {"type": "inbox.changed", "id": None}
+    assert json.loads(frame.removeprefix("data: ")) == {"type": "appointments.changed", "id": None}
     await stream.aclose()
     await hub.aclose()
 
@@ -259,7 +259,7 @@ async def test_the_session_is_checked_again_every_interval_and_a_role_change_app
     )
     await _next(stream)
     assert await _next(stream) == KEEPALIVE_FRAME  # first idle tick: access re-read, nothing allowed now
-    await bus.publish(LiveEvent(type=LiveEventType.INBOX_CHANGED, id=uuid4()))
+    await bus.publish(LiveEvent(type=LiveEventType.APPOINTMENTS_CHANGED, id=uuid4()))
     assert await _next(stream) == KEEPALIVE_FRAME
     await stream.aclose()
     await hub.aclose()
@@ -319,7 +319,7 @@ async def test_an_event_a_person_may_not_read_writes_nothing_not_even_a_comment_
     nothing = StreamAccess(types=frozenset(), with_ids=False)
     stream = event_stream(hub, sub, access=nothing, refresh_access=_always_valid, keepalive_s=0.5)
     await _next(stream)
-    await bus.publish(LiveEvent(type=LiveEventType.INBOX_CHANGED, id=uuid4()))
+    await bus.publish(LiveEvent(type=LiveEventType.APPOINTMENTS_CHANGED, id=uuid4()))
     with pytest.raises(TimeoutError):
         await _next(stream, wait_s=0.3)
     await stream.aclose()
@@ -336,7 +336,7 @@ async def test_the_keep_alive_still_comes_when_only_filtered_events_arrive() -> 
     stream = event_stream(hub, sub, access=nothing, refresh_access=_always_valid, keepalive_s=0.2)
     await _next(stream)
     for _ in range(3):
-        await bus.publish(LiveEvent(type=LiveEventType.INBOX_CHANGED, id=uuid4()))
+        await bus.publish(LiveEvent(type=LiveEventType.APPOINTMENTS_CHANGED, id=uuid4()))
         await asyncio.sleep(0.05)
     assert await _next(stream, wait_s=1.0) == KEEPALIVE_FRAME
     await stream.aclose()

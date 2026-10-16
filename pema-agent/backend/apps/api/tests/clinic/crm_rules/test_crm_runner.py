@@ -12,19 +12,13 @@ from dataclasses import replace
 from datetime import date, timedelta
 from uuid import UUID, uuid4
 
-from pema.clinic.crm_rules.records import PatientSnapshot, TemplateRef
-from pema.clinic.crm_rules.rules import DEFAULT_RULES, RuleConfig
+from pema.clinic.crm_rules.records import PatientSnapshot
 from pema.clinic.crm_rules.runner import CrmRulesRunner
 from pema.clinic.crm_rules.store import MemoryCrmRuleStore
 from pema.clinic.crm_rules.testing import NOW, appointment, make_patient, session
-from pema_contracts.crm import RuleSendMode
 
 CLINIC: UUID = uuid4()
 TODAY = date(2026, 9, 20)
-
-
-def _rules(**modes: RuleSendMode) -> tuple[RuleConfig, ...]:
-    return tuple(replace(r, send_mode=modes.get(r.key.value, r.send_mode)) for r in DEFAULT_RULES)
 
 
 def _laser_patient(code: str = "P025", **fields: object) -> PatientSnapshot:
@@ -33,7 +27,6 @@ def _laser_patient(code: str = "P025", **fields: object) -> PatientSnapshot:
         "sessions": (session("s-laser", TODAY - timedelta(days=1), "laser-co2"),),
         "total_sessions": 5,
         "completed_sessions": 1,
-        "messaging_consent": True,
     }
     return make_patient(code, **{**base, **fields})
 
@@ -41,9 +34,7 @@ def _laser_patient(code: str = "P025", **fields: object) -> PatientSnapshot:
 async def test_a_run_creates_the_tasks_and_a_rerun_creates_nothing() -> None:
     """Chạy một lần tạo đủ việc; chạy lại không tạo thêm việc nào."""
     store = MemoryCrmRuleStore(
-        rules=_rules(d1=RuleSendMode.AUTO_REMINDER),
         patients=[_laser_patient()],
-        templates=[TemplateRef("crm.d1")],
     )
     runner = CrmRulesRunner(store)
 
@@ -70,7 +61,7 @@ async def test_the_first_run_applies_the_d30_recommendation_to_the_patient() -> 
 async def test_a_booking_supersedes_the_task() -> None:
     """Đặt lịch làm việc chăm sóc cũ bị thay thế."""
     old = TODAY - timedelta(days=95)
-    patient = make_patient("P031", last_visit=old, sessions=(session("c", old),), messaging_consent=True)
+    patient = make_patient("P031", last_visit=old, sessions=(session("c", old),))
     store = MemoryCrmRuleStore(patients=[patient])
     runner = CrmRulesRunner(store)
     assert (await runner.run_clinic(CLINIC, NOW)).tasks_created >= 1

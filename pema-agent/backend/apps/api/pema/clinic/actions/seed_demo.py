@@ -1,7 +1,7 @@
 # ported from: prototype/shared/crm-data.js (the eight CRM01 cases P025..P032),
 # prototype/shared/staff-context.js
 """Synthetic demo data for the clinic of the installation (single tenant): users of every role, patients,
-care, appointments, an Inbox, a review queue, consents, message templates and a few CRM tasks. EVERYTHING
+care, appointments, consents and a few CRM tasks. EVERYTHING
 here is fictional (AGENT.md): the names say "mau" (sample), the phones are ``000...`` placeholders, the
 e-mails end in ``@example.test``.
 
@@ -40,15 +40,10 @@ from pema.clinic.actions.catalog_seed import seed_default_catalog
 from pema.clinic.actions.seed_guide import seed_guide_articles
 from pema.clinic.models import (
     Appointment,
-    ChannelIdentity,
     Consent,
-    Conversation,
     CrmTask,
     Episode,
-    Message,
-    MessageTemplate,
     Patient,
-    ReviewItem,
     TreatmentPlan,
     TreatmentSession,
     UserAccount,
@@ -103,7 +98,6 @@ class SeedResult:
     created: bool
     users: dict[str, UUID]
     patients: dict[str, UUID]
-    conversation_id: UUID | None = None
 
 
 async def seed_demo(
@@ -116,7 +110,6 @@ async def seed_demo(
     clinic_id = await get_installation_clinic_id(db)
     users = {key: _id("user", slug, key) for key, _, _ in USERS}
     patient_ids = {code: _id("patient", slug, code) for code, *_ in CASES}
-    conversation_id = _id("conversation", slug, "P025")
     async with db.session() as probe:
         already = await probe.scalar(select(UserAccount.id).where(UserAccount.id == users["owner"]))
     ctx = ActionContext(
@@ -124,7 +117,7 @@ async def seed_demo(
     )
     if already is not None:
         await seed_default_catalog(db, ctx)  # a demo database from before the catalog gets it on a re-run
-        return SeedResult(clinic_id, False, users, patient_ids, conversation_id)
+        return SeedResult(clinic_id, False, users, patient_ids)
 
     password_hash = passwords.hash_password(password)
     stamp = _at(today, 9)
@@ -276,125 +269,6 @@ async def seed_demo(
             )
         )
 
-        # Inbox: P025 is verified on Zalo and wrote after the laser session; P026 is only pending
-        identity_p025 = _id("identity", slug, "P025")
-        session.add_all(
-            [
-                ChannelIdentity(
-                    id=identity_p025,
-                    clinic_id=clinic_id,
-                    channel="zalo_bot",
-                    external_user_id="demo-uid-025",
-                    patient_id=patient_ids["P025"],
-                    display_name="Khách mẫu 025",
-                    verification_status="verified",
-                    verified_at=stamp,
-                    verified_by=users["cs.maianh"],
-                    last_inbound_at=stamp,
-                ),
-                ChannelIdentity(
-                    id=_id("identity", slug, "P026"),
-                    clinic_id=clinic_id,
-                    channel="zalo_bot",
-                    external_user_id="demo-uid-026",
-                    patient_id=patient_ids["P026"],
-                    display_name="Khách mẫu 026",
-                    verification_status="pending",
-                ),
-            ]
-        )
-        await session.flush()
-        session.add(
-            Conversation(
-                id=conversation_id,
-                clinic_id=clinic_id,
-                channel="zalo_bot",
-                external_ref="demo-thread-025",
-                patient_id=patient_ids["P025"],
-                identity_id=identity_p025,
-                status="pending_review",
-                last_message_at=stamp,
-                last_inbound_at=stamp,
-                unread_count=1,
-            )
-        )
-        await session.flush()
-        session.add(
-            Message(
-                clinic_id=clinic_id,
-                conversation_id=conversation_id,
-                channel="zalo_bot",
-                direction="inbound",
-                sender_type="patient",
-                body="Em thấy da hơi đỏ sau buổi hôm qua, có bình thường không ạ? (tin mẫu)",
-                status="received",
-                update_id="demo-update-025-1",
-                sent_at=stamp,
-            )
-        )
-        session.add(
-            ReviewItem(
-                id=_id("review", slug, "P025-reply"),
-                clinic_id=clinic_id,
-                kind="reply_draft",
-                origin="agent_turn",
-                conversation_id=conversation_id,
-                patient_id=patient_ids["P025"],
-                job_id="demo-job-reply-025",
-                draft_text=(
-                    "Chào bạn, da hơi đỏ nhẹ có thể gặp sau thủ thuật. "
-                    "Phòng khám sẽ nhờ nhân viên xem lại giúp bạn (nội dung mẫu)."
-                ),
-                sources=[],
-                model="demo-model",
-                prompt_version="demo-1",
-            )
-        )
-        session.add(
-            ReviewItem(
-                id=_id("review", slug, "P026-alert"),
-                clinic_id=clinic_id,
-                kind="triage_alert",
-                origin="policy",
-                patient_id=patient_ids["P026"],
-                job_id="demo-job-alert-026",
-                draft_text="Cờ đỏ mẫu: bệnh nhân nhắc đến chảy máu (dữ liệu hư cấu).",
-                risk_level="red_flag",
-                red_flags=["bleeding"],
-                requires_doctor=True,
-            )
-        )
-
-        # message templates: one approved by a doctor, one still a draft
-        session.add_all(
-            [
-                MessageTemplate(
-                    clinic_id=clinic_id,
-                    template_key="nhac_lich_hen",
-                    title="Nhắc lịch hẹn",
-                    body=(
-                        "Phòng khám nhắc bạn có lịch hẹn vào {gio} ngày {ngay}. "
-                        "Cần đổi lịch, xin nhắn lại cho chúng tôi."
-                    ),
-                    marketing=False,
-                    active=True,
-                    approved_by=users["doctor.mai"],
-                    approved_at=stamp,
-                ),
-                MessageTemplate(
-                    clinic_id=clinic_id,
-                    template_key="hoi_tham_sau_dieu_tri",
-                    title="Hỏi thăm sau điều trị",
-                    body=(
-                        "Phòng khám hỏi thăm bạn sau buổi điều trị. "
-                        "Nếu có điều gì bất thường, xin nhắn ngay cho chúng tôi."
-                    ),
-                    marketing=False,
-                    active=False,
-                ),
-            ]
-        )
-
         # a few CRM tasks (the rule engine of package B2 creates them normally)
         for code, rule, reason, due_offset in (
             ("P025", "d1", "Sau thủ thuật D+1", 0),
@@ -421,7 +295,7 @@ async def seed_demo(
             session, ctx, "seed.demo", "clinic", clinic_id, {"patients": len(CASES), "users": len(USERS)}
         )
     await seed_default_catalog(db, ctx)
-    return SeedResult(clinic_id, True, users, patient_ids, conversation_id)
+    return SeedResult(clinic_id, True, users, patient_ids)
 
 
 def _parse_args(argv: list[str]) -> argparse.Namespace:

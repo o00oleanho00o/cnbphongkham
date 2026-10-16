@@ -1,9 +1,8 @@
 """Live updates: ``GET /api/v1/events`` (server-sent events) for the signed-in staff member (package ST-R).
 
-New router, no zalo-agent source. The stream tells the screens WHAT changed ("inbox.changed", "tasks.changed",
-"review.changed", "presence.changed", each with the id of the object or null) and never the content: no
-message
-text, no name, no phone. The screens refetch through the normal API, so authorization stays where it is.
+New router, no zalo-agent source. The stream tells the screens WHAT changed ("tasks.changed",
+"appointments.changed", each with the id of the object or null) and never the content: no text, no name, no
+phone. The screens refetch through the normal API, so authorization stays where it is.
 
 Security (SECURITY-REVIEW-AI01 SEC-49 to SEC-52): a valid staff session is required (the middleware refuses a
 call with no cookie, ``current_user`` verifies it); the stream is re-authorised every 15 seconds and ends with

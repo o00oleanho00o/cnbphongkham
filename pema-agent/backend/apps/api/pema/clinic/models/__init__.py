@@ -11,7 +11,7 @@ from pema.clinic.models.clinical import (
     PatientBrief,
     PatientClinicalNote,
 )
-from pema.clinic.models.crm import CrmActivity, CrmRule, CrmTask, MessageTemplate
+from pema.clinic.models.crm import CrmActivity, CrmRule, CrmTask
 from pema.clinic.models.finance import (
     FinanceNotification,
     FinancePeriod,
@@ -20,36 +20,20 @@ from pema.clinic.models.finance import (
     ProcedureEntry,
     ProcedureEntryPerson,
 )
-from pema.clinic.models.inbox import ChannelIdentity, Conversation, Message, ReviewItem
-from pema.clinic.models.ops import (
-    AccountRoster,
-    ConversationAssignment,
-    NotificationLog,
-    NotificationOutbox,
-    NotifyLinkCode,
-    NotifyPreference,
-    NotifySetting,
-    PushToken,
-    SlaCheck,
-)
 from pema.clinic.models.orders import CatalogImport, Order, OrderItem, Product
 from pema.clinic.models.scheduling import Appointment
 from pema.clinic.models.tenant import AuthSession, Clinic, UserAccount
 
 __all__ = [
     "CLINIC_SCHEMA",
-    "AccountRoster",
     "Appointment",
     "AuditLog",
     "AuthSession",
     "Base",
     "CatalogImport",
-    "ChannelIdentity",
     "Clinic",
     "Consent",
     "ConsultNote",
-    "Conversation",
-    "ConversationAssignment",
     "CrmActivity",
     "CrmRule",
     "CrmTask",
@@ -58,13 +42,6 @@ __all__ = [
     "FinancePeriod",
     "Invoice",
     "Media",
-    "Message",
-    "MessageTemplate",
-    "NotificationLog",
-    "NotificationOutbox",
-    "NotifyLinkCode",
-    "NotifyPreference",
-    "NotifySetting",
     "Order",
     "OrderItem",
     "Patient",
@@ -76,13 +53,10 @@ __all__ = [
     "ProcedureEntryPerson",
     "Product",
     "Protocol",
-    "PushToken",
-    "ReviewItem",
     "Room",
     "RoomBlock",
     "Service",
     "ServiceVersion",
-    "SlaCheck",
     "TreatmentPlan",
     "TreatmentSession",
     "UserAccount",

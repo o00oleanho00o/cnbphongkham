@@ -21,7 +21,6 @@ from pema.api.clinic_testing import (
     world,
 )
 from pema.live.bus import InMemoryLiveEventBus
-from pema.live.presence import InMemoryPresenceStore
 from pema.live.publisher import install_live_publisher
 from pema.live.services import LiveServices, build_memory_live_services
 
@@ -49,10 +48,8 @@ def bus() -> InMemoryLiveEventBus:
 
 @pytest_asyncio.fixture
 async def live(app: FastAPI, bus: InMemoryLiveEventBus) -> AsyncIterator[LiveServices]:
-    """In-memory bus and presence, the publisher installed the way the composition root does it."""
-    services = build_memory_live_services(
-        bus=bus, store=InMemoryPresenceStore(), max_per_user=MAX_STREAMS_PER_USER
-    )
+    """In-memory bus, the publisher installed the way the composition root does it."""
+    services = build_memory_live_services(bus=bus, max_per_user=MAX_STREAMS_PER_USER)
     app.state.live = services
     install_live_publisher(services.publisher)
     services.hub.start()

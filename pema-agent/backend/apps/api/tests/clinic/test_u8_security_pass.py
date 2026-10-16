@@ -133,11 +133,11 @@ ROUTES: tuple[Route, ...] = (
     ),
     Route("list_app_updates", "GET", "/patients/{P025}/app-updates", (P.SESSION_READ,)),
     Route(
-        "send_app_message",
+        "send_app_update",
         "POST",
         "/patients/{P025}/app-updates",
-        (P.CONVERSATION_REPLY,),
-        lambda w: {"kind": "message", "body": "Chào bạn (mẫu)"},
+        (P.SESSION_WRITE,),
+        lambda w: {"kind": "aftercare", "body": "Chăm sóc tại nhà (mẫu)"},
     ),
     Route("get_brief", "GET", "/patients/{P025}/brief", (P.SESSION_WRITE,)),
     Route(

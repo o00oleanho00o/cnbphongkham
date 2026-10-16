@@ -20,10 +20,7 @@ B1_GUARDED_GETS = [
     "/api/v1/appointments",
     "/api/v1/crm/tasks",
     "/api/v1/crm/activities",
-    "/api/v1/conversations",
-    "/api/v1/review-items",
     "/api/v1/admin/logs/audit",
-    "/api/v1/admin/templates",
 ]
 
 
@@ -261,13 +258,8 @@ async def test_patient_360_joins_context_and_stays_traceable_to_the_source_recor
     assert any(task["rule_key"] == "overdue" for task in body["open_tasks"])
     assert body["timeline"], "the timeline must not be empty"
     assert all(event["source_id"] for event in body["timeline"])
-    # message text is not copied into the timeline
-    assert "Em thấy da" not in str(body["timeline"])
 
     p025 = (await cs.get(f"/api/v1/patients/{world.patients['P025']}/360")).json()
-    assert p025["conversations"], "P025 has an Inbox conversation"
-    seeded = next(c for c in p025["conversations"] if c["id"] == str(world.conversation_id))
-    assert seeded["has_pending_review"] is True
     assert {c["kind"] for c in p025["consents"]} == {"messaging"}
 
 

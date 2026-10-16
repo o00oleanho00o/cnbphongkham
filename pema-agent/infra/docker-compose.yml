@@ -72,10 +72,7 @@ x-retention-common-env: &retention-common-env
   PEMA_RETENTION_BATCH_SIZE: ${PEMA_RETENTION_BATCH_SIZE:-500}
 
 x-retention-clinic-env: &retention-clinic-env
-  PEMA_RETENTION_MESSAGE_DAYS: ${PEMA_RETENTION_MESSAGE_DAYS:-0}
   PEMA_RETENTION_AUTH_SESSION_DAYS: ${PEMA_RETENTION_AUTH_SESSION_DAYS:-1}
-  PEMA_RETENTION_LINK_CODE_DAYS: ${PEMA_RETENTION_LINK_CODE_DAYS:-7}
-  PEMA_RETENTION_LINK_ATTEMPT_DAYS: ${PEMA_RETENTION_LINK_ATTEMPT_DAYS:-30}
 
 x-api-database: &api-database
   PEMA_DATABASE_URL: postgresql+psycopg://be_app:${PEMA_BE_APP_PASSWORD:?set it in infra/.env}@postgres:5432/pema

@@ -395,58 +395,6 @@ def test_the_clinic_id_function_fails_closed_when_no_clinic_is_installed(
         assert _count(conn, "SELECT count(*) FROM clinic.clinic") == 1
 
 
-# ------------------------------------------------------------------ inbox and review functions
-def _create_review(conn: Connection, job_id: str, kind: str, risk: str) -> uuid.UUID:
-    return conn.execute(
-        text(
-            "SELECT clinic.create_review_item(:job, :kind, 'agent_turn', 'P001', NULL, 'draft text', "
-            "NULL, '[]'::jsonb, :risk, ARRAY[]::text[], 'qwen3-8b', 'v1')"
-        ),
-        {"job": job_id, "kind": kind, "risk": risk},
-    ).scalar_one()
-
-
-def test_create_review_item_is_idempotent_audited_and_flags_doctor(
-    be_engine: Engine, admin_engine: Engine, clinic: uuid.UUID
-) -> None:
-    with be_engine.begin() as conn:
-        first = _create_review(conn, "turn-1", "reply_draft", "normal")
-        assert _create_review(conn, "turn-1", "reply_draft", "normal") == first
-        alert = _create_review(conn, "turn-2", "triage_alert", "red_flag")
-    with admin_engine.connect() as conn:
-        rows = conn.execute(
-            text(
-                "SELECT id, requires_doctor FROM clinic.review_item WHERE clinic_id = :c ORDER BY created_at"
-            ),
-            {"c": clinic},
-        ).all()
-        assert [(r.id, r.requires_doctor) for r in rows] == [(first, False), (alert, True)]
-        audit = conn.execute(
-            text(
-                "SELECT count(*) FROM clinic.audit_log WHERE clinic_id = :c AND actor_type = 'agent' "
-                "AND action = 'review_item.create'"
-            ),
-            {"c": clinic},
-        ).scalar()
-        assert audit == 2
-
-
-def test_the_inbox_functions_write_for_the_installation_clinic(
-    be_engine: Engine, admin_engine: Engine, clinic: uuid.UUID
-) -> None:
-    """record_inbound_message / record_outbound_message lấy phòng khám từ dòng duy nhất, không từ ngữ cảnh"""
-    with be_engine.begin() as conn:
-        conn.execute(
-            text(
-                "SELECT * FROM clinic.record_inbound_message("
-                "'zalo_bot', 'upd-1', 'thread-1', 'uid-1', 'Synthetic', 'xin chao', now(), 'agent', '')"
-            )
-        )
-    with admin_engine.connect() as conn:
-        clinic_ids = conn.execute(text("SELECT DISTINCT clinic_id FROM clinic.message")).scalars().all()
-    assert clinic_ids == [clinic]
-
-
 def test_audit_log_is_append_only(be_engine: Engine, clinic: uuid.UUID) -> None:
     with be_engine.begin() as conn:
         conn.execute(

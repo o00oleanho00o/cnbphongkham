@@ -11,7 +11,6 @@ from pydantic import Field
 
 from pema_contracts.appointments import AppointmentOut
 from pema_contracts.common import ApiModel, VnDatetime
-from pema_contracts.conversations import ConversationSummary
 from pema_contracts.crm import CrmActivityOut, CrmProfile, CrmTaskOut
 
 
@@ -139,9 +138,7 @@ class TimelineEvent(ApiModel):
 
     id: str
     at: VnDatetime
-    kind: str = Field(
-        description="session, appointment, crm_activity, message, review, consent, consult, app_event"
-    )
+    kind: str = Field(description="session, appointment, crm_activity, consent, consult, app_event")
     title: str
     detail: str | None = None
     by: str | None = None
@@ -160,7 +157,6 @@ class Patient360(ApiModel):
     open_tasks: list[CrmTaskOut] = Field(default_factory=list[CrmTaskOut])
     recent_activities: list[CrmActivityOut] = Field(default_factory=list[CrmActivityOut])
     consents: list[ConsentOut] = Field(default_factory=list[ConsentOut])
-    conversations: list[ConversationSummary] = Field(default_factory=list[ConversationSummary])
     timeline: list[TimelineEvent] = Field(default_factory=list[TimelineEvent])
     alerts: list[str] = Field(
         default_factory=list[str],

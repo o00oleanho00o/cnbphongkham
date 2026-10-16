@@ -222,15 +222,11 @@ async def test_aftercare_goes_on_the_patient_app_timeline_and_an_empty_text_is_r
     assert "SPF" not in json.dumps(rows, ensure_ascii=False)
 
 
-async def test_a_message_needs_conversation_reply_and_aftercare_needs_session_write(
+async def test_aftercare_needs_session_write_and_a_message_is_no_longer_a_kind(
     client_factory: ClientFactory, world: SeedResult
 ) -> None:
     patient = world.patients["P027"]
     care = await client_factory(CS)
-    ok = await care.post(
-        f"/api/v1/patients/{patient}/app-updates", json={"kind": "message", "body": "Chào bạn (mẫu)"}
-    )
-    assert ok.status_code == 201, ok.text
     assert (
         await care.post(f"/api/v1/patients/{patient}/app-updates", json={"kind": "aftercare", "body": "x"})
     ).status_code == 403
@@ -240,8 +236,8 @@ async def test_a_message_needs_conversation_reply_and_aftercare_needs_session_wr
             f"/api/v1/patients/{patient}/app-updates", json={"kind": "aftercare", "body": "x"}
         )
     ).status_code == 403
-    blank = await care.post(f"/api/v1/patients/{patient}/app-updates", json={"kind": "message", "body": ""})
-    assert blank.status_code == 422
+    gone = await care.post(f"/api/v1/patients/{patient}/app-updates", json={"kind": "message", "body": "x"})
+    assert gone.status_code == 422
 
 
 # ----------------------------------------------------------------------------------------------- brief

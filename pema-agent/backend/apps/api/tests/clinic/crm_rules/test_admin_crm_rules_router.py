@@ -37,7 +37,6 @@ class FakeAdminService:
                 suggested_action=r.suggested_action,
                 priority=r.priority,
                 active=r.active,
-                send_mode=r.send_mode,
                 version=1,
             )
             for r in DEFAULT_RULES

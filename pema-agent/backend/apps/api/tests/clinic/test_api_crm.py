@@ -243,29 +243,16 @@ async def test_optout_sets_the_marketing_opt_out_flag(
     assert (await cs.get(f"/api/v1/patients/{world.patients['P032']}")).json()["marketing_opt_out"] is True
 
 
-async def test_a_complaint_is_handed_to_a_doctor_as_a_triage_alert_without_the_note_text(
+async def test_a_complaint_stays_in_the_contact_log(
     client_factory: ClientFactory, world: SeedResult, admin: Engine
 ) -> None:
     cs = await client_factory("cs.maianh")
-    mai = await client_factory("doctor.mai")
     task_id = new_task(admin, world, "P025", "d3")
     note = "Khiếu nại mẫu về buổi điều trị"
     done = await cs.post(
         f"/api/v1/crm/tasks/{task_id}/resolve", json=resolve_body(world, outcome="complaint", note=note)
     )
     assert done.status_code == 200
-    items = (
-        await mai.get(
-            "/api/v1/review-items",
-            params={"patient_id": str(world.patients["P025"]), "kind": "triage_alert"},
-        )
-    ).json()["items"]
-    handed = [i for i in items if i["origin"] == "crm_rule"]
-    assert handed and handed[0]["requires_doctor"] is True
-    assert note not in str(handed[0])
-    # the care member does not even see it
-    cs_items = (await cs.get("/api/v1/review-items", params={"kind": "triage_alert"})).json()["items"]
-    assert all(i["origin"] != "crm_rule" for i in cs_items)
     activity = (await cs.get("/api/v1/crm/activities", params={"task_id": task_id})).json()["items"][0]
     assert activity["kind"] == "complaint"
 

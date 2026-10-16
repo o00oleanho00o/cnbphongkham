@@ -15,9 +15,6 @@ NOT touched, on purpose (each is a decision, not an omission):
 * ``clinic.audit_log``: append-only by trigger and the evidence of who did what; no rule here names it.
 * ``clinic.patient``, ``clinic.appointment``, ``clinic.consent``, ``clinic.treatment_*``, ``clinic.episode``,
   ``clinic.crm_*``: clinical and CRM records. Erasing a patient is a staff action, not a timer.
-* ``clinic.review_item``: an OPEN item (``pending`` or ``escalated``) is work somebody has not done; its
-  conversation and messages are protected below. Decided items are not purged either (open item for the
-  owner).
 * ``agent.channel_update_seen``: purged every six hours by the webhook dedupe
   (``PostgresUpdateDedupe.purge``).
 """
@@ -117,48 +114,12 @@ AGENT_RULES: tuple[DeleteRule, ...] = (
 
 # ----------------------------------------------------------------------------------------------- clinic
 CLINIC_RULES: tuple[DeleteRule, ...] = (
-    # Messages of conversations that staff CLOSED at least ``message_days`` ago. The clock starts at the
-    # closing (``updated_at`` of a closed conversation: a new inbound message reopens it first).
-    DeleteRule(
-        "messages",
-        Scope.CLINIC,
-        lambda p: p.message_days,
-        "clinic.message",
-        "EXISTS (SELECT 1 FROM clinic.conversation c WHERE c.clinic_id = t.clinic_id "
-        "AND c.id = t.conversation_id AND c.status = 'closed' AND c.updated_at < :cutoff) "
-        "AND NOT EXISTS (SELECT 1 FROM clinic.review_item r WHERE r.clinic_id = t.clinic_id "
-        "AND r.conversation_id = t.conversation_id AND r.status IN ('pending', 'escalated')) "
-        "AND NOT EXISTS (SELECT 1 FROM clinic.review_item r2 WHERE r2.clinic_id = t.clinic_id "
-        "AND r2.id = t.review_item_id AND r2.status IN ('pending', 'escalated'))",
-    ),
-    # The empty shell afterwards. Any review item (open or decided) still points at its conversation by
-    # foreign key, so a conversation with one stays.
-    DeleteRule(
-        "conversations",
-        Scope.CLINIC,
-        lambda p: p.message_days,
-        "clinic.conversation",
-        "t.status = 'closed' AND t.updated_at < :cutoff AND NOT EXISTS (SELECT 1 FROM clinic.review_item r "
-        "WHERE r.clinic_id = t.clinic_id AND r.conversation_id = t.id)",
-        delete_where="t.status = 'closed' AND t.updated_at < :cutoff AND NOT EXISTS (SELECT 1 FROM "
-        "clinic.review_item r WHERE r.clinic_id = t.clinic_id AND r.conversation_id = t.id) "
-        "AND NOT EXISTS (SELECT 1 FROM clinic.message m WHERE m.clinic_id = t.clinic_id "
-        "AND m.conversation_id = t.id)",
-    ),
     DeleteRule(
         "auth_sessions",
         Scope.CLINIC,
         lambda p: p.auth_session_days,
         "clinic.auth_session",
         "t.expires_at < :cutoff",
-    ),
-    # Only the hash of a code is stored; an expired or spent one has no further use.
-    DeleteRule(
-        "link_codes",
-        Scope.CLINIC,
-        lambda p: p.link_code_days,
-        "clinic.identity_link_code",
-        "t.expires_at < :cutoff OR t.used_at < :cutoff",
     ),
 )
 
@@ -211,4 +172,3 @@ THREADS_RESET_BATCH = text(
 
 # ------------------------------------------------------------------------------------ audit and the door
 AUDIT_RUN = text("SELECT clinic.record_retention_run(:scope, CAST(:counts AS jsonb))")
-PURGE_LINK_ATTEMPTS = text("SELECT clinic.retention_purge_link_attempts(:cutoff, :batch, :dry_run)")

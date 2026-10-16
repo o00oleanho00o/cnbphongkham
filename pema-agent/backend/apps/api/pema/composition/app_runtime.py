@@ -5,7 +5,7 @@ removed from this branch so a new agent service can be written from scratch. Wha
 platform: authentication, the CRM, the Inbox, live updates and the staff guide. This module builds the few
 objects those need and runs their background loops inside the API process:
 
-* the database (``be_app``) and a Redis client for live updates (pub/sub and presence);
+* the database (``be_app``) and a Redis client for live updates (pub/sub);
 * the CRM rules runner (staff tasks only; it no longer schedules messages);
 * the retention run of scope ``clinic``.
 
@@ -102,8 +102,6 @@ def wire_app(app: FastAPI, rt: AppRuntime) -> None:
     state.clinic_db = rt.db
     state.live = rt.live
     state.staff_context_resolver = resolve_staff_context
-    # No channel sender until the new channel integration exists: staff messages stay queued.
-    state.outbound_delivery = None
     rules_admin = SqlCrmRuleAdminService(rt.db)
     app.dependency_overrides[admin_crm_rules.get_action_context] = dashboard_auth.action_context
     app.dependency_overrides[admin_crm_rules.get_rules_admin] = lambda: rules_admin

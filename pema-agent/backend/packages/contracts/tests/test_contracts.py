@@ -1,16 +1,13 @@
-"""Foundation contracts of the clinic application: roles, +07:00 time, the error envelope, strict DTOs and
-the shape of a channel message (kept for the future channel integration)."""
+"""Foundation contracts of the clinic application: roles, +07:00 time, the error envelope and strict DTOs."""
 
 from __future__ import annotations
 
 import json
 from datetime import UTC, datetime, timedelta, timezone
-from uuid import uuid4
 
 import pytest
 from pydantic import BaseModel, ValidationError
 
-from pema_contracts.channel import ChannelKind, InboundKind, InboundMessage, ThreadKind
 from pema_contracts.common import VN_TZ, ApiModel, VnDatetime, now_vn
 from pema_contracts.errors import ERROR_HTTP_STATUS, DomainError, ErrorCode
 from pema_contracts.roles import STAFF_ROLES, Role
@@ -65,25 +62,6 @@ def test_dtos_reject_unknown_fields() -> None:
 
     with pytest.raises(ValidationError):
         Probe.model_validate({"name": "x", "surprise": 1})
-
-
-def test_inbound_message_round_trips_with_plus_seven() -> None:
-    msg = InboundMessage(
-        channel=ChannelKind.ZALO_BOT,
-        account_id="acc-1",
-        update_id=uuid4().hex,
-        kind=InboundKind.TEXT,
-        thread_id="t-1",
-        thread_kind=ThreadKind.GROUP,
-        is_group=True,
-        sender_id="u-1",
-        text="xin chào",
-        msg_id=uuid4().hex,
-        sent_at=now_vn(),
-    )
-    data = json.loads(msg.model_dump_json())
-    assert data["sent_at"].endswith("+07:00")
-    assert InboundMessage.model_validate(data) == msg
 
 
 def test_now_vn_is_plus_seven() -> None:

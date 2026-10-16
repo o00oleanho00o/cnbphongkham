@@ -217,48 +217,6 @@ class Seed:
             )
         )
 
-    def conversation(self, clinic: UUID, status: str, age: int) -> UUID:
-        """``age`` = days since the last update (for a closed conversation: since it was closed)."""
-        return UUID(
-            str(
-                self.sql(
-                    "INSERT INTO clinic.conversation (clinic_id, channel, external_ref, status, updated_at) "
-                    "VALUES (:c, 'zalo_bot', :ref, :s, now() - make_interval(days => :age)) RETURNING id",
-                    c=clinic,
-                    ref=f"thread-{uuid.uuid4().hex[:10]}",
-                    s=status,
-                    age=age,
-                )
-            )
-        )
-
-    def message(self, clinic: UUID, conversation: UUID, *, review_item: UUID | None = None) -> UUID:
-        return UUID(
-            str(
-                self.sql(
-                    "INSERT INTO clinic.message (clinic_id, conversation_id, channel, direction, sender_type, body, "
-                    "review_item_id) VALUES (:c, :conv, 'zalo_bot', 'inbound', 'patient', 'synthetic body', :r) "
-                    "RETURNING id",
-                    c=clinic,
-                    conv=conversation,
-                    r=review_item,
-                )
-            )
-        )
-
-    def review_item(self, clinic: UUID, conversation: UUID, status: str) -> UUID:
-        return UUID(
-            str(
-                self.sql(
-                    "INSERT INTO clinic.review_item (clinic_id, kind, status, conversation_id, draft_text) "
-                    "VALUES (:c, 'reply_draft', :s, :conv, 'synthetic draft') RETURNING id",
-                    c=clinic,
-                    s=status,
-                    conv=conversation,
-                )
-            )
-        )
-
     def auth_session(self, clinic: UUID, user: UUID, expired_days_ago: int) -> None:
         """A negative ``expired_days_ago`` is a session that is still valid."""
         self.sql(
@@ -269,37 +227,6 @@ class Seed:
             c=clinic,
             u=user,
             d=expired_days_ago,
-        )
-
-    def link_code(
-        self,
-        clinic: UUID,
-        patient: UUID,
-        user: UUID,
-        *,
-        expired_days_ago: int,
-        used_days_ago: int | None = None,
-    ) -> None:
-        self.sql(
-            "INSERT INTO clinic.identity_link_code (clinic_id, patient_id, code_hash, issued_by, expires_at, used_at) "
-            "VALUES (:c, :p, :h, :u, now() - make_interval(days => :d), "
-            "CASE WHEN CAST(:used AS integer) IS NULL THEN NULL "
-            "ELSE now() - make_interval(days => CAST(:used AS integer)) END) RETURNING 1",
-            c=clinic,
-            p=patient,
-            h=uuid.uuid4().hex + uuid.uuid4().hex,
-            u=user,
-            d=expired_days_ago,
-            used=used_days_ago,
-        )
-
-    def link_attempt(self, clinic: UUID, age_days: int) -> None:
-        self.sql(
-            "INSERT INTO clinic.identity_link_attempt (clinic_id, channel, external_user_id, method, succeeded, "
-            "attempted_at) VALUES (:c, 'zalo_bot', 'ext-1', 'code', false, now() - make_interval(days => :d)) "
-            "RETURNING 1",
-            c=clinic,
-            d=age_days,
         )
 
     def audit(self, clinic: UUID, age: int) -> None:

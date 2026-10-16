@@ -182,59 +182,7 @@ ENDPOINTS: tuple[Endpoint, ...] = (
         frozenset({OWNER, MANAGER, DOCTOR}),
         lambda w: {"tags": ["guide"]},
     ),
-    Endpoint("list_conversations", "GET", "/conversations", frozenset({OWNER, MANAGER, DOCTOR, CS})),
-    Endpoint(
-        "send_message",
-        "POST",
-        f"/conversations/{FAKE}/messages",
-        frozenset({OWNER, MANAGER, DOCTOR, CS}),
-        lambda w: {"text": "x"},
-    ),
-    Endpoint("list_review_items", "GET", "/review-items", frozenset({OWNER, MANAGER, DOCTOR, CS})),
-    Endpoint(
-        "approve_review_item",
-        "POST",
-        f"/review-items/{FAKE}/approve",
-        frozenset({OWNER, MANAGER, DOCTOR, CS}),
-        lambda w: {"version": 1},
-    ),
-    Endpoint(
-        "reject_review_item",
-        "POST",
-        f"/review-items/{FAKE}/reject",
-        frozenset({OWNER, MANAGER, DOCTOR, CS}),
-        lambda w: {"version": 1, "reason": "x"},
-    ),
-    Endpoint(
-        "escalate_review_item",
-        "POST",
-        f"/review-items/{FAKE}/escalate",
-        frozenset({OWNER, MANAGER, DOCTOR, CS}),
-        lambda w: {"version": 1},
-    ),
     Endpoint("audit_log", "GET", "/admin/logs/audit", frozenset({OWNER, MANAGER})),
-    Endpoint("list_templates", "GET", "/admin/templates", frozenset({OWNER, MANAGER, DOCTOR})),
-    Endpoint(
-        "create_template",
-        "POST",
-        "/admin/templates",
-        frozenset({OWNER, MANAGER}),
-        lambda w: {"template_key": f"rbac_{uuid4().hex[:8]}", "title": "t", "body": "b"},
-    ),
-    Endpoint(
-        "update_template",
-        "PATCH",
-        f"/admin/templates/{FAKE}",
-        frozenset({OWNER, MANAGER}),
-        lambda w: {"version": 1, "title": "t"},
-    ),
-    Endpoint(
-        "approve_template",
-        "POST",
-        f"/admin/templates/{FAKE}/approve",
-        frozenset({OWNER, DOCTOR}),
-        lambda w: {"version": 1},
-    ),
 )
 
 
@@ -272,9 +220,6 @@ async def test_the_patient_role_is_denied_every_clinic_action(db: ClinicDatabase
         actions.appointments.list_schedule(db, ctx, day=date(2026, 9, 20)),
         actions.dashboard.kpis(db, ctx, range_=DashboardRange.TODAY),
         actions.crm_tasks.list_tasks(db, ctx),
-        actions.conversations.list_conversations(db, ctx),
-        actions.review_items.list_review_items(db, ctx),
-        actions.templates.list_templates(db, ctx),
         actions.audit_logs.list_audit_logs(db, ctx),
     ]
     for call in calls:

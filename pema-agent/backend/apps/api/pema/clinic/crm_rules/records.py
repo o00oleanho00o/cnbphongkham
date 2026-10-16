@@ -95,15 +95,6 @@ class AppointmentSnapshot:
 
 
 @dataclass(frozen=True, slots=True)
-class ChannelTarget:
-    """Where an automatic message to this patient would go: a verified identity on an enabled account."""
-
-    account_id: str
-    thread_id: str
-    thread_type: int = 0
-
-
-@dataclass(frozen=True, slots=True)
 class PatientSnapshot:
     id: UUID
     code: str
@@ -122,17 +113,6 @@ class PatientSnapshot:
     last_protocol_session_id: str | None = None
     reactivated_at: datetime | None = None
     first_plan_id: str | None = None
-    channel_target: ChannelTarget | None = None
-    messaging_consent: bool = False
-    """Latest ``messaging`` consent is granted and not revoked. An addition: automatic messages only."""
-
-
-@dataclass(frozen=True, slots=True)
-class TemplateRef:
-    """An approved, active ``clinic.message_template``. Unapproved templates are not passed in at all."""
-
-    key: str
-    marketing: bool = False
 
 
 @dataclass(frozen=True, slots=True)
@@ -214,6 +194,5 @@ class ClinicCrmData:
     rules: tuple[RuleConfig, ...]
     patients: tuple[PatientSnapshot, ...]
     existing_tasks: tuple[ExistingTask, ...]
-    templates: Mapping[str, TemplateRef] = field(default_factory=dict[str, TemplateRef])
     protocols: Mapping[str, ProtocolConfig] = field(default_factory=dict[str, ProtocolConfig])
     """``clinic.protocol`` by code (package U4). Empty: the engine uses the built-in laser-co2 defaults."""

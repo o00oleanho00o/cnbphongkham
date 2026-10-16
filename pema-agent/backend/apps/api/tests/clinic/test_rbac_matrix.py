@@ -32,15 +32,9 @@ def test_every_role_of_the_system_has_an_entry_and_the_patient_has_none() -> Non
     assert ROLE_PERMISSIONS[Role.PATIENT] == frozenset()
 
 
-def test_owner_holds_every_human_permission_and_never_the_agent_one() -> None:
-    assert ROLE_PERMISSIONS[Role.OWNER] == frozenset(Permission) - {P.AGENT_SUBMIT}
-
-
-def test_agent_submit_belongs_to_the_agent_and_scheduler_only() -> None:
-    holders = {role for role, perms in ROLE_PERMISSIONS.items() if P.AGENT_SUBMIT in perms}
-    assert holders == set()
-    assert frozenset({P.AGENT_SUBMIT}) == AGENT_PERMISSIONS
-    assert P.AGENT_SUBMIT in SCHEDULER_PERMISSIONS
+def test_owner_holds_every_permission_and_the_agent_none() -> None:
+    assert ROLE_PERMISSIONS[Role.OWNER] == frozenset(Permission)
+    assert frozenset() == AGENT_PERMISSIONS
 
 
 def test_every_permission_code_is_granted_to_someone() -> None:
@@ -77,16 +71,6 @@ def test_every_permission_code_is_granted_to_someone() -> None:
             {Role.DOCTOR, Role.CS_STAFF, Role.OWNER},
             {Role.RECEPTION, Role.MANAGER, Role.PATIENT},
         ),
-        # "Duyet prescription/AI draft": doctor only (the owner is the clinic's doctor)
-        (
-            P.REVIEW_DECIDE_CLINICAL,
-            {Role.DOCTOR, Role.OWNER},
-            {Role.RECEPTION, Role.CS_STAFF, Role.MANAGER, Role.PATIENT},
-        ),
-        # "Xem/phan hoi follow-up": doctor and care; reception no
-        (P.CONVERSATION_READ, {Role.DOCTOR, Role.CS_STAFF}, {Role.RECEPTION, Role.PATIENT}),
-        (P.CONVERSATION_REPLY, {Role.DOCTOR, Role.CS_STAFF}, {Role.RECEPTION, Role.PATIENT}),
-        (P.REVIEW_DECIDE, {Role.DOCTOR, Role.CS_STAFF, Role.MANAGER}, {Role.RECEPTION, Role.PATIENT}),
         # reception sees identity and schedule, not the 360
         (P.PATIENT_READ, {Role.RECEPTION, Role.DOCTOR, Role.CS_STAFF, Role.MANAGER}, {Role.PATIENT}),
         (P.PATIENT_READ_360, {Role.DOCTOR, Role.CS_STAFF, Role.MANAGER}, {Role.RECEPTION, Role.PATIENT}),
@@ -172,23 +156,21 @@ def test_system_may_do_everything_agent_and_scheduler_only_their_sets() -> None:
 
 def test_require_raises_forbidden_with_the_missing_permission() -> None:
     with pytest.raises(DomainError) as caught:
-        require(_ctx(Role.RECEPTION), P.REVIEW_DECIDE_CLINICAL)
+        require(_ctx(Role.RECEPTION), P.SESSION_WRITE)
     assert caught.value.code is ErrorCode.FORBIDDEN
     assert caught.value.http_status == 403
-    assert caught.value.details == {"permission": "review.decide_clinical"}
-    require(_ctx(Role.DOCTOR), P.REVIEW_DECIDE_CLINICAL)
+    assert caught.value.details == {"permission": "session.write"}
+    require(_ctx(Role.DOCTOR), P.SESSION_WRITE)
 
 
 def test_require_any_needs_one_of_them() -> None:
     require_any(_ctx(Role.CS_STAFF), (P.APPOINTMENT_WRITE, P.CRM_TASK_RESOLVE))
     with pytest.raises(DomainError):
-        require_any(_ctx(Role.RECEPTION), (P.CRM_TASK_RESOLVE, P.REVIEW_DECIDE))
+        require_any(_ctx(Role.RECEPTION), (P.CRM_TASK_RESOLVE, P.SESSION_WRITE))
 
 
-def test_an_agent_actor_cannot_use_staff_permissions_and_staff_cannot_submit_as_agent() -> None:
-    assert not has_permission(_ctx(None, ActorType.AGENT), P.PATIENT_READ)
-    assert has_permission(_ctx(None, ActorType.AGENT), P.AGENT_SUBMIT)
-    assert not has_permission(_ctx(Role.OWNER), P.AGENT_SUBMIT)
+def test_an_agent_actor_holds_no_permission() -> None:
+    assert not any(has_permission(_ctx(None, ActorType.AGENT), p) for p in Permission)
 
 
 def test_only_owner_and_doctor_are_clinical() -> None:

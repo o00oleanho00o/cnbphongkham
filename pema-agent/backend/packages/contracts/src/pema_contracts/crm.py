@@ -46,17 +46,6 @@ class TaskStatus(StrEnum):
     SUPERSEDED = "superseded"
 
 
-class RuleSendMode(StrEnum):
-    """What the system may do beyond creating the staff task. Birthday is never auto-sent."""
-
-    STAFF_TASK = "staff_task"
-    """Task only; staff contact the patient (default, JS ``actionType``)."""
-    AUTO_REMINDER = "auto_reminder"
-    """Simple appointment reminder that may self-approve and go out on a proactive channel."""
-    DRAFT_FOR_REVIEW = "draft_for_review"
-    """AI drafts the message; a human approves before it is sent."""
-
-
 class CrmChannel(StrEnum):
     """JS labels: Goi dien, Zalo, SMS, Ghi chu noi bo."""
 
@@ -90,7 +79,6 @@ class CrmRuleOut(ApiModel):
     suggested_action: str
     priority: TaskPriority
     active: bool
-    send_mode: RuleSendMode = RuleSendMode.STAFF_TASK
     conditions: dict[str, Any] = Field(default_factory=dict)
     version: int
 
@@ -101,7 +89,6 @@ class CrmRuleUpdate(ApiModel):
     delay_days: int | None = Field(default=None, ge=0, le=730)
     priority: TaskPriority | None = None
     suggested_action: str | None = Field(default=None, max_length=500)
-    send_mode: RuleSendMode | None = None
 
 
 class CrmTaskOut(ApiModel):
@@ -179,44 +166,6 @@ class CrmProfile(ApiModel):
     remaining_sessions: int = 0
     risk_level: str = "normal"
     marketing_opt_out: bool = False
-
-
-class MessageTemplateOut(ApiModel):
-    """An approved text a ``kind: message`` job may send in ``patient_channel`` (table
-    ``clinic.message_template``). Only a doctor approves; an unapproved template is never active."""
-
-    id: UUID
-    template_key: str = Field(pattern=r"^[a-z0-9][a-z0-9_.-]*$", max_length=64)
-    title: str
-    body: str = Field(max_length=2000)
-    marketing: bool = Field(
-        default=False, description="Obeys marketing_opt_out. Birthday is never auto-sent."
-    )
-    active: bool
-    approved_by: UUID | None = None
-    approved_at: VnDatetime | None = None
-    version: int
-
-
-class MessageTemplateCreate(ApiModel):
-    template_key: str = Field(pattern=r"^[a-z0-9][a-z0-9_.-]*$", max_length=64)
-    title: str = Field(min_length=1, max_length=200)
-    body: str = Field(min_length=1, max_length=2000)
-    marketing: bool = False
-
-
-class MessageTemplateUpdate(ApiModel):
-    version: int
-    title: str | None = Field(default=None, min_length=1, max_length=200)
-    body: str | None = Field(default=None, min_length=1, max_length=2000)
-    marketing: bool | None = None
-    active: bool | None = None
-
-
-class MessageTemplateApprove(ApiModel):
-    """Doctor sign-off. Editing the body afterwards clears the approval (version bump)."""
-
-    version: int
 
 
 class CrmSegmentKey(StrEnum):

@@ -43,7 +43,6 @@ from pema.config.env import get_settings
 from pema.core.db import ClinicDatabase
 from pema.core.testing import ensure_test_clinic, truncate_installation_data
 from pema_contracts.common import VN_TZ
-from pema_contracts.conversations import InboxRef
 
 ENV_URL = "PEMA_TEST_DATABASE_URL"
 BE_PASSWORD = "be-app-test-secret"  # noqa: S105  - throwaway test database only
@@ -83,9 +82,7 @@ def _schema_is_current(admin: str) -> bool:
         with engine.connect() as conn:
             return bool(
                 conn.execute(text("SELECT to_regclass('clinic.auth_session') IS NOT NULL")).scalar()
-                and conn.execute(
-                    text("SELECT to_regclass('clinic.review_item_summary') IS NOT NULL")
-                ).scalar()
+                and conn.execute(text("SELECT to_regclass('clinic.guide_article') IS NOT NULL")).scalar()
                 and conn.execute(
                     text(
                         "SELECT EXISTS (SELECT 1 FROM information_schema.columns WHERE "
@@ -262,37 +259,3 @@ def admin(pg_url: str) -> Iterator[Engine]:
     engine = create_engine(pg_url)
     yield engine
     engine.dispose()
-
-
-async def record_inbound(
-    db: ClinicDatabase,
-    world: SeedResult,
-    *,
-    uid: str = "demo-uid-025",
-    thread: str | None = None,
-    text: str = "Tin nhắn mẫu từ bệnh nhân",
-    update_id: str | None = None,
-) -> InboxRef:
-    """Write one inbound message to the Inbox as the channel layer does (``system`` actor). With the default
-    ``uid`` (verified identity of P025) the conversation is linked to that patient; a new ``uid`` stays
-    unlinked."""
-    from uuid import uuid4
-
-    from pema.clinic.actions.inbox_ingest import record_inbound_message
-    from pema_contracts.actions import ActionContext, ActionSource
-    from pema_contracts.channel import ChannelKind, InboundMessage
-    from pema_contracts.roles import ActorType
-
-    ctx = ActionContext(clinic_id=world.clinic_id, actor_type=ActorType.SYSTEM, source=ActionSource.WEBHOOK)
-    message = InboundMessage(
-        channel=ChannelKind.ZALO_BOT,
-        account_id="",  # no account: a test that needs one sets clinic.conversation.account_id itself
-        update_id=update_id or uuid4().hex,
-        thread_id=thread or uuid4().hex,
-        sender_id=uid,
-        sender_name="Khách mẫu",
-        text=text,
-        msg_id=uuid4().hex,
-        sent_at=DEMO_NOW,
-    )
-    return await record_inbound_message(db, ctx, message)

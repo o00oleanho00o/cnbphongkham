@@ -16,21 +16,15 @@ from fastapi import FastAPI
 from sqlalchemy import text
 from sqlalchemy.engine import Engine
 
-from pema.api.clinic_testing import ClientFactory, record_inbound
+from pema.api.clinic_testing import ClientFactory
 from pema.api.routers import live as live_router
 from pema.bootstrap import create_app
-from pema.clinic.actions.inbox_ingest import create_review_item
 from pema.clinic.actions.seed_demo import SeedResult
-from pema.core.db import ClinicDatabase
 from pema.live import sse
 from pema.live.bus import InMemoryLiveEventBus
-from pema.live.publisher import LivePublisher, install_live_publisher
 from pema.live.services import LiveServices
 from pema.live.testing import OpenStream, session_cookie
-from pema_contracts.actions import ActionContext
 from pema_contracts.live import LiveEventType
-from pema_contracts.review import ReviewItemCreate, ReviewKind, ReviewOrigin, RiskLevel
-from pema_contracts.roles import ActorType
 
 pytestmark = pytest.mark.db
 
@@ -121,167 +115,42 @@ async def test_the_stream_is_503_while_the_live_bus_is_down(
 # ------------------------------------------------------------------------------------- what it carries
 
 
-async def test_the_stream_receives_inbox_changed_after_an_inbound_message_is_processed(
+def _an_open_task(admin: Engine) -> tuple[str, str]:
+    with admin.connect() as conn:
+        row = conn.execute(
+            text("SELECT id, patient_id FROM clinic.crm_task WHERE status = 'open' ORDER BY id LIMIT 1")
+        ).one()
+    return str(row.id), str(row.patient_id)
+
+
+async def _log_contact(client: httpx.AsyncClient, admin: Engine, note: str) -> httpx.Response:
+    task_id, patient_id = _an_open_task(admin)
+    return await client.post(
+        "/api/v1/crm/activities",
+        json={"patient_id": patient_id, "task_id": task_id, "channel": "internal_note", "note": note},
+    )
+
+
+async def test_an_event_names_no_note_text_no_patient_and_no_phone(
     app: FastAPI,
     live: LiveServices,
     client_factory: ClientFactory,
     world: SeedResult,
-    db: ClinicDatabase,
+    admin: Engine,
     streams: list[OpenStream],
 ) -> None:
     stream = await open_events(app, await client_factory("cs.maianh"), streams)
     await stream.read_until("retry:")
-    ref = await record_inbound(db, world, text=SECRET_TEXT)
+    logged = await _log_contact(await client_factory("cs.maianh"), admin, SECRET_TEXT)
+    assert logged.status_code == 201, logged.text
     await flush(live)
-    chunk = await stream.read_until("inbox.changed")
-    assert data_of(chunk) == {"type": "inbox.changed", "id": str(ref.conversation_id)}
-
-
-async def test_an_event_names_no_message_text_no_patient_and_no_phone(
-    app: FastAPI,
-    live: LiveServices,
-    client_factory: ClientFactory,
-    world: SeedResult,
-    db: ClinicDatabase,
-    streams: list[OpenStream],
-) -> None:
-    stream = await open_events(app, await client_factory("cs.maianh"), streams)
-    await stream.read_until("retry:")
-    await record_inbound(db, world, text=SECRET_TEXT)
-    await flush(live)
-    await stream.read_until("inbox.changed")
+    await stream.read_until("tasks.changed")
     frames = [line for line in stream.body.split("\n") if line.startswith("data: ")]
     assert frames
     for frame in frames:
         assert set(json.loads(frame.removeprefix("data: "))) == {"type", "id"}
-    for forbidden in (SECRET_TEXT, "đau răng", "Khách mẫu", "Bệnh nhân mẫu", "P025", "demo-uid"):
+    for forbidden in (SECRET_TEXT, "đau răng", "Bệnh nhân mẫu", "P0"):
         assert forbidden not in stream.body
-
-
-async def test_a_duplicate_delivery_of_the_same_update_announces_nothing(
-    app: FastAPI,
-    live: LiveServices,
-    client_factory: ClientFactory,
-    world: SeedResult,
-    db: ClinicDatabase,
-    streams: list[OpenStream],
-) -> None:
-    update_id = uuid4().hex
-    await record_inbound(db, world, update_id=update_id, thread="dup-thread")
-    await flush(live)
-    stream = await open_events(app, await client_factory("cs.maianh"), streams)
-    await stream.read_until("retry:")
-    again = await record_inbound(db, world, update_id=update_id, thread="dup-thread")
-    assert again.duplicate
-    await flush(live)
-    assert "inbox.changed" not in stream.body
-
-
-async def test_a_change_made_through_the_api_reaches_the_other_screens(
-    app: FastAPI,
-    live: LiveServices,
-    client_factory: ClientFactory,
-    world: SeedResult,
-    streams: list[OpenStream],
-) -> None:
-    mai_anh = await client_factory("cs.maianh")
-    thu = await client_factory("cs.thu")
-    stream = await open_events(app, thu, streams)
-    await stream.read_until("retry:")
-    response = await mai_anh.post(f"/api/v1/conversations/{world.conversation_id}/read")
-    assert response.status_code == 204
-    await flush(live)
-    chunk = await stream.read_until("inbox.changed")
-    assert data_of(chunk) == {"type": "inbox.changed", "id": str(world.conversation_id)}
-
-
-async def test_handing_a_conversation_to_a_colleague_reaches_the_colleagues_stream(
-    app: FastAPI,
-    live: LiveServices,
-    client_factory: ClientFactory,
-    world: SeedResult,
-    streams: list[OpenStream],
-) -> None:
-    """ST-S assignee check and ST-R emit: the PATCH that assigns still announces `inbox.changed`"""
-    mai_anh = await client_factory("cs.maianh")
-    thu = await client_factory("cs.thu")
-    stream = await open_events(app, thu, streams)
-    await stream.read_until("retry:")
-    url = f"/api/v1/conversations/{world.conversation_id}"
-    version = (await mai_anh.get(url)).json()["version"]
-    response = await mai_anh.patch(
-        url, json={"version": version, "assigned_user_id": str(world.users["cs.thu"])}
-    )
-    assert response.status_code == 200, response.text
-    await flush(live)
-    chunk = await stream.read_until("inbox.changed")
-    assert data_of(chunk) == {"type": "inbox.changed", "id": str(world.conversation_id)}
-
-
-async def test_a_refused_assignee_announces_nothing(
-    app: FastAPI,
-    live: LiveServices,
-    client_factory: ClientFactory,
-    world: SeedResult,
-    streams: list[OpenStream],
-) -> None:
-    """an assignee the server refuses (422) changes nothing, so no screen is told to reload"""
-    mai_anh = await client_factory("cs.maianh")
-    thu = await client_factory("cs.thu")
-    stream = await open_events(app, thu, streams)
-    await stream.read_until("retry:")
-    url = f"/api/v1/conversations/{world.conversation_id}"
-    version = (await mai_anh.get(url)).json()["version"]
-    refused = await mai_anh.patch(url, json={"version": version, "assigned_user_id": str(uuid4())})
-    assert refused.status_code == 422
-    await flush(live)
-    assert "inbox.changed" not in stream.body
-
-
-async def test_a_new_review_item_announces_the_queue_and_the_conversation(
-    app: FastAPI,
-    bus: InMemoryLiveEventBus,
-    live: LiveServices,
-    client_factory: ClientFactory,
-    world: SeedResult,
-    db: ClinicDatabase,
-    streams: list[OpenStream],
-) -> None:
-    stream = await open_events(app, await client_factory("cs.maianh"), streams)
-    await stream.read_until("retry:")
-    item = await create_review_item(
-        db,
-        ActionContext(clinic_id=world.clinic_id, actor_type=ActorType.AGENT),
-        ReviewItemCreate(
-            job_id=f"job-{uuid4().hex}",
-            clinic_id=world.clinic_id,
-            patient_ref="P025",
-            conversation_ref=str(world.conversation_id),
-            kind=ReviewKind.REPLY_DRAFT,
-            origin=ReviewOrigin.AGENT_TURN,
-            draft_text="Chào bạn (nội dung mẫu).",
-            risk_level=RiskLevel.NORMAL,
-        ),
-    )
-    await flush(live)
-    await stream.read_until("review.changed")
-    published = {(e.type, e.id) for e in bus.published}
-    assert (LiveEventType.REVIEW_CHANGED, item.id) in published
-    assert (LiveEventType.INBOX_CHANGED, world.conversation_id) in published
-
-
-async def test_a_burst_of_inbound_messages_is_one_event_per_conversation(
-    bus: InMemoryLiveEventBus, live: LiveServices, world: SeedResult, db: ClinicDatabase
-) -> None:
-    publisher = LivePublisher(bus, debounce_s=0.5)  # the real window is 0.2 s; the test must not race it
-    install_live_publisher(publisher)
-    thread = "burst-thread"
-    for _ in range(6):
-        await record_inbound(db, world, thread=thread, text="tin mẫu")
-    assert bus.published == []
-    await publisher.flush()
-    inbox = [e for e in bus.published if e.type is LiveEventType.INBOX_CHANGED]
-    assert len(inbox) == 1
 
 
 # ------------------------------------------------------------------------------------- who gets what
@@ -296,12 +165,12 @@ async def test_a_doctor_stream_carries_no_ids_because_a_doctor_sees_only_their_o
 ) -> None:
     stream = await open_events(app, await client_factory("doctor.mai"), streams)
     await stream.read_until("retry:")
-    live.publisher.emit(LiveEventType.INBOX_CHANGED, world.conversation_id)
+    live.publisher.emit(LiveEventType.TASKS_CHANGED, uuid4())
     await flush(live)
-    assert data_of(await stream.read_until("inbox.changed")) == {"type": "inbox.changed", "id": None}
+    assert data_of(await stream.read_until("tasks.changed")) == {"type": "tasks.changed", "id": None}
 
 
-async def test_reception_receives_no_inbox_review_or_task_events_only_the_schedule(
+async def test_reception_receives_no_task_events_only_the_schedule(
     app: FastAPI,
     live: LiveServices,
     client_factory: ClientFactory,
@@ -449,19 +318,10 @@ async def test_a_bus_that_cannot_publish_never_breaks_the_business_operation(
     live: LiveServices,
     client_factory: ClientFactory,
     world: SeedResult,
-    db: ClinicDatabase,
+    admin: Engine,
 ) -> None:
     bus.fail_publish = True
-    cs = await client_factory("cs.maianh")
-    ref = await record_inbound(db, world, text="tin mẫu khi bus hỏng")  # the inbound message is stored
-    assert not ref.duplicate
-    assert (await cs.post(f"/api/v1/conversations/{ref.conversation_id}/read")).status_code == 204
-    detail = await cs.get(f"/api/v1/conversations/{ref.conversation_id}")
-    assert detail.status_code == 200
-    patched = await cs.patch(
-        f"/api/v1/conversations/{ref.conversation_id}",
-        json={"version": detail.json()["version"], "assigned_user_id": str(world.users["cs.maianh"])},
-    )
-    assert patched.status_code == 200
+    logged = await _log_contact(await client_factory("cs.maianh"), admin, "ghi chú mẫu khi bus hỏng")
+    assert logged.status_code == 201, logged.text  # the contact log is stored
     await flush(live)  # the publisher fails quietly
     assert bus.published == []

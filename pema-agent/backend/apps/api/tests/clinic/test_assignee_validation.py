@@ -1,7 +1,7 @@
 """Every write that accepts an assignee runs the same check, and leaves an audit row (package ST-S).
 
-New tests (no zalo-agent original). Needs ``PEMA_TEST_DATABASE_URL``. The three places that take a "Phụ trách":
-a conversation (``PATCH /conversations/{id}``), a CRM task (``POST /crm/tasks/{id}/resolve``) and a patient
+New tests (no zalo-agent original). Needs ``PEMA_TEST_DATABASE_URL``. The two places that take a "Phụ trách":
+a CRM task (``POST /crm/tasks/{id}/resolve``) and a patient
 (``PATCH /patients/{id}``: treating doctor and CSKH owner). The target must be a user of this installation, ACTIVE
 and of an assignable role; since ST-S a staff member may hand work to a colleague, and the audit row says who
 gave it to whom (ids only).
@@ -13,12 +13,11 @@ import json
 from typing import Any
 from uuid import uuid4
 
-import httpx
 import pytest
 from sqlalchemy import text
 from sqlalchemy.engine import Engine
 
-from pema.api.clinic_testing import ClientFactory, record_inbound
+from pema.api.clinic_testing import ClientFactory
 from pema.clinic.actions import assignees
 from pema.clinic.actions.seed_demo import SeedResult
 from pema.clinic.rbac import ASSIGNABLE_ROLES
@@ -30,7 +29,6 @@ from pema_contracts.roles import ActorType, Role
 pytestmark = pytest.mark.db
 
 REFUSED = "Người được giao không hợp lệ."
-COLLEAGUES = ["owner", "manager", "doctor.an", "cs.thu"]
 
 
 def _audit(admin: Engine, action: str, entity_id: str) -> list[dict[str, Any]]:
@@ -105,100 +103,11 @@ def _resolve_body(owner: object, **extra: object) -> dict[str, object]:
 
 
 def test_the_assignable_roles_follow_the_permission_matrix() -> None:
-    """vai trò được giao việc = vai trò giữ quyền trả lời hội thoại hoặc xử lý việc CSKH"""
+    """vai trò được giao việc = vai trò giữ quyền xử lý việc CSKH"""
     assert {Role.OWNER, Role.MANAGER, Role.DOCTOR, Role.CS_STAFF} == ASSIGNABLE_ROLES
     assert Role.RECEPTION not in ASSIGNABLE_ROLES
     assert Role.ACCOUNTANT not in ASSIGNABLE_ROLES
     assert Role.PATIENT not in ASSIGNABLE_ROLES
-
-
-# ------------------------------------------------------------------------------------------ conversations
-
-
-async def _conversation(db: ClinicDatabase, world: SeedResult, cs: httpx.AsyncClient) -> tuple[str, int]:
-    ref = await record_inbound(db, world)
-    url = f"/api/v1/conversations/{ref.conversation_id}"
-    return url, (await cs.get(url)).json()["version"]
-
-
-@pytest.mark.parametrize("target", COLLEAGUES)
-async def test_a_conversation_can_be_handed_to_a_colleague_and_the_hand_over_is_audited(
-    client_factory: ClientFactory, world: SeedResult, db: ClinicDatabase, admin: Engine, target: str
-) -> None:
-    """giao hội thoại cho đồng nghiệp: được, và audit ghi ai giao cho ai (chỉ id)"""
-    cs = await client_factory("cs.maianh")
-    url, version = await _conversation(db, world, cs)
-    conversation_id = url.rsplit("/", 1)[1]
-
-    response = await cs.patch(url, json={"version": version, "assigned_user_id": str(world.users[target])})
-
-    assert response.status_code == 200, response.text
-    assert response.json()["assigned_user_id"] == str(world.users[target])
-    rows = _audit(admin, "conversation.update", conversation_id)
-    assert len(rows) == 1
-    audit = rows[0]
-    assert audit["actor_user_id"] == world.users["cs.maianh"]
-    assert audit["actor_role"] == "cs_staff"
-    assert audit["entity_type"] == "conversation"
-    assert audit["details"]["assignee_from"] is None
-    assert audit["details"]["assignee_to"] == str(world.users[target])
-    assert audit["details"]["changed_fields"] == ["assigned_user_id"]
-    dumped = json.dumps(audit["details"], ensure_ascii=False)
-    assert "(mẫu)" not in dumped
-    assert "@example.test" not in dumped
-
-
-async def test_handing_a_conversation_on_records_the_previous_assignee(
-    client_factory: ClientFactory, world: SeedResult, db: ClinicDatabase, admin: Engine
-) -> None:
-    """giao tiếp cho người khác thì audit giữ cả người giao trước đó; bỏ giao (null) cũng được ghi"""
-    cs = await client_factory("cs.maianh")
-    url, version = await _conversation(db, world, cs)
-    conversation_id = url.rsplit("/", 1)[1]
-    first = await cs.patch(url, json={"version": version, "assigned_user_id": str(world.users["cs.maianh"])})
-    thu = await client_factory("cs.thu")
-    second = await thu.patch(
-        url, json={"version": first.json()["version"], "assigned_user_id": str(world.users["doctor.mai"])}
-    )
-    third = await thu.patch(url, json={"version": second.json()["version"], "assigned_user_id": None})
-
-    assert third.status_code == 200
-    assert third.json()["assigned_user_id"] is None
-    rows = _audit(admin, "conversation.update", conversation_id)
-    assert [(r["details"].get("assignee_from"), r["details"].get("assignee_to")) for r in rows] == [
-        (None, str(world.users["cs.maianh"])),
-        (str(world.users["cs.maianh"]), str(world.users["doctor.mai"])),
-        (str(world.users["doctor.mai"]), None),
-    ]
-    assert rows[1]["actor_user_id"] == world.users["cs.thu"]
-
-
-async def test_a_conversation_refuses_an_unknown_locked_or_non_assignable_assignee_with_one_answer(
-    client_factory: ClientFactory, world: SeedResult, db: ClinicDatabase, admin: Engine
-) -> None:
-    """người lạ, tài khoản khóa, lễ tân, vai trò bệnh nhân: cùng một câu trả lời 422, không đổi gì"""
-    cs = await client_factory("cs.maianh")
-    url, version = await _conversation(db, world, cs)
-    conversation_id = url.rsplit("/", 1)[1]
-    _lock(admin, world.users["cs.thu"])
-    targets = {
-        "unknown": str(uuid4()),
-        "locked": str(world.users["cs.thu"]),
-        "reception": str(world.users["reception.lan"]),
-        "patient role": _patient_role_user(admin, world),
-    }
-
-    answers: set[str] = set()
-    for label, target in targets.items():
-        response = await cs.patch(url, json={"version": version, "assigned_user_id": target})
-        assert response.status_code == 422, label
-        error = response.json()["error"]
-        assert error["code"] == "validation_failed", label
-        answers.add(error["message"])
-
-    assert answers == {REFUSED}, "the answer must not tell which accounts exist or which are locked"
-    assert (await cs.get(url)).json()["assigned_user_id"] is None
-    assert _audit(admin, "conversation.update", conversation_id) == []
 
 
 # ------------------------------------------------------------------------------------------------- tasks

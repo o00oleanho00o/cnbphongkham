@@ -34,7 +34,7 @@ from pema.clinic.crm_rules.testing import NOW
 from pema.core.db import ClinicDatabase
 from pema.core.testing import ensure_test_clinic, truncate_installation_data
 from pema_contracts.actions import ActionContext
-from pema_contracts.crm import CrmRuleUpdate, RuleKey, RuleSendMode
+from pema_contracts.crm import CrmRuleUpdate, RuleKey
 from pema_contracts.errors import DomainError, ErrorCode
 from pema_contracts.roles import ActorType, Role
 
@@ -90,7 +90,7 @@ def _run(conn: Any, sql: str, **params: object) -> Any:
 
 @pytest.fixture
 def clinic(admin_engine: Engine) -> Ids:
-    """The one clinic, emptied, with staff, an agent, a bot account, an approved template and six patients."""
+    """The one clinic, emptied, with staff and six patients."""
     with admin_engine.begin() as conn:
         c = ensure_test_clinic(conn)
         truncate_installation_data(conn)
@@ -105,20 +105,6 @@ def clinic(admin_engine: Engine) -> Ids:
                 n=f"Synthetic {key}",
                 r=role,
             ).scalar_one()
-        _run(conn, "INSERT INTO agent.agents (clinic_id, id, name) VALUES (:c, 'default', 'Default')", c=c)
-        _run(
-            conn,
-            "INSERT INTO agent.accounts (clinic_id, id, label, channel, agent_id) "
-            "VALUES (:c, 'bot-1', 'Bot', 'zalo_bot', 'default')",
-            c=c,
-        )
-        _run(
-            conn,
-            "INSERT INTO clinic.message_template (clinic_id, template_key, title, body, marketing, active, "
-            "approved_by, approved_at) VALUES (:c, 'crm.d1', 'D+1', 'Synthetic body', false, true, :u, now())",
-            c=c,
-            u=ids["doctor"],
-        )
         for code in ("P025", "P027", "P028", "P030", "P031", "P032"):
             ids[code] = _run(
                 conn,
@@ -224,36 +210,24 @@ async def test_the_ten_rules_are_seeded_per_clinic_and_listed_in_order(
     rules = await service.list_rules(_owner(clinic["clinic"], clinic["owner"]))
     assert [r.rule_key for r in rules] == [d.key for d in DEFAULT_RULES]
     d1 = rules[0]
-    assert (d1.delay_days, d1.priority.value, d1.send_mode, d1.version) == (
-        1,
-        "high",
-        RuleSendMode.STAFF_TASK,
-        1,
-    )
+    assert (d1.delay_days, d1.priority.value, d1.version) == (1, "high", 1)
     assert d1.conditions == {"protocol": "laser-co2"}
     assert next(r for r in rules if r.rule_key is RuleKey.DORMANT90).conditions == {"marketing": True}
 
 
-async def test_tuning_a_rule_uses_a_version_lock_is_audited_and_birthday_stays_staff_only(
+async def test_tuning_a_rule_uses_a_version_lock_and_is_audited(
     db: ClinicDatabase, clinic: Ids, admin_engine: Engine
 ) -> None:
-    """Chỉnh quy tắc có khoá phiên bản, có ghi audit, và quy tắc sinh nhật luôn là việc cho nhân viên."""
+    """Chỉnh quy tắc có khoá phiên bản và có ghi audit."""
     service = SqlCrmRuleAdminService(db)
     ctx = _owner(clinic["clinic"], clinic["owner"])
-    updated = await service.update_rule(
-        ctx, RuleKey.D1, CrmRuleUpdate(version=1, send_mode=RuleSendMode.AUTO_REMINDER, delay_days=2)
-    )
-    assert (updated.version, updated.send_mode, updated.delay_days) == (2, RuleSendMode.AUTO_REMINDER, 2)
+    updated = await service.update_rule(ctx, RuleKey.D1, CrmRuleUpdate(version=1, delay_days=2))
+    assert (updated.version, updated.delay_days) == (2, 2)
 
     with pytest.raises(DomainError) as stale:
         await service.update_rule(ctx, RuleKey.D1, CrmRuleUpdate(version=1, active=False))
     assert stale.value.code is ErrorCode.VERSION_CONFLICT
 
-    with pytest.raises(DomainError) as birthday:
-        await service.update_rule(
-            ctx, RuleKey.BIRTHDAY, CrmRuleUpdate(version=1, send_mode=RuleSendMode.AUTO_REMINDER)
-        )
-    assert birthday.value.code is ErrorCode.VALIDATION_FAILED
     with pytest.raises(DomainError) as manual:
         await service.update_rule(ctx, RuleKey.MANUAL, CrmRuleUpdate(version=1, active=False))
     assert manual.value.code is ErrorCode.NOT_FOUND
@@ -267,24 +241,7 @@ async def test_tuning_a_rule_uses_a_version_lock_is_audited_and_birthday_stays_s
     assert len(rows) == 1
     assert rows[0]["actor_role"] == "owner"
     assert rows[0]["entity_id"] == "d1"
-    assert rows[0]["details"] == {"fields": ["delay_days", "send_mode"], "version": 2}
-
-
-def test_the_database_itself_refuses_an_automatic_birthday_rule(admin_engine: Engine, clinic: Ids) -> None:
-    """Chính cơ sở dữ liệu cũng từ chối quy tắc sinh nhật tự động (ràng buộc CHECK)."""
-    with admin_engine.begin() as conn:
-        _run(
-            conn,
-            "INSERT INTO clinic.crm_rule (clinic_id, rule_key, name, trigger, suggested_action, send_mode) "
-            "VALUES (:c, 'birthday', 'b', 't', 'a', 'staff_task')",
-            c=clinic["clinic"],
-        )
-    with pytest.raises(Exception, match="crm_rule"), admin_engine.begin() as conn:
-        _run(
-            conn,
-            "UPDATE clinic.crm_rule SET send_mode = 'auto_reminder' WHERE clinic_id = :c AND rule_key = 'birthday'",
-            c=clinic["clinic"],
-        )
+    assert rows[0]["details"] == {"fields": ["delay_days"], "version": 2}
 
 
 async def test_a_run_writes_the_tasks_once_and_a_rerun_writes_nothing(

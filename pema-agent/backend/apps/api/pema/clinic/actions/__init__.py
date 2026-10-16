@@ -1,5 +1,5 @@
 """The action layer: authorise, filter by clinic, audit every mutation, idempotency. REST routes call
-these; a future agent service reaches the clinic only through the HTTP API. Owner: B1.
+these. Owner: B1.
 
 Conventions: every public action is ``async def name(db, ctx, ...)``; ``db`` is a
 ``pema.core.db.ClinicDatabase`` and ``ctx`` an ``ActionContext``. Each action checks the permission FIRST
@@ -15,7 +15,6 @@ from pema.clinic.actions import (
     catalog,
     consents,
     consult_notes,
-    conversations,
     crm_tasks,
     dashboard,
     finance,
@@ -29,25 +28,18 @@ from pema.clinic.actions import (
     plans,
     protocols,
     resources,
-    review_items,
     services,
     sessions,
     studio,
-    templates,
 )
-from pema.clinic.actions.outbound import FakeOutboundDelivery, OutboundDelivery, OutboundRequest
 
 __all__ = [
-    "FakeOutboundDelivery",
-    "OutboundDelivery",
-    "OutboundRequest",
     "appointments",
     "assignees",
     "audit_logs",
     "catalog",
     "consents",
     "consult_notes",
-    "conversations",
     "crm_tasks",
     "dashboard",
     "finance",
@@ -61,9 +53,7 @@ __all__ = [
     "plans",
     "protocols",
     "resources",
-    "review_items",
     "services",
     "sessions",
     "studio",
-    "templates",
 ]

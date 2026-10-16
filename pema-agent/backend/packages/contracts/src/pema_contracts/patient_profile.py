@@ -43,7 +43,6 @@ EXPECTED_RETURN_INVALID_MESSAGE: Final = "Nhập ngày hợp lệ, lý do và ng
 CLINICAL_NOTE_BLANK_MESSAGE: Final = "Nhập tiền sử và nhận định/chẩn đoán do bác sĩ xác nhận."
 BRIEF_BLANK_MESSAGE: Final = "Brief không được để trống."
 AFTERCARE_BLANK_MESSAGE: Final = "Hãy nhập hướng dẫn."
-MESSAGE_BLANK_MESSAGE: Final = "Hãy nhập nội dung tin nhắn."
 
 
 # --------------------------------------------------------------------------- the chips of /patients
@@ -107,8 +106,6 @@ class ExpectedReturnOut(ApiModel):
 
 # --------------------------------------------------------------- Chăm sóc tại nhà / Nhắn tin / Brief
 class AppUpdateKind(StrEnum):
-    MESSAGE = "message"
-    """"Nhắn tin": a short note to the patient (needs ``conversation.reply``)."""
     AFTERCARE = "aftercare"
     """"Chăm sóc tại nhà": the approved aftercare instruction (needs ``session.write``)."""
 

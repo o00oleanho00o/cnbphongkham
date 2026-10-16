@@ -8,8 +8,8 @@ one ``localStorage`` document that the Patient Mobile web also read. Here a note
 Zalo or SMS, and the proactive guard of the channels does not apply because nothing leaves the
 installation.
 
-* ``send_update`` kind ``message`` ("Nhắn tin") needs ``conversation.reply``; kind ``aftercare``
-  ("Chăm sóc tại nhà") needs ``session.write`` (the old ``clinical`` capability). An empty text is refused;
+* ``send_update`` (kind ``aftercare``, "Chăm sóc tại nhà") needs ``session.write`` (the old ``clinical``
+  capability). An empty text is refused;
 * ``get_brief`` / ``approve_brief`` need ``session.write``: the brief is a draft for the doctor. **It is
   a template over existing records** (plan counters, the latest finished session, the next appointment or
   the recommended return date, the open follow-up tasks, the warning lines); no model is called and nothing
@@ -51,7 +51,6 @@ from pema_contracts.errors import DomainError, ErrorCode
 from pema_contracts.patient_profile import (
     AFTERCARE_BLANK_MESSAGE,
     BRIEF_BLANK_MESSAGE,
-    MESSAGE_BLANK_MESSAGE,
     AppUpdateCreate,
     AppUpdateKind,
     AppUpdateOut,
@@ -81,16 +80,10 @@ def _out(row: PatientAppEvent, names: dict[UUID, str]) -> AppUpdateOut:
 async def send_update(
     db: ClinicDatabase, ctx: ActionContext, patient_id: UUID, payload: AppUpdateCreate
 ) -> AppUpdateOut:
-    if payload.kind is AppUpdateKind.AFTERCARE:
-        require(ctx, Permission.SESSION_WRITE)
-    else:
-        require(ctx, Permission.CONVERSATION_REPLY)
+    require(ctx, Permission.SESSION_WRITE)
     text = payload.body.strip()
     if text == "":
-        raise DomainError(
-            ErrorCode.VALIDATION_FAILED,
-            AFTERCARE_BLANK_MESSAGE if payload.kind is AppUpdateKind.AFTERCARE else MESSAGE_BLANK_MESSAGE,
-        )
+        raise DomainError(ErrorCode.VALIDATION_FAILED, AFTERCARE_BLANK_MESSAGE)
     async with db.session() as session:
         await load_patient(session, ctx, patient_id)
         await require_patient_access(session, ctx, patient_id)

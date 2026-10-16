@@ -140,8 +140,6 @@ async def test_staff_read_the_ten_rules_in_protocol_order(
         "birthday",
     ]
     assert {r["rule_key"] for r in rules} == {k.value for k in RuleKey} - {"manual"}
-    birthday = rules[-1]
-    assert birthday["send_mode"] == "staff_task"
     assert all(r["delay_days"] >= 0 and r["suggested_action"] for r in rules)
 
 

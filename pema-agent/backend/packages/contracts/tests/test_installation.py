@@ -15,7 +15,6 @@ from pema_contracts.installation import (
     reset_installation_clinic_id,
     set_installation_clinic_id,
 )
-from pema_contracts.review import ReviewItemCreate, ReviewKind
 from pema_contracts.roles import ActorType
 
 
@@ -36,13 +35,11 @@ def test_installation_id_is_not_invented_when_it_was_not_loaded() -> None:
 
 
 def test_dtos_fill_clinic_id_from_the_installation() -> None:
-    """ActionContext và ReviewItemCreate tự điền clinic_id từ mã cài đặt"""
+    """ActionContext tự điền clinic_id từ mã cài đặt"""
     clinic: UUID = uuid4()
     set_installation_clinic_id(clinic)
     assert installation_clinic_id() == clinic
     assert ActionContext(actor_type=ActorType.USER).clinic_id == clinic
-    review = ReviewItemCreate(job_id="turn-1", kind=ReviewKind.REPLY_DRAFT)
-    assert review.clinic_id == clinic
 
 
 def test_an_explicit_clinic_id_still_wins() -> None:

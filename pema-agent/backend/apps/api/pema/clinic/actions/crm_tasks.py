@@ -12,10 +12,8 @@ Rules kept from ``validate`` / ``finish``:
 * ``unanswered``, ``callback`` and ``busy`` need a next-action time in the future;
 * ``booked`` needs a valid booking for the SAME patient, saved in the same transaction;
 * the task is ``rescheduled`` when a next action is set and nothing was booked, otherwise ``resolved``;
-* ``optout`` sets ``marketing_opt_out``; ``doctor``, ``reaction`` and ``complaint`` hand over to a doctor.
-  In the
-  JS that was a row in ``followups``; here it is a ``triage_alert`` review item (``requires_doctor``) that
-  carries the activity id, never the note text;
+* ``optout`` sets ``marketing_opt_out``; ``doctor``, ``reaction`` and ``complaint`` stay in the contact log
+  only (the doctor follow-up queue is gone, docs/PLAN-db-baseline.md D8);
 * a doctor handles D+7 review tasks of their own patients only; nobody else does medical review.
 """
 
@@ -37,7 +35,7 @@ from pema.clinic.actions.appointments import announce as announce_appointment
 from pema.clinic.actions.appointments import book_in_session
 from pema.clinic.actions.assignees import load_assignable_user
 from pema.clinic.actions.patients import CS_OWNER_ROLES, load_patient
-from pema.clinic.models import CrmActivity, CrmTask, Patient, ReviewItem, UserAccount
+from pema.clinic.models import CrmActivity, CrmTask, Patient, UserAccount
 from pema.clinic.rbac import is_doctor_scoped, require
 from pema.core.db import ClinicDatabase
 from pema.live import emit_live
@@ -56,12 +54,10 @@ from pema_contracts.crm import (
 )
 from pema_contracts.errors import DomainError, ErrorCode
 from pema_contracts.live import LiveEventType
-from pema_contracts.review import ReviewKind, ReviewOrigin, RiskLevel
 from pema_contracts.roles import Permission
 
 OPEN_STATUSES = (TaskStatus.OPEN.value, TaskStatus.RESCHEDULED.value)
 NEEDS_NEXT_ACTION = frozenset({CrmOutcome.UNANSWERED, CrmOutcome.CALLBACK, CrmOutcome.BUSY})
-HAND_OVER_TO_DOCTOR = frozenset({CrmOutcome.DOCTOR, CrmOutcome.REACTION, CrmOutcome.COMPLAINT})
 DOCTOR_TASK_RULE = RuleKey.D7.value
 """JS: ``Tai khoan bac si chi xu ly review D+7 cua ho so phu trach``."""
 
@@ -231,23 +227,6 @@ async def resolve_task(
         with lost_race_is_conflict():
             await session.flush()
 
-        handed_over = False
-        if payload.outcome in HAND_OVER_TO_DOCTOR:
-            session.add(
-                ReviewItem(
-                    clinic_id=ctx.clinic_id,
-                    kind=ReviewKind.TRIAGE_ALERT.value,
-                    origin=ReviewOrigin.CRM_RULE.value,
-                    patient_id=task.patient_id,
-                    job_id=f"crm-handover:{activity.id}",
-                    payload={"crm_activity_id": str(activity.id), "outcome": payload.outcome.value},
-                    risk_level=RiskLevel.ATTENTION.value,
-                    requires_doctor=True,
-                )
-            )
-            await session.flush()
-            handed_over = True
-
         await audit.record(
             session,
             ctx,
@@ -259,7 +238,6 @@ async def resolve_task(
                 "status": task.status,
                 "activity_id": str(activity.id),
                 "appointment_id": str(appointment_id) if appointment_id else None,
-                "handed_over_to_doctor": handed_over,
                 "owner_from": str(previous_owner) if previous_owner else None,
                 "owner_to": str(owner.id),
             },
@@ -268,8 +246,6 @@ async def resolve_task(
     emit_live(LiveEventType.TASKS_CHANGED, task_id)
     if appointment_id is not None:
         announce_appointment(appointment_id, resolved.patient_id, "create", AppointmentStatus.BOOKED)
-    if handed_over:
-        emit_live(LiveEventType.REVIEW_CHANGED)
     return resolved
 
 

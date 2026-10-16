@@ -22,11 +22,11 @@ from typing import Any, Protocol
 
 from sqlalchemy import text
 
-from pema.clinic.crm_rules.rules import DEFAULT_RULES, json_object, validate_send_mode
+from pema.clinic.crm_rules.rules import DEFAULT_RULES, json_object
 from pema.clinic.crm_rules.sql_store import seed_default_rules
 from pema.core.db import ClinicDatabase
 from pema_contracts.actions import ActionContext
-from pema_contracts.crm import CrmRuleOut, CrmRuleUpdate, RuleKey, RuleSendMode, TaskPriority
+from pema_contracts.crm import CrmRuleOut, CrmRuleUpdate, RuleKey, TaskPriority
 from pema_contracts.errors import DomainError, ErrorCode
 from pema_contracts.roles import ActorType, Role
 
@@ -56,7 +56,6 @@ def _to_out(row: Mapping[str, Any]) -> CrmRuleOut:
         suggested_action=str(row["suggested_action"]),
         priority=TaskPriority(str(row["priority"])),
         active=bool(row["active"]),
-        send_mode=RuleSendMode(str(row["send_mode"])),
         conditions=json_object(row["conditions"]),
         version=int(row["version"]),
     )
@@ -78,7 +77,7 @@ class SqlCrmRuleAdminService:
             result = await session.execute(
                 text(
                     "SELECT id, rule_key, name, trigger, delay_days, suggested_action, priority, active, "
-                    "send_mode, conditions, version FROM clinic.crm_rule WHERE clinic_id = :c"
+                    "conditions, version FROM clinic.crm_rule WHERE clinic_id = :c"
                 ),
                 {"c": ctx.clinic_id},
             )
@@ -89,11 +88,6 @@ class SqlCrmRuleAdminService:
         require_rules_admin(ctx)
         if rule_key is RuleKey.MANUAL:
             raise DomainError(ErrorCode.NOT_FOUND, "Không tìm thấy quy tắc.")
-        if body.send_mode is not None and not validate_send_mode(rule_key, body.send_mode):
-            raise DomainError(
-                ErrorCode.VALIDATION_FAILED,
-                "Quy tắc sinh nhật chỉ tạo việc cho nhân viên, không gửi tự động.",
-            )
         fields = changed_fields(body)
         async with self._db.session() as session:
             await seed_default_rules(session, ctx.clinic_id)
@@ -103,10 +97,10 @@ class SqlCrmRuleAdminService:
                     "active = COALESCE(:active, active), delay_days = COALESCE(:delay_days, delay_days), "
                     "priority = COALESCE(:priority, priority), "
                     "suggested_action = COALESCE(:suggested_action, suggested_action), "
-                    "send_mode = COALESCE(:send_mode, send_mode), version = version + 1 "
+                    "version = version + 1 "
                     "WHERE clinic_id = :c AND rule_key = :key AND version = :version "
                     "RETURNING id, rule_key, name, trigger, delay_days, suggested_action, priority, active, "
-                    "send_mode, conditions, version"
+                    "conditions, version"
                 ),
                 {
                     "c": ctx.clinic_id,
@@ -116,7 +110,6 @@ class SqlCrmRuleAdminService:
                     "delay_days": body.delay_days,
                     "priority": body.priority.value if body.priority is not None else None,
                     "suggested_action": body.suggested_action,
-                    "send_mode": body.send_mode.value if body.send_mode is not None else None,
                 },
             )
             row = result.mappings().first()

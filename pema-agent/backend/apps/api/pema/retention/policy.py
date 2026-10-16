@@ -37,28 +37,22 @@ class RetentionPolicy:
 
     history_days: int = 0
     memory_days: int = 0
-    message_days: int = 0
     usage_days: int = 0
     trace_days: int = 7
     media_days: int = 7
     job_run_days: int = 30
     auth_session_days: int = 1
-    link_code_days: int = 7
-    link_attempt_days: int = 30
     batch_size: int = 500
 
     def __post_init__(self) -> None:
         for name in (
             "history_days",
             "memory_days",
-            "message_days",
             "usage_days",
             "trace_days",
             "media_days",
             "job_run_days",
             "auth_session_days",
-            "link_code_days",
-            "link_attempt_days",
         ):
             if getattr(self, name) < 0:
                 raise ValueError(f"{name} must be 0 (keep forever) or a number of days")
@@ -73,13 +67,10 @@ def policy_from_settings(settings: Settings, tuning_int: Callable[[str], int]) -
     return RetentionPolicy(
         history_days=settings.retention_history_days,
         memory_days=settings.retention_memory_days,
-        message_days=settings.retention_message_days,
         usage_days=settings.retention_usage_days,
         trace_days=trace if trace is not None else tuning_int(TRACE_TUNING_KEY),
         media_days=media if media is not None else tuning_int(MEDIA_TUNING_KEY),
         job_run_days=settings.retention_job_run_days,
         auth_session_days=settings.retention_auth_session_days,
-        link_code_days=settings.retention_link_code_days,
-        link_attempt_days=settings.retention_link_attempt_days,
         batch_size=settings.retention_batch_size,
     )

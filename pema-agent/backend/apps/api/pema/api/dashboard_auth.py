@@ -49,7 +49,6 @@ from pema.api.client_ip import ProxyNetwork, parse_trusted_proxies, resolve_clie
 from pema.api.request_id import clean_request_id
 from pema.clinic import audit
 from pema.clinic.actions._common import now
-from pema.clinic.actions.outbound import OutboundDelivery
 from pema.clinic.models import Clinic, UserAccount
 from pema.clinic.rbac import passwords
 from pema.config.env import get_settings
@@ -481,15 +480,7 @@ def get_db(request: Request) -> ClinicDatabase:
     return _default_db
 
 
-def get_delivery(request: Request) -> OutboundDelivery | None:
-    """The channel sender (``app.state.outbound_delivery``, wired by package G). ``None`` leaves manual
-    replies and approved review items ``queued`` in the Inbox."""
-    delivery: object = getattr(request.app.state, "outbound_delivery", None)
-    return delivery if isinstance(delivery, OutboundDelivery) else None
-
-
 Database = Annotated[ClinicDatabase, Depends(get_db)]
-Delivery = Annotated[OutboundDelivery | None, Depends(get_delivery)]
 
 
 def client_ip(request: Request) -> str:

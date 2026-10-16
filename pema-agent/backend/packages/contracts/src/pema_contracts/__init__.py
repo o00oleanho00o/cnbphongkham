@@ -3,9 +3,7 @@
 Import from the submodules, e.g. ``from pema_contracts.patients import PatientOut``.
 
 Foundations:  common (base model, +07:00 time, Page), roles, errors, actions, installation.
-Clinic:       auth, patients, appointments, crm, conversations (Inbox), review (doctor follow-up queue),
-              catalog, orders, finance, guide, knowledge, live, ops, admin.
-Channels:     channel (channel kinds and message shapes, kept for the future channel integration).
+Clinic:       auth, patients, appointments, crm, catalog, orders, finance, guide, knowledge, live, admin.
 """
 
 __version__ = "0.1.0"

@@ -168,7 +168,6 @@ class RetentionRunner:
         p = ctx.policy
         for rule in rules.CLINIC_RULES:
             await self._step(ctx, rule.group, rule.days(p), self._rule(rule))
-        await self._step(ctx, "link_attempts", p.link_attempt_days, self._link_attempts)
 
     async def _step(
         self,
@@ -217,30 +216,6 @@ class RetentionRunner:
             if n < ctx.policy.batch_size:
                 return
         ctx.report.capped.append(group)
-
-    async def _link_attempts(self, ctx: _Ctx, group: str, cutoff: datetime) -> None:
-        params: dict[str, Any] = {"cutoff": cutoff, "dry_run": ctx.dry_run}
-        if ctx.dry_run:
-            async with self._db.session() as session:
-                ctx.report.add(
-                    group,
-                    int(
-                        (await session.execute(rules.PURGE_LINK_ATTEMPTS, {**params, "batch": 1})).scalar()
-                        or 0
-                    ),
-                )
-            return
-
-        async def batch() -> int:
-            async with self._db.session() as session:
-                value = (
-                    await session.execute(
-                        rules.PURGE_LINK_ATTEMPTS, {**params, "batch": ctx.policy.batch_size}
-                    )
-                ).scalar()
-            return int(value or 0)
-
-        await self._in_batches(ctx, group, batch)
 
     # ---------------------------------------------------------------------------------------------- audit
     async def _audit(self, ctx: _Ctx) -> None:

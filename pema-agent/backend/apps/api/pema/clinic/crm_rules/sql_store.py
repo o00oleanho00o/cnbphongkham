@@ -11,10 +11,6 @@ What the snapshots are built from:
 * plans: ``clinic.treatment_plan`` in ``planned``/``active`` summed into ``total_sessions`` /
   ``completed_sessions`` (JavaScript ``p.total`` / ``p.completed``); ``first_plan_id`` is the earliest one;
 * appointments: cancelled and missed ones of any age (recall) and every appointment from today on;
-* channel target: a VERIFIED ``clinic.channel_identity`` of a ``zalo_bot`` / ``zalo_personal`` channel (the
-  most recently active identity wins); the channel stands in for the account id;
-* consent: the newest ``messaging`` row of ``clinic.consent`` is granted and not revoked;
-* templates: ``clinic.message_template`` that is active AND approved.
 
 Scale note: ``existing_tasks`` loads every task key of the clinic (three short text columns) because a closed
 task must keep blocking its key forever; a clinic with 100 000 tasks is still one small read.
@@ -37,18 +33,16 @@ from pema.clinic.crm_rules.protocols import ProtocolConfig
 from pema.clinic.crm_rules.records import (
     AppointmentSnapshot,
     AppointmentStatus,
-    ChannelTarget,
     ClinicCrmData,
     ExistingTask,
     PatientSnapshot,
     SessionSnapshot,
-    TemplateRef,
 )
 from pema.clinic.crm_rules.rules import DEFAULT_RULES, RuleConfig, conditions_of, json_object, rule_from_row
 from pema.clinic.crm_rules.store import StoreChanges
 from pema.core.db import ClinicDatabase
 from pema_contracts.common import VN_TZ
-from pema_contracts.crm import RuleKey, RuleSendMode, TaskPriority, TaskStatus
+from pema_contracts.crm import RuleKey, TaskPriority, TaskStatus
 
 _Row = Mapping[str, Any]
 
@@ -67,8 +61,8 @@ async def seed_default_rules(session: AsyncSession, clinic_id: UUID) -> None:
     await session.execute(
         text(
             "INSERT INTO clinic.crm_rule (clinic_id, rule_key, name, trigger, delay_days, suggested_action, "
-            "priority, active, send_mode, conditions) "
-            "VALUES (:c, :key, :name, :trigger, :delay, :action, :priority, :active, :mode, "
+            "priority, active, conditions) "
+            "VALUES (:c, :key, :name, :trigger, :delay, :action, :priority, :active, "
             "CAST(:conditions AS jsonb)) ON CONFLICT (clinic_id, rule_key) DO NOTHING"
         ),
         [
@@ -81,7 +75,6 @@ async def seed_default_rules(session: AsyncSession, clinic_id: UUID) -> None:
                 "action": r.suggested_action,
                 "priority": r.priority.value,
                 "active": r.active,
-                "mode": r.send_mode.value,
                 "conditions": json.dumps(conditions_of(r)),
             }
             for r in DEFAULT_RULES
@@ -128,12 +121,6 @@ class SqlCrmRuleStore:
                 "SELECT task_key, rule_key, status FROM clinic.crm_task WHERE clinic_id = :c",
                 c=clinic_id,
             )
-            templates = await _rows(
-                session,
-                "SELECT template_key, marketing FROM clinic.message_template "
-                "WHERE clinic_id = :c AND active AND approved_at IS NOT NULL",
-                c=clinic_id,
-            )
             protocols = await self._protocols(session, clinic_id)
         return ClinicCrmData(
             rules=tuple(rules),
@@ -142,10 +129,6 @@ class SqlCrmRuleStore:
                 ExistingTask(str(t["task_key"]), RuleKey(str(t["rule_key"])), TaskStatus(str(t["status"])))
                 for t in tasks
             ),
-            templates={
-                str(t["template_key"]): TemplateRef(str(t["template_key"]), bool(t["marketing"]))
-                for t in templates
-            },
             protocols=protocols,
         )
 
@@ -161,8 +144,8 @@ class SqlCrmRuleStore:
     async def _rules(self, session: AsyncSession, clinic_id: UUID) -> list[RuleConfig]:
         rows = await _rows(
             session,
-            "SELECT rule_key, name, trigger, delay_days, suggested_action, priority, active, send_mode, "
-            "conditions FROM clinic.crm_rule WHERE clinic_id = :c",
+            "SELECT rule_key, name, trigger, delay_days, suggested_action, priority, active, conditions "
+            "FROM clinic.crm_rule WHERE clinic_id = :c",
             c=clinic_id,
         )
         by_key = {
@@ -174,7 +157,6 @@ class SqlCrmRuleStore:
                 suggested_action=str(r["suggested_action"]),
                 priority=TaskPriority(str(r["priority"])),
                 active=bool(r["active"]),
-                send_mode=RuleSendMode(str(r["send_mode"])),
                 conditions=json_object(r["conditions"]),
             )
             for r in rows
@@ -214,23 +196,6 @@ class SqlCrmRuleStore:
             "GROUP BY patient_id",
             c=clinic_id,
         )
-        target_rows = await _rows(
-            session,
-            # shortcut: the channel stands in for the account id (the accounts live in the agent's zalo
-            # plugin and nothing delivers from here today); keep the account on the identity when it does
-            "SELECT DISTINCT ON (ci.patient_id) ci.patient_id, ci.channel AS account_id, ci.external_user_id "
-            "FROM clinic.channel_identity ci "
-            "WHERE ci.clinic_id = :c AND ci.verification_status = 'verified' AND ci.patient_id IS NOT NULL "
-            "AND ci.channel IN ('zalo_bot', 'zalo_personal') "
-            "ORDER BY ci.patient_id, ci.last_inbound_at DESC NULLS LAST",
-            c=clinic_id,
-        )
-        consent_rows = await _rows(
-            session,
-            "SELECT DISTINCT ON (patient_id) patient_id, granted, revoked_at FROM clinic.consent "
-            "WHERE clinic_id = :c AND kind = 'messaging' ORDER BY patient_id, created_at DESC",
-            c=clinic_id,
-        )
 
         sessions: dict[UUID, list[SessionSnapshot]] = defaultdict(list)
         for r in session_rows:
@@ -250,15 +215,6 @@ class SqlCrmRuleStore:
                 )
             )
         plans = {r["patient_id"]: r for r in plan_rows}
-        targets = {
-            r["patient_id"]: ChannelTarget(
-                account_id=str(r["account_id"]),
-                thread_id=str(r["external_user_id"]),
-                thread_type=0,
-            )
-            for r in target_rows
-        }
-        consents = {r["patient_id"]: bool(r["granted"]) and r["revoked_at"] is None for r in consent_rows}
 
         snapshots: list[PatientSnapshot] = []
         for r in patient_rows:
@@ -288,8 +244,6 @@ class SqlCrmRuleStore:
                     last_protocol_session_id=str(marker) if marker is not None else None,
                     reactivated_at=_aware(r["reactivated_at"]) if r["reactivated_at"] is not None else None,
                     first_plan_id=str(plan["first_plan_id"]) if plan is not None else None,
-                    channel_target=targets.get(pid),
-                    messaging_consent=consents.get(pid, False),
                 )
             )
         return snapshots

@@ -18,11 +18,9 @@ from pema.api.clinic_testing import (
     ClientFactory,
     add_staff_account,
     fresh_start,
-    record_inbound,
     sign_in,
 )
 from pema.clinic import audit
-from pema.clinic.actions import FakeOutboundDelivery
 from pema.clinic.actions.seed_demo import SeedResult
 from pema.clinic.models import Patient
 from pema.core.db import ClinicDatabase
@@ -36,9 +34,6 @@ B1_TAGS = {
     "patients",
     "appointments",
     "crm",
-    "conversations",
-    "review-items",
-    "admin-templates",
     "admin-users",
 }
 
@@ -64,24 +59,11 @@ MUTATIONS: dict[str, str] = {
     "appointments_miss_appointment": "appointment.miss",
     "crm_resolve_task": "crm_task.resolve",
     "crm_create_activity": "crm_activity.create",
-    "conversations_update_conversation": "conversation.update",
-    "conversations_mark_conversation_read": "conversation.mark_read",
-    "conversations_send_message": "message.send",
-    "review_items_approve_review_item": "review_item.approve",
-    "review_items_reject_review_item": "review_item.reject",
-    "review_items_escalate_review_item": "review_item.escalate",
-    "admin_templates_create_template": "message_template.create",
-    "admin_templates_update_template": "message_template.update",
-    "admin_templates_approve_template": "message_template.approve",
 }
 
 
-# Presence heartbeats (ST-R) change nothing in the database: they live in Redis for 30 seconds, and one audit row
-# every 15 seconds per open conversation would only bury the log. Not mutations of clinic data.
 # The agent token (SSO for the agent service) is minted and signed, never stored.
-EPHEMERAL: frozenset[str] = frozenset(
-    {"conversations_touch_presence", "conversations_leave_presence", "auth_agent_token_for_user"}
-)
+EPHEMERAL: frozenset[str] = frozenset({"auth_agent_token_for_user"})
 
 
 def test_the_table_covers_every_mutating_route_of_the_clinic_api(app: FastAPI) -> None:
@@ -106,7 +88,6 @@ async def _audit_actions(admin: Engine, request_id: str) -> set[str]:
 async def test_every_mutating_call_leaves_an_audit_row_tagged_with_its_request_id(
     client_factory: ClientFactory, world: SeedResult, db: ClinicDatabase, admin: Engine, app: FastAPI
 ) -> None:
-    app.state.outbound_delivery = FakeOutboundDelivery()
     seen: dict[str, str] = {}
 
     async def call(op: str, client: httpx.AsyncClient, method: str, url: str, **kw: object) -> httpx.Response:
@@ -121,8 +102,6 @@ async def test_every_mutating_call_leaves_an_audit_row_tagged_with_its_request_i
 
     reception = await client_factory("reception.lan")
     cs = await client_factory("cs.maianh")
-    mai = await client_factory("doctor.mai")
-    manager = await client_factory("manager")
     P027, P029 = (str(world.patients[c]) for c in ("P027", "P029"))
 
     # auth: login is audited under the id sent with the login request itself
@@ -246,85 +225,6 @@ async def test_every_mutating_call_leaves_an_audit_row_tagged_with_its_request_i
         "POST",
         "/crm/activities",
         json={"patient_id": P029, "channel": "internal_note", "note": "n"},
-    )
-
-    ref = await record_inbound(db, world)
-    conv = f"/conversations/{ref.conversation_id}"
-    await call("conversations_mark_conversation_read", cs, "POST", f"{conv}/read")
-    await call("conversations_send_message", cs, "POST", f"{conv}/messages", json={"text": "Chào bạn."})
-    version = (await cs.get(f"/api/v1{conv}")).json()["version"]
-    await call(
-        "conversations_update_conversation",
-        cs,
-        "PATCH",
-        conv,
-        json={"version": version, "assigned_user_id": str(world.users["cs.thu"])},
-    )
-
-    from pema.clinic.actions.inbox_ingest import create_review_item
-    from pema_contracts.review import ReviewItemCreate, ReviewItemOut, ReviewKind
-
-    agent = ActionContext(clinic_id=world.clinic_id, actor_type=ActorType.AGENT)
-    items: list[ReviewItemOut] = []
-    for n in range(3):
-        items.append(
-            await create_review_item(
-                db,
-                agent,
-                ReviewItemCreate(
-                    job_id=f"audit-job-{uuid4().hex}",
-                    clinic_id=world.clinic_id,
-                    patient_ref="P025",
-                    conversation_ref=str(ref.conversation_id),
-                    kind=ReviewKind.REPLY_DRAFT,
-                    draft_text=f"Bản nháp {n}",
-                ),
-            )
-        )
-    await call(
-        "review_items_approve_review_item",
-        cs,
-        "POST",
-        f"/review-items/{items[0].id}/approve",
-        json={"version": 1},
-    )
-    await call(
-        "review_items_reject_review_item",
-        cs,
-        "POST",
-        f"/review-items/{items[1].id}/reject",
-        json={"version": 1, "reason": "sai"},
-    )
-    await call(
-        "review_items_escalate_review_item",
-        cs,
-        "POST",
-        f"/review-items/{items[2].id}/escalate",
-        json={"version": 1},
-    )
-
-    template = (
-        await call(
-            "admin_templates_create_template",
-            manager,
-            "POST",
-            "/admin/templates",
-            json={"template_key": f"audit_{uuid4().hex[:8]}", "title": "t", "body": "b"},
-        )
-    ).json()
-    await call(
-        "admin_templates_update_template",
-        manager,
-        "PATCH",
-        f"/admin/templates/{template['id']}",
-        json={"version": 1, "title": "t2"},
-    )
-    await call(
-        "admin_templates_approve_template",
-        mai,
-        "POST",
-        f"/admin/templates/{template['id']}/approve",
-        json={"version": 2},
     )
 
     # a throw-away account: changing the password of a seeded one would break every later test

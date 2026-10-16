@@ -40,7 +40,6 @@ from pema_contracts.crm import (
     CrmSegmentPatientOut,
     CrmSegmentsOut,
     RuleKey,
-    RuleSendMode,
     TaskPriority,
 )
 from pema_contracts.roles import Permission
@@ -167,7 +166,6 @@ async def list_rules(db: ClinicDatabase, ctx: ActionContext) -> list[CrmRuleOut]
                 suggested_action=row.suggested_action,
                 priority=TaskPriority(row.priority),
                 active=row.active,
-                send_mode=RuleSendMode(row.send_mode),
                 conditions=dict(row.conditions),
                 version=row.version,
             )

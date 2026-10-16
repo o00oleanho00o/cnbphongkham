@@ -3,19 +3,13 @@
 
 ``DEFAULT_RULES`` is the ``rules`` table of crm-data.js, row for row (id, name, trigger, delayDays,
 suggestedAction, priority), with the same ``conditions``: ``protocol`` for d1/d3/d7 and ``marketing`` for
-dormant90, dormant180 and birthday. ``actionType: 'staff_task'`` of the original becomes
-``send_mode = staff_task``, the default of every rule.
+dormant90, dormant180 and birthday. ``actionType: 'staff_task'`` of the original is the only action: a rule
+creates a task for the staff, nothing is sent to the patient (docs/PLAN-db-baseline.md D8).
 
 Forced deviations from the JavaScript:
 
 * ``conditions.protocol`` is READ here; the original defined it but hard-coded ``'laser-co2'`` in the loop.
   A rule without a protocol keeps the original behaviour (``LASER_PROTOCOL_ID``).
-* ``template_key`` (an addition): the approved message template a rule may send when its ``send_mode`` is not
-  ``staff_task``. It is ``conditions.template_key`` when present, else the convention ``crm.<rule_key>``;
-  ``clinic.message_template.template_key`` accepts dots, so a doctor-approved template named ``crm.d1`` is
-  all the configuration a rule needs and no DTO of the OpenAPI changes.
-* A birthday rule is always ``staff_task`` (AGENT.md: birthday messages are never sent automatically); the
-  database has the same CHECK and ``validate_send_mode`` enforces it before a write.
 """
 
 from __future__ import annotations
@@ -24,7 +18,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any, cast
 
-from pema_contracts.crm import RuleKey, RuleSendMode, TaskPriority
+from pema_contracts.crm import RuleKey, TaskPriority
 
 LASER_PROTOCOL_ID = "laser-co2"
 """Protocol of the sessions that start the D+1 / D+3 / D+7 care chain and the D+30 recommendation."""
@@ -58,14 +52,8 @@ class RuleConfig:
     suggested_action: str
     priority: TaskPriority
     active: bool = True
-    send_mode: RuleSendMode = RuleSendMode.STAFF_TASK
     protocol: str | None = None
     marketing: bool = False
-    template_key: str | None = None
-
-    @property
-    def effective_template_key(self) -> str:
-        return self.template_key or f"crm.{self.key.value}"
 
 
 def _row(
@@ -176,14 +164,12 @@ def default_rule(key: RuleKey) -> RuleConfig:
 
 
 def conditions_of(rule: RuleConfig) -> dict[str, Any]:
-    """``conditions`` jsonb of a rule: ``protocol`` / ``marketing`` of crm-data.js plus the template."""
+    """``conditions`` jsonb of a rule: ``protocol`` / ``marketing`` of crm-data.js."""
     conditions: dict[str, Any] = {}
     if rule.protocol is not None:
         conditions["protocol"] = rule.protocol
     if rule.marketing:
         conditions["marketing"] = True
-    if rule.template_key is not None:
-        conditions["template_key"] = rule.template_key
     return conditions
 
 
@@ -196,11 +182,9 @@ def rule_from_row(
     suggested_action: str,
     priority: TaskPriority,
     active: bool,
-    send_mode: RuleSendMode,
     conditions: Mapping[str, Any],
 ) -> RuleConfig:
     protocol = conditions.get("protocol")
-    template_key = conditions.get("template_key")
     return RuleConfig(
         key=key,
         name=name,
@@ -209,10 +193,8 @@ def rule_from_row(
         suggested_action=suggested_action,
         priority=priority,
         active=active,
-        send_mode=send_mode,
         protocol=protocol if isinstance(protocol, str) else None,
         marketing=bool(conditions.get("marketing")),
-        template_key=template_key if isinstance(template_key, str) else None,
     )
 
 
@@ -221,8 +203,3 @@ def json_object(value: object) -> dict[str, Any]:
     if isinstance(value, dict):
         return {str(k): v for k, v in cast(dict[Any, Any], value).items()}
     return {}
-
-
-def validate_send_mode(key: RuleKey, send_mode: RuleSendMode) -> bool:
-    """False for a birthday rule that is not ``staff_task`` (never automatic)."""
-    return key is not RuleKey.BIRTHDAY or send_mode is RuleSendMode.STAFF_TASK

@@ -55,7 +55,7 @@ Agent nói chuyện với người ngoài (Zalo, web) nên **phải coi như có
 | D5 | `clinic_agent`, `agent_worker` | Bỏ (L3) |
 | D6 | Test kiểm lịch sử migration | Xóa; kiểm schema cuối thì chuyển thành test schema |
 | D7 | Hai database riêng `pema` / `pema_agent` | **Có** (L1). Rẻ nhất là làm ngay lúc dựng lại DB |
-| D8 | Hộp thư (Inbox) và hàng Theo dõi bên CRM còn nguồn tin không? | **Không, bỏ hẳn** (chủ hệ thống chốt 2026-10-16): xóa `inbox_ingest`, `sla_checks` và phần API, bảng phục vụ chúng; FE dọn ở đợt sau |
+| D8 | Hộp thư, Theo dõi, mẫu tin, nhắn tin vào app | **Bỏ hết** (chủ hệ thống chốt 2026-10-16): không kênh nào đổ tin vào CRM; kết quả "chuyển bác sĩ" của CRM chỉ còn ghi ở nhật ký liên hệ; luật CRM chỉ tạo việc cho nhân viên; app bệnh nhân bỏ loại "Nhắn tin", giữ "aftercare". Danh sách ở mục 5a. FE dọn ở đợt sau |
 | D9 | Design (canvas, `design-specs/web`) | **Không động tới** trong kế hoạch này và đợt dọn FE |
 
 ## 5. Các bước (mỗi bước nhỏ, một commit, test xanh, app vẫn chạy; ⏸ = tôi dừng chờ bạn)
@@ -75,10 +75,8 @@ Agent nói chuyện với người ngoài (Zalo, web) nên **phải coi như có
 7. C7: hàm `clinic_agent` còn dùng chuyển về `clinic` (sửa chuỗi SQL ở chỗ gọi); kiểm `grep` không còn `agent.`, `clinic_agent.`
    trong code API; cả bộ test API xanh.
 
-7b. ⏸ D8: bỏ Hộp thư và Theo dõi khỏi API — route `conversations`, `assignment`, `review_items`, roster, gửi tin
-   (`outbound`), `inbox_ingest`, `sla_checks`, presence của luồng chat, mô hình `clinic/models/inbox.py`, `ops.py`, quyền
-   RBAC tương ứng, seed demo và test của chúng. Tôi liệt kê đủ file và bảng rồi chờ bạn duyệt trước khi xóa; bảng thì
-   khỏi revision tạm, baseline bước 8 không tạo chúng nữa.
+7b. ⏸ D8: bỏ Hộp thư, Theo dõi, mẫu tin, nhắn tin vào app (danh sách ở mục 5a). Bảng không cần revision tạm: baseline
+   bước 8 không tạo chúng.
 
 **C. Baseline API**
 
@@ -99,6 +97,44 @@ Agent nói chuyện với người ngoài (Zalo, web) nên **phải coi như có
 12. Tài liệu nhắc số revision (README, `infra/README.md`, `docs/*`), viết lại HANDOFF.
 13. ⏸ Bạn xóa DB và volume, build lại Docker. Tôi chạy smoke (API, agent, đăng nhập, Hướng dẫn, chat Zalo và web, nạp tài liệu) và
     **thử phá ranh giới trên hệ thật**: từ container agent thử kết nối `pema`, thử gọi route CRM bằng token SSO → cả hai phải bị từ chối.
+
+## 5a. Danh sách bước 7b (D8)
+
+**Xóa hẳn (API, `apps/api/pema`)**
+
+- Route: `routers/conversations.py`, `assignment.py`, `review_items.py`, `admin_templates.py`.
+- Action: `clinic/actions/conversations.py`, `assignment.py`, `_assignment_core.py`, `inbox_ingest.py`, `outbound.py`,
+  `review_items.py`, `roster.py`, `sla_checks.py`, `templates.py`.
+- Live: `live/presence.py` và hai route presence; loại sự kiện `inbox.changed`, `review.changed`, `presence.changed`,
+  `assignment.changed`, `notifications.changed`, `handoff.changed`.
+- Model: `clinic/models/inbox.py`; trong `ops.py` mọi lớp trừ `StaffProfile`.
+- Contracts (`packages/contracts`): `conversations.py`, `review.py`, phần mẫu tin, roster, phân công trong `ops.py`,
+  `admin.py`; mã lỗi `thread_locked`, `review_required` nếu không còn ai dùng.
+- Quyền RBAC: `conversation.read/reply`, `review.read/decide/decide_clinical`, `roster.read/manage`,
+  `thread.claim/assign/end_shift`, `agent.submit`.
+- Retention: luật xóa tin nhắn, mục Theo dõi, `identity_link_attempt`, `identity_link_code`.
+- Test của các phần trên (`tests/ops/*` phần lớn, `test_api_conversations_reviews.py`, `test_assignee_validation.py`,
+  test presence, review, template...).
+
+**Sửa (giữ chức năng, bỏ nhánh liên quan)**
+
+- `crm_tasks.py`: kết quả `doctor`, `reaction`, `complaint` thôi tạo mục Theo dõi, chỉ ghi nhật ký liên hệ.
+- `crm_rules/*`: bỏ `template_key`, chế độ gửi khác `staff_task`, đích kênh (`channel_identity`); chỉ còn tạo việc.
+- `patient_app.py`: bỏ loại `message`; `patient_360.py`: bỏ mục tin nhắn và hội thoại trong dòng thời gian.
+- `live_access.py`, `dashboard_auth.py`, `api/router.py`, `actions/__init__.py`, `models/__init__.py`, `rbac/matrix.py`,
+  `seed_demo.py`, `clinic_testing.py`, `config/env.py` (biến retention của tin nhắn), `openapi.json`.
+
+**Bảng không còn trong baseline (bước 8)**
+
+`conversation`, `message`, `review_item`, `channel_identity`, `conversation_assignment`, `account_roster`,
+`message_template`, `sla_check`, `notification_outbox`, `notification_log`, `push_token`, `notify_setting`,
+`notify_preference`, `notify_link_code`, `identity_link_attempt`, `identity_link_code`; thêm ba bảng không code nào dùng:
+`channel_setting`, `on_call_contacts`, `patient_ownership`. Hàm SQL `record_inbound_message`, `record_outbound_message`,
+`create_review_item`, view `review_item_summary` cũng bỏ.
+
+**Giữ:** `staff_profiles`, `assignees.py` và `/staff/assignable` (CRM giao việc vẫn dùng), luồng live cho lịch hẹn và
+việc CRM.
+
 
 ## 6. Quy ước về sau
 

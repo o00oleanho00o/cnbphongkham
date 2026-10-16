@@ -68,21 +68,16 @@ def _summary_row(row: Any) -> GuideArticleSummary:
 
 async def _articles(db: ClinicDatabase, ctx: ActionContext, *, head: int) -> list[Any]:
     async with db.session() as session:
-        return (
-            (
-                await session.execute(
-                    text(
-                        "SELECT id, title, tags, updated_at, left(body, :n) AS body "
-                        "FROM clinic.guide_article "
-                        "WHERE clinic_id = :c AND tags @> ARRAY['guide']::text[] "
-                        "ORDER BY title, id LIMIT :limit"
-                    ),
-                    {"c": ctx.clinic_id, "n": head, "limit": LIST_LIMIT},
-                )
-            )
-            .mappings()
-            .all()
+        result = await session.execute(
+            text(
+                "SELECT id, title, tags, updated_at, left(body, :n) AS body "
+                "FROM clinic.guide_article "
+                "WHERE clinic_id = :c AND tags @> ARRAY['guide']::text[] "
+                "ORDER BY title, id LIMIT :limit"
+            ),
+            {"c": ctx.clinic_id, "n": head, "limit": LIST_LIMIT},
         )
+        return list(result.mappings().all())
 
 
 async def list_articles(db: ClinicDatabase, ctx: ActionContext) -> list[GuideArticleSummary]:

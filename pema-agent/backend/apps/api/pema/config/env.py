@@ -74,9 +74,6 @@ class Settings(BaseSettings):
     the rolling summary of threads idle for that long. 0 = keep."""
     retention_memory_days: int = Field(default=0, ge=0)
     """``agent.memories`` (facts the agent learned). 0 = keep."""
-    retention_message_days: int = Field(default=0, ge=0)
-    """``clinic.message`` of conversations closed for that long, then the empty closed conversations. Open
-    review items protect their conversation and messages. 0 = keep."""
     retention_usage_days: int = Field(default=0, ge=0)
     """``agent.usage`` (token ledger, no text) and, by cascade, its trace steps. 0 = keep."""
     retention_trace_days: int | None = Field(default=None, ge=0)
@@ -88,10 +85,6 @@ class Settings(BaseSettings):
     """Finished rows of ``agent.job_runs`` (scheduler delivery log)."""
     retention_auth_session_days: int = Field(default=1, ge=0)
     """Days after expiry before an expired dashboard session row is deleted."""
-    retention_link_code_days: int = Field(default=7, ge=0)
-    """Days after expiry (or use) before an identity-link code (a hash) is deleted."""
-    retention_link_attempt_days: int = Field(default=30, ge=0)
-    """``clinic.identity_link_attempt`` (failure log of the link flow); never younger than one hour."""
 
     @field_validator("clinic_id", mode="before")
     @classmethod

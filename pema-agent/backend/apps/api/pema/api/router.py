@@ -14,12 +14,9 @@ from pema.api.deps import API_PREFIX
 from pema.api.routers import (
     admin_audit,
     admin_crm_rules,
-    admin_templates,
     admin_users,
     appointments,
-    assignment,
     auth,
-    conversations,
     crm,
     dashboard,
     finance,
@@ -30,7 +27,6 @@ from pema.api.routers import (
     patient_profile,
     patients,
     resources,
-    review_items,
     services,
     staff,
     system,
@@ -62,15 +58,11 @@ TAGS_METADATA: list[dict[str, str]] = [
     {"name": "studio", "description": "Before/after photo studio of one patient. (U4)"},
     {"name": "crm", "description": "CSKH tasks and contact log. (B1)"},
     {"name": "guide", "description": "Staff guide and Hoi Pema. (U7)"},
-    {"name": "conversations", "description": "Inbox and messages. (B1)"},
-    {"name": "review-items", "description": "Doctor follow-up queue (Theo dõi): alerts from CRM tasks. (B1)"},
-    {"name": "live", "description": "Live updates (server-sent events) and presence. (ST-R)"},
+    {"name": "live", "description": "Live updates (server-sent events). (ST-R)"},
     {"name": "staff", "description": "Pickers for every signed-in member: who can be assigned work. (ST-S)"},
-    {"name": "assignment", "description": "Who holds a conversation: claim, takeover, release. (O2)"},
     {"name": "admin-crm", "description": "CRM automation rules. (B2)"},
     {"name": "admin-audit", "description": "Audit log reader. (B1)"},
     {"name": "admin-users", "description": "Staff accounts: owner resets a password. (B1)"},
-    {"name": "admin-templates", "description": "Doctor-approved message templates. (B1)"},
     {"name": "system", "description": "Health."},
 ]
 
@@ -99,15 +91,11 @@ def build_api_router() -> APIRouter:
         resources.studio_router,
         crm.router,
         guide.router,
-        conversations.router,
-        assignment.router,
-        review_items.router,
         live.router,
         staff.router,
         admin_crm_rules.router,
         admin_audit.router,
         admin_users.router,
-        admin_templates.router,
     ):
         api.include_router(router)
     return api

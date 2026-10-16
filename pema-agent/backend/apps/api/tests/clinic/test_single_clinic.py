@@ -46,11 +46,7 @@ async def test_ids_that_do_not_exist_answer_404_through_the_api(
         f"/patients/{unknown}",
         f"/patients/{unknown}/360",
         f"/patients/{unknown}/consents",
-        f"/conversations/{unknown}",
-        f"/conversations/{unknown}/messages",
     ):
         response = await owner.get(f"/api/v1{path}")
         assert response.status_code == 404, path
         assert response.json()["error"]["code"] == "not_found"
-    approve = await owner.post(f"/api/v1/review-items/{unknown}/approve", json={"version": 1})
-    assert approve.status_code == 404

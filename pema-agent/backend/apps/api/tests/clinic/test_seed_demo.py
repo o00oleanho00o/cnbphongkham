@@ -21,10 +21,9 @@ async def test_the_seed_is_idempotent_and_returns_stable_ids(db: ClinicDatabase,
     assert again.clinic_id == world.clinic_id
     assert again.users == world.users
     assert again.patients == world.patients
-    assert again.conversation_id == world.conversation_id
 
 
-async def test_the_seed_creates_every_role_the_cases_and_the_inbox(world: SeedResult, admin: Engine) -> None:
+async def test_the_seed_creates_every_role_and_the_cases(world: SeedResult, admin: Engine) -> None:
     assert {role for _, _, role in USERS} >= {
         Role.OWNER,
         Role.MANAGER,
@@ -45,20 +44,8 @@ async def test_the_seed_creates_every_role_the_cases_and_the_inbox(world: SeedRe
                 text("SELECT code FROM clinic.patient WHERE clinic_id = :c"), {"c": world.clinic_id}
             )
         }
-        pending = conn.execute(
-            text("SELECT count(*) FROM clinic.review_item WHERE clinic_id = :c AND status = 'pending'"),
-            {"c": world.clinic_id},
-        ).scalar_one()
-        approved = conn.execute(
-            text(
-                "SELECT count(*) FROM clinic.message_template WHERE clinic_id = :c AND active AND approved_at IS NOT NULL"
-            ),
-            {"c": world.clinic_id},
-        ).scalar_one()
     assert {"owner", "manager", "doctor", "cs_staff", "reception"} <= roles
     assert {code for code, *_ in CASES} <= codes
-    assert pending >= 2
-    assert approved >= 1
 
 
 async def test_everything_in_the_seed_is_visibly_synthetic(world: SeedResult, admin: Engine) -> None:

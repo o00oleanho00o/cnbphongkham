@@ -39,17 +39,15 @@ def _tuning(values: dict[str, int]) -> Callable[[str], int]:
 
 
 # ------------------------------------------------------------------------------------------------ policy
-def test_defaults_keep_clinical_data_and_messages_and_give_technical_data_a_short_life() -> None:
+def test_defaults_keep_clinical_data_and_give_technical_data_a_short_life() -> None:
     policy = policy_from_settings(
         Settings(), _tuning({"AGENT_TRACE_RETENTION_DAYS": 7, "MEDIA_RETENTION_DAYS": 7})
     )
-    assert (policy.history_days, policy.memory_days, policy.message_days, policy.usage_days) == (0, 0, 0, 0)
+    assert (policy.history_days, policy.memory_days, policy.usage_days) == (0, 0, 0)
     assert policy.trace_days == 7
     assert policy.media_days == 7
     assert policy.job_run_days > 0
     assert policy.auth_session_days > 0
-    assert policy.link_code_days > 0
-    assert policy.link_attempt_days > 0
 
 
 def test_trace_and_media_follow_the_tuning_keys_until_a_retention_setting_overrides_them() -> None:
@@ -133,30 +131,28 @@ def test_no_retention_sql_names_the_audit_log_in_a_delete() -> None:
 
 
 # ------------------------------------------------------------------------------------------ command line
-def _settings(env: RetentionEnv, *, history_days: int = 0, message_days: int = 0) -> Settings:
+def _settings(env: RetentionEnv, *, history_days: int = 0) -> Settings:
     return Settings(
-        database_url=env.server.role_url("be_app", BE_PASSWORD),
-        retention_history_days=history_days,
-        retention_message_days=message_days,
+        database_url=env.server.role_url("be_app", BE_PASSWORD), retention_history_days=history_days
     )
 
 
 @pytest.mark.db
 async def test_cli_dry_run_prints_the_counts_and_changes_nothing(env: RetentionEnv, seed: Seed) -> None:
     seed.history(env.clinic_id, age=40, n=2)
-    seed.conversation(env.clinic_id, "closed", age=100)
+    seed.auth_session(env.clinic_id, seed.user(env.clinic_id), expired_days_ago=9)
     out = io.StringIO()
     code = await run_cli(
         ["--dry-run"],
-        settings=_settings(env, history_days=30, message_days=90),
+        settings=_settings(env, history_days=30),
         out=out,
     )
     printed = out.getvalue()
     assert code == 0
     assert "scope=clinic status=done" in printed
     assert "scope=agent" not in printed
-    assert "would delete conversations: 1" in printed
-    assert seed.count("clinic.conversation", env.clinic_id) == 1
+    assert "would delete auth_sessions: 1" in printed
+    assert seed.count("clinic.auth_session", env.clinic_id) == 1
 
 
 @pytest.mark.db

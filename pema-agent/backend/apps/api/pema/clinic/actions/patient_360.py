@@ -3,8 +3,7 @@
 (AGENT.md): every timeline row carries the id of the record it came from (``source_id``).
 
 Forced deviation: the prototype built the timeline in the browser from ``localStorage`` arrays; here the
-rows come from ``clinic.*``. Message bodies are NOT copied into the timeline (the conversation endpoints
-own them, and read access to them is audited separately); a message row shows direction and time only.
+rows come from ``clinic.*``.
 Reading the 360 is itself audited (ARCH-PB01: audit for reads of sensitive content).
 """
 
@@ -27,7 +26,6 @@ from pema.clinic.actions._mappers import (
     task_out,
 )
 from pema.clinic.actions._scope import require_patient_access
-from pema.clinic.actions.conversations import summaries
 from pema.clinic.actions.patients import load_patient, patient_to_out
 from pema.clinic.domain.appointments import FREE_STATUSES
 from pema.clinic.domain.profile import ProfileFacts, compute_profile
@@ -35,20 +33,17 @@ from pema.clinic.models import (
     Appointment,
     Consent,
     ConsultNote,
-    Conversation,
     CrmActivity,
     CrmTask,
     Episode,
-    Message,
     Patient,
     PatientAppEvent,
     PatientClinicalNote,
-    ReviewItem,
     TreatmentPlan,
     TreatmentSession,
     UserAccount,
 )
-from pema.clinic.rbac import has_permission, require
+from pema.clinic.rbac import require
 from pema.core.db import ClinicDatabase
 from pema_contracts.actions import ActionContext
 from pema_contracts.appointments import AppointmentStatus
@@ -81,7 +76,6 @@ APPOINTMENT_LABELS = {
     "missed": "Vắng hẹn",
 }
 APP_EVENT_TITLES = {
-    "message": "Đã gửi tin nhắn vào app",
     "aftercare": "Đã gửi hướng dẫn chăm sóc",
 }
 CHANNEL_LABELS = {
@@ -153,8 +147,6 @@ def _timeline(
     sessions: list[TreatmentSession],
     appointments: list[Appointment],
     activities: list[CrmActivity],
-    messages: list[Message],
-    reviews: list[ReviewItem],
     consents: list[Consent],
     notes: list[ConsultNote],
     names: dict[UUID, str],
@@ -194,26 +186,6 @@ def _timeline(
                 title=f"{CHANNEL_LABELS.get(c.channel, c.channel)} · {outcome}",
                 by=names.get(c.actor_user_id) if c.actor_user_id else None,
                 source_id=str(c.id),
-            )
-        )
-    for m in messages:
-        rows.append(
-            TimelineEvent(
-                id=f"message:{m.id}",
-                at=m.created_at,
-                kind="message",
-                title="Tin nhắn đến" if m.direction == "inbound" else "Tin nhắn đi",
-                source_id=str(m.id),
-            )
-        )
-    for r in reviews:
-        rows.append(
-            TimelineEvent(
-                id=f"review:{r.id}",
-                at=r.created_at,
-                kind="review",
-                title=f"Duyệt nội dung · {r.status}",
-                source_id=str(r.id),
             )
         )
     for k in consents:
@@ -351,34 +323,6 @@ async def get_patient_360(db: ClinicDatabase, ctx: ActionContext, patient_id: UU
             newest_per_kind.setdefault(c.kind, c)
         consents: list[ConsentOut] = [consent_out(c) for c in newest_per_kind.values()]
 
-        conversations = []
-        messages: list[Message] = []
-        if has_permission(ctx, Permission.CONVERSATION_READ):
-            conversations, _, _ = await summaries(
-                session, ctx, [Conversation.patient_id == patient_id], limit=20, offset=0
-            )
-            conv_ids = [c.id for c in conversations]
-            if conv_ids:
-                messages = list(
-                    (
-                        await session.scalars(
-                            select(Message)
-                            .where(Message.clinic_id == cid, Message.conversation_id.in_(conv_ids))
-                            .order_by(Message.created_at.desc())
-                            .limit(20)
-                        )
-                    ).all()
-                )
-        reviews = list(
-            (
-                await session.scalars(
-                    select(ReviewItem)
-                    .where(ReviewItem.clinic_id == cid, ReviewItem.patient_id == patient_id)
-                    .order_by(ReviewItem.created_at.desc())
-                    .limit(10)
-                )
-            ).all()
-        )
         notes = list(
             (
                 await session.scalars(
@@ -430,8 +374,6 @@ async def get_patient_360(db: ClinicDatabase, ctx: ActionContext, patient_id: UU
             sessions,
             appointments,
             [a for a, _ in activity_rows],
-            messages,
-            reviews,
             consent_history,
             notes,
             names,
@@ -454,7 +396,6 @@ async def get_patient_360(db: ClinicDatabase, ctx: ActionContext, patient_id: UU
             open_tasks=[task_out(t, patient.code, name) for t, name in task_rows],
             recent_activities=[activity_out(a, name) for a, name in activity_rows],
             consents=consents,
-            conversations=conversations,
             timeline=timeline,
             alerts=list(patient.alerts or []),
         )

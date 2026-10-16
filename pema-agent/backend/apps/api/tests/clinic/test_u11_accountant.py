@@ -80,18 +80,14 @@ def test_the_accountant_holds_the_billing_side(permission: Permission) -> None:
         P.CONSENT_WRITE,
         P.APPOINTMENT_READ,
         P.APPOINTMENT_WRITE,
-        P.REVIEW_DECIDE_CLINICAL,
         P.CRM_TASK_READ,
         P.CRM_TASK_RESOLVE,
-        P.CONVERSATION_READ,
-        P.CONVERSATION_REPLY,
         P.FINANCE_READ_OWN,
         P.FINANCE_NOTIFICATIONS,
         P.ADMIN_USERS,
         P.ADMIN_USERS_READ,
         P.ADMIN_RULES,
         P.ADMIN_ACCOUNTS,
-        P.AGENT_SUBMIT,
     ],
 )
 def test_the_accountant_is_denied_everything_clinical_crm_and_admin(permission: Permission) -> None:
@@ -129,12 +125,11 @@ async def test_me_lists_the_accountant_permissions(client_factory: ClientFactory
 
 
 @pytest.mark.db
-async def test_the_accountant_cannot_reach_inbox_crm_staff_or_the_owners_notifications(
+async def test_the_accountant_cannot_reach_crm_staff_or_the_owners_notifications(
     client_factory: ClientFactory, world: SeedResult
 ) -> None:
     accountant = await client_factory(KEY)
     for path in (
-        "/api/v1/conversations",
         "/api/v1/crm/tasks",
         "/api/v1/admin/users",
         f"{F}/notifications",
