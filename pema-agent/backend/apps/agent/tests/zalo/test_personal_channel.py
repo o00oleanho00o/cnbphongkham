@@ -482,7 +482,7 @@ async def test_the_address_book_keeps_every_sender_and_groups_get_their_name_onc
     tmp_path: Path, bridge: FakeBridge
 ) -> None:
     setup = Setup(_runtime(tmp_path, bridge))
-    await setup.personal()
+    await setup.personal(listen_group_ids=["g1"])
     await setup.event("nick", {"type": "credential_updated", "credential": CREDENTIAL})
     await setup.hub.sync()
 
@@ -509,6 +509,50 @@ async def test_the_address_book_keeps_every_sender_and_groups_get_their_name_onc
     assert groups == [{"account_id": "nick", "thread_id": "g1", "name": "Nhóm khám"}]
     assert bridge.group_info == ["g1"]
     assert bad.status_code == 422
+    await setup.close()
+
+
+async def test_a_group_off_the_list_is_named_for_the_picker_but_its_speakers_are_not_kept(
+    tmp_path: Path, bridge: FakeBridge
+) -> None:
+    setup = Setup(_runtime(tmp_path, bridge))
+    await setup.personal()
+    await setup.event("nick", {"type": "credential_updated", "credential": CREDENTIAL})
+    await setup.hub.sync()
+
+    await setup.event("nick", _message("riêng", sender="u1", name="An"))
+    await setup.event("nick", _message("nhóm lạ", sender="u2", name="Bình", group="g9"))
+    await setup.until(lambda: bridge.group_info)
+    await asyncio.sleep(0.05)
+    contacts = (await setup.client.get("/v1/plugins/zalo/contacts", headers=HEADERS)).json()
+    groups = (await setup.client.get("/v1/plugins/zalo/groups", headers=HEADERS)).json()
+    account = (await setup.client.get("/v1/plugins/zalo/accounts", headers=HEADERS)).json()[0]
+
+    assert [c["user_id"] for c in contacts] == ["u1"]
+    assert [g["thread_id"] for g in groups] == ["g9"]
+    assert account["listen_group_ids"] == []
+    await setup.close()
+
+
+async def test_the_groups_to_listen_to_are_checked_and_kept_once_in_order(
+    tmp_path: Path, bridge: FakeBridge
+) -> None:
+    setup = Setup(_runtime(tmp_path, bridge))
+    await setup.personal()
+
+    saved = await setup.client.patch(
+        "/v1/plugins/zalo/accounts/nick", json={"listen_group_ids": ["g2", "g1", "g2"]}, headers=HEADERS
+    )
+    bad = await setup.client.patch(
+        "/v1/plugins/zalo/accounts/nick", json={"listen_group_ids": ["g 1/../x"]}, headers=HEADERS
+    )
+    cleared = await setup.client.patch(
+        "/v1/plugins/zalo/accounts/nick", json={"listen_group_ids": []}, headers=HEADERS
+    )
+
+    assert saved.json()["listen_group_ids"] == ["g1", "g2"]
+    assert bad.status_code == 422
+    assert cleared.json()["listen_group_ids"] == []
     await setup.close()
 
 

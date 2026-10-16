@@ -26,7 +26,7 @@ from typing import Any, Final, cast
 
 from agentcore.channels import ChannelCapabilities, ChannelSendError, Observe, OutboundMessage, Receive
 
-from ..access import should_respond
+from ..access import keeps_chat, should_respond
 from ..accounts import AccountStore
 from ..format.prepare_outgoing_text import dinh_dang_neu_bat, lam_sach_theo_cau_hinh
 from ..inbound import THREAD_GROUP, Heard, ZaloInbound, to_inbound, to_observed
@@ -152,6 +152,8 @@ class ZaloPersonalChannel:
     async def _tell(self, msg: ZaloInbound, *, answered: bool) -> None:
         if self._observe is None:
             return
+        if not keeps_chat(self.account, thread_id=msg.thread_id, is_group=msg.is_group):
+            return
         observed = to_observed(self.name, msg, answered=answered)
         if observed is not None:
             await self._observe(observed)
@@ -211,6 +213,12 @@ class ZaloPersonalChannel:
                 await self._send_plain(api, formatted.text, message.conversation_id, kind)
                 return
             raise ChannelSendError(str(err), retryable=err.kind in RETRYABLE_KINDS) from None
+
+    def listens_to(self, conversation_id: str, metadata: Mapping[str, str]) -> bool:
+        """The channel hub asks before it tells the listening plugins of the agent's reply in this chat."""
+        return keeps_chat(
+            self.account, thread_id=conversation_id, is_group=metadata.get("thread_type") == THREAD_GROUP
+        )
 
     async def typing(self, conversation_id: str, metadata: Mapping[str, str]) -> None:
         api = self._api

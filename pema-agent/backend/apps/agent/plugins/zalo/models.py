@@ -13,12 +13,17 @@ from datetime import datetime
 from enum import StrEnum
 from typing import Annotated, Final
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 MAX_ACCOUNT_ID_CHARS: Final = 58
 """The channel of an account is ``zalo-<id>``, and a channel name has at most 64 characters."""
 
+ZALO_ID_PATTERN: Final = r"^[A-Za-z0-9_.-]{1,100}$"
+"""A Zalo user or group id as it may appear in a path or a body (part of a storage key)."""
+
 ToolName = Annotated[str, Field(pattern=r"^[A-Za-z0-9_.-]{1,100}$")]
+GroupId = Annotated[str, Field(pattern=ZALO_ID_PATTERN)]
+MAX_LISTEN_GROUPS: Final = 1000
 
 
 class ChannelKind(StrEnum):
@@ -50,6 +55,12 @@ class AccountConfig(_Model):
     group_require_mention: bool = True
     respond_to_groups: bool = True
     group_passive_listen: bool = True
+    listen_group_ids: list[GroupId] = Field(
+        default_factory=list[GroupId],
+        max_length=MAX_LISTEN_GROUPS,
+        description="The groups this account listens to: only their messages (every kind) reach the plugins "
+        "that keep conversations. A group not on the list is not kept; a new group starts off it.",
+    )
     auto_react_enabled: bool = False
     auto_react_icon: str = "heart"
     typing_indicator_enabled: bool = True
@@ -59,6 +70,11 @@ class AccountConfig(_Model):
     )
     auto_accept_friends: bool = False
     auto_accept_friend_delay_minutes: int = Field(default=1, ge=0, le=1440)
+
+    @field_validator("listen_group_ids")
+    @classmethod
+    def _once_and_in_order(cls, ids: list[str]) -> list[str]:
+        return sorted(set(ids))
 
 
 class AccountCreate(_Model):
@@ -79,6 +95,7 @@ class AccountUpdate(_Model):
     group_require_mention: bool | None = None
     respond_to_groups: bool | None = None
     group_passive_listen: bool | None = None
+    listen_group_ids: list[GroupId] | None = Field(default=None, max_length=MAX_LISTEN_GROUPS)
     auto_react_enabled: bool | None = None
     auto_react_icon: str | None = None
     typing_indicator_enabled: bool | None = None
@@ -135,10 +152,6 @@ class OaKeysSet(_Model):
     app_secret: str = Field(min_length=8, max_length=200)
     oa_secret_key: str = Field(min_length=8, max_length=200, description="Checks the OA webhook signature.")
     refresh_token: str = Field(min_length=8, max_length=2000, description="OAuth v4; renewed on each use.")
-
-
-ZALO_ID_PATTERN: Final = r"^[A-Za-z0-9_.-]{1,100}$"
-"""A Zalo user or group id as it may appear in a path or a body (part of a storage key)."""
 
 
 class ContactOut(_Model):

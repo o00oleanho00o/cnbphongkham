@@ -22,9 +22,9 @@ from typing import Final
 
 from agentcore.channels import ChannelCapabilities, ChannelSendError, Observe, OutboundMessage, Receive
 
-from ..access import should_respond
+from ..access import keeps_chat, should_respond
 from ..format.prepare_outgoing_text import lam_sach_theo_cau_hinh
-from ..inbound import Heard, to_inbound, to_observed
+from ..inbound import THREAD_GROUP, Heard, to_inbound, to_observed
 from ..models import AccountConfig
 from .client import BotApiClient, LoiZaloBotApi
 from .parser import parse_update
@@ -138,7 +138,9 @@ class ZaloBotChannel:
         if self._heard is not None and not msg.is_self:
             await self._heard(msg)
         decision = should_respond(self.account, msg)
-        if self._observe is not None and not msg.is_self:
+        if self._observe is not None and not msg.is_self and keeps_chat(
+            self.account, thread_id=msg.thread_id, is_group=msg.is_group
+        ):
             observed = to_observed(self.name, msg, answered=decision.respond)
             if observed is not None:
                 await self._observe(observed)
@@ -171,6 +173,12 @@ class ZaloBotChannel:
             await client.send_message(message.conversation_id, message.text, None)
         except LoiZaloBotApi as err:
             raise ChannelSendError(str(err), retryable=send_error_is_retryable(err)) from None
+
+    def listens_to(self, conversation_id: str, metadata: Mapping[str, str]) -> bool:
+        """The channel hub asks before it tells the listening plugins of the agent's reply in this chat."""
+        return keeps_chat(
+            self.account, thread_id=conversation_id, is_group=metadata.get("thread_type") == THREAD_GROUP
+        )
 
     async def typing(self, conversation_id: str, metadata: Mapping[str, str]) -> None:
         client = self._client

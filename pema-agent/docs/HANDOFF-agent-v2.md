@@ -33,6 +33,12 @@ revision files `0001_agent_rt` … `0012_*` or plugin files `0002_*`/`0003_*`, t
   tried, also sent as the session cookie; the web reaches the agent with it; a document upload lands in
   `pema_agent`. T1 passes against the live cluster. `agent db bootstrap-role` also revokes PUBLIC's CONNECT on
   `postgres` and `template1`, so `agent_rt_app` reaches `pema_agent` only (T1 asserts the whole list).
+- **Zalo: groups to listen to (2026-10-16):** each account has `listen_group_ids` (plugin `zalo`, page "Nhóm Zalo").
+  A group not on the list is not kept: the channel does not tell `conversations` of its messages, the channel hub
+  does not tell of the agent's reply there (`FiltersListening` in `agentcore.channels`), and the address book skips
+  its speakers. The group's name is still looked up so the page can offer it; it shows after the group's first
+  message (the bridge cannot list all groups). A new group starts off the list. Answering is unchanged: an @mention
+  in a group off the list is still answered. No keyword filter: a listened group is kept whole.
 - **Front end:** still calls the removed inbox, review, template routes (D8); `schema.d.ts` is stale. Clean-up is a
   separate branch with `pema-ui-builder` and entries in `web-design-changes.md`; design (canvas, specs) untouched (D9).
 

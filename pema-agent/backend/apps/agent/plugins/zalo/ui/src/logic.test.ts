@@ -29,6 +29,7 @@ const ACCOUNT: Account = {
   group_require_mention: false,
   respond_to_groups: true,
   group_passive_listen: false,
+  listen_group_ids: ["g1"],
   auto_react_enabled: true,
   auto_react_icon: "like",
   typing_indicator_enabled: false,

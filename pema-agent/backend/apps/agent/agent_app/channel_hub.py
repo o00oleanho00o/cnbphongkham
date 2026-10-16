@@ -25,6 +25,7 @@ from agent_app.ingress import IngressRecord
 from agentcore.channels import (
     ChannelAdapter,
     ChannelSendError,
+    FiltersListening,
     InboundMessage,
     Observe,
     ObservedMessage,
@@ -258,6 +259,11 @@ class ChannelHub:
     async def _tell_of_reply(self, record: IngressRecord, text: str) -> None:
         """The plugins that listen hear what the agent said (a failure here never undoes the send)."""
         if self._observe is None:
+            return
+        adapter = self._running.get(record.channel)
+        if isinstance(adapter, FiltersListening) and not (
+            adapter.listens_to(record.conversation_id, record.metadata)
+        ):
             return
         try:
             await self._observe(

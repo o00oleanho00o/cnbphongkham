@@ -124,6 +124,15 @@ class ShowsTyping(Protocol):
 
 
 @runtime_checkable
+class FiltersListening(Protocol):
+    """A channel that listens to only some of its chats. What it hears itself it filters on its own; the
+    channel hub asks it before it tells the plugins that listen of the agent's reply in a chat. ``metadata``
+    is what the inbound message carried."""
+
+    def listens_to(self, conversation_id: str, metadata: Mapping[str, str]) -> bool: ...
+
+
+@runtime_checkable
 class PreparesText(Protocol):
     """A channel that turns the whole reply into what it can show (strips markup it cannot render) before it
     is split into parts; None means the reply must not go out at all (the channel's own safety check)."""

@@ -3,8 +3,9 @@
 
 Pure: the account settings and the message in, the decision out. ``record`` (passive listening: keep a group
 message as context without answering) is decided as in the original. The channel tells the plugins that
-listen (``ctx.observe``, for instance ``conversations``) of every message, answered or not; the agent runs a
-turn only for the ones this decision answers.
+listen (``ctx.observe``, for instance ``conversations``) of every message, answered or not, but only of the
+groups the account is set to listen to (``keeps_chat``); the agent runs a turn only for the ones this
+decision answers.
 """
 
 from __future__ import annotations
@@ -30,6 +31,12 @@ def _skip(reason: str) -> FilterDecision:
 
 def _record_only(reason: str) -> FilterDecision:
     return FilterDecision(respond=False, record=True, reason=reason)
+
+
+def keeps_chat(account: AccountConfig, *, thread_id: str, is_group: bool) -> bool:
+    """Is this chat one the account keeps conversations of: every one-to-one chat, and a group only when it is
+    on the account's list. A group not on it is still answered when the account is asked in it."""
+    return not is_group or thread_id in account.listen_group_ids
 
 
 def should_respond(account: AccountConfig, msg: ZaloInbound) -> FilterDecision:

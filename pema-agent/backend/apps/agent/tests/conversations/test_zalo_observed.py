@@ -96,9 +96,16 @@ def _from_the_owner(text: str, *, message_id: str, thread: str = "u1") -> dict[s
     }
 
 
-async def _started(tmp_path: Path, bridge: FakeBridge, *, staff: list[str] | None = None) -> Setup:
+async def _started(
+    tmp_path: Path,
+    bridge: FakeBridge,
+    *,
+    staff: list[str] | None = None,
+    listen: list[str] | None = None,
+) -> Setup:
+    """A running account; ``listen`` are the groups it listens to (none: only the one-to-one chats)."""
     setup = Setup(_runtime(tmp_path, bridge))
-    await setup.personal()
+    await setup.personal(listen_group_ids=listen or [])
     await setup.event("nick", {"type": "credential_updated", "credential": CREDENTIAL})
     await setup.hub.sync()
     saved = await setup.client.put(
@@ -138,7 +145,7 @@ def bridge() -> FakeBridge:
 async def test_a_group_message_nobody_asked_the_agent_about_is_kept_and_a_mentioned_one_and_its_reply_too(
     tmp_path: Path, bridge: FakeBridge
 ) -> None:
-    setup = await _started(tmp_path, bridge)
+    setup = await _started(tmp_path, bridge, listen=["g1"])
 
     await setup.event("nick", _message("giá niềng răng bao nhiêu?", group="g1"))
     await setup.event(
@@ -150,6 +157,45 @@ async def test_a_group_message_nobody_asked_the_agent_about_is_kept_and_a_mentio
     assert kept[1] == ("customer", "@bot đặt lịch", True)
     assert kept[2][0] == "agent"
     assert len(bridge.sent) == 1  # the agent answered only the mention
+    await setup.close()
+
+
+async def test_a_group_off_the_list_is_not_kept_even_when_the_agent_answers_a_mention_there(
+    tmp_path: Path, bridge: FakeBridge
+) -> None:
+    setup = await _started(tmp_path, bridge, listen=["g-chosen"])
+
+    await setup.event("nick", _message("chuyện riêng của nhóm", group="g-other"))
+    await setup.event(
+        "nick", _message("@bot giá?", group="g-other", mentions=["me-1"], sender="u2", name="Bình")
+    )
+    await setup.event("nick", _message("nhóm được chọn", group="g-chosen"))
+    await setup.event("nick", _message("chào", sender="u1"))
+    await setup.until(lambda: len(bridge.sent) >= 2)  # the mention in the other group and the private chat
+    await _until_kept(setup, "g-chosen", 1)
+    await _until_kept(setup, "u1", 2)
+
+    assert await _chat(setup, "g-other") == []  # neither the messages nor the agent's reply
+    assert [role for role, _, _ in await _chat(setup, "g-chosen")] == ["customer"]
+    await setup.close()
+
+
+async def test_choosing_a_group_takes_effect_at_once_and_unchoosing_stops_it(
+    tmp_path: Path, bridge: FakeBridge
+) -> None:
+    setup = await _started(tmp_path, bridge)
+
+    await setup.event("nick", _message("trước khi chọn", group="g1"))
+    await setup.client.patch(
+        "/v1/plugins/zalo/accounts/nick", json={"listen_group_ids": ["g1"]}, headers=HEADERS
+    )
+    await setup.event("nick", _message("sau khi chọn", group="g1"))
+    await _until_kept(setup, "g1", 1)
+    await setup.client.patch("/v1/plugins/zalo/accounts/nick", json={"listen_group_ids": []}, headers=HEADERS)
+    await setup.event("nick", _message("sau khi bỏ chọn", group="g1"))
+    await asyncio.sleep(0.2)
+
+    assert [text for _, text, _ in await _chat(setup, "g1")] == ["sau khi chọn"]
     await setup.close()
 
 
@@ -187,7 +233,7 @@ async def test_the_agents_own_reply_coming_back_as_the_accounts_message_is_not_k
 
 
 async def test_a_person_on_the_staff_list_is_kept_as_staff(tmp_path: Path, bridge: FakeBridge) -> None:
-    setup = await _started(tmp_path, bridge, staff=["s1"])
+    setup = await _started(tmp_path, bridge, staff=["s1"], listen=["g1"])
 
     await setup.event("nick", _message("em đã gọi cho khách", group="g1", sender="s1", name="Hà"))
     kept = await _until_kept(setup, "g1", 1)

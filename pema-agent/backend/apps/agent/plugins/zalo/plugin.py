@@ -33,6 +33,7 @@ from agentcore import PromptEnv, TurnInfo, TurnSection
 from agentcore.harness.hooks import ALLOW, Deny, HookContext, PreToolHook, ToolDecision
 from agentcore.messages import ToolUseBlock
 
+from .access import keeps_chat
 from .accounts import AccountStore
 from .bot.channel import ZaloBotChannel, channel_name
 from .bot.client import BotApiClient, tao_zalo_bot_client
@@ -234,11 +235,15 @@ class ZaloPlugin:
 
     async def _heard(self, msg: ZaloInbound) -> None:
         """Every message from someone else: the sender goes into the address book, and the name of a group
-        a personal account sees for the first time is looked up. A failure here never costs the message."""
-        try:
-            await self.contacts.record(msg.account_id, msg.sender_id, msg.sender_name, datetime.now(UTC))
-        except Exception as err:  # the storage's own errors included
-            logger.warning("Zalo account %s: contact not recorded (%s)", msg.account_id, type(err).__name__)
+        a personal account sees for the first time is looked up (so the group can be offered in the list to
+        listen to). The sender of a group the account does not listen to is not kept. A failure here never
+        costs the message."""
+        account = self._accounts.get(channel_name(msg.account_id))
+        if account is None or keeps_chat(account, thread_id=msg.thread_id, is_group=msg.is_group):
+            try:
+                await self.contacts.record(msg.account_id, msg.sender_id, msg.sender_name, datetime.now(UTC))
+            except Exception as err:  # the storage's own errors included
+                logger.warning("Zalo account %s: no contact kept (%s)", msg.account_id, type(err).__name__)
         key = (msg.account_id, msg.thread_id)
         if msg.is_group and key not in self._groups_asked and self.personal_api(msg.account_id) is not None:
             self._groups_asked.add(key)

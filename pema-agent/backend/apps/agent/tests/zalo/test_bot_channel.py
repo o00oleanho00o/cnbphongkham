@@ -26,7 +26,7 @@ from agentcore import PromptEnv, ToolContext, ToolOutput, ToolSpec, TurnInfo, Tu
 from agentcore.harness.hooks import Deny, HookContext, PreToolHook
 from agentcore.harness.model.scripted import ScriptedModel, reply
 from agentcore.messages import ToolUseBlock
-from plugins.zalo.access import should_respond
+from plugins.zalo.access import keeps_chat, should_respond
 from plugins.zalo.bot.channel import ZaloBotChannel, send_error_is_retryable
 from plugins.zalo.bot.client import LoiZaloBotApi, ZaloBotClient, tao_zalo_bot_client
 from plugins.zalo.bot.parser import parse_update
@@ -412,6 +412,19 @@ def test_who_is_answered() -> None:
     assert should_respond(closed, message).respond is False
     assert should_respond(open_, message).respond is True
     assert should_respond(_bot_account(respond_to_groups=False), in_group).respond is False
+
+
+def test_a_group_is_kept_only_when_it_is_on_the_list_and_a_private_chat_always() -> None:
+    account = _bot_account(listen_group_ids=["g1"])
+    channel = ZaloBotChannel(account, BOT_TOKEN, client_factory=FakeZalo().client)
+
+    assert keeps_chat(account, thread_id="g1", is_group=True) is True
+    assert keeps_chat(account, thread_id="g2", is_group=True) is False
+    assert keeps_chat(account, thread_id="u1", is_group=False) is True
+    assert channel.listens_to("g1", {"thread_type": "group"}) is True
+    assert channel.listens_to("g2", {"thread_type": "group"}) is False
+    assert channel.listens_to("u1", {"thread_type": "user"}) is True
+    assert channel.listens_to("g2", {}) is True  # no thread type, no group
 
 
 @pytest.mark.parametrize(
