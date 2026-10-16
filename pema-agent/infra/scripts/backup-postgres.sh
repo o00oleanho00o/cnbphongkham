@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Logical backup of the Pema database: one custom-format dump of `pema` + the cluster's roles (globals),
+# Logical backup of the Pema databases: one custom-format dump of `pema` (the clinic), one of `pema_agent` (the
+# agent, when it exists) + the cluster's roles (globals),
 # verified, encrypted, with simple retention. One installation = one clinic = one database, so the dump is the
 # WHOLE clinic (every patient, message and credential it has); treat it with that weight. A second clinic has its
 # own stack and must use its own PEMA_BACKUP_DIR and its own age key. Run from the host that runs docker compose
@@ -18,6 +19,7 @@
 #   PEMA_BACKUP_COMPOSE         the compose command (default: docker compose -f <infra>/docker-compose.yml --env-file <infra>/.env)
 #   PEMA_BACKUP_SERVICE         compose service name of Postgres (default postgres)
 #   PEMA_BACKUP_DB              database (default pema)
+#   PEMA_BACKUP_AGENT_DB        the agent's database (default pema_agent; skipped when the server has none)
 #   PEMA_BACKUP_HOOK            command run with the finished file path as $1 (rsync/rclone to the second site)
 #
 # Exit codes: 0 ok; non-zero on any failure (cron mails stderr). Nothing is printed except file names and sizes.
@@ -29,6 +31,7 @@ DIR="${PEMA_BACKUP_DIR:-/var/backups/pema}"
 KEEP="${PEMA_BACKUP_KEEP_DAYS:-14}"
 SERVICE="${PEMA_BACKUP_SERVICE:-postgres}"
 DB="${PEMA_BACKUP_DB:-pema}"
+AGENT_DB="${PEMA_BACKUP_AGENT_DB:-pema_agent}"
 read -r -a COMPOSE <<<"${PEMA_BACKUP_COMPOSE:-docker compose -f $INFRA/docker-compose.yml --env-file $INFRA/.env}"
 
 encrypt() { # stdin -> stdout
@@ -65,6 +68,13 @@ trap 'rm -rf "$TMP" "$OUT.part"' EXIT
 #    stay in the archive (no --no-owner / --no-privileges): the role split and the grants depend on them.
 "${COMPOSE[@]}" exec -T "$SERVICE" pg_dump -U postgres -Fc "$DB" >"$TMP/db.dump"
 "${COMPOSE[@]}" exec -T "$SERVICE" pg_dumpall -U postgres --globals-only >"$TMP/globals.sql"
+FILES=(db.dump globals.sql)
+if [ "$("${COMPOSE[@]}" exec -T "$SERVICE" psql -U postgres -Atc "SELECT 1 FROM pg_database WHERE datname = '$AGENT_DB'")" = "1" ]; then
+  "${COMPOSE[@]}" exec -T "$SERVICE" pg_dump -U postgres -Fc "$AGENT_DB" >"$TMP/agent.dump"
+  "${COMPOSE[@]}" exec -T "$SERVICE" pg_restore --list <"$TMP/agent.dump" | grep -q " SCHEMA - agent_rt " ||
+    { echo "backup check failed: schema agent_rt missing in $AGENT_DB" >&2; exit 2; }
+  FILES+=(agent.dump)
+fi
 
 # 2. Verify before trusting it: pg_restore must be able to list the archive and it must contain the schemas.
 "${COMPOSE[@]}" exec -T "$SERVICE" pg_restore --list <"$TMP/db.dump" >"$TMP/db.list"
@@ -74,8 +84,8 @@ done
 # the installation's clinic row must be in the archive (restoring without it would leave an unusable system)
 grep -q " TABLE DATA clinic clinic " "$TMP/db.list" || { echo "backup check failed: clinic.clinic data missing" >&2; exit 2; }
 
-# 3. Bundle and encrypt. tar keeps both files in one object so a restore cannot mix dates.
-tar -C "$TMP" -cf - db.dump globals.sql | encrypt >"$OUT.part"
+# 3. Bundle and encrypt. tar keeps the files in one object so a restore cannot mix dates.
+tar -C "$TMP" -cf - "${FILES[@]}" | encrypt >"$OUT.part"
 mv "$OUT.part" "$OUT"
 echo "backup written: $OUT ($(wc -c <"$OUT") bytes)"
 

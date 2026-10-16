@@ -3,11 +3,12 @@
 #
 #   restore-postgres.sh --verify  <file>            restore into a scratch database, count tables, drop it
 #   restore-postgres.sh --restore <file>            restore into a NEW database (name: PEMA_RESTORE_DB)
+#                                                   and the agent's into <that name>_agent
 #
 # It never overwrites the live database. To go live after a disaster: stop api/worker, run --restore into
 # `pema_restored`, check it, then `ALTER DATABASE pema RENAME TO pema_old; ALTER DATABASE pema_restored RENAME
-# TO pema;` (nobody connected), start the services. Run --verify at least once a quarter: a backup that was
-# never restored is a hope, not a backup.
+# TO pema;` (nobody connected), the same for `pema_agent` and `pema_restored_agent`, start the services. Run
+# --verify at least once a quarter: a backup that was never restored is a hope, not a backup.
 #
 # Decryption: PEMA_RESTORE_AGE_IDENTITY (path of the age private key) for *.age; gpg uses its own keyring.
 # Same PEMA_BACKUP_COMPOSE / PEMA_BACKUP_SERVICE variables as backup-postgres.sh.
@@ -55,7 +56,15 @@ fi
 CLINIC_NAME="$(psql_in -d "$TARGET" -At -c "SELECT name FROM clinic.clinic")"
 echo "restored clinic: $CLINIC_NAME (exactly one row)"
 
+if [ -f "$TMP/agent.dump" ]; then
+  psql_in -d postgres -c "CREATE DATABASE \"${TARGET}_agent\"" >/dev/null
+  "${COMPOSE[@]}" exec -T "$SERVICE" pg_restore -U postgres -d "${TARGET}_agent" --exit-on-error <"$TMP/agent.dump"
+  AGENT_TABLES="$(psql_in -d "${TARGET}_agent" -At -c "SELECT count(*) FROM information_schema.tables WHERE table_schema = 'agent_rt'")"
+  echo "restored the agent into ${TARGET}_agent: $AGENT_TABLES tables in agent_rt"
+fi
+
 if [ "$MODE" = "--verify" ]; then
   psql_in -d postgres -c "DROP DATABASE \"$TARGET\"" >/dev/null
-  echo "verify ok; scratch database dropped"
+  psql_in -d postgres -c "DROP DATABASE IF EXISTS \"${TARGET}_agent\"" >/dev/null
+  echo "verify ok; scratch databases dropped"
 fi

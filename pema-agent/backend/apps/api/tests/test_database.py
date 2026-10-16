@@ -547,9 +547,15 @@ def test_the_crm_database_holds_nothing_for_the_agent(admin_engine: Engine) -> N
             .all()
         )
         owner = conn.execute(text("SELECT current_user")).scalar_one()
+        agent_connect = conn.execute(  # the agent's database, when this server has one
+            text(
+                "SELECT has_database_privilege('be_app', datname, 'CONNECT') FROM pg_database WHERE datname = 'pema_agent'"
+            )
+        ).scalar_one_or_none()
     assert schemas == {"public", "clinic", "ctx"}
     assert extensions == {"plpgsql"}, "no dblink, no postgres_fdw, nothing the agent could use"
     assert grantees <= {"be_app", owner}  # PUBLIC may run trigger functions only (definer ones: test above)
+    assert agent_connect is not True, "be_app may connect to the agent's database pema_agent"
 
 
 # ------------------------------------------------------------------ last: it empties the tables

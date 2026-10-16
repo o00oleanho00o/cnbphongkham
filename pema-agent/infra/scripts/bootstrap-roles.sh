@@ -17,14 +17,14 @@
 # Inputs (environment, never arguments, so no password shows in `ps`):
 #   PEMA_MIGRATION_DATABASE_URL   owner/superuser URL, e.g. postgresql+psycopg://postgres:...@host:5432/pema
 #   PEMA_BE_APP_PASSWORD          password of be_app          (empty/unset: the role stays NOLOGIN)
-#   PEMA_BOOTSTRAP_HARDEN_CONNECT true (default): REVOKE CONNECT on the database from PUBLIC and grant it to
-#                                 be_app only.
+#
+# Always: REVOKE CONNECT on the database from PUBLIC and grant it to be_app only, so no other role (the agent's
+# agent_rt_app above all) can connect (.claude/rules/agent-crm-boundary.md, L1).
 #
 # Safe to rerun: also the way to ROTATE a password (change the variable, run it, restart the services).
 set -euo pipefail
 
 : "${PEMA_MIGRATION_DATABASE_URL:?set PEMA_MIGRATION_DATABASE_URL (owner/superuser URL)}"
-HARDEN="${PEMA_BOOTSTRAP_HARDEN_CONNECT:-true}"
 
 # Turn the SQLAlchemy URL into PG* environment variables for psql (keeps the password out of the argv).
 PY="$(command -v python3 || command -v python)"
@@ -49,7 +49,7 @@ PYEOF
 
 # Passwords are read by psql itself (`\getenv`, psql >= 15) so they never appear in the argument list.
 export PEMA_BE_APP_PASSWORD="${PEMA_BE_APP_PASSWORD:-}"
-psql --no-psqlrc --set=ON_ERROR_STOP=1 --set=harden="$HARDEN" <<'SQL'
+psql --no-psqlrc --set=ON_ERROR_STOP=1 <<'SQL'
 -- The ALTER ROLE ... PASSWORD statement must never reach the server log in clear text.
 SET log_statement = 'none';
 SET log_min_duration_statement = -1;
@@ -69,10 +69,8 @@ END $$;
 SELECT format('ALTER ROLE be_app LOGIN PASSWORD %L', :'be_app_pw')
  WHERE length(:'be_app_pw') > 0 \gexec
 
-SELECT format('REVOKE CONNECT ON DATABASE %I FROM PUBLIC', :'dbname')
- WHERE :'harden' = 'true' \gexec
-SELECT format('GRANT CONNECT ON DATABASE %I TO be_app', :'dbname')
- WHERE :'harden' = 'true' \gexec
+SELECT format('REVOKE CONNECT ON DATABASE %I FROM PUBLIC', :'dbname') \gexec
+SELECT format('GRANT CONNECT ON DATABASE %I TO be_app', :'dbname') \gexec
 
 SELECT rolname,
        CASE WHEN rolcanlogin THEN 'LOGIN' ELSE 'NOLOGIN' END AS login,

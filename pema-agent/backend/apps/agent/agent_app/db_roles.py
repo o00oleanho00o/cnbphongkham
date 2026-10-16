@@ -2,6 +2,10 @@
 nothing else (no DDL, no changing or deleting trace rows). Run ``agent db bootstrap-role`` as an owner role
 (``AGENT_MIGRATION_DATABASE_URL``) before or after the migrations; it is safe to run again (it also resets the
 password). The service then connects as ``agent_rt_app`` through ``AGENT_DATABASE_URL``.
+
+The agent has a database of its own (``pema_agent`` in the compose stack), never the clinic's: bootstrap-role
+creates it when it is missing, and only ``agent_rt_app`` (and superusers) may connect to it. The role gets
+CONNECT on that database alone (.claude/rules/agent-crm-boundary.md, L1).
 """
 
 from __future__ import annotations
@@ -43,7 +47,7 @@ def bootstrap_role(migration_url: str, password: str) -> list[str]:
     if len(password) < MIN_PASSWORD_CHARS:
         raise ValueError(f"{PASSWORD_ENV} must have at least {MIN_PASSWORD_CHARS} characters")
     role = sql.Identifier(RUNTIME_ROLE)
-    done: list[str] = []
+    done = ensure_database(migration_url)
     with psycopg.connect(libpq_url(migration_url), autocommit=True) as conn:
         exists = conn.execute("SELECT 1 FROM pg_roles WHERE rolname = %s", (RUNTIME_ROLE,)).fetchone()
         if exists is None:
@@ -58,10 +62,10 @@ def bootstrap_role(migration_url: str, password: str) -> list[str]:
         done.append("set its password and LOGIN")
         database = conn.execute("SELECT current_database()").fetchone()
         if database is not None:
-            conn.execute(
-                sql.SQL("GRANT CONNECT ON DATABASE {} TO {}").format(sql.Identifier(database[0]), role)
-            )
-            done.append(f"granted CONNECT on database {database[0]}")
+            name = sql.Identifier(database[0])
+            conn.execute(sql.SQL("REVOKE CONNECT ON DATABASE {} FROM PUBLIC").format(name))
+            conn.execute(sql.SQL("GRANT CONNECT ON DATABASE {} TO {}").format(name, role))
+            done.append(f"granted CONNECT on database {database[0]} to {RUNTIME_ROLE} only")
         schema = conn.execute("SELECT to_regnamespace(%s) IS NOT NULL", (SCHEMA,)).fetchone()
         if schema is None or not schema[0]:
             done.append(f"schema {SCHEMA} does not exist yet: the migrations grant the tables when they run")
@@ -86,6 +90,20 @@ def bootstrap_role(migration_url: str, password: str) -> list[str]:
         done.append(f"granted USAGE, SELECT on the sequences of {SCHEMA}")
         done.extend(_grant_plugin_tables(conn))
     return done
+
+
+def ensure_database(migration_url: str) -> list[str]:
+    """Creates the database the URL names when the server lacks it (asked on the database ``postgres``)."""
+    url = make_url(migration_url)
+    name = url.database
+    if not name:
+        raise ValueError(f"{MIGRATION_URL_ENV} must name a database")
+    maintenance = url.set(database="postgres").render_as_string(hide_password=False)
+    with psycopg.connect(libpq_url(maintenance), autocommit=True) as conn:
+        if conn.execute("SELECT 1 FROM pg_database WHERE datname = %s", (name,)).fetchone() is not None:
+            return []
+        conn.execute(sql.SQL("CREATE DATABASE {}").format(sql.Identifier(name)))
+    return [f"created database {name}"]
 
 
 def _grant_plugin_tables(conn: psycopg.Connection) -> list[str]:
