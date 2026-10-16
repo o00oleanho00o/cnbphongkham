@@ -34,6 +34,10 @@ class LiveAgent:
             self._version = version
         return self._agent
 
+    def rebuild(self) -> None:
+        """The next ``current()`` builds the agent again (its settings changed)."""
+        self._version = -1
+
     def enable(self, name: str, config: Mapping[str, Any] | None = None) -> None:
         """Enables a plugin while running. If the agent cannot be built with it (a tool or prompt section
         clashing with a built-in one), it is disabled again and the error names it."""

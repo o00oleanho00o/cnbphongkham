@@ -20,6 +20,7 @@ from sqlalchemy import Engine, create_engine
 from sqlalchemy import text as sql
 from sqlalchemy.engine import make_url
 
+from agent_app.agent_settings import PostgresAgentSettingsStore, StoredAgentSettings
 from agent_app.db_roles import RUNTIME_ROLE, bootstrap_role
 from agent_app.dispatcher import DispatchSettings
 from agent_app.ingress import SessionBusyError, TurnReply
@@ -70,7 +71,8 @@ def db_url(migrated: tuple[str, Engine]) -> str:
             sql(
                 "TRUNCATE agent_rt.agent_ingress, agent_rt.agent_conversation, agent_rt.agent_session, "
                 "agent_rt.agent_message, agent_rt.agent_turn, agent_rt.agent_turn_event, agent_rt.agent_memory, "
-                "agent_rt.agent_model_settings, agent_rt.agent_model_entry, agent_rt.agent_plugin, "
+                "agent_rt.agent_model_settings, agent_rt.agent_model_entry, agent_rt.agent_settings, "
+                "agent_rt.agent_plugin, "
                 "agent_rt.agent_plugin_record"
             )
         )
@@ -450,5 +452,49 @@ def test_model_settings_are_stored_per_agent_and_a_clear_never_lowers_the_versio
         assert loaded == StoredModelSettings(version=2)
         assert loaded is not None
         assert loaded.empty
+
+    _run(db_url, check)
+
+
+def test_agent_settings_are_stored_per_agent_and_a_clear_never_lowers_the_version(db_url: str) -> None:
+    async def check(db: AgentDatabase) -> None:
+        store = PostgresAgentSettingsStore(db, agent="dev")
+        assert (await store.get("t"), await store.version("t")) == (None, 0)
+
+        stored = StoredAgentSettings(
+            timezone="Asia/Ho_Chi_Minh",
+            persona="Xin chào {{clinic}}",
+            memory_enabled=False,
+            memory_agent_chars=500,
+            variables={"clinic": "Pema"},
+            tools={"web_fetch": True, "kb_search": False},
+            updated_by="an@admin",
+        )
+        saved = await store.save("t", stored)
+        loaded = await store.get("t")
+        cleared = await store.save("t", StoredAgentSettings())
+
+        assert saved == replace(stored, version=1)
+        assert loaded == saved
+        assert await PostgresAgentSettingsStore(db, agent="other").get("t") is None
+        assert cleared.version == 2
+        again = await store.get("t")
+        assert again is not None
+        assert (again.empty, again.version) == (True, 2)
+
+    _run(db_url, check)
+
+
+def test_the_database_refuses_agent_settings_outside_their_limits(db_url: str) -> None:
+    async def check(db: AgentDatabase) -> None:
+        store = PostgresAgentSettingsStore(db, agent="dev")
+        for bad in (
+            StoredAgentSettings(memory_agent_chars=5),
+            StoredAgentSettings(failure_reply="x" * 1001),
+            StoredAgentSettings(timezone=""),
+        ):
+            with pytest.raises(Exception, match="agent_settings"):
+                await store.save("t", bad)
+        assert await store.get("t") is None
 
     _run(db_url, check)

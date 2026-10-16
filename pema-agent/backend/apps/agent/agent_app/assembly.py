@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Collection, Mapping, Sequence
 from dataclasses import dataclass, replace
 
 from agent_app.model_factory import build_model, resolve_model_settings
@@ -42,10 +42,12 @@ def build_agent(
     memory_backend: MemoryBackend | None = None,
     model: ModelClient | None = None,
     plugins: Contributions | None = None,
+    disabled_tools: Collection[str] = (),
 ) -> Agent:
     """Without a backend or store, memory and agent-written skills live in process memory. A given ``model``
     (the settings-aware one of a service) picks its own reasoning effort, so the policy leaves it unset.
-    ``plugins`` adds their tools, prompt sections (after the profile's, unless it lists them) and hooks."""
+    ``plugins`` adds their tools, prompt sections (after the profile's, unless it lists them) and hooks;
+    a plugin tool named in ``disabled_tools`` is left out (an admin switched it off)."""
     name = profile.agent.name
     added = plugins or Contributions()
     client = model or build_model(profile, fake=fake)
@@ -55,7 +57,8 @@ def build_agent(
         memory = MemoryService(memory_backend or InMemoryMemoryBackend(), profile.memory_limits())
         tools.register(make_memory_tool(memory, agent=name))
     for spec in added.tools:
-        tools.register(spec)
+        if spec.name not in disabled_tools:
+            tools.register(spec)
     prompt = build_prompt(profile, tool_names=tools.names(), memory=memory, extra_sections=added.sections)
     context_policy = profile.context_policy()
     context = ContextManager(context_policy, client) if context_policy else None

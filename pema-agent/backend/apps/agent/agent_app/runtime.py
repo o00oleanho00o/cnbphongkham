@@ -8,6 +8,11 @@ from pathlib import Path
 from typing import Final, Protocol
 
 import agent_app
+from agent_app.agent_settings import (
+    AgentSettings,
+    InMemoryAgentSettingsStore,
+    PostgresAgentSettingsStore,
+)
 from agent_app.assembly import Agent, build_agent
 from agent_app.channel_hub import PACED_DELIVERY, ChannelHub, DeliverySettings
 from agent_app.dispatcher import Dispatcher, DispatchSettings
@@ -90,6 +95,17 @@ class Runtime:
     dynamic_model: DynamicModel | None
     """None with ``--fake``: the echo model ignores the settings."""
     plugin_manager: PluginManager
+    agent_settings: AgentSettings
+
+    async def start(self) -> None:
+        """Applies what is stored: the plugins that are on, then the agent's settings."""
+        await self.plugin_manager.start()
+        await self.agent_settings.start()
+
+    async def refresh(self) -> None:
+        """Before a turn: follows changes made since the last look (through this or another process)."""
+        await self.plugin_manager.refresh()
+        await self.agent_settings.refresh()
 
     @property
     def agent(self) -> Agent:
@@ -107,9 +123,9 @@ class Runtime:
         return ChannelHub(
             dispatcher,
             channels=lambda: self.plugins.contributions().channels,
-            refresh=self.plugin_manager.refresh,
+            refresh=self.refresh,
             settings=settings or PACED_DELIVERY,
-            failure_reply=self.agent.profile.agent.failure_reply,
+            failure_reply=lambda: self.agent.profile.agent.failure_reply,
             observe=self.plugins.observe,
         )
 
@@ -136,7 +152,7 @@ class Runtime:
                 max_wait_s=loop.queue_max_wait_s,
                 max_batch=loop.queue_max_batch,
             ),
-            before_turn=self.plugin_manager.refresh,
+            before_turn=self.refresh,
         )
 
 
@@ -221,18 +237,27 @@ def build_runtime(
     if model_wrapper is not None:
         model = model_wrapper(dynamic if dynamic is not None else build_model(profile, fake=True))
 
+    agent_settings = AgentSettings(
+        profile,
+        InMemoryAgentSettingsStore() if db is None else PostgresAgentSettingsStore(db, agent=name),
+        tenant_id=tenant_id,
+    )
+
     def build(added: Contributions) -> Agent:
+        effective = agent_settings.effective
         return build_agent(
-            profile,
+            effective.profile,
             fake=fake,
             env=env,
             memory_backend=memory_backend,
             model=model,
             plugins=added,
+            disabled_tools=effective.disabled_tools,
         )
 
     access = None if db is None else DatabaseAccess(db.engine, tenant_id=tenant_id, agent=name)
     live = LiveAgent(build, plugins or start_plugins(profile, env, storage=records.storage, database=access))
+    agent_settings.attach(live)
     live.host.use_model(model or build_model(profile, fake=True))
     installed = env.get(PLUGIN_DIR_ENV)
     plugin_manager = PluginManager(
@@ -257,6 +282,7 @@ def build_runtime(
             model_admin=admin,
             dynamic_model=dynamic,
             plugin_manager=plugin_manager,
+            agent_settings=agent_settings,
         )
     sessions = PostgresSessionStore(db, agent=name)
     model_name: Callable[[], str] = (lambda: "echo") if dynamic is None else (lambda: dynamic.model_name)
@@ -272,4 +298,5 @@ def build_runtime(
         model_admin=admin,
         dynamic_model=dynamic,
         plugin_manager=plugin_manager,
+        agent_settings=agent_settings,
     )

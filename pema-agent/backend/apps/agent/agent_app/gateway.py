@@ -39,6 +39,7 @@ from sqlalchemy import text as sql
 from starlette.types import ASGIApp, Receive, Scope, Send
 
 from agent_app.activity import Activity
+from agent_app.agent_settings import AgentSettings, SettingsError
 from agent_app.auth import ADMIN, CHAT, Authenticator, Principal
 from agent_app.channel_hub import ChannelHub
 from agent_app.dispatcher import Dispatcher, StreamObserver
@@ -199,6 +200,8 @@ class Gate:
 
 ENTRY_ID = r"^[0-9a-f]{32}$"
 ENTRY_STATUS = {"not_found": 404, "list_full": 409}
+SETTINGS_STATUS = {"invalid": 422, "unknown_tool": 404}
+ToolNameParam = Annotated[str, UrlPath(pattern=r"^[A-Za-z0-9_.-]{1,64}$")]
 EntryIdParam = Annotated[str, UrlPath(pattern=ENTRY_ID)]
 
 
@@ -244,6 +247,25 @@ class ModelSettingsPatch(_Body):
     reasoning: ReasoningEffort | None = None
     dialect: OpenAIDialect | None = None
     api_key: str | None = Field(default=None, max_length=500)
+
+
+class AgentSettingsPatch(_Body):
+    """Only the fields sent change: a value sets it, null gives it back to the profile. ``variables`` maps a
+    name to its value (null: the profile's again) or is null for all of them."""
+
+    timezone: str | None = Field(default=None, max_length=64)
+    failure_reply: str | None = Field(default=None, max_length=1000)
+    persona: str | None = Field(default=None, max_length=20_000)
+    rules: str | None = Field(default=None, max_length=20_000)
+    memory_enabled: bool | None = None
+    memory_agent_chars: int | None = Field(default=None, ge=100, le=20_000)
+    memory_user_chars: int | None = Field(default=None, ge=100, le=20_000)
+    variables: dict[str, str | None] | None = None
+
+
+class ToolSwitch(_Body):
+    enabled: bool | None
+    """null gives the tool back to the profile (a core tool) or to on (a plugin's)."""
 
 
 class ModelListBody(_Body):
@@ -305,6 +327,7 @@ def create_app(
     channels: ChannelHub | None = None,
     jobs: JobRunner | None = None,
     activity: Activity | None = None,
+    agent_settings: AgentSettings | None = None,
 ) -> FastAPI:
     @contextlib.asynccontextmanager
     async def lifespan(_: FastAPI) -> AsyncGenerator[None]:
@@ -388,8 +411,8 @@ def create_app(
         session_id = await dispatcher.reset(CHANNEL, body.conversation_id or body.user_id)
         return {"session_id": session_id}
 
-    if (admin, plugins, channels, jobs) != (None, None, None, None):
-        _add_admin_routes(app, gate, admin, plugins, channels, jobs)
+    if (admin, plugins, channels, jobs, agent_settings) != (None, None, None, None, None):
+        _add_admin_routes(app, gate, admin, plugins, channels, jobs, agent_settings)
         profile = dispatcher.agent.profile
         _add_activity_routes(
             app,
@@ -537,6 +560,7 @@ def _add_admin_routes(
     plugins: PluginManager | None,
     channels: ChannelHub | None = None,
     jobs: JobRunner | None = None,
+    agent_settings: AgentSettings | None = None,
 ) -> None:
     """Model settings (read with the key masked, change, clear, test), the plugin manager, the plugins' own
     admin routes, and the state of channels and plugin jobs."""
@@ -578,6 +602,9 @@ def _add_admin_routes(
         async def list_channels() -> dict[str, Any]:
             return {"channels": hub.status()}
 
+    if agent_settings is not None:
+        _add_settings_routes(app, agent_settings, authorized)
+
     if admin is None:
         return
 
@@ -614,6 +641,41 @@ def _add_admin_routes(
     async def test_model() -> Response:
         outcome = await admin.test()
         return JSONResponse(outcome, status_code=200 if outcome["ok"] else 502)
+
+
+def _add_settings_routes(app: FastAPI, settings: AgentSettings, authorized: Any) -> None:
+    """The agent's own settings (time zone, persona, rules, memory...) and which tools are on."""
+
+    async def answer(work: Awaitable[Any]) -> Response:
+        try:
+            return JSONResponse(await work)
+        except SettingsError as err:
+            return _error(SETTINGS_STATUS[err.code], err.code, str(err))
+
+    def who(request: Request) -> str | None:
+        principal = getattr(request.state, "principal", None)
+        return principal.subject if isinstance(principal, Principal) else None
+
+    @app.get("/v1/admin/settings", dependencies=[authorized])
+    async def show_settings() -> dict[str, Any]:
+        return await settings.show()
+
+    @app.patch("/v1/admin/settings", dependencies=[authorized])
+    async def change_settings(body: AgentSettingsPatch, request: Request) -> Response:
+        changes = {name: getattr(body, name) for name in body.model_fields_set}
+        return await answer(settings.update(changes, by=who(request)))
+
+    @app.delete("/v1/admin/settings", dependencies=[authorized])
+    async def clear_settings(request: Request) -> Response:
+        return await answer(settings.clear(by=who(request)))
+
+    @app.get("/v1/admin/tools", dependencies=[authorized])
+    async def list_tools() -> dict[str, Any]:
+        return await settings.tools()
+
+    @app.put("/v1/admin/tools/{name}", dependencies=[authorized])
+    async def switch_tool(name: ToolNameParam, body: ToolSwitch, request: Request) -> Response:
+        return await answer(settings.set_tool(name, body.enabled, by=who(request)))
 
 
 def _add_model_entry_routes(app: FastAPI, admin: ModelAdmin, authorized: Any) -> None:

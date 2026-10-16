@@ -22,6 +22,7 @@ from uuid import uuid4
 import psycopg
 import uvicorn
 
+from agent_app.agent_settings import MEMORY_FIELDS, TEXT_FIELDS, SettingsError
 from agent_app.assembly import Agent
 from agent_app.db_roles import MIGRATION_URL_ENV, PASSWORD_ENV, RUNTIME_ROLE, bootstrap_role
 from agent_app.gateway import GatewaySettings, create_app
@@ -130,6 +131,16 @@ def main(argv: Sequence[str] | None = None) -> int:
         ),
         home,
     )
+    _add_settings_commands(
+        commands.add_parser(
+            "settings", help=f"Agent settings stored in the database (needs {DATABASE_URL_ENV})"
+        ),
+        home,
+    )
+    _add_tools_commands(
+        commands.add_parser("tools", help=f"Switch the agent's tools on and off (needs {DATABASE_URL_ENV})"),
+        home,
+    )
     plugins = commands.add_parser(
         "plugins", help=f"Plugins of an agent (changes are stored: they need {DATABASE_URL_ENV})"
     )
@@ -156,6 +167,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         work = _model(args)
     elif args.command == "plugins":
         work = _plugins(args)
+    elif args.command in ("settings", "tools"):
+        work = _agent_settings(args)
     elif args.command == "replay":
         work = _replay(args.cassette, args.profile, expect=args.expect, update=args.update)
     else:
@@ -194,6 +207,50 @@ def _add_model_commands(model: argparse.ArgumentParser, home: argparse.ArgumentP
             choices=(*SETTING_FIELDS, "api_key"),
             help="give this field back to the profile (repeatable)",
         )
+
+
+def _add_settings_commands(settings: argparse.ArgumentParser, home: argparse.ArgumentParser) -> None:
+    actions = settings.add_subparsers(dest="settings_command", required=True)
+    for name, help_text in (
+        ("show", "show the settings in effect and where each comes from"),
+        ("set", "change stored settings; fields not given stay as they are"),
+        ("clear", "remove every stored setting: back to the profile"),
+    ):
+        action = actions.add_parser(name, parents=[home], help=help_text)
+        action.add_argument("--profile", type=Path, required=True, help="agent folder or TOML profile")
+        if name != "set":
+            continue
+        action.add_argument("--timezone")
+        action.add_argument("--failure-reply", dest="failure_reply")
+        action.add_argument("--persona-file", type=Path, help="a text file with the persona (like SOUL.md)")
+        action.add_argument("--rules-file", type=Path, help="a text file with the rules (like AGENTS.md)")
+        action.add_argument(
+            "--variable", action="append", default=[], metavar="NAME=VALUE", help="a {{variable}} of the text"
+        )
+        action.add_argument("--memory", choices=("on", "off"))
+        action.add_argument("--memory-agent-chars", type=int, dest="memory_agent_chars")
+        action.add_argument("--memory-user-chars", type=int, dest="memory_user_chars")
+        action.add_argument(
+            "--clear",
+            action="append",
+            default=[],
+            choices=(*TEXT_FIELDS, *MEMORY_FIELDS, "variables"),
+            help="give this field back to the profile (repeatable)",
+        )
+
+
+def _add_tools_commands(tools: argparse.ArgumentParser, home: argparse.ArgumentParser) -> None:
+    actions = tools.add_subparsers(dest="tools_command", required=True)
+    for name, help_text in (
+        ("list", "every tool the agent has or may have, and whether it is on"),
+        ("enable", "switch a tool on"),
+        ("disable", "switch a tool off"),
+        ("reset", "give a tool back to the profile's choice"),
+    ):
+        action = actions.add_parser(name, parents=[home], help=help_text)
+        action.add_argument("--profile", type=Path, required=True, help="agent folder or TOML profile")
+        if name != "list":
+            action.add_argument("name")
 
 
 def _add_plugin_commands(plugins: argparse.ArgumentParser, home: argparse.ArgumentParser) -> None:
@@ -315,6 +372,74 @@ def _plugin_settings(args: argparse.Namespace) -> dict[str, Any]:
     return settings
 
 
+async def _agent_settings(args: argparse.Namespace) -> int:
+    """``agent settings ...`` and ``agent tools ...``: the stored settings of the agent, applied to a running
+    service within a few seconds."""
+    db_url = os.environ.get(DATABASE_URL_ENV)
+    if not db_url:
+        _write(f"error: set {DATABASE_URL_ENV}: the agent's settings are stored in the database\n")
+        return EXIT_CONFIG_ERROR
+    db = AgentDatabase(db_url)
+    try:
+        try:
+            runtime = build_runtime(load_profile(args.profile), fake=True, env=_service_env(args.home), db=db)
+            changes = _settings_changes(args) if getattr(args, "settings_command", "") == "set" else {}
+        except (OSError, ValueError) as err:
+            _write(f"error: {err}\n")
+            return EXIT_CONFIG_ERROR
+        try:
+            await runtime.start()
+            shown = await _settings_command(runtime, args, changes)
+        except (SettingsError, PluginError) as err:
+            _write(f"error: {err}\n")
+            return 1
+        finally:
+            runtime.close()
+    finally:
+        await db.dispose()
+    _write(json.dumps(shown, ensure_ascii=False, indent=2) + "\n")
+    return 0
+
+
+async def _settings_command(
+    runtime: Runtime, args: argparse.Namespace, changes: dict[str, Any]
+) -> dict[str, Any]:
+    settings, by = runtime.agent_settings, "cli"
+    if args.command == "tools":
+        command = args.tools_command
+        if command == "list":
+            return await settings.tools()
+        return await settings.set_tool(args.name, {"enable": True, "disable": False}.get(command), by=by)
+    if args.settings_command == "show":
+        return await settings.show()
+    if args.settings_command == "clear":
+        return await settings.clear(by=by)
+    return await settings.update(changes, by=by)
+
+
+def _settings_changes(args: argparse.Namespace) -> dict[str, Any]:
+    changes: dict[str, Any] = dict.fromkeys(args.clear)
+    given: dict[str, Any] = {
+        "timezone": args.timezone,
+        "failure_reply": args.failure_reply,
+        "memory_agent_chars": args.memory_agent_chars,
+        "memory_user_chars": args.memory_user_chars,
+    }
+    if args.persona_file is not None:
+        given["persona"] = args.persona_file.read_text(encoding="utf-8").lstrip("﻿")
+    if args.rules_file is not None:
+        given["rules"] = args.rules_file.read_text(encoding="utf-8").lstrip("﻿")
+    if args.memory is not None:
+        given["memory_enabled"] = args.memory == "on"
+    if args.variable:
+        pairs = [item.partition("=") for item in args.variable]
+        if any(not sep for _, sep, _ in pairs):
+            raise ValueError("--variable takes NAME=VALUE")
+        given["variables"] = {name: value for name, _, value in pairs}
+    changes.update({name: value for name, value in given.items() if value is not None})
+    return changes
+
+
 async def _model(args: argparse.Namespace) -> int:
     db_url = os.environ.get(DATABASE_URL_ENV)
     if not db_url:
@@ -380,7 +505,7 @@ async def _serve(profile_path: Path, *, fake: bool, host: str, port: int, home: 
         if "web" not in runtime.plugins.enabled():
             _write("warning: the web plugin is off: nobody can sign in to the gateway\n")
         try:
-            await runtime.plugin_manager.start()
+            await runtime.start()
             # Helper processes of plugins call back over loopback, whatever address the service binds.
             local = "127.0.0.1" if host in ("0.0.0.0", "::", "") else host  # noqa: S104 - compared, not bound
             runtime.plugins.self_url = (
@@ -395,6 +520,7 @@ async def _serve(profile_path: Path, *, fake: bool, host: str, port: int, home: 
                 plugins=runtime.plugin_manager,
                 channels=runtime.channel_hub(dispatcher),
                 jobs=runtime.job_runner(),
+                agent_settings=runtime.agent_settings,
             )
             server = uvicorn.Server(
                 uvicorn.Config(app, host=host, port=port, log_level="info", access_log=False)
@@ -451,7 +577,7 @@ async def _chat_with(
     if writer is not None:
         _write(f"recording to {writer.path}; commands that call the model (/compact) do not replay\n")
     try:
-        await runtime.plugin_manager.start()
+        await runtime.start()
         return await _chat_loop(profile, runtime, fake=fake, session=session, db=db, record=writer)
     finally:
         runtime.close()
@@ -506,9 +632,7 @@ async def _chat_loop(
     session_id = session or _new_session_id()
     lines = _stdin_lines()
     model_label = describe_model(profile, fake=fake)
-    storage = (
-        "postgres" if db else f"in process memory (set {DATABASE_URL_ENV} to keep sessions and notes)"
-    )
+    storage = "postgres" if db else f"in process memory (set {DATABASE_URL_ENV} to keep sessions and notes)"
     _write(
         f"agent '{name}' | model: {model_label} | session: {session_id}\n"
         f"sessions and notes: {storage}\n{HELP}"
@@ -528,7 +652,7 @@ async def _chat_loop(
         text = line.strip()
         if not text:
             continue
-        await runtime.plugin_manager.refresh()
+        await runtime.refresh()
         agent = runtime.agent
         if text in {"/exit", "/quit"}:
             return 0

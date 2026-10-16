@@ -83,7 +83,7 @@ class ChannelHub:
         channels: Callable[[], Sequence[ChannelAdapter]],
         refresh: Callable[[], Awaitable[None]] | None = None,
         settings: DeliverySettings | None = None,
-        failure_reply: str = "",
+        failure_reply: str | Callable[[], str] = "",
         observe: Observe | None = None,
         clock: Callable[[], float] = time.monotonic,
         sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
@@ -94,7 +94,8 @@ class ChannelHub:
         self._channels = channels
         self._refresh = refresh
         self.settings = settings or DeliverySettings()
-        self._failure_reply = failure_reply.strip()
+        # a function: an admin may change the text while the service runs
+        self._failure_reply = failure_reply if callable(failure_reply) else lambda: failure_reply
         self._observe = observe
         self._clock = clock
         self._sleep = sleep
@@ -210,8 +211,8 @@ class ChannelHub:
             return False
         if record.status == "done" and record.reply is not None:
             text = record.reply.text
-        elif self._failure_reply:
-            text = self._failure_reply  # the turn failed; the person still hears back
+        elif failure := self._failure_reply().strip():
+            text = failure  # the turn failed; the person still hears back
         else:
             await self._ingress.finish_delivery(
                 record.id, "skipped", f"no reply: {record.error_kind or record.status}"

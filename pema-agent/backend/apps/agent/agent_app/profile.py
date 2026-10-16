@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import re
 import tomllib
+from collections.abc import Mapping
 from pathlib import Path
 from typing import Any, Final, Literal, cast
 
@@ -49,6 +50,10 @@ class AgentSection(_Section):
     sends nothing."""
     variables: dict[str, str] = Field(default_factory=dict[str, str])
     """Values for the ``{{name}}`` placeholders of the persona and the rules."""
+    persona_template: str = ""
+    rules_template: str = ""
+    """The persona and the rules before the variables were filled in; ``load_profile`` sets them, so the
+    settings an admin stores can fill the same text with other values."""
 
 
 class ModelSection(_Section):
@@ -208,9 +213,17 @@ def load_profile(path: Path) -> Profile:
         raise ValueError(f"{folder}: give the persona in {SOUL_FILE} or in system_prompt, not both")
     if rules is not None and agent.rules:
         raise ValueError(f"{folder}: give the rules in {RULES_FILE} or in rules, not both")
-    persona = _fill(soul or agent.system_prompt, agent.variables, SOUL_FILE if soul else "system_prompt")
-    working = _fill(rules or agent.rules, agent.variables, RULES_FILE if rules else "rules")
-    filled = agent.model_copy(update={"system_prompt": persona, "rules": working})
+    persona_text, rules_text = soul or agent.system_prompt, rules or agent.rules
+    persona = fill_variables(persona_text, agent.variables, SOUL_FILE if soul else "system_prompt")
+    working = fill_variables(rules_text, agent.variables, RULES_FILE if rules else "rules")
+    filled = agent.model_copy(
+        update={
+            "system_prompt": persona,
+            "rules": working,
+            "persona_template": persona_text,
+            "rules_template": rules_text,
+        }
+    )
     return profile.model_copy(update={"agent": filled}).in_folder(folder)
 
 
@@ -218,7 +231,7 @@ def _read_markdown(path: Path) -> str | None:
     return path.read_text(encoding="utf-8").lstrip("\ufeff") if path.is_file() else None
 
 
-def _fill(text: str, variables: dict[str, str], where: str) -> str:
+def fill_variables(text: str, variables: Mapping[str, str], where: str) -> str:
     """``text`` with every ``{{name}}`` replaced; a name without a value is an error, never left for the model
     to read."""
     missing = sorted({m.group(1) for m in VARIABLE.finditer(text) if m.group(1) not in variables})

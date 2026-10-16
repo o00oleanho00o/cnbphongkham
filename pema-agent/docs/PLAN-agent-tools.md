@@ -1,6 +1,6 @@
 # Kế hoạch: tool web chung cho agent (web_search, web_fetch) và vòng chăm sóc lại
 
-**Trạng thái (2026-10-16): kế hoạch bản 5 (thêm mục 2b: cài đặt agent lên UI). Bước 0 (bỏ `allow_internet`, `ToolSpec.network`) đã làm; các bước sau chờ chủ.**
+**Trạng thái (2026-10-16): kế hoạch bản 5 (thêm mục 2b: cài đặt agent lên UI). Bước 0 và 0a đã làm; chờ bước 0b. Bước 0 (bỏ `allow_internet`, `ToolSpec.network`) đã làm; các bước sau chờ chủ.**
 
 Nguồn để port (chỉ đọc): `zalo-agent/src/agent/tools/web-*.ts`, `wrap-untrusted-content.ts`, `shared/safe-remote-download.ts`.
 Bản ghi quy tắc tool: `project-agent-tool-rule` (2026-10-12; sẽ sửa ở bước cuối).
@@ -170,7 +170,7 @@ Chọn từng tài khoản Zalo sẽ làm cùng giao diện (hoãn); trước m�
 | Bước | Nội dung | Test chạy |
 |---|---|---|
 | 0 | Bỏ `allow_internet` và `ToolSpec.network` (**đã làm**, `64e85e15`) | — |
-| 0a | `agent_settings` (`0002`), kho, resolve, `LiveAgent` dựng lại, lọc tool, `failure_reply` và biến đọc lúc dựng; API + CLI | test mới, `test_agent_app.py`, `test_channel_hub.py`, `test_gateway.py`, profile; test DB chỉ trên `scratch_*` |
+| 0a (**đã làm**) | `agent_settings` (`0002`), kho, resolve, `LiveAgent` dựng lại, lọc tool, `failure_reply` và biến đọc lúc dựng; API + CLI | test mới, `test_agent_app.py`, `test_channel_hub.py`, `test_gateway.py`, profile; test DB chỉ trên `scratch_*` |
 | 0b | Trang "Cài đặt" và "Công cụ" (`pema-ui-builder`) | `pnpm test`, `contract.test.ts`, `pnpm visual`, `pending-web.cjs` |
 | 1 | `netguard`, `untrusted` + T5 | test mới + `test_crm_boundary.py` |
 | 2 | `web_search`, `web_fetch` (trang giả, không gọi mạng thật) | test mới |
