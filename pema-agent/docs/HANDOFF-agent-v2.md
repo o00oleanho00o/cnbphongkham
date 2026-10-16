@@ -1440,6 +1440,25 @@ thì tách nguồn), enrich/rerank dùng MODEL CHAT ĐANG CHỌN, `ctx.model` đ
 bộ của plugin rồi bỏ. Docling: đánh giá ở mục 3.2.1 của plan — dùng làm parser qua sidecar `docling-serve`
 (không nhúng vào agent), chốt mặc định sau spike đầu bước 2. Bước kế: user cho phép → commit plan, làm bước 0.
 
+## Rủi ro còn mở — nhắc chủ sửa sau (ghi 2026-10-16)
+
+Chủ nhận các đánh đổi này cho bản demo và muốn được nhắc lại để sửa trước khi có bệnh nhân thật. Khi việc chạm tới cài đặt agent,
+tool web hay vòng chăm sóc lại, hoặc trước khi merge vào `master`/chạy thật: liệt kê các mục liên quan và hỏi chủ có sửa luôn không.
+Chi tiết: `docs/PLAN-agent-tools.md` mục 2, 2b, 5.4.
+
+1. **Admin đổi hành vi agent trên UI**: ai có quyền admin (chủ, quản lý qua SSO) sửa được vai trò, quy tắc và bật tool internet cho
+   agent đang nói chuyện với khách. Chỉ ghi `updated_by` + thời điểm; chưa có lịch sử phiên bản, chưa quay lại được.
+2. **Hai lớp vai trò/quy tắc**: phần gốc ở trang "Cài đặt" và phần theo kênh/tài khoản của plugin `skills`; chưa kiểm có gây rối không.
+3. **Tắt nhớ trên UI** bỏ cả tool `memory` lẫn phần nhớ trong prompt (một cờ).
+4. **Lộ dữ liệu qua `web_fetch`**: agent bị jailbreak đọc tài liệu kho tri thức rồi nhét vào URL. Chỉ giảm (GET, URL ≤ 2000 ký tự,
+   không header/cookie), chưa loại hẳn.
+5. **"Plugin không tự ra internet" mới là luật chữ**: Python của plugin vẫn gọi được `httpx`; chặn thật cần luật egress ở mạng Docker.
+6. **Hàng rào SSRF là lớp chặn duy nhất** từ khi bỏ `allow_internet` (`64e85e15`); T5 phải luôn xanh.
+7. **Vòng chăm sóc lại nhắn chủ động**: tài khoản Zalo cá nhân dễ bị đánh dấu spam; Nghị định 91/2020 đòi khách đồng ý trước khi nhận
+   tin quảng cáo (chủ nên hỏi người hiểu luật); mỗi hội thoại im tốn một lời gọi model.
+8. **Hoãn, chưa kiểm**: nhận biết nhân viên nhắn tay từ máy khác (`origin="own"`) để vòng lùi lại; UI danh sách chăm sóc lại/ngưng và
+   chọn theo từng tài khoản Zalo; chưa có ví dụ "từ chối khéo" thật để đo (test chỉ dùng model giả).
+
 ## Suggested skills
 
 - `handoff` (`.claude/skills/handoff/SKILL.md`) — run again at the end of the next session to refresh this doc.

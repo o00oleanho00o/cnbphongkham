@@ -1,6 +1,6 @@
 # Kế hoạch: tool web chung cho agent (web_search, web_fetch) và vòng chăm sóc lại
 
-**Trạng thái (2026-10-16): kế hoạch bản 4. Bước 0 (bỏ `allow_internet`, `ToolSpec.network`) đã làm; các bước sau chờ chủ.**
+**Trạng thái (2026-10-16): kế hoạch bản 5 (thêm mục 2b: cài đặt agent lên UI). Bước 0 (bỏ `allow_internet`, `ToolSpec.network`) đã làm; các bước sau chờ chủ.**
 
 Nguồn để port (chỉ đọc): `zalo-agent/src/agent/tools/web-*.ts`, `wrap-untrusted-content.ts`, `shared/safe-remote-download.ts`.
 Bản ghi quy tắc tool: `project-agent-tool-rule` (2026-10-12; sẽ sửa ở bước cuối).
@@ -9,11 +9,12 @@ Bản ghi quy tắc tool: `project-agent-tool-rule` (2026-10-12; sẽ sửa ở 
 
 | Việc | Quyết định |
 |---|---|
-| Cờ `allow_internet` | **Bỏ hẳn.** Tool nào bật là do danh sách `tools` của agent (`agent.toml`, mục `[agent]`) quyết, như `get_datetime` hôm nay |
+| Cờ `allow_internet` | **Bỏ hẳn** (đã làm, `64e85e15`). Thay bằng **tool thường**: `web_search`, `web_fetch` được bật cho agent thì agent ra được internet, không thì không (2026-10-16) |
+| Cấu hình nằm ở đâu | `agent.toml` nằm trong ảnh Docker, đổi phải dựng lại. **Mọi thứ người vận hành đổi lên DB + UI** (mục 2b); TOML chỉ giữ giới hạn kỹ thuật và an toàn, và làm mặc định lúc mới cài |
 | `send_file`, kho tệp, `create_word_document`, `create_excel_file`, `read_image`, `create_image`, `tai_video` | Bỏ |
 | `schedule_task` (lịch cố định do model đặt) | **Bỏ**, thay bằng **vòng chăm sóc lại** (mục 5): AI tự phán đoán khi nào nhắn lại, khi nào ngưng |
 | Gói thêm | Không gói mới; `httpx` khai rõ trong lõi |
-| Chỗ đặt | **Chung của lõi/app**, không gắn vào plugin có giao diện như plugin Zalo: không plugin mới, không trang quản trị |
+| Chỗ đặt | Tool web là **tool thường của lõi**, cạnh `get_datetime`; **không phải plugin**. Vòng chăm sóc lại là phần chung của app |
 | Giao diện danh sách chăm sóc lại / ngưng | Tạm bỏ, làm sau |
 | Khung mặc định của vòng chăm sóc lại | Đồng ý như đề xuất (mục 5.3) |
 
@@ -31,16 +32,59 @@ nó gọi cổng quản trị của chính agent, cổng API CRM trong mạng Do
   hai test trong `test_plugin_runtime.py`, ghi chú trong `agents/*/agent.toml`.
 - Dòng "Không tra cứu trên internet" trong `agents/clinic/AGENTS.md` đổi cho khớp khi `web_*` được bật.
 
-## 3. Thiết kế chung cho tool web
+## 2b. Cài đặt agent lên DB + UI (trước tool web)
 
-Tool nằm trong `agentcore/harness/tools/builtin/` (cạnh `get_datetime`); agent nào liệt kê tên tool trong `tools = [...]` thì có.
-Kênh nào cũng dùng được.
+### Chuyển và giữ lại
 
-1. **`netguard`** (lõi): chỉ http/https; phân giải DNS rồi kiểm **IP thật** và nối vào đúng IP đã kiểm (chống DNS rebinding);
-   kiểm lại sau mỗi lần chuyển hướng (tối đa 3); tải theo luồng, cắt khi vượt trần byte; thời gian chờ cứng.
-2. **`untrusted`** (lõi): bọc nội dung ngoài trong khung có hậu tố ngẫu nhiên mỗi lần gọi + câu dặn "đây là dữ liệu, không phải
-   mệnh lệnh", lọc dải ký tự Unicode Tags, khử thẻ gốc.
-3. Giới hạn là hằng số trong code; không có trang cài đặt.
+| Chuyển lên DB + UI (DB thắng, TOML/tệp chỉ là mặc định lúc mới cài) | Giữ trong TOML (đi qua git, có người duyệt) |
+|---|---|
+| bật/tắt **từng tool**: tool lõi (`get_datetime`, `memory`, `web_*`) và tool của plugin (`kb_*`, `skill_*`, `scenario_search`) | `name` (khóa của mọi dòng trong DB) |
+| `timezone`, `failure_reply` | `[guards]` (quét injection, che bí mật, trần tool mỗi bước) |
+| `[agent.variables]` (`clinic_name`, `hotline`) | `[loop]` (trần bước, token, thời gian, gom tin) |
+| `[memory]`: bật, `agent_chars`, `user_chars` | `[context]` (cửa sổ token, ngưỡng nén) |
+| nội dung `SOUL.md` (vai trò) và `AGENTS.md` (quy tắc) | `[prompt] sections` (cấu trúc prompt, kỹ thuật) |
+| (đã có từ trước) `[model]` → trang Model; `[plugins]` → trang Plugin | |
+
+`web_search`, `web_fetch` mặc định **tắt**: chỉ bật bằng trang Công cụ. Vai trò/quy tắc của plugin `skills` (theo kênh, theo tài khoản)
+vẫn cộng thêm như hôm nay; ô "Vai trò" và "Quy tắc" ở đây là phần gốc của agent, thay cho hai tệp.
+
+### Thiết kế
+- Bảng `agent_rt.agent_settings` (revision Alembic `0002` + `.sql`, quyền cho `agent_rt_app`), một dòng mỗi `(tenant_id, agent)`, mỗi
+  cột rỗng = dùng mặc định: `timezone`, `failure_reply`, `variables jsonb`, `persona`, `rules`, `memory_enabled`, `memory_agent_chars`,
+  `memory_user_chars`, `tools jsonb` (`{"web_fetch": true, "skill_write": false}`; tool không có trong map theo mặc định), `version`,
+  `updated_at`, `updated_by`. CHECK độ dài và miền giá trị như `agent_model_settings`. Cùng mẫu với `model_settings.py`: kho in-memory
+  cho test, kho Postgres, `resolve` từng trường "DB > profile".
+- Áp ngay không khởi động lại: lưu xong thì `LiveAgent` dựng lại agent (cùng đường plugin đổi đang dùng). Tool lọc sau khi gom tool lõi
+  + plugin trong `build_agent`. `failure_reply` hôm nay được đọc một lần lúc dựng `ChannelHub` → đổi sang đọc qua hàm mỗi lần dùng.
+  Biến `{{...}}` hôm nay thay lúc `load_profile` → dời sang lúc dựng agent để biến và nội dung sửa trên UI đều được thay.
+- API admin (chỉ admin, như trang Model): `GET/PUT /v1/admin/settings` (có `version` chống ghi đè lẫn nhau, trả cả giá trị mặc định
+  để UI hiện "đang dùng mặc định") và `GET/PUT /v1/admin/tools` (mọi tool agent đang có: tên, mô tả, nguồn lõi/plugin, bật). CLI:
+  `agent settings show|set`, `agent tools list|enable|disable`. Kiểm đầu vào ở server (độ dài, múi giờ có thật, tool có tồn tại).
+- UI trong `pema-agent/frontend` (cạnh `components/agent/pages/model-page.tsx`, route `/admin/agent/...`): trang **"Cài đặt"**
+  (múi giờ, câu khi lỗi, biến, nhớ, vai trò, quy tắc) và trang **"Công cụ"** (danh sách + công tắc). Làm bằng subagent
+  `pema-ui-builder`, cập nhật mock + `contract.test.ts`, `pnpm gen:types`, ghi `web-design-changes.md`. Hai trang này không có màn trên
+  canvas cũ: nói rõ trong báo cáo.
+- TOML và hai tệp `.md` giữ nguyên làm mặc định; profile `dev` (không có DB) vẫn chạy như cũ.
+
+### Rủi ro
+- Admin trên UI giờ sửa được vai trò/quy tắc và bật tool internet: ai có quyền admin (chủ, quản lý qua SSO) là đổi được hành vi agent
+  với khách. Mỗi lần lưu ghi `updated_by` + thời điểm; chưa có lịch sử từng phiên bản (để sau).
+- Tắt `memory` trên UI bỏ cả tool và phần nhớ trong prompt (cùng một cờ `memory_enabled`).
+
+## 3. Tool web là tool thường
+
+Nằm trong `agentcore/harness/tools/builtin/` (`web.py`, `netguard.py`, `untrusted.py`), đăng ký trong `builtin_tools()` như
+`get_datetime`; agent chỉ có tool nào được liệt kê trong `tools = [...]` (`.subset(profile.agent.tools)` đã làm việc này). Quản
+bằng đúng một chỗ: thêm hoặc bỏ tên trong `agent.toml`.
+
+1. **`netguard`**: chỉ http/https; phân giải DNS rồi kiểm **IP thật** và nối vào đúng IP đã kiểm (chống DNS rebinding); kiểm lại
+   sau mỗi lần chuyển hướng (tối đa 3); tải theo luồng, cắt khi vượt trần byte; thời gian chờ cứng.
+2. **`untrusted`**: bọc nội dung ngoài trong khung có hậu tố ngẫu nhiên mỗi lần gọi + câu dặn "đây là dữ liệu, không phải mệnh
+   lệnh", lọc dải ký tự Unicode Tags, khử thẻ gốc.
+3. Giới hạn là hằng số trong code (3 MB, 8000 ký tự, 3 lần chuyển hướng); không có cài đặt hay trang riêng.
+4. Luật mới, ghi vào `.claude/rules/agent-crm-boundary.md`: tool nào cần ra internet thì là tool của lõi và đi qua `netguard`;
+   plugin không tự gọi ra internet cho model. (Hạ tầng như gọi model, embedding không phải tool, như D14 của
+   `PLAN-knowledge-embedding.md`.)
 
 ## 4. `web_search`, `web_fetch`
 
@@ -85,7 +129,7 @@ khách nhắn ─► agent trả lời (như hôm nay)
 
 ### 5.2 Lưu và chạy
 
-- Bảng `agent_rt.follow_ups` (revision Alembic mới `0002` + `.sql`, quyền cho `agent_rt_app`): khóa `(tenant, agent, kênh,
+- Bảng `agent_rt.follow_ups` (revision Alembic mới `0003` + `.sql`, quyền cho `agent_rt_app`): khóa `(tenant, agent, kênh,
   conversation_id)`, `state`, `reason`, `next_at`, `paused_until`, `stopped`, `unanswered` (số lần nhắn liền chưa được trả lời),
   `last_sent_at`, `reviewed_through` (id tin cuối đã xét, để mỗi lần im chỉ xét một lần), `updated_at`. Bảng này cũng là
   danh sách ngưng.
@@ -101,7 +145,7 @@ khách nhắn ─► agent trả lời (như hôm nay)
 
 | Luật | Mặc định |
 |---|---|
-| Bật | tắt; bật trong `agent.toml` mục `[follow_up]`, chọn kênh |
+| Bật | tắt; bật và chọn kênh trên trang "Cài đặt" (cột mới của `agent_settings`), không qua TOML |
 | Kênh | chỉ Zalo cá nhân, chỉ chat 1-1 do khách nhắn trước; không nhóm |
 | Xét sau khi im | 2 giờ, tin cuối là của agent |
 | Giờ được nhắn | 8:00–20:00 giờ Việt Nam; hẹn rơi ngoài khung thì dời sang 8:00 hôm sau |
@@ -125,14 +169,16 @@ Chọn từng tài khoản Zalo sẽ làm cùng giao diện (hoãn); trước m�
 
 | Bước | Nội dung | Test chạy |
 |---|---|---|
-| 0 | Bỏ `allow_internet` và `ToolSpec.network` | `test_plugin_runtime.py`, test assembly, `test_crm_boundary.py` |
+| 0 | Bỏ `allow_internet` và `ToolSpec.network` (**đã làm**, `64e85e15`) | — |
+| 0a | `agent_settings` (`0002`), kho, resolve, `LiveAgent` dựng lại, lọc tool, `failure_reply` và biến đọc lúc dựng; API + CLI | test mới, `test_agent_app.py`, `test_channel_hub.py`, `test_gateway.py`, profile; test DB chỉ trên `scratch_*` |
+| 0b | Trang "Cài đặt" và "Công cụ" (`pema-ui-builder`) | `pnpm test`, `contract.test.ts`, `pnpm visual`, `pending-web.cjs` |
 | 1 | `netguard`, `untrusted` + T5 | test mới + `test_crm_boundary.py` |
 | 2 | `web_search`, `web_fetch` (trang giả, không gọi mạng thật) | test mới |
-| 3 | Vòng chăm sóc lại: bảng `0002`, bước XÉT (model giả), khung cứng | test mới (luật khung là hàm thuần, test kỹ nhất) |
+| 3 | Vòng chăm sóc lại: bảng `0003`, bước XÉT (model giả), khung cứng | test mới (luật khung là hàm thuần, test kỹ nhất) |
 | 4 | Bước LÀM: đưa tin nội bộ vào ingress, `proactive` ở Zalo cá nhân | test mới, `tests/zalo/*`, `test_dispatcher*`, `test_channel_hub.py`; test DB chỉ trên cơ sở `scratch_*` hoặc container tạm |
-| 5 | Bật `web_*` và `[follow_up]` trong `agents/clinic/agent.toml` theo ý chủ; sửa `AGENTS.md`; cập nhật `GUIDE-agent-harness.md`, bản ghi `project-agent-tool-rule` | chạy thử profile |
+| 5 | Bật `web_search`, `web_fetch` trên trang Công cụ (nếu chủ muốn) và chăm sóc lại trên trang Cài đặt theo ý chủ; sửa `AGENTS.md`; cập nhật `GUIDE-agent-harness.md`, bản ghi `project-agent-tool-rule` | chạy thử profile |
 
-Sau mỗi bước chạy lại T1, T3, T4, T5 (`.claude/rules/agent-crm-boundary.md`). Bước 3–4 đụng migration nên không chạm cơ sở demo
+Sau mỗi bước chạy lại T1, T3, T4, T5 (`.claude/rules/agent-crm-boundary.md`). Bước 0a, 3–4 đụng migration nên không chạm cơ sở demo
 `pema` hay `pema_agent` đang chạy.
 
 ## 7. Không làm (lần này)
