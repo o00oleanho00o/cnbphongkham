@@ -36,6 +36,8 @@ const AGENT_TABS = [
   "/admin/agent/sessions",
   "/admin/agent/traces",
   "/admin/agent/model",
+  "/admin/agent/settings",
+  "/admin/agent/tools",
   "/admin/agent/plugins",
 ];
 /**

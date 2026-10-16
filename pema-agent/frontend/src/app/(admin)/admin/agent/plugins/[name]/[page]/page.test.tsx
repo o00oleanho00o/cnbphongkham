@@ -184,9 +184,11 @@ describe("a registered page", () => {
       "Phiên chat",
       "Trace",
       "Model",
+      "Cài đặt",
+      "Công cụ",
       "Plugins",
     ]);
-    expect(links[4]?.getAttribute("aria-current")).toBe("page");
+    expect(links[6]?.getAttribute("aria-current")).toBe("page");
   });
 
   it("gives_the_plugin_the_sdk_before_its_script_runs", async () => {

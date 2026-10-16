@@ -142,6 +142,44 @@ describe("the fake agent's dashboard routes", () => {
     expect(missing.status).toBe(404);
   });
 
+  it("serves_the_settings_and_tool_routes_behind_the_token", async () => {
+    const headers = await signed();
+    const saved = await fetch(`${base}/v1/admin/settings`, {
+      method: "PATCH",
+      headers,
+      body: JSON.stringify({ failure_reply: "Bận, thử lại sau." }),
+    });
+    const refused = await fetch(`${base}/v1/admin/settings`, {
+      method: "PATCH",
+      headers,
+      body: JSON.stringify({ timezone: "Mars/Olympus" }),
+    });
+    const off = await fetch(`${base}/v1/admin/tools/kb_search`, {
+      method: "PUT",
+      headers,
+      body: JSON.stringify({ enabled: false }),
+    });
+    const missing = await fetch(`${base}/v1/admin/tools/none`, {
+      method: "PUT",
+      headers,
+      body: JSON.stringify({ enabled: true }),
+    });
+    const cleared = await fetch(`${base}/v1/admin/settings`, { method: "DELETE", headers });
+
+    expect(await saved.json()).toMatchObject({
+      failure_reply: "Bận, thử lại sau.",
+      sources: { failure_reply: "db" },
+    });
+    expect(refused.status).toBe(422);
+    expect(await off.json()).toMatchObject({
+      tools: expect.arrayContaining([
+        expect.objectContaining({ name: "kb_search", enabled: false }),
+      ]) as unknown,
+    });
+    expect(missing.status).toBe(404);
+    expect(await cleared.json()).toMatchObject({ stored: false });
+  });
+
   it("switches_a_plugin_off_and_on_in_the_listing", async () => {
     const headers = await signed();
     const off = await fetch(`${base}/v1/admin/plugins/zalo/disable`, { method: "POST", headers });

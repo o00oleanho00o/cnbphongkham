@@ -17,7 +17,7 @@ import { concreteRoute, listPageRoutes } from "./app-routes";
 const BASE = process.env.SMOKE_BASE_URL ?? "http://localhost:3000";
 const APP_DIR = fileURLToPath(new URL("../src/app", import.meta.url));
 
-type Role = "button" | "link" | "textbox" | "searchbox" | "checkbox";
+type Role = "button" | "link" | "textbox" | "searchbox" | "checkbox" | "switch";
 type Expectation = {
   /** Text of the main heading (substring); empty string: any non-empty heading (a name from the data). */
   heading: string;
@@ -54,6 +54,11 @@ const EXPECTATIONS: Readonly<Record<string, Expectation>> = {
     action: { role: "checkbox", name: "Chỉ lượt không thành công" },
   },
   "/admin/agent/model": { heading: "Model", action: { role: "button", name: "Lưu" } },
+  "/admin/agent/settings": {
+    heading: "Cài đặt",
+    action: { role: "button", name: "Lưu thay đổi" },
+  },
+  "/admin/agent/tools": { heading: "Công cụ", action: { role: "switch", name: "memory" } },
   "/admin/agent/plugins": { heading: "Plugins", action: { role: "searchbox", name: "Tìm plugin" } },
   "/admin/agent/plugins/[name]": { heading: "zalo", action: { role: "link", name: "Plugins" } },
   // The first heading of a plugin's page is the plugin's name; the page it ships sits under the plugin's tabs.

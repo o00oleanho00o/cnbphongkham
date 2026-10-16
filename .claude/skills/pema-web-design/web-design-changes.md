@@ -21,6 +21,24 @@ If unsure of the canvas id, write "unknown"; the skill looks it up in `.claude/s
 
 ## Pending
 
+### 2026-10-17 · add · Điều khiển agent: hai tab mới "Cài đặt" và "Công cụ"
+- Where: `pema-agent/frontend/src/app/(admin)/admin/agent/layout.tsx` · routes `/admin/agent/*`
+- Change: the tab bar "Trang quản trị agent" now reads Tổng quan, Phiên chat, Trace, (tab of a plugin section, e.g. Kho tri thức), Model, **Cài đặt**, **Công cụ**, Plugins; the two new tabs open `/admin/agent/settings` and `/admin/agent/tools`.
+- Web canvas target: none (D3); nearest frames are the agent pages WJ106 (Mô hình & cấu hình) and the tab bar of the other `/admin/agent/*` pages
+- Logged by: agent settings UI
+
+### 2026-10-17 · add · Công cụ (bật/tắt công cụ của agent)
+- Where: `pema-agent/frontend/src/app/(admin)/admin/agent/tools/page.tsx`, `src/components/agent/pages/tools-page.tsx` · route `/admin/agent/tools`
+- Change: new page "Công cụ" ("... Thay đổi áp dụng từ lượt trả lời tiếp theo của agent, không cần khởi động lại."). Two cards "Công cụ lõi" and "Công cụ của plugin" (each with "N công cụ"); a row per tool: name, one-line description, badge "Mặc định" or "Đã chỉnh", for a hand-changed tool "Mặc định: bật/tắt" and "Về mặc định", and an on/off switch (`role="switch"`, label "Tắt <tool>" / "Bật <tool>"); the tool `memory` carries the hint "Tắt sẽ tắt cả phần nhớ trong prompt của agent."; empty state "Agent chưa có công cụ nào. Bật một plugin có công cụ để thấy nó ở đây."; a refused call shows an error notice and the switch goes back.
+- Web canvas target: none (D3); nearest WJ106 (rows with a description, a "mặc định" badge and a control on the right), WJ67 (Agents list)
+- Logged by: agent settings UI
+
+### 2026-10-17 · add · Cài đặt (cài đặt riêng của agent)
+- Where: `pema-agent/frontend/src/app/(admin)/admin/agent/settings/page.tsx`, `src/components/agent/pages/settings-page.tsx`, `src/components/agent/pages/settings-fields.tsx` · route `/admin/agent/settings`
+- Change: new page "Cài đặt" ("... Thay đổi áp dụng từ lượt trả lời tiếp theo của agent, không cần khởi động lại."). Cards: "Chung" (Múi giờ, Lời trả lời khi lượt chat lỗi), "Biến" (rows tên / giá trị, "+ Thêm biến", "Bỏ" for a new row, "Về profile" per row, "Về mặc định"), "Vai trò của agent" (Vai trò), "Quy tắc của agent" (Quy tắc), "Bộ nhớ" (switch "Bật trí nhớ", "Trí nhớ về agent (số ký tự)", "Trí nhớ về khách (số ký tự)", 100 - 20000). Every field shows the badge "Đã chỉnh" (value stored in the system) or "Theo profile", and "Về mặc định" for a stored one. When Vai trò or Quy tắc is stored, a warning notice: "Đang dùng bản đã lưu trong hệ thống, không dùng file SOUL.md (hoặc AGENTS.md). Sửa file trong git sẽ không đổi agent cho tới khi bấm 'Dùng lại file'." with the button "Dùng lại file" (confirm dialog "Dùng lại file?"). Last card: "Lưu thay đổi" (sends only changed fields; the message of a refusal such as an unknown time zone shows above), "Bỏ thay đổi chưa lưu", danger "Xóa mọi cài đặt đã lưu" (confirm "Xóa mọi cài đặt đã lưu?", button "Xóa cài đặt"), and "Sửa lần cuối bởi <người sửa>".
+- Web canvas target: none (D3); nearest WJ106 (Mô hình & cấu hình: per-field "mặc định" badge and "Về mặc định"), WJ110 (Chung: múi giờ)
+- Logged by: agent settings UI
+
 ### 2026-10-16 · change · Hướng dẫn: bài mẫu không còn nhắc "Hàng đợi duyệt" và mẫu tin
 - Where: `pema-agent/frontend/mock/data/guide.ts` and the seed `backend/apps/api/pema/clinic/actions/seed_guide.py` (the text of the sample articles; no frontend component changed)
 - Change: in "Bắt đầu theo vai trò" step 4 for the manager is now "xem Vòng đời khách hàng và các màn quản trị agent" (the "Hàng đợi duyệt" is gone) and the last note is "Hệ thống không tự gửi tin cho người bệnh: nhân viên liên hệ và ghi lại kết quả."; in "CSKH chủ động: xử lý việc hôm nay" the sentence about messages to customers is now "Tin nhắn cho khách do nhân viên gửi, rồi ghi lại kết quả."

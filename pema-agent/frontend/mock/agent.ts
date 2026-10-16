@@ -8,6 +8,7 @@ import { existsSync, readFileSync } from "node:fs";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { fileURLToPath } from "node:url";
 
+import { registerAgentSettings } from "./agent-settings";
 import { registerKnowledge } from "./knowledge";
 import {
   DAY,
@@ -787,6 +788,7 @@ export function buildAgentRouter(): Router {
       log: [],
     },
   }));
+  registerAgentSettings(r);
   registerKnowledge(r);
   return r;
 }
