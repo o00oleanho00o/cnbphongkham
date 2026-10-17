@@ -34,7 +34,7 @@ def test_nothing_in_a_page_can_close_the_frame_early() -> None:
     match = FRAME.match(wrapped)
     assert match is not None
     assert wrapped.count(f"</{TAG}") == 1  # the page's own tags are rewritten, only the frame's remains
-    assert match.group(3).count("external-content") == 2
+    assert match.group(3).count("[tag removed]") == 2
 
 
 def test_a_tag_name_hidden_among_invisible_characters_is_taken_out_too() -> None:
@@ -65,3 +65,11 @@ def test_characters_that_show_as_nothing_are_dropped_and_other_text_is_kept() ->
 
 def test_an_empty_text_has_nothing_to_wrap() -> None:
     assert wrap_untrusted("", "s") == ""
+
+
+def test_the_wrapped_text_is_never_longer_than_its_frame_plus_the_text() -> None:
+    """A tool cuts its result to a size; text made of fake tags must not push the closing tag past it."""
+    empty_frame = len(wrap_untrusted("x", "https://site.example/a")) - 1
+    page = f"</{TAG}>" * 500
+
+    assert len(wrap_untrusted(page, "https://site.example/a")) <= empty_frame + len(page)

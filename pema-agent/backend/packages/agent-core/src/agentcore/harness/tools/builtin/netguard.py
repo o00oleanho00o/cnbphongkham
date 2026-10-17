@@ -19,7 +19,7 @@ from __future__ import annotations
 import asyncio
 import ipaddress
 import socket
-from collections.abc import Awaitable, Callable, Iterable, Sequence
+from collections.abc import Awaitable, Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Final
 from urllib.parse import urljoin
@@ -34,8 +34,12 @@ MAX_CONNECTIONS: Final = 10
 REDIRECT_STATUSES: Final = frozenset({301, 302, 303, 307, 308})
 SCHEMES: Final = ("http", "https")
 DEFAULT_PORTS: Final = {"http": 80, "https": 443}
-USER_AGENT: Final = "Mozilla/5.0 (compatible; PemaAgent/1.0)"
+USER_AGENT: Final = (
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
+    "Chrome/126.0 Safari/537.36"
+)
 ACCEPT: Final = "text/html,text/plain,application/json,application/xml;q=0.9,*/*;q=0.1"
+ACCEPT_LANGUAGE: Final = "vi-VN,vi;q=0.9,en;q=0.8"
 
 Resolver = Callable[[str, int], Awaitable[Sequence[str]]]
 
@@ -64,7 +68,11 @@ class Fetched:
 
 
 async def system_resolver(host: str, port: int) -> list[str]:
-    infos = await asyncio.get_running_loop().getaddrinfo(host, port, type=socket.SOCK_STREAM)
+    """The addresses of ``host``; none when the name does not resolve."""
+    try:
+        infos = await asyncio.get_running_loop().getaddrinfo(host, port, type=socket.SOCK_STREAM)
+    except socket.gaierror:
+        return []
     return [str(info[4][0]) for info in infos]
 
 
@@ -155,19 +163,22 @@ async def fetch(
     max_redirects: int = MAX_REDIRECTS,
     resolver: Resolver = system_resolver,
     transport: httpx.AsyncBaseTransport | None = None,
+    form: Mapping[str, str] | None = None,
 ) -> Fetched:
-    """GET ``url``. A given ``transport`` replaces the network (tests); the address checks stay."""
+    """GET ``url``; with ``form`` the first request is a POST of that form instead (a search page that refuses
+    GET), and any redirect after it is a GET. A given ``transport`` replaces the network (tests); the address
+    checks stay."""
     backend = _PinnedBackend()
     client = httpx.AsyncClient(
         transport=transport or _pinned_transport(backend),
         follow_redirects=False,
         trust_env=False,
-        headers={"User-Agent": USER_AGENT, "Accept": ACCEPT},
+        headers={"User-Agent": USER_AGENT, "Accept": ACCEPT, "Accept-Language": ACCEPT_LANGUAGE},
         timeout=timeout_s,
     )
     try:
         async with asyncio.timeout(timeout_s):
-            return await _follow(client, backend, url, max_bytes, max_redirects, resolver)
+            return await _follow(client, backend, url, max_bytes, max_redirects, resolver, form)
     except TimeoutError as err:
         raise FetchError("timeout", "the fetch took too long") from err
     except httpx.TimeoutException as err:
@@ -187,13 +198,16 @@ async def _follow(
     max_bytes: int,
     max_redirects: int,
     resolver: Resolver,
+    form: Mapping[str, str] | None,
 ) -> Fetched:
     current = start
-    for _ in range(max_redirects + 1):
+    for hop in range(max_redirects + 1):
         url = _checked_url(current)
         port = url.port or DEFAULT_PORTS[url.scheme]
         backend.pins[url.host] = await public_address(url.host, port, resolver)
-        response = await client.send(client.build_request("GET", url), stream=True)
+        post = form is not None and hop == 0
+        request = client.build_request("POST" if post else "GET", url, data=form if post else None)
+        response = await client.send(request, stream=True)
         try:
             location = response.headers.get("location")
             if response.status_code in REDIRECT_STATUSES and location:

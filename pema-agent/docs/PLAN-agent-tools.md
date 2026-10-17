@@ -1,6 +1,6 @@
 # Kế hoạch: tool web chung cho agent (web_search, web_fetch) và vòng chăm sóc lại
 
-**Trạng thái (2026-10-16): kế hoạch bản 5 (thêm mục 2b: cài đặt agent lên UI). Bước 0, 0a, 0b và 1 đã làm (bước 1 đúng như kế hoạch; phần đề xuất thêm ở mục 2c chờ chủ xem xét); chờ bước 2 (`web_search`, `web_fetch`). Bước 0 (bỏ `allow_internet`, `ToolSpec.network`) đã làm; các bước sau chờ chủ.**
+**Trạng thái (2026-10-16): kế hoạch bản 5 (thêm mục 2b: cài đặt agent lên UI). Bước 0, 0a, 0b và 1 đã làm (bước 1 đúng như kế hoạch; phần đề xuất thêm ở mục 2c chờ chủ xem xét); bước 2 (`web_search`, `web_fetch`) đã làm, tool mặc định TẮT; chờ bước 3 (vòng chăm sóc lại). Bước 0 (bỏ `allow_internet`, `ToolSpec.network`) đã làm; các bước sau chờ chủ.**
 
 Nguồn để port (chỉ đọc): `zalo-agent/src/agent/tools/web-*.ts`, `wrap-untrusted-content.ts`, `shared/safe-remote-download.ts`.
 Bản ghi quy tắc tool: `project-agent-tool-rule` (2026-10-12; sẽ sửa ở bước cuối).
@@ -106,6 +106,19 @@ một URL. Giới hạn độ dài URL chỉ làm chậm. Một danh sách tên 
 `netguard` chỉ là chặn ở tầng ứng dụng. Container agent nằm chung mạng với `api`, `db`, `redis`. Muốn chắc hơn: luật egress chặn container
 agent ra các dải riêng ngoại trừ `db` và `api:8000/.well-known`, hoặc một proxy đi ra ngoài là đường duy nhất ra internet. Cần trước khi có
 bệnh nhân thật (cũng ghi trong handoff, rủi ro 5 và 6).
+
+### Ghi chú bước 2 (đã làm, `web_search` và `web_fetch`)
+- Hai tool nằm trong danh mục tool lõi (`builtin_tools()`), **mặc định tắt**: bật trên trang "Công cụ" hoặc `agent tools enable web_fetch`.
+- `web_search` dùng DuckDuckGo bằng **POST form** (GET bị trả trang thử thách); vì vậy `netguard.fetch` có tham số `form` (chỉ lượt đầu
+  là POST, chuyển hướng sau đó là GET; `web_fetch` không bao giờ dùng `form`).
+- `web_fetch` đã có thêm so với kế hoạch: từ chối nội dung không phải văn bản (ảnh, PDF, nhị phân), mã HTTP ≥ 400 báo lỗi, đọc đúng
+  charset khai trong header, phân tích HTML ngoài vòng sự kiện (`asyncio.to_thread`). Tên miền không phân giải được là một lần tải bị
+  từ chối, không phải lỗi sập.
+- Kết quả được cắt TRƯỚC khi bọc và `max_result_chars` của tool chừa 1000 ký tự cho khung, để executor không cắt mất thẻ đóng; chuỗi
+  thay thế thẻ giả ngắn hơn thẻ thật nên văn bản bọc không bao giờ dài hơn khung + văn bản.
+- Rủi ro riêng của `web_search`: bóc HTML của DuckDuckGo (selector `result__a`, `result__snippet`) sẽ hỏng khi họ đổi giao diện hoặc
+  hiện thử thách chống bot; khi đó tool báo "No results" chứ không sập. Chưa có nhà cung cấp dự phòng (đã bỏ Brave theo quyết định).
+- Chưa lọc menu dài theo mật độ liên kết (chỉ bỏ nav/header/footer/aside); thêm nếu trang chỉ ra menu cho model.
 
 ### Đã kiểm trong bước 1
 - `netguard` chạy thật với TLS qua kết nối ghim địa chỉ (`https://example.com/` 200, `http://localhost:8000/` bị chặn); không cần
@@ -218,7 +231,7 @@ Chọn từng tài khoản Zalo sẽ làm cùng giao diện (hoãn); trước m�
 | 0a (**đã làm**) | `agent_settings` (`0002`), kho, resolve, `LiveAgent` dựng lại, lọc tool, `failure_reply` và biến đọc lúc dựng; API + CLI | test mới, `test_agent_app.py`, `test_channel_hub.py`, `test_gateway.py`, profile; test DB chỉ trên `scratch_*` |
 | 0b (**đã làm**) | Trang "Cài đặt" và "Công cụ" (`pema-ui-builder`) | `pnpm test`, `contract.test.ts`, `pnpm visual`, `pending-web.cjs` |
 | 1 (**đã làm**, đúng kế hoạch) | `netguard`, `untrusted` + T5 | test mới + `test_crm_boundary.py` |
-| 2 | `web_search`, `web_fetch` (trang giả, không gọi mạng thật) | test mới |
+| 2 (**đã làm**) | `web_search`, `web_fetch` (trang giả, không gọi mạng thật) | test mới |
 | 3 | Vòng chăm sóc lại: bảng `0003`, bước XÉT (model giả), khung cứng | test mới (luật khung là hàm thuần, test kỹ nhất) |
 | 4 | Bước LÀM: đưa tin nội bộ vào ingress, `proactive` ở Zalo cá nhân | test mới, `tests/zalo/*`, `test_dispatcher*`, `test_channel_hub.py`; test DB chỉ trên cơ sở `scratch_*` hoặc container tạm |
 | 5 | Bật `web_search`, `web_fetch` trên trang Công cụ (nếu chủ muốn) và chăm sóc lại trên trang Cài đặt theo ý chủ; sửa `AGENTS.md`; cập nhật `GUIDE-agent-harness.md`, bản ghi `project-agent-tool-rule` | chạy thử profile |

@@ -115,6 +115,28 @@ async def test_only_http_and_https_are_fetched(url: str) -> None:
     assert refused.value.kind == "scheme"
 
 
+async def test_a_form_is_posted_to_the_first_address_and_a_redirect_after_it_is_a_get() -> None:
+    seen: list[tuple[str, str, bytes]] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen.append((request.method, request.url.path, request.content))
+        if request.method == "POST":
+            return httpx.Response(303, headers={"location": "/results"})
+        return httpx.Response(200, text="found")
+
+    page = await fetch(
+        "https://search.example/html/",
+        form={"q": "giá vàng"},
+        resolver=_dns({"search.example": ["93.184.216.34"]}),
+        transport=_mock(handler),
+    )
+
+    assert page.data == b"found"
+    assert [(m, p) for m, p, _ in seen] == [("POST", "/html/"), ("GET", "/results")]
+    assert seen[0][2] == b"q=gi%C3%A1+v%C3%A0ng"
+    assert seen[1][2] == b""
+
+
 async def test_a_redirect_is_followed_and_checked_from_the_start() -> None:
     def handler(request: httpx.Request) -> httpx.Response:
         if request.url.path == "/old":
@@ -286,3 +308,10 @@ async def test_a_connection_goes_to_the_checked_address_and_to_nothing_else() ->
         await backend.connect_unix_socket("/var/run/docker.sock")
 
     assert recorder.connected == [("93.184.216.34", 443)]
+
+
+async def test_a_name_the_system_cannot_resolve_is_a_refused_fetch_not_a_crash() -> None:
+    with pytest.raises(FetchError) as refused:
+        await fetch("http://no-such-host.invalid/", transport=_mock(lambda r: httpx.Response(200)))
+
+    assert refused.value.kind == "blocked"

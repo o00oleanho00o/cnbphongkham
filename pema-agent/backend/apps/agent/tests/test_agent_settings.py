@@ -206,7 +206,7 @@ async def test_a_tool_that_does_not_exist_is_refused() -> None:
     settings = AgentSettings(_profile(), InMemoryAgentSettingsStore(), tenant_id="t")
 
     with pytest.raises(SettingsError) as refused:
-        await settings.set_tool("web_fetch", True)
+        await settings.set_tool("no_such_tool", True)
 
     assert refused.value.code == "unknown_tool"
 
