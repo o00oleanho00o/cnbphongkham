@@ -11,6 +11,7 @@ import asyncio
 import os
 from collections.abc import Awaitable, Callable, Iterator
 from dataclasses import replace
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
@@ -23,6 +24,7 @@ from sqlalchemy.engine import make_url
 from agent_app.agent_settings import PostgresAgentSettingsStore, StoredAgentSettings
 from agent_app.db_roles import RUNTIME_ROLE, bootstrap_role
 from agent_app.dispatcher import DispatchSettings
+from agent_app.follow_up import FollowUp, PostgresFollowUpStore
 from agent_app.ingress import SessionBusyError, TurnReply
 from agent_app.ingress_store import PostgresConversationStore, PostgresIngressStore, PostgresSessionLocks
 from agent_app.model_entries import ModelEntry, PostgresModelEntryStore
@@ -72,6 +74,7 @@ def db_url(migrated: tuple[str, Engine]) -> str:
                 "TRUNCATE agent_rt.agent_ingress, agent_rt.agent_conversation, agent_rt.agent_session, "
                 "agent_rt.agent_message, agent_rt.agent_turn, agent_rt.agent_turn_event, agent_rt.agent_memory, "
                 "agent_rt.agent_model_settings, agent_rt.agent_model_entry, agent_rt.agent_settings, "
+                "agent_rt.agent_follow_up, "
                 "agent_rt.agent_plugin, "
                 "agent_rt.agent_plugin_record"
             )
@@ -466,6 +469,8 @@ def test_agent_settings_are_stored_per_agent_and_a_clear_never_lowers_the_versio
             persona="Xin chào {{clinic}}",
             memory_enabled=False,
             memory_agent_chars=500,
+            follow_up_enabled=True,
+            follow_up_channels=("zalo-a1", "zalo-b2"),
             variables={"clinic": "Pema"},
             tools={"web_fetch": True, "kb_search": False},
             updated_by="an@admin",
@@ -496,5 +501,126 @@ def test_the_database_refuses_agent_settings_outside_their_limits(db_url: str) -
             with pytest.raises(Exception, match="agent_settings"):
                 await store.save("t", bad)
         assert await store.get("t") is None
+
+    _run(db_url, check)
+
+
+def _row(**kw: object) -> FollowUp:
+    return replace(FollowUp(channel="zalo-a1", conversation_id="c1", user_id="u1", session_id="s1"), **kw)  # type: ignore[arg-type]
+
+
+def test_a_follow_up_is_stored_per_agent_and_the_database_refuses_what_is_not_a_state(db_url: str) -> None:
+    async def check(db: AgentDatabase) -> None:
+        store = PostgresFollowUpStore(db, agent="dev")
+        now = datetime.now(UTC).replace(microsecond=0)
+        assert await store.get("t", "zalo-a1", "c1") is None
+
+        row = _row(
+            state="hesitant",
+            reason="hỏi giá rồi im",
+            next_at=now + timedelta(hours=3),
+            paused_until=now + timedelta(days=7),
+            unanswered=1,
+            last_sent_at=now - timedelta(hours=30),
+            reviewed_through=42,
+        )
+        await store.save("t", row)
+        loaded = await store.get("t", "zalo-a1", "c1")
+        await store.save("t", replace(row, state="done", next_at=None, stopped=True))
+        again = await store.get("t", "zalo-a1", "c1")
+
+        assert loaded is not None
+        assert replace(loaded, updated_at=None) == row
+        assert again is not None
+        assert (again.state, again.next_at, again.stopped, again.reviewed_through) == ("done", None, True, 42)
+        assert await PostgresFollowUpStore(db, agent="other").get("t", "zalo-a1", "c1") is None
+        assert [r.conversation_id for r in await store.list("t")] == ["c1"]
+        for bad in (_row(state="angry"), _row(reason="x" * 501), _row(unanswered=-1)):  # type: ignore[arg-type]
+            with pytest.raises(Exception, match="agent_follow_up"):
+                await store.save("t", bad)
+
+    _run(db_url, check)
+
+
+_INSERT = sql(
+    "INSERT INTO agent_rt.agent_ingress (tenant_id, agent, channel, external_id, conversation_id, user_id, "
+    "session_id, text, metadata, status, reply, received_at, delivery, delivery_at) "
+    "VALUES ('t', 'dev', :channel, :external_id, :conversation_id, 'u1', :session_id, :text, "
+    "CAST(:metadata AS jsonb), :status, CAST(:reply AS jsonb), :at, :delivery, :delivery_at) RETURNING id"
+)
+
+
+def test_a_quiet_conversation_is_one_whose_last_reply_went_out_and_was_not_answered(db_url: str) -> None:
+    """Only one-to-one chats of the chosen channels; the last message decides; what the customer wrote since the
+    last judgement comes along; the loop's own messages are not the customer's."""
+
+    async def check(db: AgentDatabase) -> None:
+        now = datetime.now(UTC)
+        reply = '{"turn_id": "x", "text": "ok", "stop": "end", "steps": 1, "usage": {}}'
+
+        async def add(
+            conv: str,
+            text: str,
+            *,
+            channel: str = "zalo-a1",
+            ago: float = 3.0,
+            group: bool = False,
+            done: bool = True,
+            external: str | None = None,
+        ) -> int:
+            async with db.engine.begin() as conn:
+                found = await conn.execute(
+                    _INSERT,
+                    {
+                        "channel": channel,
+                        "external_id": external or f"{conv}-{text}",
+                        "conversation_id": conv,
+                        "session_id": f"s-{conv}",
+                        "text": text,
+                        "metadata": '{"thread_type": "group"}' if group else '{"thread_type": "user"}',
+                        "status": "done" if done else "queued",
+                        "reply": reply if done else None,
+                        "at": now - timedelta(hours=ago + 0.1),
+                        "delivery": "sent" if done else "pending",
+                        "delivery_at": now - timedelta(hours=ago) if done else None,
+                    },
+                )
+                return found.scalar_one()
+
+        await add("answered-long-ago", "hello", ago=3)
+        await add("recent", "hello", ago=0.5)
+        await add("group", "hello", group=True)
+        await add("other-channel", "hello", channel="zalo-zzz")
+        await add("customer-wrote-last", "first", ago=5)
+        await add("customer-wrote-last", "again", done=False, ago=0.2)
+        await add("too-old", "hello", ago=72)
+        reviewed = await add("reviewed", "hello", ago=4)
+        newer = await add("reviewed", "second question", ago=3)
+        await add("loops-own-message", "price?", ago=26)
+        await add("loops-own-message", "[instruction]", ago=3, external="followup:1:1")
+
+        store = PostgresFollowUpStore(db, agent="dev")
+        await store.save("t", _row(conversation_id="reviewed", state="done", reviewed_through=reviewed))
+        found = await store.quiet("t", ["zalo-a1"], now - timedelta(hours=2), now - timedelta(hours=26), 10)
+
+        by_conv = {q.conversation_id: q for q in found}
+        assert set(by_conv) == {"answered-long-ago", "reviewed", "loops-own-message"}, sorted(by_conv)
+        assert by_conv["loops-own-message"].customer_texts == (
+            "price?",
+        )  # the loop's own message is not the customer's
+        assert by_conv["answered-long-ago"].customer_texts == ("hello",)
+        assert (by_conv["reviewed"].customer_texts, by_conv["reviewed"].last_id) == (
+            ("second question",),
+            newer,
+        )
+        assert by_conv["answered-long-ago"].session_id == "s-answered-long-ago"
+        limited = await store.quiet("t", ["zalo-a1"], now - timedelta(hours=2), now - timedelta(hours=26), 1)
+        assert len(limited) == 1
+
+        widened = await store.quiet(
+            "t", ["zalo-a1"], now - timedelta(hours=2), now - timedelta(hours=100), 10
+        )
+        assert "too-old" in {q.conversation_id for q in widened}
+        assert await store.quiet("t", [], now, now - timedelta(days=1), 10) == []
 
     _run(db_url, check)

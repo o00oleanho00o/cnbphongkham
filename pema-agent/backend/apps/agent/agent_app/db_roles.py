@@ -29,6 +29,7 @@ DATA_TABLES: Final = (
     "agent_model_settings",
     "agent_model_entry",
     "agent_settings",
+    "agent_follow_up",
     "agent_plugin",
     "agent_plugin_record",
 )

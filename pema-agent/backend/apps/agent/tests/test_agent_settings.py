@@ -15,9 +15,11 @@ from agent_app.agent_settings import (
     StoredAgentSettings,
     resolve_agent,
 )
+from agent_app.follow_up import FollowUpConfig, FollowUps, InMemoryFollowUpStore
 from agent_app.gateway import GatewaySettings, create_app
 from agent_app.profile import Profile, load_profile
 from agent_app.runtime import Runtime, build_runtime
+from agentcore import InMemorySessionStore
 
 DEV_PROFILE = Path(__file__).resolve().parents[1] / "agents" / "dev"
 TOKEN = "c" * 40
@@ -144,6 +146,33 @@ async def test_an_empty_change_keeps_what_is_stored() -> None:
 
     assert shown["failure_reply"] == "Later."
     assert shown["stored"] is True
+
+
+async def test_the_follow_up_loop_is_off_until_an_admin_switches_it_on_for_channels() -> None:
+    settings = AgentSettings(_profile(), InMemoryAgentSettingsStore(), tenant_id="t")
+    assert settings.effective.follow_up == FollowUpConfig(False, ())
+
+    shown = await settings.update(
+        {"follow_up_enabled": True, "follow_up_channels": ["zalo-a1", "zalo-a1", "zalo-b2"]}
+    )
+
+    assert settings.effective.follow_up == FollowUpConfig(True, ("zalo-a1", "zalo-b2"))
+    assert (shown["follow_up_enabled"], shown["follow_up_channels"]) == (True, ["zalo-a1", "zalo-b2"])
+    assert shown["sources"]["follow_up_enabled"] == "db"
+
+    shown = await settings.update({"follow_up_enabled": None, "follow_up_channels": None})
+    assert settings.effective.follow_up == FollowUpConfig(False, ())
+    assert shown["stored"] is False
+
+
+@pytest.mark.parametrize("channels", [["Bad Name"], ["ok", ""], [f"c{n}" for n in range(21)]])
+async def test_channels_the_loop_cannot_watch_are_refused(channels: list[str]) -> None:
+    settings = AgentSettings(_profile(), InMemoryAgentSettingsStore(), tenant_id="t")
+
+    with pytest.raises(SettingsError) as refused:
+        await settings.update({"follow_up_channels": channels})
+
+    assert refused.value.code == "invalid"
 
 
 async def test_refused_values_store_nothing() -> None:
@@ -298,3 +327,33 @@ async def test_the_settings_routes_need_the_admin_scope() -> None:
         nobody = await client.get("/v1/admin/tools")
 
     assert (chat.status_code, nobody.status_code) == (403, 401)
+
+
+async def test_the_follow_up_fields_and_the_list_of_judged_conversations_are_served() -> None:
+    runtime = _runtime()
+    store = InMemoryFollowUpStore()
+    loop = FollowUps(
+        store, InMemorySessionStore(), lambda: runtime.agent.model, lambda: FollowUpConfig(), tenant_id="t"
+    )
+    app = create_app(
+        runtime.dispatcher(),
+        GatewaySettings(token=TOKEN, admin_token=ADMIN_TOKEN),
+        agent_settings=runtime.agent_settings,
+        follow_ups=loop,
+    )
+    async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://agent") as client:
+        changed = await client.patch(
+            "/v1/admin/settings",
+            headers=ADMIN,
+            json={"follow_up_enabled": True, "follow_up_channels": ["zalo-a1"]},
+        )
+        refused = await client.patch(
+            "/v1/admin/settings", headers=ADMIN, json={"follow_up_channels": ["Bad Name"]}
+        )
+        listed = await client.get("/v1/admin/follow-ups", headers=ADMIN)
+        chat = await client.get("/v1/admin/follow-ups", headers={"Authorization": f"Bearer {TOKEN}"})
+
+    assert (changed.json()["follow_up_enabled"], changed.json()["follow_up_channels"]) == (True, ["zalo-a1"])
+    assert refused.status_code == 422
+    assert listed.json() == {"follow_ups": []}
+    assert chat.status_code == 403

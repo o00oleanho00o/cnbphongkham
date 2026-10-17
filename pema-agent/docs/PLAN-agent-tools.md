@@ -1,6 +1,6 @@
 # Kế hoạch: tool web chung cho agent (web_search, web_fetch) và vòng chăm sóc lại
 
-**Trạng thái (2026-10-16): kế hoạch bản 5 (thêm mục 2b: cài đặt agent lên UI). Bước 0, 0a, 0b và 1 đã làm (bước 1 đúng như kế hoạch; phần đề xuất thêm ở mục 2c chờ chủ xem xét); bước 2 (`web_search`, `web_fetch`) đã làm, tool mặc định TẮT; chờ bước 3 (vòng chăm sóc lại). Bước 0 (bỏ `allow_internet`, `ToolSpec.network`) đã làm; các bước sau chờ chủ.**
+**Trạng thái (2026-10-16): kế hoạch bản 5 (thêm mục 2b: cài đặt agent lên UI). Bước 0, 0a, 0b và 1 đã làm (bước 1 đúng như kế hoạch; phần đề xuất thêm ở mục 2c chờ chủ xem xét); bước 2 (`web_search`, `web_fetch`) đã làm, tool mặc định TẮT; bước 3 (vòng chăm sóc lại, nửa XÉT) đã làm, mặc định TẮT; chờ bước 4 (nửa LÀM). Bước 0 (bỏ `allow_internet`, `ToolSpec.network`) đã làm; các bước sau chờ chủ.**
 
 Nguồn để port (chỉ đọc): `zalo-agent/src/agent/tools/web-*.ts`, `wrap-untrusted-content.ts`, `shared/safe-remote-download.ts`.
 Bản ghi quy tắc tool: `project-agent-tool-rule` (2026-10-12; sẽ sửa ở bước cuối).
@@ -223,6 +223,25 @@ Chọn từng tài khoản Zalo sẽ làm cùng giao diện (hoãn); trước m�
   nhận tin quảng cáo. Khung ở 5.3 là để giữ ít; nội dung mang tính quảng cáo thì chủ nên hỏi người hiểu luật.
 - Mỗi lần hội thoại im tốn một lời gọi model ở bước XÉT.
 
+### Ghi chú bước 3 (đã làm: nửa XÉT và khung cứng, chưa gửi gì cho khách)
+Mã: `agent_app/follow_up.py`; bảng `agent_rt.agent_follow_up` và hai cột `follow_up_enabled`, `follow_up_channels` của `agent_settings`
+(migration `0003`); đường quản trị `GET /v1/admin/follow-ups`; bật bằng `agent settings set --follow-up on --follow-up-channel <tên kênh>`
+hoặc `PATCH /v1/admin/settings`. **Mặc định tắt, chưa có trang giao diện** (hoãn như đã chốt).
+- **Khung cứng** là hàm thuần có test: giờ 8–20 giờ Việt Nam, cách nhau ≥ 24 giờ, chờ 1 giờ–14 ngày, tạm ngưng 1–60 ngày, 2 lần nhắn
+  không được trả lời thì tự ngưng, hard_decline/negative là ngưng hẳn, lưới từ khóa (không dấu cũng bắt), `may_send()` để bước 4 hỏi
+  trước khi gửi.
+- **Chỉ xét** hội thoại 1-1 của các kênh admin chọn, mà tin cuối là câu trả lời của agent đã gửi xong, im ≥ 2 giờ, và **không quá
+  1 ngày** (bật vòng không bao giờ lôi khách cũ ra nhắn). Mỗi lượt quét tối đa 10 hội thoại. Mỗi lần im chỉ xét một lần
+  (`reviewed_through`); khách nhắn lại thì gỡ ngưng và đếm lại từ đầu.
+- Chỉ đọc kho riêng của agent (bảng `agent_ingress` và phiên của chính nó): đúng luật L4, không chạm CRM.
+- **Chọn cần chủ xem xét:**
+  1. `soft_decline` (từ chối khéo): hiện **cho phép nhắn lại một lần sau khi hết thời gian tạm ngưng** (`next_at` = hết tạm ngưng, rơi vào
+     giờ cho phép). Nếu chủ muốn "từ chối khéo thì không bao giờ nhắn lại trừ khi khách nhắn trước", đổi một dòng ở `decide`.
+  2. Lưới từ khóa có thể bắt nhầm câu lịch sự ("không cần nữa" trong ngữ cảnh khác): hậu quả chỉ là ngưng nhắn khách đó.
+  3. Mỗi hội thoại im tốn một lời gọi model; trần 10 hội thoại mỗi phút.
+  4. Truy vấn "im lặng" quét các dòng `agent_ingress` gần đây theo `DISTINCT ON`; đủ cho demo, cần chỉ mục riêng khi bảng lớn.
+- **Chưa có (bước 4):** hủy hẹn khi khách nhắn lại trước giờ hẹn, gửi tin, gắn `proactive`, tăng `unanswered`, `last_sent_at`.
+
 ## 6. Thứ tự làm (mỗi bước một commit; test theo `.claude/rules/testing.md`)
 
 | Bước | Nội dung | Test chạy |
@@ -232,7 +251,7 @@ Chọn từng tài khoản Zalo sẽ làm cùng giao diện (hoãn); trước m�
 | 0b (**đã làm**) | Trang "Cài đặt" và "Công cụ" (`pema-ui-builder`) | `pnpm test`, `contract.test.ts`, `pnpm visual`, `pending-web.cjs` |
 | 1 (**đã làm**, đúng kế hoạch) | `netguard`, `untrusted` + T5 | test mới + `test_crm_boundary.py` |
 | 2 (**đã làm**) | `web_search`, `web_fetch` (trang giả, không gọi mạng thật) | test mới |
-| 3 | Vòng chăm sóc lại: bảng `0003`, bước XÉT (model giả), khung cứng | test mới (luật khung là hàm thuần, test kỹ nhất) |
+| 3 (**đã làm**) | Vòng chăm sóc lại: bảng `0003`, bước XÉT (model giả), khung cứng | test mới (luật khung là hàm thuần, test kỹ nhất) |
 | 4 | Bước LÀM: đưa tin nội bộ vào ingress, `proactive` ở Zalo cá nhân | test mới, `tests/zalo/*`, `test_dispatcher*`, `test_channel_hub.py`; test DB chỉ trên cơ sở `scratch_*` hoặc container tạm |
 | 5 | Bật `web_search`, `web_fetch` trên trang Công cụ (nếu chủ muốn) và chăm sóc lại trên trang Cài đặt theo ý chủ; sửa `AGENTS.md`; cập nhật `GUIDE-agent-harness.md`, bản ghi `project-agent-tool-rule` | chạy thử profile |
 

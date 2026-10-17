@@ -15,17 +15,19 @@ import logging
 import math
 import re
 import time
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field, replace
 from typing import Any, Final, Literal
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from sqlalchemy import text as sql
 
+from agent_app.follow_up import MAX_CHANNELS, FollowUpConfig
 from agent_app.live import LiveAgent
 from agent_app.profile import Profile, fill_variables
 from agent_app.storage import AgentDatabase, retrying
 from agentcore import ToolSpec
+from agentcore.channels import valid_channel_name
 from agentcore.harness.tools.builtin import builtin_tools
 from agentcore.memory.tool import DESCRIPTION as MEMORY_DESCRIPTION
 
@@ -40,7 +42,7 @@ MEMORY_TOOL: Final = "memory"
 VARIABLE_NAME: Final = re.compile(r"^[a-z][a-z0-9_]{0,63}$")
 TEXT_FIELDS: Final = ("timezone", "failure_reply", "persona", "rules")
 MEMORY_FIELDS: Final = ("memory_enabled", "memory_agent_chars", "memory_user_chars")
-SCALAR_FIELDS: Final = (*TEXT_FIELDS, *MEMORY_FIELDS)
+SCALAR_FIELDS: Final = (*TEXT_FIELDS, *MEMORY_FIELDS, "follow_up_enabled")
 
 FieldSource = Literal["db", "profile"]
 
@@ -67,6 +69,9 @@ class StoredAgentSettings:
     memory_enabled: bool | None = None
     memory_agent_chars: int | None = None
     memory_user_chars: int | None = None
+    follow_up_enabled: bool | None = None
+    follow_up_channels: tuple[str, ...] = ()
+    """The channels the follow-up loop watches, by the name the channel hub gives them."""
     variables: Mapping[str, str] = field(default_factory=dict[str, str])
     """Only the variables whose value an admin changed; the others keep the profile's."""
     tools: Mapping[str, bool] = field(default_factory=dict[str, bool])
@@ -76,7 +81,12 @@ class StoredAgentSettings:
 
     @property
     def empty(self) -> bool:
-        return not self.variables and not self.tools and all(getattr(self, n) is None for n in SCALAR_FIELDS)
+        return (
+            not self.variables
+            and not self.tools
+            and not self.follow_up_channels
+            and all(getattr(self, n) is None for n in SCALAR_FIELDS)
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -87,6 +97,7 @@ class EffectiveAgent:
     """Plugin tools an admin switched off."""
     sources: Mapping[str, FieldSource]
     version: int
+    follow_up: FollowUpConfig = field(default_factory=FollowUpConfig)
 
 
 def core_tool_names() -> list[str]:
@@ -136,7 +147,12 @@ def resolve_agent(profile: Profile, stored: StoredAgentSettings | None) -> Effec
         }
     )
     disabled = frozenset(n for n, on in stored.tools.items() if not on and n not in core)
-    return EffectiveAgent(profile=laid, disabled_tools=disabled, sources=sources, version=stored.version)
+    sources["follow_up_enabled"] = "db" if stored.follow_up_enabled is not None else "profile"
+    sources["follow_up_channels"] = "db" if stored.follow_up_channels else "profile"
+    follow_up = FollowUpConfig(bool(stored.follow_up_enabled), tuple(stored.follow_up_channels))
+    return EffectiveAgent(
+        profile=laid, disabled_tools=disabled, sources=sources, version=stored.version, follow_up=follow_up
+    )
 
 
 class InMemoryAgentSettingsStore:
@@ -158,19 +174,23 @@ class InMemoryAgentSettingsStore:
 
 _GET = sql(
     "SELECT timezone, failure_reply, persona, rules, memory_enabled, memory_agent_chars, memory_user_chars, "
-    "variables, tools, version, updated_by FROM agent_rt.agent_settings "
+    "variables, tools, follow_up_enabled, follow_up_channels, version, updated_by "
+    "FROM agent_rt.agent_settings "
     "WHERE tenant_id = :tenant_id AND agent = :agent"
 )
 _VERSION = sql("SELECT version FROM agent_rt.agent_settings WHERE tenant_id = :tenant_id AND agent = :agent")
 _SAVE = sql(
     "INSERT INTO agent_rt.agent_settings (tenant_id, agent, timezone, failure_reply, persona, rules, "
-    "memory_enabled, memory_agent_chars, memory_user_chars, variables, tools, updated_by) "
+    "memory_enabled, memory_agent_chars, memory_user_chars, follow_up_enabled, follow_up_channels, "
+    "variables, tools, updated_by) "
     "VALUES (:tenant_id, :agent, :timezone, :failure_reply, :persona, :rules, :memory_enabled, "
-    ":memory_agent_chars, :memory_user_chars, CAST(:variables AS jsonb), CAST(:tools AS jsonb), :updated_by) "
+    ":memory_agent_chars, :memory_user_chars, :follow_up_enabled, CAST(:follow_up_channels AS jsonb), "
+    "CAST(:variables AS jsonb), CAST(:tools AS jsonb), :updated_by) "
     "ON CONFLICT (tenant_id, agent) DO UPDATE SET timezone = EXCLUDED.timezone, "
     "failure_reply = EXCLUDED.failure_reply, persona = EXCLUDED.persona, rules = EXCLUDED.rules, "
     "memory_enabled = EXCLUDED.memory_enabled, memory_agent_chars = EXCLUDED.memory_agent_chars, "
-    "memory_user_chars = EXCLUDED.memory_user_chars, variables = EXCLUDED.variables, "
+    "memory_user_chars = EXCLUDED.memory_user_chars, follow_up_enabled = EXCLUDED.follow_up_enabled, "
+    "follow_up_channels = EXCLUDED.follow_up_channels, variables = EXCLUDED.variables, "
     "tools = EXCLUDED.tools, updated_by = EXCLUDED.updated_by, "
     "version = agent_rt.agent_settings.version + 1, updated_at = now() RETURNING version"
 )
@@ -198,6 +218,8 @@ class PostgresAgentSettingsStore:
                 memory_enabled=row.memory_enabled,
                 memory_agent_chars=row.memory_agent_chars,
                 memory_user_chars=row.memory_user_chars,
+                follow_up_enabled=row.follow_up_enabled,
+                follow_up_channels=tuple(row.follow_up_channels),
                 variables=dict(row.variables),
                 tools=dict(row.tools),
                 version=row.version,
@@ -219,6 +241,7 @@ class PostgresAgentSettingsStore:
             "tenant_id": tenant_id,
             "agent": self._agent,
             **{name: getattr(settings, name) for name in SCALAR_FIELDS},
+            "follow_up_channels": json.dumps(list(settings.follow_up_channels)),
             "variables": json.dumps(dict(settings.variables), ensure_ascii=False),
             "tools": json.dumps(dict(settings.tools)),
             "updated_by": settings.updated_by,
@@ -311,6 +334,8 @@ class AgentSettings:
             "memory_enabled": memory.enabled,
             "memory_agent_chars": memory.agent_chars,
             "memory_user_chars": memory.user_chars,
+            "follow_up_enabled": effective.follow_up.enabled,
+            "follow_up_channels": list(effective.follow_up.channels),
             "sources": dict(effective.sources),
             "stored": not stored.empty,
             "version": stored.version,
@@ -326,6 +351,8 @@ class AgentSettings:
             _check_scalar(name, value)
         if "variables" in changes:
             updates["variables"] = _merged_variables(current.variables, changes["variables"])
+        if "follow_up_channels" in changes:
+            updates["follow_up_channels"] = _checked_channels(changes["follow_up_channels"])
         changed = list(updates)
         await self._save(replace(current, **updates, updated_by=by), changed)
         return await self.show()
@@ -459,3 +486,15 @@ def _merged_variables(current: Mapping[str, str], changes: Mapping[str, str | No
     if len(merged) > MAX_VARIABLES:
         raise SettingsError("invalid", f"at most {MAX_VARIABLES} variables")
     return merged
+
+
+def _checked_channels(channels: Sequence[str] | None) -> tuple[str, ...]:
+    if channels is None:
+        return ()
+    names = tuple(dict.fromkeys(channels))
+    bad = [name for name in names if not valid_channel_name(name)]
+    if bad:
+        raise SettingsError("invalid", f"channel name {bad[0]!r}: use a-z, 0-9, '_' and '-'")
+    if len(names) > MAX_CHANNELS:
+        raise SettingsError("invalid", f"at most {MAX_CHANNELS} channels")
+    return names
