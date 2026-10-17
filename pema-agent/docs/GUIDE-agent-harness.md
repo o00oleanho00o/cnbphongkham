@@ -241,6 +241,9 @@ vector đã trúng 30/30. Phần lớn kỹ thuật giải bài toán Pema chưa
 | Mở rộng bằng plugin | có |
 | Quyền do harness chặn, không do model tự giác | một phần: cần profile theo danh tính |
 | Phân biệt dữ liệu và chỉ thị (kết quả tool, tin nhắn người lạ) | cần làm rõ trong prompt và hook |
+| Tool ra internet (tìm kiếm, đọc trang) | có: `web_search`, `web_fetch` là tool của lõi, tắt mặc định, bật từng agent trên trang "Công cụ"; mọi lần nối đi qua `netguard` (chỉ địa chỉ công khai, kiểm lại mỗi lần chuyển hướng), nội dung trang bọc `untrusted` |
+| Bật tắt tool, vai trò, quy tắc, múi giờ, biến của agent | có: lưu trong DB, sửa trên trang "Cài đặt" và "Công cụ", áp dụng ở lượt kế tiếp, không cần khởi động lại |
+| Việc agent tự làm theo thời gian (thay cho `schedule_task`) | có: vòng chăm sóc lại. Model chỉ phán đoán (khách phân vân, từ chối khéo, bực...), code giữ giới hạn (giờ nhắn, khoảng cách, trần, danh sách ngưng); mặc định tắt |
 | Sub-agent là tool | chưa có, chỉ làm khi cần |
 | Nạp tool trễ khi có rất nhiều tool | chưa cần |
 | Bộ nhớ lâu dài, nhắc nhở hệ thống chèn giữa phiên | chưa cần cho phòng khám |

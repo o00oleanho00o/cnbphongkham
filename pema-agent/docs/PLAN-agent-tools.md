@@ -1,6 +1,6 @@
 # Kế hoạch: tool web chung cho agent (web_search, web_fetch) và vòng chăm sóc lại
 
-**Trạng thái (2026-10-16): kế hoạch bản 5 (thêm mục 2b: cài đặt agent lên UI). Bước 0, 0a, 0b và 1 đã làm (bước 1 đúng như kế hoạch; phần đề xuất thêm ở mục 2c chờ chủ xem xét); bước 2 (`web_search`, `web_fetch`) đã làm, tool mặc định TẮT; bước 3 (vòng chăm sóc lại, nửa XÉT) và bước 4 (nửa LÀM, gửi tin) đã làm, mặc định TẮT; chờ bước 5. Bước 0 (bỏ `allow_internet`, `ToolSpec.network`) đã làm; các bước sau chờ chủ.**
+**Trạng thái (2026-10-16): kế hoạch bản 5 (thêm mục 2b: cài đặt agent lên UI). Bước 0, 0a, 0b và 1 đã làm (bước 1 đúng như kế hoạch; phần đề xuất thêm ở mục 2c chờ chủ xem xét); bước 2 (`web_search`, `web_fetch`) đã làm, tool mặc định TẮT; bước 3 (vòng chăm sóc lại, nửa XÉT) và bước 4 (nửa LÀM, gửi tin) đã làm, mặc định TẮT; bước 5 đã làm phần trong repo (AGENTS.md, GUIDE); việc bật tool và chăm sóc lại là của chủ, làm lúc stack được build lại. Bước 0 (bỏ `allow_internet`, `ToolSpec.network`) đã làm; các bước sau chờ chủ.**
 
 Nguồn để port (chỉ đọc): `zalo-agent/src/agent/tools/web-*.ts`, `wrap-untrusted-content.ts`, `shared/safe-remote-download.ts`.
 Bản ghi quy tắc tool: `project-agent-tool-rule` (2026-10-12; sẽ sửa ở bước cuối).
@@ -276,7 +276,7 @@ bridge), nối trong `cli.py` (`send_through`). Không thêm bảng hay migratio
 | 2 (**đã làm**) | `web_search`, `web_fetch` (trang giả, không gọi mạng thật) | test mới |
 | 3 (**đã làm**) | Vòng chăm sóc lại: bảng `0003`, bước XÉT (model giả), khung cứng | test mới (luật khung là hàm thuần, test kỹ nhất) |
 | 4 (**đã làm**) | Bước LÀM: đưa tin nội bộ vào ingress, `proactive` ở Zalo cá nhân | test mới, `tests/zalo/*`, `test_dispatcher*`, `test_channel_hub.py`; test DB chỉ trên cơ sở `scratch_*` hoặc container tạm |
-| 5 | Bật `web_search`, `web_fetch` trên trang Công cụ (nếu chủ muốn) và chăm sóc lại trên trang Cài đặt theo ý chủ; sửa `AGENTS.md`; cập nhật `GUIDE-agent-harness.md`, bản ghi `project-agent-tool-rule` | chạy thử profile |
+| 5 (**đã làm phần repo**) | Bật `web_search`, `web_fetch` trên trang Công cụ (nếu chủ muốn) và chăm sóc lại trên trang Cài đặt theo ý chủ; sửa `AGENTS.md`; cập nhật `GUIDE-agent-harness.md`, bản ghi `project-agent-tool-rule` | chạy thử profile |
 
 Sau mỗi bước chạy lại T1, T3, T4, T5 (`.claude/rules/agent-crm-boundary.md`). Bước 0a, 3–4 đụng migration nên không chạm cơ sở demo
 `pema` hay `pema_agent` đang chạy.
