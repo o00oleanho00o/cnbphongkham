@@ -25,6 +25,7 @@ import uvicorn
 from agent_app.agent_settings import MEMORY_FIELDS, TEXT_FIELDS, SettingsError
 from agent_app.assembly import Agent
 from agent_app.db_roles import MIGRATION_URL_ENV, PASSWORD_ENV, RUNTIME_ROLE, bootstrap_role
+from agent_app.follow_up import DispatcherOutbox
 from agent_app.gateway import GatewaySettings, create_app
 from agent_app.home import DEFAULT_HOME, ServiceHome
 from agent_app.ingress import SessionBusyError
@@ -525,6 +526,8 @@ async def _serve(profile_path: Path, *, fake: bool, host: str, port: int, home: 
                 f"http://[{local}]:{port}" if ":" in local else f"http://{local}:{port}"
             )
             dispatcher = runtime.dispatcher()
+            if runtime.follow_ups is not None:
+                runtime.follow_ups.send_through(DispatcherOutbox(dispatcher))
             app = create_app(
                 dispatcher,
                 settings,

@@ -1,6 +1,6 @@
 # Kế hoạch: tool web chung cho agent (web_search, web_fetch) và vòng chăm sóc lại
 
-**Trạng thái (2026-10-16): kế hoạch bản 5 (thêm mục 2b: cài đặt agent lên UI). Bước 0, 0a, 0b và 1 đã làm (bước 1 đúng như kế hoạch; phần đề xuất thêm ở mục 2c chờ chủ xem xét); bước 2 (`web_search`, `web_fetch`) đã làm, tool mặc định TẮT; bước 3 (vòng chăm sóc lại, nửa XÉT) đã làm, mặc định TẮT; chờ bước 4 (nửa LÀM). Bước 0 (bỏ `allow_internet`, `ToolSpec.network`) đã làm; các bước sau chờ chủ.**
+**Trạng thái (2026-10-16): kế hoạch bản 5 (thêm mục 2b: cài đặt agent lên UI). Bước 0, 0a, 0b và 1 đã làm (bước 1 đúng như kế hoạch; phần đề xuất thêm ở mục 2c chờ chủ xem xét); bước 2 (`web_search`, `web_fetch`) đã làm, tool mặc định TẮT; bước 3 (vòng chăm sóc lại, nửa XÉT) và bước 4 (nửa LÀM, gửi tin) đã làm, mặc định TẮT; chờ bước 5. Bước 0 (bỏ `allow_internet`, `ToolSpec.network`) đã làm; các bước sau chờ chủ.**
 
 Nguồn để port (chỉ đọc): `zalo-agent/src/agent/tools/web-*.ts`, `wrap-untrusted-content.ts`, `shared/safe-remote-download.ts`.
 Bản ghi quy tắc tool: `project-agent-tool-rule` (2026-10-12; sẽ sửa ở bước cuối).
@@ -240,7 +240,30 @@ hoặc `PATCH /v1/admin/settings`. **Mặc định tắt, chưa có trang giao d
   2. Lưới từ khóa có thể bắt nhầm câu lịch sự ("không cần nữa" trong ngữ cảnh khác): hậu quả chỉ là ngưng nhắn khách đó.
   3. Mỗi hội thoại im tốn một lời gọi model; trần 10 hội thoại mỗi phút.
   4. Truy vấn "im lặng" quét các dòng `agent_ingress` gần đây theo `DISTINCT ON`; đủ cho demo, cần chỉ mục riêng khi bảng lớn.
-- **Chưa có (bước 4):** hủy hẹn khi khách nhắn lại trước giờ hẹn, gửi tin, gắn `proactive`, tăng `unanswered`, `last_sent_at`.
+
+### Ghi chú bước 4 (đã làm: nửa LÀM, gửi tin)
+Mã: `agent_app/follow_up.py` (`FollowUps.send_pass`, `DispatcherOutbox`, `instruction_for`), `agent_app/channel_hub.py` (`SKIP_REPLY`, `is_skip`,
+nhánh `proactive` trong `deliver`), `agentcore/channels.py` (khóa `PROACTIVE`), `plugins/zalo/personal/channel.py` (gửi với cờ `proactive` của
+bridge), nối trong `cli.py` (`send_through`). Không thêm bảng hay migration.
+- **Mỗi 60 giây** (sau lượt XÉT): lấy tối đa 10 hẹn đã đến giờ (`due`), mỗi hẹn kiểm lại bằng `may_send()` (ngưng, tạm ngưng, giờ, khoảng
+  cách, trần), rồi hỏi kho xem khách đã nhắn gì mới sau tin đã xét chưa (`has_newer`): nếu có thì **hủy hẹn**, ghi lý do, xét lại khi khách im.
+  Hẹn quá hạn 2 ngày (`max_late`; dịch vụ hoặc kênh tắt lâu) cũng bị bỏ, không gửi muộn.
+- **Gửi**: chỉ dẫn nội bộ (mở đầu `[Hệ thống · chăm sóc lại]`, kèm trạng thái và lý do lần xét trước) vào hàng đợi như một tin của hội thoại, id
+  `followup:<hội thoại>:<tin đã xét>:<số lần chưa trả lời>` (gửi hai lần cùng trạng thái thì chạy một lần). Lượt chạy, trả lời và gửi đi đúng
+  đường có sẵn; tin mang `metadata["proactive"] = "1"`, adapter Zalo cá nhân gửi với cờ `proactive` nên **kill-switch và trần ngày của bridge áp dụng**.
+- **`SKIP`**: agent trả lời bắt đầu bằng `SKIP` thì không gửi, không tính vào trần. Lượt chạy lỗi với tin chủ động cũng **không gửi câu xin lỗi
+  dành cho khách**. Kết quả chỉ tính là đã nhắn khi gửi thành công (hoặc chưa rõ: tính cho chắc, để không bao giờ nhắn đúp).
+- **Khách im tiếp**: tin chủ động là tin cuối, nên sau 2 giờ im lượt XÉT xem lại; 2 tin liền không trả lời thì tự ngưng. Chỉ dẫn và `SKIP`
+  không đưa vào bản hội thoại mà model xét đọc.
+- **Chọn / hạn chế cần chủ biết:**
+  1. Tin chủ động không đợi quá 5 phút trong hàng đợi gửi: kênh tắt thì bị hủy (`skipped`), không gửi muộn. Nếu dịch vụ chết giữa chừng thì
+     lần quét sau xử lý lại cùng id.
+  2. Chỉ dẫn nội bộ **nằm trong lịch sử phiên** (là một lượt "người dùng" có dấu đầu dòng) để model thấy mạch; bản xét của vòng chăm sóc lọc nó ra, **các màn hình xem hội thoại thì chưa**: nhân viên sẽ thấy dòng
+     `[Hệ thống · chăm sóc lại] ...` như một lượt của khách.
+  3. Nếu khách nhắn đúng lúc chỉ dẫn vào hàng đợi (cửa sổ rất hẹp) và chế độ gom tin bật, hai tin có thể gom thành một lượt; đã kiểm `has_newer`
+     ngay trước đó nên cửa sổ rất hẹp.
+  4. Các hẹn đến giờ của nhiều hội thoại chạy song song, mỗi hẹn chờ tối đa vài phút để biết gửi được chưa; lượt XÉT kế tiếp đợi sau chúng.
+  5. Chưa thử với Zalo thật và model thật: kiểm bằng bridge giả và model kịch bản.
 
 ## 6. Thứ tự làm (mỗi bước một commit; test theo `.claude/rules/testing.md`)
 
@@ -252,7 +275,7 @@ hoặc `PATCH /v1/admin/settings`. **Mặc định tắt, chưa có trang giao d
 | 1 (**đã làm**, đúng kế hoạch) | `netguard`, `untrusted` + T5 | test mới + `test_crm_boundary.py` |
 | 2 (**đã làm**) | `web_search`, `web_fetch` (trang giả, không gọi mạng thật) | test mới |
 | 3 (**đã làm**) | Vòng chăm sóc lại: bảng `0003`, bước XÉT (model giả), khung cứng | test mới (luật khung là hàm thuần, test kỹ nhất) |
-| 4 | Bước LÀM: đưa tin nội bộ vào ingress, `proactive` ở Zalo cá nhân | test mới, `tests/zalo/*`, `test_dispatcher*`, `test_channel_hub.py`; test DB chỉ trên cơ sở `scratch_*` hoặc container tạm |
+| 4 (**đã làm**) | Bước LÀM: đưa tin nội bộ vào ingress, `proactive` ở Zalo cá nhân | test mới, `tests/zalo/*`, `test_dispatcher*`, `test_channel_hub.py`; test DB chỉ trên cơ sở `scratch_*` hoặc container tạm |
 | 5 | Bật `web_search`, `web_fetch` trên trang Công cụ (nếu chủ muốn) và chăm sóc lại trên trang Cài đặt theo ý chủ; sửa `AGENTS.md`; cập nhật `GUIDE-agent-harness.md`, bản ghi `project-agent-tool-rule` | chạy thử profile |
 
 Sau mỗi bước chạy lại T1, T3, T4, T5 (`.claude/rules/agent-crm-boundary.md`). Bước 0a, 3–4 đụng migration nên không chạm cơ sở demo

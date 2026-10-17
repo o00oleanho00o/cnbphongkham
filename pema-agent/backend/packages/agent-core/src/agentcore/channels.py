@@ -16,6 +16,9 @@ from datetime import UTC, datetime
 from typing import Final, Literal, Protocol, runtime_checkable
 
 MAX_SESSION_ID_CHARS: Final = 200
+PROACTIVE: Final = "proactive"
+"""The metadata key (value ``"1"``) of a message the agent starts on its own, not as an answer. A channel that
+tells the two apart (a personal account has stricter limits on messages nobody asked for) reads it."""
 _NAME: Final = re.compile(r"^[a-z0-9][a-z0-9_-]{0,63}$")
 
 

@@ -15,6 +15,7 @@ import asyncio
 import logging
 import math
 import random
+import re
 import time
 from collections.abc import Awaitable, Callable, Mapping, Sequence
 from dataclasses import dataclass, replace
@@ -23,6 +24,7 @@ from typing import Any, Final
 from agent_app.dispatcher import Dispatcher
 from agent_app.ingress import IngressRecord
 from agentcore.channels import (
+    PROACTIVE,
     ChannelAdapter,
     ChannelSendError,
     FiltersListening,
@@ -39,6 +41,8 @@ from agentcore.channels import (
 MAX_INBOUND_CHARS: Final = 8000
 MAX_ERROR_CHARS: Final = 500
 CLOSE_GRACE_S: Final = 5.0
+SKIP_REPLY: Final = "SKIP"
+"""What the agent answers to a message it started itself when it has nothing to say: it is not sent."""
 
 logger = logging.getLogger(__name__)
 
@@ -209,8 +213,17 @@ class ChannelHub:
                 record.id, "the channel is not running", after_s=settings.tick_s
             )
             return False
+        proactive = record.metadata.get(PROACTIVE) == "1"
         if record.status == "done" and record.reply is not None:
             text = record.reply.text
+            if proactive and is_skip(text):
+                await self._ingress.finish_delivery(record.id, "skipped", "the agent chose not to write")
+                return True
+        elif proactive:  # nobody asked: a failed turn is not worth an apology
+            await self._ingress.finish_delivery(
+                record.id, "skipped", f"no reply: {record.error_kind or record.status}"
+            )
+            return True
         elif failure := self._failure_reply().strip():
             text = failure  # the turn failed; the person still hears back
         else:
@@ -378,6 +391,11 @@ class ChannelHub:
         except Exception as err:  # it is gone from the hub either way
             logger.warning("channel %s did not stop cleanly (%s)", name, type(err).__name__)
         logger.info("channel %s stopped", name)
+
+
+def is_skip(text: str) -> bool:
+    """The reply to a message of the agent's own starts with ``SKIP`` (any case; a word may follow)."""
+    return re.match(rf"\s*{SKIP_REPLY}\b", text, re.IGNORECASE) is not None
 
 
 def _describe(err: BaseException) -> str:

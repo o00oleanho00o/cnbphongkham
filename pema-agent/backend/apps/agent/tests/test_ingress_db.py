@@ -624,3 +624,59 @@ def test_a_quiet_conversation_is_one_whose_last_reply_went_out_and_was_not_answe
         assert await store.quiet("t", [], now, now - timedelta(days=1), 10) == []
 
     _run(db_url, check)
+
+
+def test_due_follow_ups_and_a_newer_message_are_found_per_agent_and_channel(db_url: str) -> None:
+    async def check(db: AgentDatabase) -> None:
+        now = datetime.now(UTC).replace(microsecond=0)
+        store = PostgresFollowUpStore(db, agent="dev")
+        soon = now - timedelta(minutes=5)
+        await store.save(
+            "t", _row(conversation_id="first", next_at=now - timedelta(hours=1), reviewed_through=3)
+        )
+        await store.save("t", _row(conversation_id="second", next_at=soon, reviewed_through=3))
+        await store.save("t", _row(conversation_id="future", next_at=now + timedelta(hours=1)))
+        await store.save("t", _row(conversation_id="never", next_at=None))
+        await store.save("t", _row(conversation_id="stopped", next_at=soon, stopped=True))
+        await store.save("t", _row(conversation_id="elsewhere", channel="zalo-zzz", next_at=soon))
+        await PostgresFollowUpStore(db, agent="other").save("t", _row(conversation_id="theirs", next_at=soon))
+
+        due = await store.due("t", ["zalo-a1"], now, 10)
+
+        assert [r.conversation_id for r in due] == ["first", "second"]
+        assert [r.conversation_id for r in await store.due("t", ["zalo-a1"], now, 1)] == ["first"]
+        assert await store.due("t", [], now, 10) == []
+
+        async def add(external: str, conv: str = "first") -> int:
+            async with db.engine.begin() as conn:
+                found = await conn.execute(
+                    _INSERT,
+                    {
+                        "channel": "zalo-a1",
+                        "external_id": external,
+                        "conversation_id": conv,
+                        "session_id": f"s-{conv}",
+                        "text": "hi",
+                        "metadata": "{}",
+                        "status": "queued",
+                        "reply": None,
+                        "at": now,
+                        "delivery": "pending",
+                        "delivery_at": None,
+                    },
+                )
+                return found.scalar_one()
+
+        first = next(r for r in due if r.conversation_id == "first")
+        second = next(r for r in due if r.conversation_id == "second")
+        before = await add("old", "first")  # an id below the one judged is not newer
+        assert before > 0
+        reviewed = replace(first, reviewed_through=before)
+        assert await store.has_newer("t", reviewed) is False
+        await add("followup:first:3:0")  # the loop's own message does not count
+        assert await store.has_newer("t", reviewed) is False
+        await add("customer-again")
+        assert await store.has_newer("t", reviewed) is True
+        assert await store.has_newer("t", second) is False  # another conversation
+
+    _run(db_url, check)

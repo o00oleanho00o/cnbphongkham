@@ -24,7 +24,14 @@ from collections import deque
 from collections.abc import Callable, Coroutine, Mapping
 from typing import Any, Final, cast
 
-from agentcore.channels import ChannelCapabilities, ChannelSendError, Observe, OutboundMessage, Receive
+from agentcore.channels import (
+    PROACTIVE,
+    ChannelCapabilities,
+    ChannelSendError,
+    Observe,
+    OutboundMessage,
+    Receive,
+)
 
 from ..access import keeps_chat, should_respond
 from ..accounts import AccountStore
@@ -193,6 +200,7 @@ class ZaloPersonalChannel:
         formatted = dinh_dang_neu_bat(message.text, rich_text=self._rich_text)
         # Only the first part quotes: the quote says which message the whole reply answers.
         quote = _quote(message.metadata) if message.part == 1 and kind is ThreadKind.GROUP else None
+        proactive = message.metadata.get(PROACTIVE) == "1"
         try:
             answer = await api.send_message(
                 text=formatted.text,
@@ -200,6 +208,7 @@ class ZaloPersonalChannel:
                 thread_type=kind,
                 styles=formatted.styles,
                 quote=quote,
+                proactive=proactive,
             )
             self._remember_sent(answer, message.conversation_id, formatted.text)
         except ZaloBridgeError as err:
@@ -210,7 +219,7 @@ class ZaloPersonalChannel:
                     self.account.id,
                     err.code,
                 )
-                await self._send_plain(api, formatted.text, message.conversation_id, kind)
+                await self._send_plain(api, formatted.text, message.conversation_id, kind, proactive)
                 return
             raise ChannelSendError(str(err), retryable=err.kind in RETRYABLE_KINDS) from None
 
@@ -226,9 +235,13 @@ class ZaloPersonalChannel:
             kind = ThreadKind.GROUP if metadata.get("thread_type") == THREAD_GROUP else ThreadKind.USER
             await api.send_typing_event(conversation_id, kind)
 
-    async def _send_plain(self, api: BridgeAccountApi, text: str, thread_id: str, kind: ThreadKind) -> None:
+    async def _send_plain(
+        self, api: BridgeAccountApi, text: str, thread_id: str, kind: ThreadKind, proactive: bool
+    ) -> None:
         try:
-            answer = await api.send_message(text=text, thread_id=thread_id, thread_type=kind)
+            answer = await api.send_message(
+                text=text, thread_id=thread_id, thread_type=kind, proactive=proactive
+            )
             self._remember_sent(answer, thread_id, text)
         except ZaloBridgeError as err:
             raise ChannelSendError(str(err), retryable=err.kind in RETRYABLE_KINDS) from None

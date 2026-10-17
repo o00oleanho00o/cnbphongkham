@@ -17,6 +17,7 @@ import pytest
 
 from agent_app.channel_hub import ChannelHub, DeliverySettings
 from agent_app.dispatcher import Dispatcher, DispatchSettings
+from agent_app.follow_up import DispatcherOutbox, FollowUp
 from agent_app.gateway import GatewaySettings, create_app
 from agent_app.plugins import PluginHost, discover
 from agent_app.plugins.records import InMemoryPluginRecords
@@ -582,3 +583,35 @@ async def test_auto_accept_takes_the_requests_that_waited_and_keeps_a_failed_one
     assert api.accepted == ["old"]
     assert [r.from_uid for r in await requests.list("nick")] == ["new", "bad"]
     assert [r.from_uid for r in await requests.list("off")] == ["old"]
+
+
+async def test_a_follow_up_leaves_as_a_proactive_send_and_an_answer_does_not(
+    tmp_path: Path, bridge: FakeBridge
+) -> None:
+    setup = Setup(_runtime(tmp_path, bridge))
+    setup.runtime.live.use_model(ScriptedModel([reply("Dạ giá 200k ạ"), reply("Chị còn quan tâm không ạ?")]))
+    await setup.personal()
+    await setup.event("nick", {"type": "credential_updated", "credential": CREDENTIAL})
+    await setup.hub.sync()
+    await setup.event("nick", _message("giá khám?"))
+    await setup.until(lambda: bridge.sent)
+    (channel,) = setup.hub.running
+
+    row = FollowUp(channel, "u1", "u1", "s1", state="hesitant", reason="hỏi giá rồi im")
+    outbox = DispatcherOutbox(setup.dispatcher, poll_s=0.01)
+    ticking = asyncio.create_task(_tick(setup))
+    sent = await outbox.send(row, "followup:u1:1:0", "[Hệ thống · chăm sóc lại] nhắn lại")
+    ticking.cancel()
+
+    assert sent.counted is True
+    assert [(m["text"], m["proactive"]) for m in bridge.sent] == [
+        ("Dạ giá 200k ạ", False),
+        ("Chị còn quan tâm không ạ?", True),
+    ]
+    await setup.close()
+
+
+async def _tick(setup: Setup) -> None:
+    while True:
+        await setup.hub.tick()
+        await asyncio.sleep(0.01)

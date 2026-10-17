@@ -7,8 +7,10 @@ opinion: it sends nothing, and every limit that decides whether anything may be 
 the model cannot argue with (``FollowUpPolicy``, ``decide``, ``may_send``).
 
 The rows kept for each conversation are also the list of those to leave alone: ``stopped`` (never again,
-unless the customer writes first) and ``paused_until``. Sending is the second half; this module never writes
-to a customer. It reads only what the agent keeps itself: its own messages and sessions (law L4).
+unless the customer writes first) and ``paused_until``. Sending is the second half: when a
+conversation is due, the limits are checked again and the agent is asked, through the same queue and
+channels as any reply, to write one natural message or to answer ``SKIP``. It reads only what the agent keeps
+itself: its own messages and sessions (law L4).
 """
 
 from __future__ import annotations
@@ -27,8 +29,12 @@ from zoneinfo import ZoneInfo
 from pydantic import BaseModel, Field, ValidationError
 from sqlalchemy import text as sql
 
+from agent_app.channel_hub import SKIP_REPLY, is_skip
+from agent_app.dispatcher import Dispatcher
+from agent_app.ingress import OPEN_DELIVERY
 from agent_app.storage import AgentDatabase, retrying
 from agentcore import LlmRequest, Message, ModelClient, ModelError, SessionStore
+from agentcore.channels import PROACTIVE, InboundMessage
 
 State = Literal["done", "hesitant", "call_back", "soft_decline", "hard_decline", "negative"]
 STATES: Final = get_args(State)
@@ -36,7 +42,9 @@ MAX_REASON_CHARS: Final = 300
 MAX_CHANNELS: Final = 20
 LIST_LIMIT: Final = 100
 FOLLOW_UP_ID_PREFIX: Final = "followup:"
-"""The external id of a message the loop itself puts into the queue (second half); not the customer's."""
+"""The external id of a message the loop itself puts into the queue; not the customer's."""
+INSTRUCTION_MARK: Final = "[Hệ thống · chăm sóc lại]"
+"""Starts the instruction the loop gives the agent; it marks the text as not the customer's words."""
 
 logger = logging.getLogger(__name__)
 
@@ -75,7 +83,9 @@ class FollowUpPolicy:
     transcript_chars: int = 6000
     message_chars: int = 600
     per_pass: int = 10
-    """Conversations judged in one pass: the cost of the loop is bounded."""
+    """Conversations judged (and written to) in one pass: the cost of the loop is bounded."""
+    max_late: timedelta = timedelta(days=2)
+    """An appointment this much past due (service or channel was down) is cancelled, not kept."""
 
 
 DEFAULT_POLICY: Final = FollowUpPolicy()
@@ -260,14 +270,37 @@ Trả về đúng một JSON, không thêm chữ nào khác:
 {"state": "...", "after_h": số hoặc null, "pause_days": số hoặc null, "reason": "..."}"""  # noqa: E501
 
 
+def instruction_for(row: FollowUp) -> str:
+    """What the agent is told when a follow-up is due: write one natural message, or say ``SKIP``."""
+    earlier = f"{row.state} ({row.reason})" if row.reason else row.state
+    return (
+        f"{INSTRUCTION_MARK} Khách đã im lặng một lúc. Nhận định lúc trước: {earlier}. "
+        "Nếu hợp lý, nhắn lại MỘT tin ngắn, tự nhiên như người thật, theo mạch cuộc trò chuyện trước, "
+        "không lặp lại câu cũ, không nói đây là tin tự động. "
+        f"Nếu thấy không nên làm phiền khách, chỉ trả lời đúng một chữ {SKIP_REPLY}."
+    )
+
+
 def render_transcript(messages: Sequence[Message], policy: FollowUpPolicy = DEFAULT_POLICY) -> str:
-    """The newest messages of the session as 'Khách:' and 'Agent:' lines, oldest first, within the limits."""
+    """The newest messages of the session as 'Khách:' and 'Agent:' lines, oldest first, within the limits.
+    The loop's own instructions (and an answer of ``SKIP`` to one) are not part of what was said."""
     lines: list[str] = []
+    instructed = False
     for message in messages:
         text = message.text().strip()
-        if text and message.role in ("user", "assistant"):
-            who = "Khách" if message.role == "user" else "Agent"
-            lines.append(f"{who}: {text[: policy.message_chars]}")
+        if not text or message.role not in ("user", "assistant"):
+            continue
+        if message.role == "user":
+            instructed = text.startswith(INSTRUCTION_MARK)
+            if instructed:
+                continue
+        elif instructed and is_skip(text):
+            instructed = False
+            continue
+        else:
+            instructed = False
+        who = "Khách" if message.role == "user" else "Agent"
+        lines.append(f"{who}: {text[: policy.message_chars]}")
     kept: list[str] = []
     size = 0
     for line in reversed(lines[-policy.transcript_messages :]):
@@ -311,15 +344,28 @@ class FollowUpStore(Protocol):
         and ``before`` and has had no judgement since, oldest first."""
         ...
 
+    async def due(self, tenant_id: str, channels: Sequence[str], now: datetime, limit: int) -> list[FollowUp]:
+        """Rows of these channels with an appointment that has come, not stopped, earliest first."""
+        ...
+
+    async def has_newer(self, tenant_id: str, row: FollowUp) -> bool:
+        """Whether the conversation has a message (not one of the loop's own) after the one judged."""
+        ...
+
 
 class InMemoryFollowUpStore:
     def __init__(self) -> None:
         self._rows: dict[tuple[str, str, str], FollowUp] = {}
         self._quiet: list[Quiet] = []
+        self._newest: dict[tuple[str, str], int] = {}
 
     def add_quiet(self, quiet: Quiet) -> None:
         """What the loop will find quiet (the stand-in for the queue's tables)."""
         self._quiet.append(quiet)
+
+    def add_message(self, channel: str, conversation_id: str, message_id: int) -> None:
+        """A message of the customer's arrived in the conversation (the stand-in for the queue's tables)."""
+        self._newest[(channel, conversation_id)] = message_id
 
     async def get(self, tenant_id: str, channel: str, conversation_id: str) -> FollowUp | None:
         return self._rows.get((tenant_id, channel, conversation_id))
@@ -343,6 +389,21 @@ class InMemoryFollowUpStore:
                 found.append(item)
         return sorted(found, key=lambda q: q.last_id)[:limit]
 
+    async def due(self, tenant_id: str, channels: Sequence[str], now: datetime, limit: int) -> list[FollowUp]:
+        rows = [
+            row
+            for (tenant, _, _), row in self._rows.items()
+            if tenant == tenant_id
+            and row.channel in channels
+            and not row.stopped
+            and row.next_at is not None
+            and row.next_at <= now
+        ]
+        return sorted(rows, key=lambda r: cast(datetime, r.next_at))[:limit]
+
+    async def has_newer(self, tenant_id: str, row: FollowUp) -> bool:
+        return self._newest.get((row.channel, row.conversation_id), 0) > row.reviewed_through
+
 
 _GET = sql(
     "SELECT channel, conversation_id, user_id, session_id, state, reason, next_at, paused_until, stopped, "
@@ -354,6 +415,17 @@ _LIST = sql(
     "SELECT channel, conversation_id, user_id, session_id, state, reason, next_at, paused_until, stopped, "
     "unanswered, last_sent_at, reviewed_through, updated_at FROM agent_rt.agent_follow_up "
     "WHERE tenant_id = :tenant_id AND agent = :agent ORDER BY updated_at DESC LIMIT :limit"
+)
+_DUE = sql(
+    "SELECT channel, conversation_id, user_id, session_id, state, reason, next_at, paused_until, stopped, "
+    "unanswered, last_sent_at, reviewed_through, updated_at FROM agent_rt.agent_follow_up "
+    "WHERE tenant_id = :tenant_id AND agent = :agent AND channel = ANY(:channels) "
+    "AND next_at IS NOT NULL AND next_at <= :now AND NOT stopped ORDER BY next_at LIMIT :limit"
+)
+_NEWER = sql(
+    "SELECT EXISTS (SELECT 1 FROM agent_rt.agent_ingress WHERE tenant_id = :tenant_id AND agent = :agent "
+    "AND channel = :channel AND conversation_id = :conversation_id AND id > :last_id "
+    "AND external_id NOT LIKE 'followup:%')"
 )
 _SAVE = sql(
     "INSERT INTO agent_rt.agent_follow_up (tenant_id, agent, channel, conversation_id, user_id, session_id, "
@@ -492,6 +564,101 @@ class PostgresFollowUpStore:
 
         return await retrying("find quiet conversations", work)
 
+    async def due(self, tenant_id: str, channels: Sequence[str], now: datetime, limit: int) -> list[FollowUp]:
+        params = {
+            "tenant_id": tenant_id,
+            "agent": self._agent,
+            "channels": list(channels),
+            "now": now,
+            "limit": limit,
+        }
+
+        async def work() -> list[FollowUp]:
+            async with self._engine.connect() as conn:
+                return [_row(row) for row in (await conn.execute(_DUE, params)).all()]
+
+        return await retrying("find due follow-ups", work)
+
+    async def has_newer(self, tenant_id: str, row: FollowUp) -> bool:
+        params = {
+            "tenant_id": tenant_id,
+            "agent": self._agent,
+            "channel": row.channel,
+            "conversation_id": row.conversation_id,
+            "last_id": row.reviewed_through,
+        }
+
+        async def work() -> bool:
+            async with self._engine.connect() as conn:
+                return bool((await conn.execute(_NEWER, params)).scalar_one())
+
+        return await retrying("look for newer messages", work)
+
+
+# --- writing to the customer ---
+
+
+@dataclass(frozen=True, slots=True)
+class Sent:
+    counted: bool
+    """True when the customer was written to, or may have been (it counts against the limits)."""
+    note: str = ""
+
+
+class Outbox(Protocol):
+    async def send(self, row: FollowUp, external_id: str, instruction: str) -> Sent:
+        """Has the agent answer ``instruction`` and sends the answer to the conversation, unless it is
+        ``SKIP``. The same ``external_id`` asked twice runs once."""
+        ...
+
+
+class DispatcherOutbox:
+    """The instruction goes into the queue like a message from the conversation, so the turn, the reply and
+    the send take the usual way; the message carries ``PROACTIVE`` and is never answered with an apology."""
+
+    def __init__(
+        self,
+        dispatcher: Dispatcher,
+        *,
+        turn_timeout_s: float = 180.0,
+        delivery_timeout_s: float = 300.0,
+        poll_s: float = 2.0,
+    ) -> None:
+        self._dispatcher = dispatcher
+        self._turn_timeout_s = turn_timeout_s
+        self._delivery_timeout_s = delivery_timeout_s
+        self._poll_s = poll_s
+
+    async def send(self, row: FollowUp, external_id: str, instruction: str) -> Sent:
+        dispatcher = self._dispatcher
+        inbound = InboundMessage(
+            channel=row.channel,
+            conversation_id=row.conversation_id,
+            user_id=row.user_id,
+            message_id=external_id,
+            text=instruction,
+            metadata={PROACTIVE: "1"},
+        )
+        record, _ = await dispatcher.accept(inbound, deliver=True)
+        record = await dispatcher.wait(record.id, self._turn_timeout_s)
+        if not record.finished:
+            return Sent(True, "the turn was still running")
+        loop = asyncio.get_running_loop()
+        deadline = loop.time() + self._delivery_timeout_s
+        while record.delivery in OPEN_DELIVERY and loop.time() < deadline:
+            await asyncio.sleep(self._poll_s)
+            fresh = await dispatcher.ingress.get(dispatcher.tenant_id, record.id)
+            record = fresh or record
+        if record.delivery == "sent":
+            return Sent(True)
+        if record.delivery == "sending":
+            return Sent(True, "still being sent")
+        if record.delivery == "pending":
+            # It would go out whenever the channel comes back, long after it made sense.
+            await dispatcher.ingress.finish_delivery(record.id, "skipped", "not sent in time")
+            return Sent(False, "not sent in time")
+        return Sent(False, record.delivery_error or record.error_kind or str(record.delivery))
+
 
 # --- the loop ---
 
@@ -510,6 +677,7 @@ class FollowUps:
         tenant_id: str,
         policy: FollowUpPolicy = DEFAULT_POLICY,
         clock: Callable[[], datetime] = lambda: datetime.now(UTC),
+        outbox: Outbox | None = None,
     ) -> None:
         self._store = store
         self._sessions = sessions
@@ -518,6 +686,11 @@ class FollowUps:
         self._tenant_id = tenant_id
         self._policy = policy
         self._clock = clock
+        self._outbox = outbox
+
+    def send_through(self, outbox: Outbox) -> None:
+        """Where the follow-ups go once the service has its dispatcher; without one nothing is ever sent."""
+        self._outbox = outbox
 
     async def review_pass(self) -> int:
         """Judges the conversations that went quiet since the last pass; how many it judged."""
@@ -568,15 +741,66 @@ class FollowUps:
             for row in await self._store.list(self._tenant_id, limit)
         ]
 
+    async def send_pass(self) -> int:
+        """Writes to the conversations whose appointment has come; how many customers it wrote to."""
+        config = self._config()
+        if not config.enabled or not config.channels or self._outbox is None:
+            return 0
+        now = self._clock()
+        due = await self._store.due(self._tenant_id, config.channels, now, self._policy.per_pass)
+        results = await asyncio.gather(*(self._send_safely(row, now) for row in due))
+        return sum(results)
+
     async def run(self, interval_s: float = 60.0) -> None:
         while True:
-            try:
-                await self.review_pass()
-            except asyncio.CancelledError:
-                raise
-            except Exception:
-                logger.exception("follow-up pass failed")
+            for work in (self.review_pass, self.send_pass):
+                try:
+                    await work()
+                except asyncio.CancelledError:
+                    raise
+                except Exception:
+                    logger.exception("follow-up pass failed")
             await asyncio.sleep(interval_s)
+
+    async def _send_safely(self, row: FollowUp, now: datetime) -> bool:
+        try:
+            return await self._send(row, now)
+        except Exception:
+            logger.exception("follow-up of one conversation failed")
+            return False
+
+    async def _send(self, row: FollowUp, now: datetime) -> bool:
+        """Asks again, just before writing, whether the customer may be written to; True when it was."""
+        policy = self._policy
+        if self._outbox is None:
+            return False
+        if row.next_at is not None and now - row.next_at > policy.max_late:
+            await self._settle(row, "Hẹn quá hạn, bỏ.")
+            return False
+        allowed, why = may_send(row, now, policy)
+        if not allowed:
+            logger.debug("follow-up not sent: %s", why)
+            return False
+        if await self._store.has_newer(self._tenant_id, row):
+            await self._settle(row, "Khách nhắn lại trước giờ hẹn: hủy hẹn, xét lại khi khách im.")
+            return False
+        # One id for one state of the conversation: a send that was started twice (a crash, two processes)
+        # runs once.
+        external_id = f"{FOLLOW_UP_ID_PREFIX}{row.conversation_id}:{row.reviewed_through}:{row.unanswered}"
+        result = await self._outbox.send(row, external_id, instruction_for(row))
+        if not result.counted:
+            await self._settle(row, f"Không nhắn: {result.note}.")
+            return False
+        await self._store.save(
+            self._tenant_id,
+            replace(row, next_at=None, unanswered=row.unanswered + 1, last_sent_at=self._clock()),
+        )
+        return True
+
+    async def _settle(self, row: FollowUp, note: str) -> None:
+        """The appointment is over without a message; ``note`` goes before the reason for the staff."""
+        reason = f"{note} {row.reason}".strip()[:MAX_REASON_CHARS]
+        await self._store.save(self._tenant_id, replace(row, next_at=None, reason=reason))
 
     async def _review(self, item: Quiet, now: datetime) -> None:
         policy = self._policy

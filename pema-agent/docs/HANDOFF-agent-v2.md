@@ -1458,6 +1458,13 @@ Chi tiết: `docs/PLAN-agent-tools.md` mục 2, 2b, 5.4.
    tin quảng cáo (chủ nên hỏi người hiểu luật); mỗi hội thoại im tốn một lời gọi model.
 8. **Hoãn, chưa kiểm**: nhận biết nhân viên nhắn tay từ máy khác (`origin="own"`) để vòng lùi lại; UI danh sách chăm sóc lại/ngưng và
    chọn theo từng tài khoản Zalo; chưa có ví dụ "từ chối khéo" thật để đo (test chỉ dùng model giả).
+9. **Vòng chăm sóc lại, hai chỗ chủ chưa quyết** (`PLAN-agent-tools.md` mục 5, "Ghi chú bước 3"): (a) `soft_decline` hiện cho nhắn lại một
+   lần sau khi hết tạm ngưng; nếu muốn "từ chối khéo là không bao giờ nhắn lại trừ khi khách nhắn trước" thì đổi một dòng ở `decide`;
+   (b) lưới từ khóa ("không cần nữa"...) có thể bắt nhầm câu lịch sự, hậu quả chỉ là ngưng nhắn khách đó.
+10. **Vòng chăm sóc lại đã gửi được nhưng chưa chạy thật** (bước 4 xong, test bằng bridge giả và model kịch bản): chưa thử với Zalo thật hay
+    model thật, nên độ tự nhiên của tin và độ chính xác "từ chối khéo" chưa đo. Tin chủ động không đợi quá 5 phút trong hàng đợi gửi (kênh
+    tắt thì hủy); chỉ dẫn nội bộ nằm trong lịch sử phiên và các màn hình xem hội thoại chưa lọc nó (nhân viên thấy dòng `[Hệ thống · chăm sóc lại]`). Truy vấn tìm hội thoại im (`DISTINCT ON`) cần thêm index khi bảng tin lớn.
+    Docker chưa build lại nên stack đang chạy chưa có bảng `0002`/`0003`, đường gửi và trang mới.
 
 ## Suggested skills
 
