@@ -1,6 +1,6 @@
 # Kế hoạch: bỏ app zalo-agent cũ, cắt chỗ chéo, khóa ranh giới agent ↔ CRM, làm lại DB
 
-Ngày: 2026-10-16. Trạng thái: **xong cả 13 bước (nhánh `chore/db-baseline`), DB demo đã dựng lại 2026-10-16.** FE đã dọn theo D8 (commit ccf9d6b9). Sơ đồ: [diagrams/db-baseline-plan.html](diagrams/db-baseline-plan.html).
+Ngày: 2026-10-16. Trạng thái: **xong cả 13 bước (nhánh `chore/db-baseline`), DB demo đã dựng lại 2026-10-16.** FE đã dọn theo D8 (commit ccf9d6b9). Sơ đồ: [diagrams/pema-system-design.html](diagrams/pema-system-design.html).
 
 Bạn xóa DB, nên không cần đường nâng cấp từ DB cũ. Hai app vẫn tách riêng (không dồn chung một chuỗi migration).
 

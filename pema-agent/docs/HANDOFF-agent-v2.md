@@ -18,7 +18,7 @@ revision files `0001_agent_rt` … `0012_*` or plugin files `0002_*`/`0003_*`, t
 - **Migrations:** the API has one Alembic revision `apps/api/alembic/versions/0001_baseline` (+ `.sql`), the agent
   one `apps/agent/alembic/versions/0001_baseline` (+ `.sql`); plugins: `conversations/0001`, `knowledge/0001`,
   `skills/0001` + `0002_seed_dev_skill`. A change is a NEW revision or plugin file; never edit one that ran.
-  Schema dumps and what changed: `docs/db-baseline/before|after/`; ER diagram: `docs/diagrams/db-baseline-plan.html`.
+  Schema dumps and what changed: `docs/db-baseline/before|after/`; design (DB, architecture, harness): `docs/diagrams/pema-system-design.html`.
 - **Gone from the CRM (D8):** inbox, follow-up queue (review items), message templates and CRM auto-send, patient
   app "Nhắn tin", channel identities, notifications O3; schema `agent` (old zalo-agent port), `clinic_agent`, role
   `agent_worker`, `vector` in `pema`, runtime tuning settings, `PEMA_SECRET_ENCRYPTION_KEY`,
