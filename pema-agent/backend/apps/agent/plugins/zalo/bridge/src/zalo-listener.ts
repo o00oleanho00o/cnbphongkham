@@ -10,13 +10,14 @@
 // - `now` / `random` / `keHoach` can be injected so the reconnect logic is testable with fake timers;
 // - the log line that advises `pnpm zalo-login <id>` now points at the admin UI QR login.
 import { CloseReason } from "zca-js";
-import type { FriendEvent } from "zca-js";
+import type { FriendEvent, Typing } from "zca-js";
 import { createLogger, errorInfo } from "./logger.js";
 import { KeHoachKetNoiLai } from "./reconnect-planner.js";
 import type { ListenerPort } from "./zalo-types.js";
 
 export type RawMessageHandler = (rawMessage: unknown) => Promise<void> | void;
 export type FriendEventHandler = (event: FriendEvent) => Promise<void> | void;
+export type TypingHandler = (typing: Typing) => Promise<void> | void;
 
 /** Trần jitter cộng vào backoff để nhiều account không reconnect đồng loạt */
 const JITTER_MS = 1_000;
@@ -35,6 +36,8 @@ export type ListenerReport = { state: ListenerReportState; reason: string };
 
 export type ListenerOptions = {
   onReport?: (report: ListenerReport) => void;
+  /** Someone is typing in a chat of this account (zca-js' `typing` event). */
+  onTyping?: TypingHandler;
   keHoach?: KeHoachKetNoiLai;
   now?: () => number;
   /** In [0, 1); jitter = floor(random() * JITTER_MS). */
@@ -149,6 +152,15 @@ export function startListener(
     api.listener.on("friend_event", (event) => {
       Promise.resolve(onFriendEvent(event)).catch((err: unknown) =>
         log.error(errorInfo(err), "Lỗi xử lý friend_event"),
+      );
+    });
+  }
+
+  const onTyping = options.onTyping;
+  if (onTyping) {
+    api.listener.on("typing", (typing) => {
+      Promise.resolve(onTyping(typing)).catch((err: unknown) =>
+        log.error(errorInfo(err), "Lỗi xử lý typing"),
       );
     });
   }

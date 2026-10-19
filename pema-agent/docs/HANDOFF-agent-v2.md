@@ -1466,6 +1466,13 @@ Chi tiết: `docs/PLAN-agent-tools.md` mục 2, 2b, 5.4.
     tắt thì hủy); chỉ dẫn nội bộ nằm trong lịch sử phiên và các màn hình xem hội thoại chưa lọc nó (nhân viên thấy dòng `[Hệ thống · chăm sóc lại]`). Truy vấn tìm hội thoại im (`DISTINCT ON`) cần thêm index khi bảng tin lớn.
     Docker chưa build lại nên stack đang chạy chưa có bảng `0002`/`0003`, đường gửi và trang mới.
 
+11. **Gom tin của khách Zalo (2026-10-19)**: kênh `zalo-*` chờ 5 giây (tối đa 20) cho phần còn lại của một loạt tin, và lâu hơn (tới 30 giây)
+    khi cầu nối báo khách đang gõ (sự kiện `typing` của zca-js). Chưa thử với Zalo thật: chưa biết Zalo có gửi sự kiện này đều cho tài khoản
+    cá nhân hay không; nếu không thì chỉ còn mức chờ 5 giây. Thêm vài giây vào mỗi câu trả lời (cộng với 10–20 giây trễ có chủ ý khi gửi).
+    Khi khách nhắn thêm đúng lúc model đang viết câu trả lời cuối thì câu đó bị bỏ và model trả lời lại một lần cho tất cả; câu nháp vẫn nằm
+    trong lịch sử phiên kèm một dòng `[System ...]` nói câu đó chưa gửi. Khoảng trống còn lại: tin đến trong 10–20 giây trễ khi gửi thì vẫn
+    thành hai câu trả lời liên tiếp.
+
 ## Suggested skills
 
 - `handoff` (`.claude/skills/handoff/SKILL.md`) — run again at the end of the next session to refresh this doc.

@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import time
 from collections.abc import Awaitable, Callable, Mapping
 from dataclasses import dataclass, field
 from typing import Any, Final
@@ -38,6 +39,8 @@ from agentcore import (
 from agentcore.channels import InboundMessage, session_id_for
 
 CLOSE_GRACE_S: Final = 10.0
+TYPING_KEEP: Final = 512
+"""Conversations whose typing signal is remembered; past this the expired ones are dropped."""
 
 logger = logging.getLogger(__name__)
 
@@ -61,9 +64,23 @@ class DispatchSettings:
     """... or after this long at most."""
     max_batch: int = 20
     """Messages one turn takes at most."""
+    wait_by_prefix: Mapping[str, tuple[float, float]] = field(default_factory=dict[str, tuple[float, float]])
+    """Channel name prefix -> (debounce_s, max_wait_s) for the channels that start with it (a chat platform
+    where people send a message in pieces waits longer than a test console); the longest prefix wins."""
+    typing_hold_s: float = 5.0
+    """How long a typing signal from the person keeps the wait going (0 ignores the signals)."""
+    typing_max_wait_s: float = 30.0
+    """The longest a conversation waits when the person keeps typing."""
 
     def mode_for(self, channel: str) -> QueueMode:
         return self.queue_by_channel.get(channel, self.queue_mode)
+
+    def wait_for(self, channel: str) -> tuple[float, float]:
+        """(debounce_s, max_wait_s) of this channel."""
+        matching = [prefix for prefix in self.wait_by_prefix if channel.startswith(prefix)]
+        if not matching:
+            return self.debounce_s, self.max_wait_s
+        return self.wait_by_prefix[max(matching, key=len)]
 
 
 class StreamObserver:
@@ -128,6 +145,18 @@ class Dispatcher:
         self._finished: dict[int, asyncio.Event] = {}
         self._observers: dict[int, StreamObserver] = {}
         self._listeners: list[Callable[[IngressRecord], None]] = []
+        self._typing_until: dict[tuple[str, str], float] = {}
+
+    def note_typing(self, channel: str, conversation_id: str) -> None:
+        """The person of this conversation is typing: the wait for the rest of their burst goes on a little
+        longer (``typing_hold_s`` from now, within ``typing_max_wait_s`` of when the wait began)."""
+        hold = self.settings.typing_hold_s
+        if hold <= 0:
+            return
+        now = time.monotonic()
+        if len(self._typing_until) > TYPING_KEEP:
+            self._typing_until = {key: until for key, until in self._typing_until.items() if until > now}
+        self._typing_until[(channel, conversation_id)] = now + hold
 
     @property
     def tenant_id(self) -> str:
@@ -153,6 +182,9 @@ class Dispatcher:
         """Stores the message and starts its session's drain; returns the record and whether it is new. With
         ``deliver`` the reply goes out through the message's channel once the turn is over."""
         session_id = await self.session_for(inbound.channel, inbound.conversation_id)
+        self._typing_until.pop(
+            (inbound.channel, inbound.conversation_id), None
+        )  # the message is out of the box
         record, created = await self.ingress.accept(self.tenant_id, inbound, session_id, deliver=deliver)
         if observer is not None and not record.finished:
             self._observers[record.id] = observer
@@ -197,7 +229,7 @@ class Dispatcher:
                     while (queued := await self.ingress.next_queued(self.tenant_id, session_id)) is not None:
                         mode = self.settings.mode_for(queued.channel)
                         if mode != "followup":
-                            await self._quiet(session_id)
+                            await self._quiet(queued)
                         claimed = await self.ingress.claim(queued.id)
                         if claimed is None:
                             continue
@@ -210,19 +242,26 @@ class Dispatcher:
             self._draining.discard(session_id)
             self._wanted.discard(session_id)
 
-    async def _quiet(self, session_id: str) -> None:
-        """Waits until no new message came for ``debounce_s`` (at most ``max_wait_s``), so a burst of short
-        messages becomes one turn."""
+    async def _quiet(self, lead: IngressRecord) -> None:
+        """Waits until no new message came for the channel's ``debounce_s`` (at most its ``max_wait_s``), so a
+        burst of short messages becomes one turn. While the person is heard typing the wait goes on, up to
+        ``typing_max_wait_s``."""
         settings = self.settings
-        loop = asyncio.get_running_loop()
-        deadline = loop.time() + settings.max_wait_s
+        session_id = lead.session_id
+        debounce_s, max_wait_s = settings.wait_for(lead.channel)
+        key = (lead.channel, lead.conversation_id)
+        started = time.monotonic()
         count = len(await self.ingress.queued_in_session(self.tenant_id, session_id, settings.max_batch + 1))
-        while (pause := min(settings.debounce_s, deadline - loop.time())) > 0:
+        while True:
+            typed = self._typing_until.get(key, 0.0) > started
+            cap = started + (max(max_wait_s, settings.typing_max_wait_s) if typed else max_wait_s)
+            if (pause := min(debounce_s, cap - time.monotonic())) <= 0:
+                return
             await asyncio.sleep(pause)
             now = len(
                 await self.ingress.queued_in_session(self.tenant_id, session_id, settings.max_batch + 1)
             )
-            if now == count:
+            if now == count and time.monotonic() >= self._typing_until.get(key, 0.0):
                 return
             count = now
 

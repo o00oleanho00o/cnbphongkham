@@ -615,3 +615,27 @@ async def _tick(setup: Setup) -> None:
     while True:
         await setup.hub.tick()
         await asyncio.sleep(0.01)
+
+
+async def test_a_person_typing_in_a_one_to_one_chat_is_told_to_the_dispatcher_and_nothing_else_is(
+    tmp_path: Path, bridge: FakeBridge, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    setup = Setup(_runtime(tmp_path, bridge))
+    heard: list[tuple[str, str]] = []
+
+    def note_typing(name: str, thread: str) -> None:
+        heard.append((name, thread))
+
+    monkeypatch.setattr(setup.dispatcher, "note_typing", note_typing)
+    await setup.personal()
+    await setup.event("nick", {"type": "credential_updated", "credential": CREDENTIAL})
+    await setup.hub.sync()
+
+    await setup.event("nick", {"type": "typing", "thread_id": "u1", "is_group": False})
+    await setup.event("nick", {"type": "typing", "thread_id": "g1", "is_group": True})
+    await setup.event("nick", {"type": "typing", "thread_id": "me-1", "is_group": False})
+    await setup.event("nick", {"type": "typing", "is_group": False})
+    await setup.event("other", {"type": "typing", "thread_id": "u2", "is_group": False})
+
+    assert heard == [("zalo-nick", "u1")]
+    await setup.close()

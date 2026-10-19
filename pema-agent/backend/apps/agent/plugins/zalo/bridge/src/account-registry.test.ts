@@ -12,6 +12,8 @@ import {
   createFakeApi,
   createFakeSession,
   fakeFriendEvent,
+  fakeGroupTyping,
+  fakeUserTyping,
   fakeUserMessage,
   makeConfig,
 } from "./test-support.js";
@@ -155,6 +157,20 @@ describe("AccountManager: events to the API", () => {
       ["request"],
     );
     assert.equal(publisher.ofType("friend_event")[0]?.event.thread_id, "2000009");
+  });
+
+  it("a_person_typing_is_published_once_per_gap_and_a_group_is_left_out", async () => {
+    const { gateway, publisher, manager } = setup();
+    const fake = await startWithFake(manager, gateway);
+
+    fake.listener.emitTyping(fakeUserTyping("2000009"));
+    fake.listener.emitTyping(fakeUserTyping("2000009"));
+    fake.listener.emitTyping(fakeGroupTyping("2000009"));
+    await Promise.resolve();
+
+    assert.deepEqual(publisher.ofType("typing"), [
+      { type: "typing", thread_id: "2000009", is_group: false },
+    ]);
   });
 
   it("events_of_a_stopped_attachment_are_not_published", async () => {

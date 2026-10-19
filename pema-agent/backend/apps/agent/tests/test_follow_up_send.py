@@ -392,3 +392,19 @@ async def test_the_same_follow_up_asked_twice_is_sent_once(tmp_path: Path) -> No
 
     assert (first, second) == (Sent(True), Sent(True))
     assert [m.text for m in channel.sent] == ["Chị còn quan tâm không ạ?"]
+
+
+def test_the_judge_leaves_out_an_answer_that_was_never_sent_because_the_customer_wrote_again() -> None:
+    history = [
+        Message.user("hours?"),
+        Message(role="assistant", blocks=[TextBlock(text="draft nobody saw")]),
+        Message.user("[System] The person wrote again before your last answer was sent."),
+        Message.user("and the price?"),
+        Message(role="assistant", blocks=[TextBlock(text="hours and price in one answer")]),
+    ]
+
+    assert render_transcript(history).split("\n") == [
+        "Khách: hours?",
+        "Khách: and the price?",
+        "Agent: hours and price in one answer",
+    ]

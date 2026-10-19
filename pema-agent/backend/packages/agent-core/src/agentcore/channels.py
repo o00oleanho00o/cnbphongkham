@@ -127,6 +127,15 @@ class ShowsTyping(Protocol):
 
 
 @runtime_checkable
+class ReportsTyping(Protocol):
+    """A channel that hears when the person is typing. The channel hub hands it a function to call with the
+    conversation id each time it hears so; the dispatcher then waits a little longer for the rest of a burst
+    of messages before it answers."""
+
+    def on_typing(self, notify: Callable[[str], None]) -> None: ...
+
+
+@runtime_checkable
 class FiltersListening(Protocol):
     """A channel that listens to only some of its chats. What it hears itself it filters on its own; the
     channel hub asks it before it tells the plugins that listen of the agent's reply in a chat. ``metadata``

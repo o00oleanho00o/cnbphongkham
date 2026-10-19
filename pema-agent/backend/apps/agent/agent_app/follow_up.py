@@ -35,6 +35,7 @@ from agent_app.ingress import OPEN_DELIVERY
 from agent_app.storage import AgentDatabase, retrying
 from agentcore import LlmRequest, Message, ModelClient, ModelError, SessionStore
 from agentcore.channels import PROACTIVE, InboundMessage
+from agentcore.loop.run_turn import SYSTEM_NOTE_PREFIX
 
 State = Literal["done", "hesitant", "call_back", "soft_decline", "hard_decline", "negative"]
 STATES: Final = get_args(State)
@@ -289,6 +290,11 @@ def render_transcript(messages: Sequence[Message], policy: FollowUpPolicy = DEFA
     for message in messages:
         text = message.text().strip()
         if not text or message.role not in ("user", "assistant"):
+            continue
+        if message.role == "user" and text.startswith(SYSTEM_NOTE_PREFIX):
+            # The answer before it was never sent: the customer wrote again first.
+            if lines and lines[-1].startswith("Agent:"):
+                lines.pop()
             continue
         if message.role == "user":
             instructed = text.startswith(INSTRUCTION_MARK)

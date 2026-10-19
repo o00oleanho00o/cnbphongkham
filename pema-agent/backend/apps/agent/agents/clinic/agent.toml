@@ -54,6 +54,11 @@ queue_mode = "steer"
 queue_debounce_s = 0.8
 queue_max_wait_s = 3.0
 queue_max_batch = 20
+# Zalo customers send a thought in pieces, a few seconds apart: wait for the rest before answering, and longer
+# while the customer is heard typing (personal accounts report it). The test console keeps the short wait.
+queue_wait_by_prefix = { "zalo-" = { debounce_s = 5.0, max_wait_s = 20.0 } }
+queue_typing_hold_s = 6.0
+queue_typing_max_wait_s = 30.0
 
 [plugins]
 # sso: the clinic web's staff (owner and manager get admin); knowledge: the documents the agent answers from;

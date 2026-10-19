@@ -3,7 +3,14 @@
  * names and cookies are made up, nothing here opens a network connection.
  */
 import type { Hono } from "hono";
-import { FriendEventType, type FriendEvent, type Message } from "zca-js";
+import {
+  FriendEventType,
+  GroupTyping,
+  UserTyping,
+  type FriendEvent,
+  type Message,
+  type Typing,
+} from "zca-js";
 import { signedHeaders } from "./auth.js";
 import type { BridgeConfig } from "./config.js";
 import type { BridgeEvent, EventPublisher, EventTarget } from "./event-publisher.js";
@@ -48,6 +55,7 @@ export type FakeListener = ListenerPort & {
   failNextStart: boolean;
   emitMessage(message: Message): void;
   emitFriendEvent(event: FriendEvent): void;
+  emitTyping(typing: Typing): void;
   emitConnected(): void;
   emitClosed(code: number, reason?: string): void;
   emitError(error: unknown): void;
@@ -56,6 +64,7 @@ export type FakeListener = ListenerPort & {
 export function createFakeListener(): FakeListener {
   let messageHandler: ((message: Message) => unknown) | null = null;
   let friendHandler: ((event: FriendEvent) => unknown) | null = null;
+  let typingHandler: ((typing: Typing) => unknown) | null = null;
   let connectedHandler: (() => unknown) | null = null;
   let closedHandler: ((code: number, reason: string) => unknown) | null = null;
   let errorHandler: ((error: unknown) => unknown) | null = null;
@@ -64,8 +73,9 @@ export function createFakeListener(): FakeListener {
     starts: 0,
     stops: 0,
     failNextStart: false,
-    on(event: "message" | "friend_event", handler: never): unknown {
+    on(event: "message" | "friend_event" | "typing", handler: never): unknown {
       if (event === "message") messageHandler = handler;
+      else if (event === "typing") typingHandler = handler;
       else friendHandler = handler;
       return listener;
     },
@@ -89,6 +99,7 @@ export function createFakeListener(): FakeListener {
     },
     emitMessage: (message) => void messageHandler?.(message),
     emitFriendEvent: (event) => void friendHandler?.(event),
+    emitTyping: (typing) => void typingHandler?.(typing),
     emitConnected: () => void connectedHandler?.(),
     emitClosed: (code, reason = "") => void closedHandler?.(code, reason),
     emitError: (error) => void errorHandler?.(error),
@@ -249,6 +260,15 @@ export function fakeUserMessage(threadId = "2000001", text = "xin chào"): Messa
 
 export function fakeFriendEvent(type: FriendEventType, threadId = "2000001"): FriendEvent {
   return { type, data: threadId, threadId, isSelf: false } as unknown as FriendEvent; // synthetic
+}
+
+/** A person typing in a one-to-one chat, as zca-js builds it. */
+export function fakeUserTyping(uid = "2000001"): Typing {
+  return new UserTyping({ uid, ts: "1760000000000", isPC: 0 });
+}
+
+export function fakeGroupTyping(uid = "2000001", gid = "3000001"): Typing {
+  return new GroupTyping({ uid, gid, ts: "1760000000000", isPC: 0 });
 }
 
 export type Sender = {

@@ -136,6 +136,89 @@ async def test_steer_brings_a_new_message_into_the_turn_while_it_uses_tools(tmp_
     await dispatcher.close()
 
 
+async def test_steer_gives_one_answer_to_a_message_that_came_while_the_final_answer_was_made(
+    tmp_path: Path,
+) -> None:
+    release = asyncio.Event()
+
+    async def slow_answer(request: LlmRequest) -> AssistantResult:
+        await release.wait()
+        return reply("draft that nobody should see")
+
+    runtime = _runtime(tmp_path)
+    model = Model([slow_answer, _answer("one answer to both")])
+    dispatcher = _dispatcher(runtime, model, "steer")
+
+    first, _ = await dispatcher.accept(_inbound("m1", "what are the hours"), deliver=True)
+    await asyncio.wait_for(model.started.wait(), 5.0)
+    second, _ = await dispatcher.accept(_inbound("m2", "and the price?"), deliver=True)
+    release.set()
+    done = [await dispatcher.wait(r.id, 5.0) for r in (first, second)]
+
+    assert model.asked == ["what are the hours", "and the price?"]
+    assert {(r.status, r.reply and r.reply.text) for r in done} == {("done", "one answer to both")}
+    assert (done[0].delivery, done[1].delivery) == ("pending", "skipped")
+    history = await runtime.store.load("default", first.session_id)
+    assert [m.role for m in history] == ["user", "assistant", "user", "user", "assistant"]
+    assert history[2].text().startswith("[System")
+    await dispatcher.close()
+
+
+async def _burst(tmp_path: Path, *, typing: bool) -> list[str]:
+    """m1, then m2 a moment later than the plain wait allows; True ``typing`` says the person is heard typing."""
+    model = Model([_answer("a"), _answer("b")])
+    runtime = _runtime(tmp_path)
+    runtime.live.use_model(model)
+    settings = DispatchSettings(
+        queue_mode="steer",
+        debounce_s=0.05,
+        max_wait_s=0.15,
+        poll_s=0.01,
+        typing_hold_s=1.0,
+        typing_max_wait_s=1.0,
+    )
+    dispatcher = runtime.dispatcher(settings)
+    first, _ = await dispatcher.accept(_inbound("m1", "first part"))
+    if typing:
+        dispatcher.note_typing("http", "c1")
+    await asyncio.sleep(0.4)
+    second, _ = await dispatcher.accept(_inbound("m2", "second part"))
+    await dispatcher.wait(first.id, 5.0)
+    await dispatcher.wait(second.id, 5.0)
+    await dispatcher.close()
+    return model.asked
+
+
+async def test_a_person_heard_typing_keeps_the_wait_going_for_the_rest_of_the_burst(tmp_path: Path) -> None:
+    assert await _burst(tmp_path, typing=True) == ["first part\n\nsecond part"]
+
+
+async def test_without_a_typing_signal_the_wait_ends_at_its_limit(tmp_path: Path) -> None:
+    assert await _burst(tmp_path, typing=False) == ["first part", "second part"]
+
+
+async def test_typing_never_holds_a_conversation_past_its_cap(tmp_path: Path) -> None:
+    model = Model([_answer("done")])
+    runtime = _runtime(tmp_path)
+    runtime.live.use_model(model)
+    settings = DispatchSettings(
+        queue_mode="steer",
+        debounce_s=0.05,
+        max_wait_s=0.1,
+        poll_s=0.01,
+        typing_hold_s=30.0,
+        typing_max_wait_s=0.4,
+    )
+    dispatcher = runtime.dispatcher(settings)
+    first, _ = await dispatcher.accept(_inbound("m1", "hello"))
+    dispatcher.note_typing("http", "c1")  # the person types for ever and never sends
+
+    record = await dispatcher.wait(first.id, 5.0)
+
+    assert record.status == "done"
+    await dispatcher.close()
+
+
 async def test_a_failed_turn_fails_every_message_it_took(tmp_path: Path) -> None:
     async def broken(request: LlmRequest) -> AssistantResult:
         raise ModelError("auth", "bad key")
@@ -164,4 +247,49 @@ def test_the_profile_chooses_the_mode_per_channel_and_checks_the_waits(tmp_path:
         )
     assert DispatchSettings(queue_by_channel={"zalo": "collect"}).mode_for("zalo") == "collect"
     assert DispatchSettings(queue_by_channel={"zalo": "collect"}).mode_for("http") == "followup"
+    runtime.close()
+
+
+def test_a_channel_prefix_can_wait_longer_and_the_longest_prefix_wins() -> None:
+    settings = DispatchSettings(
+        debounce_s=0.8,
+        max_wait_s=3.0,
+        wait_by_prefix={"zalo-": (5.0, 20.0), "zalo-vip": (8.0, 30.0)},
+    )
+
+    assert settings.wait_for("http") == (0.8, 3.0)
+    assert settings.wait_for("zalo-nick") == (5.0, 20.0)
+    assert settings.wait_for("zalo-vip1") == (8.0, 30.0)
+
+
+def test_the_profile_checks_the_waits_it_sets_per_channel_and_for_typing() -> None:
+    profile = Profile.model_validate(
+        {
+            "agent": {"name": "t"},
+            "loop": {"queue_wait_by_prefix": {"zalo-": {"debounce_s": 5, "max_wait_s": 20}}},
+        }
+    )
+
+    assert profile.loop.queue_wait_by_prefix["zalo-"].max_wait_s == 20
+    with pytest.raises(ValidationError, match="max_wait_s must be at least debounce_s"):
+        Profile.model_validate(
+            {
+                "agent": {"name": "t"},
+                "loop": {"queue_wait_by_prefix": {"z": {"debounce_s": 5, "max_wait_s": 1}}},
+            }
+        )
+    with pytest.raises(ValidationError, match="queue_typing_max_wait_s"):
+        Profile.model_validate(
+            {"agent": {"name": "t"}, "loop": {"queue_max_wait_s": 10, "queue_typing_max_wait_s": 5}}
+        )
+
+
+def test_the_clinic_agent_waits_longer_for_zalo_customers_than_for_the_console() -> None:
+    clinic = Path(__file__).resolve().parents[1] / "agents" / "clinic"
+    runtime = build_runtime(load_profile(clinic), fake=True, env={}, db=None)
+    settings = runtime.dispatcher().settings
+
+    assert settings.wait_for("http") == (0.8, 3.0)
+    assert settings.wait_for("zalo-nick") == (5.0, 20.0)
+    assert (settings.typing_hold_s, settings.typing_max_wait_s) == (6.0, 30.0)
     runtime.close()

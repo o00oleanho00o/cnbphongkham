@@ -11,6 +11,7 @@ import {
 import {
   createFakeListener,
   fakeFriendEvent,
+  fakeUserTyping,
   fakeUserMessage,
   type FakeListener,
 } from "./test-support.js";
@@ -331,6 +332,23 @@ describe("startListener: lifecycle and handlers", () => {
     withHandler.emitFriendEvent(event);
 
     assert.deepEqual(received, [event]);
+  });
+
+  it("typing_is_forwarded_only_when_a_handler_is_given", async () => {
+    const withoutHandler = createFakeListener();
+    startListener("acc-2", { listener: withoutHandler }, () => undefined);
+    assert.doesNotThrow(() => withoutHandler.emitTyping(fakeUserTyping()));
+
+    const withHandler = createFakeListener();
+    const received: unknown[] = [];
+    startListener("acc-3", { listener: withHandler }, () => undefined, undefined, {
+      onTyping: (typing) => void received.push(typing),
+    });
+    const typing = fakeUserTyping("2000005");
+    withHandler.emitTyping(typing);
+    await Promise.resolve();
+
+    assert.deepEqual(received, [typing]);
   });
 
   it("a_listener_error_is_logged_without_stopping_anything", () => {

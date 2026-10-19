@@ -68,6 +68,17 @@ class ModelSection(_Section):
     """openai-compatible only: ``deepseek`` or ``openai``; unset guesses from the base URL."""
 
 
+class ChannelWait(_Section):
+    debounce_s: float = Field(ge=0, le=30)
+    max_wait_s: float = Field(ge=0, le=60)
+
+    @model_validator(mode="after")
+    def _ordered(self) -> ChannelWait:
+        if self.max_wait_s < self.debounce_s:
+            raise ValueError("max_wait_s must be at least debounce_s")
+        return self
+
+
 class LoopSection(_Section):
     max_steps: int = Field(default=6, ge=1, le=50)
     max_output_tokens: int = Field(default=2048, ge=64)
@@ -87,12 +98,21 @@ class LoopSection(_Section):
     queue_debounce_s: float = Field(default=0.8, ge=0, le=10)
     queue_max_wait_s: float = Field(default=3.0, ge=0, le=30)
     queue_max_batch: int = Field(default=20, ge=1, le=100)
+    queue_wait_by_prefix: dict[str, ChannelWait] = Field(default_factory=dict[str, ChannelWait])
+    """Channels whose name starts with a key wait differently for the rest of a burst of messages, e.g.
+    ``{ "chat-" = { debounce_s = 5, max_wait_s = 20 } }``; the longest matching key wins."""
+    queue_typing_hold_s: float = Field(default=5.0, ge=0, le=30)
+    """How long a "the person is typing" signal keeps the wait going; 0 ignores the signal."""
+    queue_typing_max_wait_s: float = Field(default=30.0, ge=0, le=120)
+    """The longest a conversation waits while the person keeps typing."""
 
     @model_validator(mode="after")
     def _guard_is_valid(self) -> LoopSection:
         self.guard_policy()
         if self.queue_max_wait_s < self.queue_debounce_s:
             raise ValueError("queue_max_wait_s must be at least queue_debounce_s")
+        if self.queue_typing_max_wait_s < self.queue_max_wait_s:
+            raise ValueError("queue_typing_max_wait_s must be at least queue_max_wait_s")
         return self
 
     def guard_policy(self) -> LoopGuardPolicy:

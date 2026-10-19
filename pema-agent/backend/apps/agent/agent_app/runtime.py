@@ -154,6 +154,11 @@ class Runtime:
                 debounce_s=loop.queue_debounce_s,
                 max_wait_s=loop.queue_max_wait_s,
                 max_batch=loop.queue_max_batch,
+                wait_by_prefix={
+                    k: (v.debounce_s, v.max_wait_s) for k, v in loop.queue_wait_by_prefix.items()
+                },
+                typing_hold_s=loop.queue_typing_hold_s,
+                typing_max_wait_s=loop.queue_typing_max_wait_s,
             ),
             before_turn=self.refresh,
         )

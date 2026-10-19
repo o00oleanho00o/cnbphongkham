@@ -87,6 +87,7 @@ class ZaloPersonalChannel:
         owner's own."""
         self._api: BridgeAccountApi | None = None
         self._receive: Receive | None = None
+        self._typing: Callable[[str], None] | None = None
         self._courtesies: set[asyncio.Task[None]] = set()
 
     @property
@@ -127,6 +128,20 @@ class ZaloPersonalChannel:
             await client.stop_account(self.account.id)
         except ZaloBridgeError as err:
             logger.info("personal account %s: stop refused (%s)", self.account.id, err.kind)
+
+    def on_typing(self, notify: Callable[[str], None]) -> None:
+        """Where the channel hub wants to hear that a person is typing (``ReportsTyping``)."""
+        self._typing = notify
+
+    def handle_typing(self, event: Mapping[str, Any]) -> None:
+        """One ``typing`` event of the bridge. Only a person of a one-to-one chat counts; the agent just waits
+        a little longer for their next message, so nothing else is checked."""
+        notify = self._typing
+        thread_id = event.get("thread_id")
+        if notify is None or not self.listening or event.get("is_group") is not False:
+            return
+        if isinstance(thread_id, str) and thread_id and thread_id != self.own_id:
+            notify(thread_id)
 
     async def handle(self, message: Mapping[str, Any]) -> None:
         """One ``message`` event of the bridge: filtered, then handed to the agent."""

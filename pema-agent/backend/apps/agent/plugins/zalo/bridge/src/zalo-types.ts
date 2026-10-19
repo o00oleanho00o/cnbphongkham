@@ -6,12 +6,13 @@
  * network, so the code depends on these small types and only `zalo-client.ts` touches the real library.
  * Types come from zca-js (`import type`), so a fake that satisfies them stays honest to the real API.
  */
-import type { API, FriendEvent, Message } from "zca-js";
+import type { API, FriendEvent, Message, Typing } from "zca-js";
 
 /** The slice of zca-js' `Listener` the bridge uses (same methods the original `zalo-listener.ts` calls). */
 export type ListenerPort = {
   on(event: "message", handler: (message: Message) => unknown): unknown;
   on(event: "friend_event", handler: (event: FriendEvent) => unknown): unknown;
+  on(event: "typing", handler: (typing: Typing) => unknown): unknown;
   onConnected(cb: () => unknown): void;
   onError(cb: (error: unknown) => unknown): void;
   onClosed(cb: (code: number, reason: string) => unknown): void;

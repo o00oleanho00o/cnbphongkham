@@ -59,6 +59,12 @@ FLUSH_NOTE: Final = (
     "remembering in later sessions (the user's preferences or corrections, lasting facts), save it now with "
     "the memory tool. Otherwise reply: nothing to save."
 )
+SYSTEM_NOTE_PREFIX: Final = "[System"
+"""Starts every text the harness itself puts into the history as if from the user; it is not the person's."""
+UNSENT_NOTE: Final = (
+    f"{SYSTEM_NOTE_PREFIX}] The person wrote again before your last answer was sent, so that answer was NOT "
+    "sent to them. Answer again: cover everything they wrote so far, once, in the conversation's language."
+)
 TRACE_WRITE_TIMEOUT_S: Final = 10.0
 
 logger = logging.getLogger(__name__)
@@ -335,6 +341,23 @@ async def run_turn(
                     notes.append(note.text)
         return stop
 
+    async def take_steered(step: int, *, unsent: bool) -> bool:
+        """Stores the messages that came while the turn ran; True when there were some. ``unsent``: the answer
+        just made would have been the reply, and it is told the person never got it."""
+        if steer is None:
+            return False
+        steered = [text for text in await steer() if text.strip()]
+        if not steered:
+            return False
+        if unsent:
+            if isinstance(observer, RetryObserver):
+                observer.retry("steered")
+            await record(Message.user(UNSENT_NOTE))
+        for text in steered:
+            await record(Message.user(text))
+        events.append(TraceEvent("inbox", step, 0.0, detail={"mode": "steer", "messages": len(steered)}))
+        return True
+
     async def turn() -> TurnResult:
         nonlocal system, turn_start, usage
         system = await prompt.system(store, tenant_id, session_id, user_id=user_id)
@@ -369,19 +392,17 @@ async def run_turn(
 
             uses = result.message.tool_uses()
             if not uses:
+                # A person who wrote again while this answer was being made has not seen it yet: answer once
+                # more, to everything.
+                if await take_steered(step, unsent=True):
+                    continue
                 return finished(result.message.text(), "completed", step)
             runs = await executor.execute(uses, ctx, step=step, observer=observer)
             for run in runs:
                 events.append(_tool_event(step, run))
                 await record(Message(role="tool", blocks=[run.result]))
             stop_using_tools = watch(step, uses, runs)
-            if steer is not None:
-                steered = [text for text in await steer() if text.strip()]
-                for text in steered:
-                    await record(Message.user(text))
-                if steered:
-                    detail = {"mode": "steer", "messages": len(steered)}
-                    events.append(TraceEvent("inbox", step, 0.0, detail=detail))
+            await take_steered(step, unsent=False)
             if stop_using_tools:
                 stop = "loop"
                 break

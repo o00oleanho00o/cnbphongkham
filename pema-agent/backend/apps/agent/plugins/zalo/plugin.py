@@ -318,6 +318,10 @@ class ZaloPlugin:
                 )
                 return
             await channel.handle(cast(Mapping[str, Any], message))
+        elif kind == "typing":
+            typing_channel = self.personal_channel(account_id)
+            if typing_channel is not None:
+                typing_channel.handle_typing(payload)
         elif kind == "credential_updated":
             credential = payload.get("credential")
             if not isinstance(credential, Mapping) or not credential:

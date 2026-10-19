@@ -96,6 +96,17 @@ class FakeChannel:
         )
 
 
+class TypingChannel(FakeChannel):
+    """Hears that a person is typing: keeps the function the hub gives it."""
+
+    def __init__(self, name: str = "fake") -> None:
+        super().__init__(name)
+        self.notify: Callable[[str], None] | None = None
+
+    def on_typing(self, notify: Callable[[str], None]) -> None:
+        self.notify = notify
+
+
 class StubbornChannel(FakeChannel):
     async def start(self, receive: Receive) -> None:
         self.starts += 1
@@ -462,3 +473,23 @@ async def test_the_host_tells_every_listening_plugin_of_a_message_and_skips_the_
     await runtime.plugins.observe(ObservedMessage("zalo-a", "t1", "u1", "m2", "sau khi tắt", "inbound"))
 
     assert log == [("zalo-a", "inbound", "chào")]
+
+
+async def test_a_channel_that_hears_typing_tells_the_dispatcher_under_its_own_name(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    channel = TypingChannel("chat-a")
+    dispatcher, hub = _hub(_runtime(tmp_path), channel)
+    heard: list[tuple[str, str]] = []
+
+    def note_typing(name: str, conversation: str) -> None:
+        heard.append((name, conversation))
+
+    monkeypatch.setattr(dispatcher, "note_typing", note_typing)
+
+    await hub.sync()
+    assert channel.notify is not None
+    channel.notify("c9")
+
+    assert heard == [("chat-a", "c9")]
+    await dispatcher.close()

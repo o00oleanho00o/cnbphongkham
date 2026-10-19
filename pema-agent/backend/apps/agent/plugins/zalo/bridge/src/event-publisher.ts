@@ -23,6 +23,7 @@ export type FriendEventKind =
 
 export type BridgeEvent =
   | { type: "message"; self_id: string; message: unknown }
+  | { type: "typing"; thread_id: string; is_group: boolean }
   | {
       type: "friend_event";
       event: { kind: FriendEventKind; thread_id: string; is_self: boolean; data: unknown };

@@ -19,6 +19,7 @@ import re
 import time
 from collections.abc import Awaitable, Callable, Mapping, Sequence
 from dataclasses import dataclass, replace
+from functools import partial
 from typing import Any, Final
 
 from agent_app.dispatcher import Dispatcher
@@ -34,6 +35,7 @@ from agentcore.channels import (
     OutboundMessage,
     PreparesText,
     Receive,
+    ReportsTyping,
     ShowsTyping,
     split_reply,
 )
@@ -160,6 +162,8 @@ class ChannelHub:
         for name, adapter in wanted.items():
             if name in self._running or self._clock() < self._retry_at.get(name, -math.inf):
                 continue
+            if isinstance(adapter, ReportsTyping):
+                adapter.on_typing(partial(self._dispatcher.note_typing, name))
             try:
                 await asyncio.wait_for(
                     adapter.start(self._receiver(name, adapter)), self.settings.start_timeout_s

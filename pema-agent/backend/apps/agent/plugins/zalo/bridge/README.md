@@ -112,7 +112,7 @@ and nothing was delivered).
 - `POST /kill-switch` `{on, scope?, reason?}`, `GET /kill-switch`
 
 **Events (bridge to API)**, posted to `{PEMA_API_BASE_URL}/webhooks/zalo-bridge/{account_id}`, signed,
-retried 3 times with backoff: `message`, `friend_event` (`kind`: `add|remove|request|undo_request|reject_request|other`),
+retried 3 times with backoff: `message`, `typing` (`thread_id`, `is_group`; one per person per 2 s, one-to-one chats only), `friend_event` (`kind`: `add|remove|request|undo_request|reject_request|other`),
 `credential_updated`, `account_state` (`connected|disconnected|session_dead|logged_out|blocked`).
 
 ## Configuration

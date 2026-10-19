@@ -29,6 +29,7 @@ from agentcore import (
 )
 from agentcore.harness.hooks import HookContext, HookSet, PostModelHook, PreModelHook
 from agentcore.harness.model.scripted import ScriptedModel, ScriptStep, calls, reply, tool_call
+from agentcore.loop.run_turn import SYSTEM_NOTE_PREFIX
 from agentcore.prompt import FINAL_TURN_NOTE
 
 SESSION = "s1"
@@ -388,3 +389,55 @@ async def test_a_message_steered_in_after_the_tools_is_stored_and_seen_by_the_ne
     (trace,) = tracer.traces
     inbox = [dict(e.detail) for e in trace.events if e.kind == "inbox"]
     assert inbox == [{"mode": "collect", "messages": 2}, {"mode": "steer", "messages": 1}]
+
+
+async def test_a_message_that_came_while_the_final_answer_was_made_gets_one_answer_to_everything() -> None:
+    model = ScriptedModel([reply("draft answer"), reply("one answer to both")])
+    store, tracer = InMemorySessionStore(), InMemoryTracer()
+    waiting = [["and the price?"], []]
+
+    async def steer() -> list[str]:
+        return waiting.pop(0) if waiting else []
+
+    result = await run_turn(
+        session_id=SESSION,
+        user_text="hours?",
+        prompt=PromptBuilder.fixed("s"),
+        model=model,
+        tools=ToolRegistry([ADD]),
+        store=store,
+        tracer=tracer,
+        steer=steer,
+    )
+
+    history = await store.load("default", SESSION)
+    assert result.text == "one answer to both"
+    assert [m.role for m in history] == ["user", "assistant", "user", "user", "assistant"]
+    assert history[2].text().startswith(SYSTEM_NOTE_PREFIX)
+    assert "NOT" in history[2].text()
+    assert history[3].text() == "and the price?"
+    assert len(model.requests) == 2
+    (trace,) = tracer.traces
+    assert [dict(e.detail) for e in trace.events if e.kind == "inbox"] == [{"mode": "steer", "messages": 1}]
+
+
+async def test_nothing_is_added_when_no_message_came_during_the_final_answer() -> None:
+    model = ScriptedModel([reply("answer")])
+    store = InMemorySessionStore()
+
+    async def steer() -> list[str]:
+        return []
+
+    result = await run_turn(
+        session_id=SESSION,
+        user_text="hi",
+        prompt=PromptBuilder.fixed("s"),
+        model=model,
+        tools=ToolRegistry([ADD]),
+        store=store,
+        steer=steer,
+    )
+
+    assert result.text == "answer"
+    assert [m.role for m in await store.load("default", SESSION)] == ["user", "assistant"]
+    assert len(model.requests) == 1

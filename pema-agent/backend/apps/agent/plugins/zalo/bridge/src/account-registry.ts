@@ -8,6 +8,7 @@ import { normalizeFriendEvent } from "./friends.js";
 import { createLogger, errorInfo } from "./logger.js";
 import { ON_DINH_MS } from "./reconnect-planner.js";
 import { AccountSafety } from "./safety.js";
+import { createTypingFilter } from "./typing.js";
 import { startListener, type ListenerReport } from "./zalo-listener.js";
 import type { Credential, Gateway, ZaloApi, ZaloSession } from "./zalo-types.js";
 
@@ -176,6 +177,7 @@ export class AccountManager {
     account.reportedState = null;
     const target = { accountId: account.id };
     const current = (): boolean => account.token === token;
+    const typingEvent = createTypingFilter(this.now);
 
     if (announceCredential) {
       this.deps.publisher.publish(target, {
@@ -207,6 +209,12 @@ export class AccountManager {
           onReport: (report) => {
             if (!current()) return;
             this.onListenerReport(account, report);
+          },
+          onTyping: (typing) => {
+            if (!current()) return;
+            const event = typingEvent(typing);
+            if (event === null) return;
+            this.deps.publisher.publish(target, event);
           },
           now: this.now,
         },
