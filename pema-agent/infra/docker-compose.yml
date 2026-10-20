@@ -39,6 +39,10 @@ x-agent-build: &agent-build
   context: ..
   dockerfile: infra/docker/agent.Dockerfile
 
+x-signer-build: &signer-build
+  context: ..
+  dockerfile: infra/docker/crm-signer.Dockerfile
+
 # Variables every Python process reads (pema.config.env.Settings, prefix PEMA_). Inside the compose network
 # the hosts are service names, so the URLs are composed here from the passwords in .env, not copied from it.
 # The database URL is NOT here: the API gets its role below.
@@ -169,6 +173,9 @@ services:
       # The session cookie is Secure (browsers send it only over https; localhost counts as secure). Set false
       # ONLY for the plain-HTTP-over-Tailscale mode (PEMA_PROXY_TLS=off), or the login loops.
       PEMA_SESSION_COOKIE_SECURE: ${PEMA_SESSION_COOKIE_SECURE:-true}
+      # The public key(s) of crm-signer (printed by `crm-signer keygen`; two, comma separated, while a key is being
+      # changed). Empty: the agent gateway /api/v1/agent-gateway answers 404 to everyone.
+      PEMA_AGENT_GATEWAY_PUBLIC_KEYS: ${PEMA_AGENT_GATEWAY_PUBLIC_KEYS:-}
     networks:
       - default
       - edge
@@ -238,6 +245,37 @@ services:
       timeout: 5s
       retries: 6
       start_period: 15s
+
+  # The only holder of the key that signs the agent's calls to the CRM gateway (docs/PLAN-crm-plugin.md 3.9). The
+  # agent calls it at http://crm-signer:8090/agent-gateway/... without any credential; it signs one short token per
+  # call, for exactly the one of the 8 routes asked for, and forwards to the API. Internal only. Make the key once:
+  #   docker compose --profile agent run --rm crm-signer crm-signer keygen   -> paste the printed line into .env
+  crm-signer:
+    profiles: ["agent"]
+    build: *signer-build
+    image: pema-agent-crm-signer:${PEMA_IMAGE_TAG:-local}
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    environment:
+      CRM_SIGNER_UPSTREAM: http://api:8000/api/v1/agent-gateway
+    expose:
+      - "8090"
+    volumes:
+      - crm-signer-keys:/keys
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8090/health', timeout=3).status == 200 else 1)"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 10s
 
   frontend:
     profiles: ["frontend", "app", "proxy"]
@@ -382,6 +420,7 @@ volumes:
   redis-data:
   pema-data:
   agent-home:
+  crm-signer-keys:
   caddy-data:
   caddy-config:
   # ollama-models:  # TẠM TẮT LLM LOCAL (2026-10-02)

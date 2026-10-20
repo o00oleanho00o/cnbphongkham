@@ -26,7 +26,7 @@ dev = [
 [tool.ruff]
 line-length = 110
 target-version = "py312"
-src = ["packages/contracts/src", "packages/agent-core/src", "packages/secret-cipher/src", "apps/api", "apps/agent", ".."]
+src = ["packages/contracts/src", "packages/agent-core/src", "packages/secret-cipher/src", "apps/api", "apps/agent", "apps/crm-signer", ".."]
 extend-exclude = [".venv"]
 
 [tool.ruff.lint]
@@ -42,7 +42,7 @@ ignore = [
 "**/alembic/env.py" = ["S608"]
 
 [tool.ruff.lint.isort]
-known-first-party = ["pema_contracts", "pema", "agentcore", "agent_app", "secretcipher"]
+known-first-party = ["pema_contracts", "pema", "agentcore", "agent_app", "secretcipher", "crm_signer"]
 known-third-party = ["alembic"]
 
 # ------------------------------------------------------------- pyright
@@ -59,6 +59,7 @@ extraPaths = [
     "packages/secret-cipher/src",
     "apps/api",
     "apps/agent",
+    "apps/crm-signer",
     "..",
 ]
 
