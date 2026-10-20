@@ -93,12 +93,14 @@ Là dữ liệu CRM, agent không đọc được, không view, hàm SQL hay rol
 `agent.appointment.change`, `agent.reminders.read`. `AGENT_PERMISSIONS` đúng sáu quyền này; không vai trò nhân viên nào
 có.
 
-**Xác thực máy** (`api/agent_gateway_auth.py`). *Đã viết:* khóa Bearer tĩnh, CRM giữ SHA-256 của khóa
-(`PEMA_AGENT_GATEWAY_KEY_SHA256`). **Sẽ đổi (bước 1b):** `Authorization: Bearer <JWT>` do `crm-signer` ký bằng Ed25519;
+**Xác thực máy** (`api/agent_gateway_auth.py`, **bước 1b đã làm 2026-10-20**; thay khóa Bearer tĩnh băm
+SHA-256 của bước 1): `Authorization: Bearer <JWT>` do `crm-signer` ký bằng Ed25519;
 CRM giữ **khóa công khai** (`PEMA_AGENT_GATEWAY_PUBLIC_KEYS`: một hoặc hai khóa, để đổi khóa không gián đoạn). CRM kiểm:
 chữ ký, `iss = pema-crm-signer`, `aud = pema-agent-gateway`, `exp` ≤ 2 phút sau `iat`, `scope` chứa quyền mà route cần,
 `jti` chưa dùng (nhớ trong bộ nhớ tới khi hết hạn). Không đặt khóa công khai thì cả nhóm route trả 404. Giới hạn 300
 lượt gọi mỗi phút cho cả nhóm, 10 lần ghi mỗi giờ cho mỗi người chat. Các route, quyền và test T6-T8 giữ nguyên.
+Khóa công khai viết dạng base64url của 32 byte (trường `x` của JWK), cách nhau bằng dấu phẩy. Thiếu quyền trong
+`scope` thì 403; mọi lỗi khác của token thì 401.
 
 **Route** `/api/v1/agent-gateway` (ký hiệu `C` = `/contacts/{channel}/{external_id}`):
 
@@ -386,7 +388,7 @@ agent (không khóa) ──HTTP──► crm-signer (giữ khóa riêng) ──B
 |---|---|---|
 | 0 | **Cứng hóa, phần test** (mục 3.10a, T9): làm được ngay, độc lập với mọi bước khác | T9 xanh |
 | 1 | CRM: cổng agent (đã viết): migration `0002`, quyền, khóa máy, chuẩn hóa số, 8 route, openapi/types | **22 test cổng qua trên DB tạm (đã chạy).** Còn chạy cả bộ test `apps/api` và `contracts` (chưa chạy), `ruff`/`pyright` sạch (đã sạch) |
-| 1b | CRM: đổi xác thực cổng từ khóa băm sang JWT Ed25519, kiểm bằng khóa công khai (mục 3.2) | Test 1b và 22 test cổng xanh, cả bộ `apps/api` xanh |
+| 1b | **(đã làm)** CRM: đổi xác thực cổng từ khóa băm sang JWT Ed25519, kiểm bằng khóa công khai (mục 3.2) | Test 1b và 22 test cổng xanh, cả bộ `apps/api` xanh |
 | 2 | CRM: outbox: migration `0003`, hàm ghi sự kiện ở 5 nơi, listener nhiều người nghe, worker `agent-events`, JWT sự kiện ký bằng khóa có sẵn của CRM, biến `PEMA_AGENT_EVENTS_URL`, dọn dòng cũ | Test outbox mục 4 xanh, cả bộ `apps/api` xanh |
 | 3 | `crm-signer`: ứng dụng nhỏ, `keygen`, danh sách 8 route, ký JWT, chuyển tiếp, log, Dockerfile, dịch vụ trong compose | Test `crm-signer` xanh |
 | 4 | Agent: plugin `crm`: client gọi `crm-signer`, 7 tool, `crm_person`, profile, `AGENTS.md`, T4 | Test tool xanh |
