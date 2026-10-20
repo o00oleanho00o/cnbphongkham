@@ -89,3 +89,26 @@ Agent: nhận sự kiện → cập nhật bảng nhắc của mình → tính c
   chưa tới giờ; gửi Zalo thất bại thì vào danh sách "nhắc không tới".
 - **Khách cũ đặt qua điện thoại, chưa từng chat:** khi khách lưu liên hệ trên Zalo mà số trùng hồ sơ cũ, CRM tạo **đề
   nghị nối** để nhân viên bấm duyệt (không gộp tự động). Zalo OA có nút trả lời nhanh cho tin nhắc: làm sau.
+
+## 5. Hai khung để viết vòng từ bước 6 trở đi (tra 2026-10-20)
+
+Mỗi vòng của agent từ nay viết theo **hai khung**, và sau này có thể đổi thành schema (bảng, file TOML) mà không đổi ý:
+
+**Khung vòng (loop spec)**, theo [arXiv 2607.00038](https://huggingface.co/papers/2607.00038) và
+[MindStudio](https://www.mindstudio.ai/blog/agent-loops-explained-trigger-action-stop-condition/): một vòng là một bản
+đặc tả có giới hạn, dùng lại được, gồm đúng năm phần: `trigger` (gì khởi động: sự kiện, đồng hồ, lượt chat), `goal`
+(trạng thái muốn đạt, kiểm được bằng dữ liệu), `verify` (đọc lại đâu để biết đã đạt chưa), `stop` (luật dừng: đạt mục
+tiêu, hết hạn, hết ngân sách, người đổi ý), `memory` (vòng nhớ gì giữa hai lần chạy). Vòng nhắc hẹn của mục 2 và 3
+đã trả lời đủ năm phần; mục "bảy câu" của mục 1 là cùng khung với hai câu thêm (ai gọi tool, ai được nhắn).
+
+**Khung đồ thị (graph)**, theo [Analytics Vidhya](https://www.analyticsvidhya.com/blog/2026/07/graph-engineering/) và
+[mastra.ai](https://mastra.ai/articles/langgraph): một vòng là đồ thị `nút` (mỗi nút một việc: đọc sự kiện, tính mốc,
+soạn tin, gửi, đọc câu trả lời, gọi CRM), `cạnh` (cạnh cố định hoặc cạnh có điều kiện đọc trạng thái), `trạng thái có
+kiểu` (mọi nút đọc ghi cùng một bản ghi: mã lịch, `version`, mốc đã gửi, số tin hôm nay, câu trả lời cuối), và `điểm
+dừng chờ người` (khách trả lời, nhân viên duyệt). Chu trình trong đồ thị là nơi vòng có thể tự quay: mỗi cạnh quay lại
+phải có bộ đếm trong trạng thái (mục 3).
+
+Áp vào repo: **mã giữ cả hai khung, model chỉ điền nội dung nút "soạn tin" và nút "hiểu câu trả lời"**. `crm-signer`
+(bước 3) không phải một vòng: nó là một nút "gọi CRM" không có `trigger` và `stop` riêng, có giới hạn tần suất làm
+phanh chung cho mọi vòng đi qua nó. Khi làm bước 6, ghi vòng nhắc hẹn thành một bảng năm phần và một danh sách nút,
+cạnh; test của mục 3 là test của các cạnh quay lại.

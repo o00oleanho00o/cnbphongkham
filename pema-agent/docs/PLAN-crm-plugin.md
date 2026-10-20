@@ -298,10 +298,10 @@ không đổi):
 agent (không khóa) ──HTTP──► crm-signer (giữ khóa riêng) ──Bearer JWT──► api /agent-gateway (giữ khóa công khai)
 ```
 
-- **Một ứng dụng nhỏ mới** `apps/crm-signer` (Python, `httpx` + một app ASGI tối giản, khoảng 150 dòng), container riêng,
+- **Một ứng dụng nhỏ mới** `apps/crm-signer` (Python, `httpx` + Starlette, bốn file nhỏ; **đã viết 2026-10-21**), container riêng,
   cổng `8090` chỉ trong mạng nội bộ. Không DB, không model, không tool, không gì khác.
 - **Việc của nó:** nhận yêu cầu ở `/agent-gateway/<đường>`, kiểm **phương thức + đường** có trong danh sách cố định
-  (đúng 8 route của mục 3.2), ký một JWT mới cho mỗi yêu cầu (`iss`, `aud`, `exp` 2 phút, `jti`, `scope` = đúng quyền
+  (đúng 8 route của mục 3.2), ký một JWT mới cho mỗi yêu cầu (`iss`, `aud`, `exp` **1 phút** (mỗi token một lần gọi nên ngắn hơn mức 2 phút CRM nhận), `jti`, `scope` = đúng quyền
   của route đó), chuyển tiếp thân và các header cho phép (`Content-Type`, `Idempotency-Key`, `X-Request-Id`), trả lại
   nguyên văn kết quả của CRM. Đường lạ thì 404 mà không gọi CRM. Không theo chuyển hướng.
 - **Khóa riêng:** file `0600` trong volume chỉ `crm-signer` gắn (như cách `agent_token.py` giữ khóa của CRM); tạo một lần
@@ -311,6 +311,7 @@ agent (không khóa) ──HTTP──► crm-signer (giữ khóa riêng) ──B
   không thân, không tên, số). Agent bị chiếm vẫn gọi được qua đây **trong lúc bị chiếm**, nhưng không mang được khóa đi,
   và mọi lần gọi có dấu vết ở chỗ agent không sửa được.
 - **Container:** `read_only`, `cap_drop: [ALL]`, `no-new-privileges`, người dùng thường; ra được đúng `api:8000`.
+- **Trong khung vòng của chủ (IDEAS-agent-loops.md mục 5):** `crm-signer` không phải một vòng, nó là "thẻ quyền nhân viên đeo" khi dùng công cụ CRM: không `trigger`, không `stop`; giới hạn tần suất của nó là phanh chung cho mọi vòng đi qua. Test đối chiếu `test_the_route_list_is_the_crm_gateway` giữ hai bên (8 route của CRM, 6 quyền) không lệch.
 - **Giới hạn thật:** `crm-signer` vẫn tin `channel`/`external_id` mà agent gửi (CRM không xác thực được người Zalo). Nó
   giải quyết việc *lộ khóa*, không giải quyết việc *agent bị chiếm tự khai người khác* trong lúc bị chiếm.
 
@@ -394,8 +395,8 @@ agent (không khóa) ──HTTP──► crm-signer (giữ khóa riêng) ──B
 | 0 | **Cứng hóa, phần test** (mục 3.10a, T9): làm được ngay, độc lập với mọi bước khác | T9 xanh |
 | 1 | CRM: cổng agent (đã viết): migration `0002`, quyền, khóa máy, chuẩn hóa số, 8 route, openapi/types | **22 test cổng qua trên DB tạm (đã chạy).** Còn chạy cả bộ test `apps/api` và `contracts` (chưa chạy), `ruff`/`pyright` sạch (đã sạch) |
 | 1b | **(đã làm)** CRM: đổi xác thực cổng từ khóa băm sang JWT Ed25519, kiểm bằng khóa công khai (mục 3.2) | Test 1b và 22 test cổng xanh, cả bộ `apps/api` xanh |
-| 2 | **(đã làm 2026-10-20, chờ chạy bộ test đầy đủ)** CRM: outbox: migration `0003`, hàm ghi sự kiện ở 5 nơi, listener nhiều người nghe, worker `agent-events`, JWT sự kiện ký bằng khóa có sẵn của CRM, biến `PEMA_AGENT_EVENTS_URL`, dọn dòng cũ | Test outbox mục 4 xanh, cả bộ `apps/api` xanh |
-| 3 | `crm-signer`: ứng dụng nhỏ, `keygen`, danh sách 8 route, ký JWT, chuyển tiếp, log, Dockerfile, dịch vụ trong compose | Test `crm-signer` xanh |
+| 2 | **(đã làm 2026-10-20, bộ test đầy đủ xanh: 1112 qua)** CRM: outbox: migration `0003`, hàm ghi sự kiện ở 5 nơi, listener nhiều người nghe, worker `agent-events`, JWT sự kiện ký bằng khóa có sẵn của CRM, biến `PEMA_AGENT_EVENTS_URL`, dọn dòng cũ | Test outbox mục 4 xanh, cả bộ `apps/api` xanh |
+| 3 | **(đã làm 2026-10-21)** `crm-signer`: ứng dụng nhỏ (`apps/crm-signer`, Starlette), `keygen`, danh sách 8 route, ký JWT, chuyển tiếp, log, giới hạn 300/phút, Dockerfile, dịch vụ `crm-signer` trong compose (profile `agent`, `read_only`, `cap_drop ALL`), `PEMA_AGENT_GATEWAY_PUBLIC_KEYS` vào `.env` và `api` | 24 test `crm-signer` xanh, test cổng và sự kiện xanh trên DB tạm; **chưa build Docker** |
 | 4 | Agent: plugin `crm`: client gọi `crm-signer`, 7 tool, `crm_person`, profile, `AGENTS.md`, T4 | Test tool xanh |
 | 5 | Agent: route nhận sự kiện (JWKS, `aud` riêng), `sso` từ chối `aud` sự kiện, bảng `crm_reminder`/`crm_reminder_sent` | Test route xanh, test `sso` xanh |
 | 6 | Lõi và nhắc hẹn: `ctx.proactive` (tách `DispatcherOutbox`), job `crm-reminders`, đối soát; tìm `conversation_id` cho người chat | Test job và `ctx.proactive` xanh; test `follow_up` vẫn xanh |
