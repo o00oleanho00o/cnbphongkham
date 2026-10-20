@@ -33,7 +33,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import aliased
 
 from pema.clinic import audit
-from pema.clinic.actions import appointment_events
+from pema.clinic.actions import agent_events, appointment_events
 from pema.clinic.actions._common import (
     check_version,
     lost_race_is_conflict,
@@ -313,6 +313,7 @@ async def book_in_session(
             "starts_at": row.starts_at.isoformat(),
         },
     )
+    await agent_events.record_appointment_changed(session, ctx, row)
     return row, patient_code
 
 
@@ -470,6 +471,7 @@ async def update_appointment(
         await audit.record(
             session, ctx, "appointment.update", "appointment", row.id, {"changed_fields": changed}
         )
+        await agent_events.record_appointment_changed(session, ctx, row)
         updated = appointment_out(row, code)
     announce(updated.id, updated.patient_id, "update", updated.status)
     return updated
@@ -528,6 +530,7 @@ async def transition(
             row.id,
             {"from": current.value, "to": target.value, "has_reason": bool(reason)},
         )
+        await agent_events.record_appointment_changed(session, ctx, row)
         changed = appointment_out(row, code)
     announce(changed.id, changed.patient_id, verb, target)
     return changed

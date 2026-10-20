@@ -14,6 +14,7 @@ from uuid import UUID
 from sqlalchemy import select
 
 from pema.clinic import audit
+from pema.clinic.actions import agent_events
 from pema.clinic.actions._common import lost_race_is_conflict, now
 from pema.clinic.actions._mappers import consent_out
 from pema.clinic.actions._scope import require_patient_access
@@ -79,4 +80,8 @@ async def record_consent(
                 "marketing_opt_out_set": opted_out,
             },
         )
+        if payload.kind is ConsentKind.MESSAGING:
+            await agent_events.record_person_changed(
+                session, ctx, patient_id, messages_consent=payload.granted
+            )
         return consent_out(row)

@@ -31,6 +31,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from pema.clinic import audit
+from pema.clinic.actions import agent_events
 from pema.clinic.actions._common import lost_race_is_conflict, not_found, now
 from pema.clinic.actions.appointments import (
     DOCTOR_ROLES,
@@ -232,18 +233,6 @@ async def free_slots(
     return FreeSlotsOut(duration_min=duration_min, days=out)
 
 
-async def _messages_consent(session: AsyncSession, ctx: ActionContext, patient_id: UUID) -> bool | None:
-    """The current consent of kind ``messaging``: the newest row (``consent`` is an append-only history)."""
-    return await session.scalar(
-        select(Consent.granted)
-        .where(
-            Consent.clinic_id == ctx.clinic_id, Consent.patient_id == patient_id, Consent.kind == MESSAGING
-        )
-        .order_by(Consent.created_at.desc(), Consent.id.desc())
-        .limit(1)
-    )
-
-
 async def _new_patient(
     session: AsyncSession, ctx: ActionContext, full_name: str, phone: str, channel: str
 ) -> Patient:
@@ -295,7 +284,7 @@ async def save_contact(
                 link.id,
                 {"patient_id": str(patient.id), "channel": channel},
             )
-        consent = await _messages_consent(session, ctx, link.patient_id)
+        consent = await agent_events.current_messages_consent(session, ctx.clinic_id, link.patient_id)
         wanted = payload.messages_consent
         if wanted is not None and wanted != consent:
             stamp = now()
@@ -318,6 +307,7 @@ async def save_contact(
                 row.id,
                 {"patient_id": str(link.patient_id), "kind": MESSAGING, "granted": wanted},
             )
+            await agent_events.record_person_changed(session, ctx, link.patient_id, messages_consent=wanted)
             consent = wanted
     return ContactOut(created=created, messages_consent=consent)
 
@@ -440,6 +430,7 @@ async def reschedule(
             row.id,
             {"changed_fields": ["starts_at", "duration_min"]},
         )
+        await agent_events.record_appointment_changed(session, ctx, row)
         moved = _out(row)
         patient_id = row.patient_id
     announce(moved.id, patient_id, "update", moved.status)

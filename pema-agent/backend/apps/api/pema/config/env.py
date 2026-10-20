@@ -58,6 +58,11 @@ class Settings(BaseSettings):
     bytes, the ``x`` of a JWK), comma separated; two while a key is being changed. Public, not a secret.
     Unset or empty: ``/agent-gateway`` answers 404 to everyone."""
 
+    agent_events_url: str | None = None
+    """``PEMA_AGENT_EVENTS_URL``: where the API sends what the agent must hear about the visits of the people
+    it chats with (``http://agent:8088/v1/hooks/crm/events``), signed with the key of ``agent_token``. Unset
+    or empty: no event is written and no worker runs."""
+
     crm_runner_interval_seconds: int = 900
     """How often the API process runs the CRM rules for every clinic (0 turns the runner off). The runner
     reads ``clinic.*``, so it lives in the API process (role ``be_app``), not in the worker."""

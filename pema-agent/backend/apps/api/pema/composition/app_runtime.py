@@ -24,10 +24,11 @@ from fastapi import FastAPI
 
 from pema.api import dashboard_auth
 from pema.api.routers import admin_crm_rules
-from pema.clinic.actions import appointment_events
+from pema.clinic.actions import agent_events, appointment_events
 from pema.clinic.crm_rules.admin import SqlCrmRuleAdminService
 from pema.clinic.crm_rules.runner import CrmRulesRunner
 from pema.clinic.crm_rules.sql_store import SqlCrmRuleStore
+from pema.composition.agent_events_worker import AgentEventWorker
 from pema.composition.auth_bridge import resolve_staff_context
 from pema.config.env import Settings
 from pema.core.db import ClinicDatabase, get_installation_clinic_id
@@ -125,6 +126,11 @@ class AppLifecycle:
         if interval > 0:
             appointment_events.install_listener(lambda _change: self._crm_wake.set())
             self._tasks.append(loop.create_task(self._crm_loop(interval), name="crm-rules"))
+        events_url = (rt.settings.agent_events_url or "").strip()
+        if events_url:
+            worker = AgentEventWorker(rt.db, events_url)
+            agent_events.set_waker(worker.wake)
+            self._tasks.append(loop.create_task(worker.run(), name="agent-events"))
         retention = start_retention_loop(
             RetentionRunner(
                 rt.db,
@@ -153,6 +159,7 @@ class AppLifecycle:
 
     async def stop(self) -> None:
         appointment_events.install_listener(None)
+        agent_events.set_waker(None)
         self._stop.set()
         tasks, self._tasks = self._tasks, []
         for task in tasks:

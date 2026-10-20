@@ -4,131 +4,35 @@ every call acts for the person of one chat only (rules L2-L4; tests T6, T8, step
 
 from __future__ import annotations
 
-import base64
-import itertools
 import time
-from collections.abc import AsyncIterator, Awaitable, Callable, Generator, Iterator
-from datetime import date, datetime, timedelta
-from typing import Any
-from uuid import uuid4
+from collections.abc import Callable
 
 import httpx
-import jwt
 import pytest
-import pytest_asyncio
-from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
-from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
 from fastapi import FastAPI
-from sqlalchemy import text
 from sqlalchemy.engine import Engine
 
-from pema.api.agent_gateway_auth import AUDIENCE, ISSUER, WRITES_PER_HOUR, reset_agent_gateway_limits
+from pema.api.agent_gateway_auth import WRITES_PER_HOUR
 from pema.api.clinic_testing import ClientFactory
+from pema.api.gateway_testing import (
+    DOCTORS,
+    GW,
+    KEY,
+    OTHER_KEY,
+    Save,
+    at,
+    bearer,
+    book,
+    free_day,
+    person,
+    public,
+    rows,
+    token,
+)
 from pema.clinic.actions.seed_demo import SeedResult
 from pema.config.env import get_settings
-from pema_contracts.common import VN_TZ
-from pema_contracts.roles import Permission
 
 pytestmark = pytest.mark.db
-
-KEY = Ed25519PrivateKey.generate()  # crm-signer's key, made fresh for this test run
-OTHER_KEY = Ed25519PrivateKey.generate()
-ALL_SCOPES = " ".join(p.value for p in Permission if p.value.startswith("agent."))
-GW = "/api/v1/agent-gateway"
-DOCTORS = 3  # owner, doctor.mai, doctor.an of the demo seed
-
-_days = itertools.count(1)
-
-
-def free_day() -> date:
-    """A new day of 2027 per call: no test sees another test's visits."""
-    return date(2027, 3, 1) + timedelta(days=next(_days))
-
-
-def at(day: date, hour: int, minute: int = 0) -> str:
-    return datetime(day.year, day.month, day.day, hour, minute, tzinfo=VN_TZ).isoformat()
-
-
-def person() -> str:
-    return f"{GW}/contacts/zalo-test/{uuid4().hex}"
-
-
-def public(key: Ed25519PrivateKey) -> str:
-    raw = key.public_key().public_bytes(Encoding.Raw, PublicFormat.Raw)
-    return base64.urlsafe_b64encode(raw).rstrip(b"=").decode()
-
-
-def token(key: Ed25519PrivateKey = KEY, *, scope: str = ALL_SCOPES, **claims: Any) -> str:
-    """What crm-signer sends: a fresh JWT per call. A claim given as None is left out."""
-    now = int(time.time())
-    body: dict[str, Any] = {"iss": ISSUER, "aud": AUDIENCE, "iat": now, "exp": now + 120, "jti": uuid4().hex}
-    body["scope"] = scope
-    body.update(claims)
-    return jwt.encode({k: v for k, v in body.items() if v is not None}, key, algorithm="EdDSA")
-
-
-class Signer(httpx.Auth):
-    def auth_flow(self, request: httpx.Request) -> Generator[httpx.Request, httpx.Response]:
-        request.headers["Authorization"] = f"Bearer {token()}"
-        yield request
-
-
-def bearer(value: str) -> dict[str, str]:
-    return {"Authorization": f"Bearer {value}"}
-
-
-@pytest.fixture
-def gateway_on(monkeypatch: pytest.MonkeyPatch, jwt_env: None) -> Iterator[None]:
-    monkeypatch.setenv("PEMA_AGENT_GATEWAY_PUBLIC_KEYS", public(KEY))
-    get_settings.cache_clear()
-    reset_agent_gateway_limits()
-    yield
-    get_settings.cache_clear()
-    reset_agent_gateway_limits()
-
-
-@pytest_asyncio.fixture
-async def agent(app: FastAPI, gateway_on: None, world: SeedResult) -> AsyncIterator[httpx.AsyncClient]:
-    """The agent's client, on the seeded clinic (three doctors)."""
-    transport = httpx.ASGITransport(app=app, raise_app_exceptions=False)
-    async with httpx.AsyncClient(transport=transport, base_url="http://test", auth=Signer()) as http:
-        yield http
-
-
-Save = Callable[..., Awaitable[str]]
-
-
-@pytest.fixture
-def saved(agent: httpx.AsyncClient) -> Save:
-    """A person with a saved contact; returns their path."""
-
-    async def make(
-        name: str = "Khách thử (mẫu)", phone: str = "0912 000 111", consent: bool | None = None
-    ) -> str:
-        path = person()
-        response = await agent.put(
-            path, json={"full_name": name, "phone": phone, "messages_consent": consent}
-        )
-        assert response.status_code == 200, response.text
-        return path
-
-    return make
-
-
-async def _book(
-    agent: httpx.AsyncClient, path: str, starts_at: str, key: str | None = None
-) -> httpx.Response:
-    return await agent.post(
-        f"{path}/appointments",
-        json={"starts_at": starts_at, "duration_min": 30, "note": "Tư vấn da"},
-        headers={"Idempotency-Key": key or uuid4().hex},
-    )
-
-
-def _rows(admin: Engine, sql: str, **params: Any) -> list[Any]:
-    with admin.connect() as conn:
-        return list(conn.execute(text(sql), params).all())
-
 
 # ------------------------------------------------------------------ T6: the token, and only the token
 
@@ -281,24 +185,24 @@ async def test_the_first_save_makes_a_patient_and_a_later_one_changes_nothing(
     assert first.json() == {"created": True, "messages_consent": None}
     assert second.json() == {"created": False, "messages_consent": None}
     external_id = path.rsplit("/", 1)[1]
-    rows = _rows(
+    found = rows(
         admin,
         "SELECT p.full_name, p.phone, p.source FROM clinic.patient_channel c "
         "JOIN clinic.patient p ON p.id = c.patient_id WHERE c.external_id = :e",
         e=external_id,
     )
-    assert rows == [("Lan (mẫu)", "0912345678", "agent:zalo-test")]
+    assert found == [("Lan (mẫu)", "0912345678", "agent:zalo-test")]
 
 
 async def test_a_phone_of_an_existing_patient_makes_a_new_patient_not_a_link_to_theirs(
     agent: httpx.AsyncClient, admin: Engine, world: SeedResult
 ) -> None:
     """Giving someone's number never makes you them."""
-    phone = _rows(admin, "SELECT phone FROM clinic.patient WHERE id = :p", p=world.patients["P027"])[0][0]
+    phone = rows(admin, "SELECT phone FROM clinic.patient WHERE id = :p", p=world.patients["P027"])[0][0]
     path = person()
     response = await agent.put(path, json={"full_name": "Kẻ mạo danh", "phone": "0912000222"})
     assert response.json()["created"] is True
-    linked = _rows(
+    linked = rows(
         admin,
         "SELECT patient_id FROM clinic.patient_channel WHERE external_id = :e",
         e=path.rsplit("/", 1)[1],
@@ -318,13 +222,13 @@ async def test_the_consent_to_messages_is_recorded_once_per_change(
     path = person()
     for consent in (True, True, None, False):
         await agent.put(path, json={"full_name": "Lan", "phone": "0912000333", "messages_consent": consent})
-    rows = _rows(
+    found = rows(
         admin,
         "SELECT s.granted, s.source FROM clinic.consent s JOIN clinic.patient_channel c "
         "ON c.patient_id = s.patient_id WHERE c.external_id = :e ORDER BY s.created_at, s.id",
         e=path.rsplit("/", 1)[1],
     )
-    assert rows == [(True, "agent:zalo-test"), (False, "agent:zalo-test")]
+    assert found == [(True, "agent:zalo-test"), (False, "agent:zalo-test")]
 
 
 async def test_writes_of_one_person_are_limited_per_hour(agent: httpx.AsyncClient) -> None:
@@ -342,7 +246,7 @@ async def test_writes_of_one_person_are_limited_per_hour(agent: httpx.AsyncClien
 
 async def test_booking_needs_a_saved_contact_and_a_key(agent: httpx.AsyncClient, saved: Save) -> None:
     day = free_day()
-    assert (await _book(agent, person(), at(day, 9))).status_code == 409
+    assert (await book(agent, person(), at(day, 9))).status_code == 409
     path = await saved()
     keyless = await agent.post(f"{path}/appointments", json={"starts_at": at(day, 9)})
     assert keyless.status_code == 422
@@ -353,22 +257,22 @@ async def test_a_booking_is_made_once_whatever_the_retries(
 ) -> None:
     path = await saved()
     day = free_day()
-    first = await _book(agent, path, at(day, 10), key="same-key-1")
-    again = await _book(agent, path, at(day, 10), key="same-key-1")
+    first = await book(agent, path, at(day, 10), key="same-key-1")
+    again = await book(agent, path, at(day, 10), key="same-key-1")
     assert first.status_code == 201, first.text
     assert again.json()["id"] == first.json()["id"]
     visit = first.json()
     assert visit["status"] == "booked"
     assert set(visit) == {"id", "starts_at", "duration_min", "status"}
-    rows = _rows(
+    found = rows(
         admin, "SELECT doctor_id, created_by, note FROM clinic.appointment WHERE id = :i", i=visit["id"]
     )
-    assert rows == [(None, None, "Tư vấn da")]
+    assert found == [(None, None, "Tư vấn da")]
 
 
 async def test_a_person_holds_at_most_two_coming_visits(agent: httpx.AsyncClient, saved: Save) -> None:
     path = await saved()
-    codes = [(await _book(agent, path, at(free_day(), 9))).status_code for _ in range(3)]
+    codes = [(await book(agent, path, at(free_day(), 9))).status_code for _ in range(3)]
     assert codes == [201, 201, 409]
 
 
@@ -381,15 +285,15 @@ async def test_a_full_time_is_refused(
         await reception.post(
             "/api/v1/appointments", json={"patient_id": str(world.patients[code]), "starts_at": at(day, 14)}
         )
-    response = await _book(agent, await saved(), at(day, 14))
+    response = await book(agent, await saved(), at(day, 14))
     assert response.status_code == 409
     assert response.json()["error"]["details"]["conflict"] == "capacity"
 
 
 async def test_a_time_too_soon_or_in_the_break_is_refused(agent: httpx.AsyncClient, saved: Save) -> None:
     path = await saved()
-    soon = await _book(agent, path, "2026-09-20T09:15:00+07:00")  # the demo clock is 09:00
-    lunch = await _book(agent, path, at(free_day(), 12))
+    soon = await book(agent, path, "2026-09-20T09:15:00+07:00")  # the demo clock is 09:00
+    lunch = await book(agent, path, at(free_day(), 12))
     assert (soon.status_code, lunch.status_code) == (422, 422)
 
 
@@ -398,7 +302,7 @@ async def test_a_time_too_soon_or_in_the_break_is_refused(agent: httpx.AsyncClie
 
 async def test_another_person_cannot_see_or_change_a_visit(agent: httpx.AsyncClient, saved: Save) -> None:
     owner_path, other_path = await saved(), await saved()
-    visit = (await _book(agent, owner_path, at(free_day(), 9))).json()
+    visit = (await book(agent, owner_path, at(free_day(), 9))).json()
     assert (await agent.get(f"{other_path}/appointments")).json() == []
     base = f"{other_path}/appointments/{visit['id']}"
     attempts = [
@@ -424,7 +328,7 @@ async def test_confirm_then_cancel_a_coming_visit(
     agent: httpx.AsyncClient, saved: Save, admin: Engine
 ) -> None:
     path = await saved()
-    visit = (await _book(agent, path, at(free_day(), 9))).json()
+    visit = (await book(agent, path, at(free_day(), 9))).json()
     base = f"{path}/appointments/{visit['id']}"
     confirmed = await agent.post(f"{base}/confirm")
     twice = await agent.post(f"{base}/confirm")
@@ -433,7 +337,7 @@ async def test_confirm_then_cancel_a_coming_visit(
     assert (confirmed.json()["status"], twice.json()["status"]) == ("confirmed", "confirmed")
     assert cancelled.json()["status"] == "cancelled"
     assert after.status_code == 409
-    reason = _rows(admin, "SELECT cancel_reason FROM clinic.appointment WHERE id = :i", i=visit["id"])
+    reason = rows(admin, "SELECT cancel_reason FROM clinic.appointment WHERE id = :i", i=visit["id"])
     assert reason == [("Khách hủy qua chat: bận việc",)]
 
 
@@ -442,7 +346,7 @@ async def test_a_visit_moves_once_per_key_and_at_most_three_times(
 ) -> None:
     path = await saved()
     day = free_day()
-    visit = (await _book(agent, path, at(day, 8))).json()
+    visit = (await book(agent, path, at(day, 8))).json()
     base = f"{path}/appointments/{visit['id']}/reschedule"
 
     async def move(hour: int, key: str) -> httpx.Response:
@@ -464,9 +368,9 @@ async def test_reminders_list_only_people_who_agreed_and_name_no_one(
     yes, no = await saved(consent=True), await saved(consent=False)
     soon = "2026-09-21T10:00:00+07:00"  # 25 hours after the demo clock (2026-09-20 09:00)
     later = "2026-09-23T10:00:00+07:00"
-    yes_visit = (await _book(agent, yes, soon)).json()
-    await _book(agent, yes, later)
-    await _book(agent, no, "2026-09-21T10:30:00+07:00")
+    yes_visit = (await book(agent, yes, soon)).json()
+    await book(agent, yes, later)
+    await book(agent, no, "2026-09-21T10:30:00+07:00")
     listed = (await agent.get(f"{GW}/reminders", params={"hours": 26})).json()
     mine = [r for r in listed if r["external_id"] in {yes.rsplit("/", 1)[1], no.rsplit("/", 1)[1]}]
     assert [r["appointment_id"] for r in mine] == [yes_visit["id"]]
@@ -488,26 +392,26 @@ async def test_every_write_is_audited_as_the_agent_and_without_pii(
     agent: httpx.AsyncClient, saved: Save, admin: Engine
 ) -> None:
     path = await saved(consent=True)
-    visit = (await _book(agent, path, at(free_day(), 9))).json()
+    visit = (await book(agent, path, at(free_day(), 9))).json()
     await agent.post(f"{path}/appointments/{visit['id']}/confirm")
-    patient = _rows(
+    patient = rows(
         admin,
         "SELECT patient_id FROM clinic.patient_channel WHERE external_id = :e",
         e=path.rsplit("/", 1)[1],
     )[0][0]
-    rows = _rows(
+    audited = rows(
         admin,
         "SELECT action, actor_type, details FROM clinic.audit_log "
         "WHERE entity_id IN (:p, :a) OR details->>'patient_id' = :p ORDER BY id",
         p=str(patient),
         a=visit["id"],
     )
-    actions = [r[0] for r in rows]
+    actions = [r[0] for r in audited]
     assert {"patient.create", "patient_channel.create", "consent.record", "appointment.create"} <= set(
         actions
     )
     assert "appointment.confirm" in actions
-    assert {r[1] for r in rows} == {"agent"}
-    assert all(r[2].get("source") == "agent" for r in rows)
-    flat = str([r[2] for r in rows])
+    assert {r[1] for r in audited} == {"agent"}
+    assert all(r[2].get("source") == "agent" for r in audited)
+    flat = str([r[2] for r in audited])
     assert "0912000111" not in flat and "Khách thử" not in flat
