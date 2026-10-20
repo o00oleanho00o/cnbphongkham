@@ -12,10 +12,11 @@ from uuid import UUID
 
 from fastapi import APIRouter, Path, Query, Security, status
 
-from pema.api.agent_gateway_auth import AgentCtx, agent_gateway_scheme, count_person_write
+from pema.api.agent_gateway_auth import agent_gateway, agent_gateway_scheme, count_person_write
 from pema.api.dashboard_auth import Database
 from pema.api.deps import ERROR_RESPONSES, IdempotencyKey
-from pema.clinic.actions import agent_gateway
+from pema.clinic.actions import agent_gateway as actions
+from pema_contracts.actions import ActionContext
 from pema_contracts.agent_gateway import (
     AgentAppointmentOut,
     AgentBooking,
@@ -26,6 +27,15 @@ from pema_contracts.agent_gateway import (
     FreeSlotsOut,
     ReminderOut,
 )
+from pema_contracts.roles import Permission
+
+P = Permission
+SlotsCtx = Annotated[ActionContext, agent_gateway(P.AGENT_SLOTS_READ)]
+ContactCtx = Annotated[ActionContext, agent_gateway(P.AGENT_CONTACT_WRITE)]
+BookingCtx = Annotated[ActionContext, agent_gateway(P.AGENT_BOOKING_WRITE)]
+ReadCtx = Annotated[ActionContext, agent_gateway(P.AGENT_APPOINTMENT_READ)]
+ChangeCtx = Annotated[ActionContext, agent_gateway(P.AGENT_APPOINTMENT_CHANGE)]
+RemindersCtx = Annotated[ActionContext, agent_gateway(P.AGENT_REMINDERS_READ)]
 
 router = APIRouter(
     prefix="/agent-gateway",
@@ -44,29 +54,29 @@ PERSON = "/contacts/{channel}/{external_id}"
 @router.get("/free-slots", response_model=FreeSlotsOut, summary="Free start times of the coming days")
 async def get_free_slots(
     db: Database,
-    ctx: AgentCtx,
+    ctx: SlotsCtx,
     day_from: date,
     days: int = Query(default=1, ge=1, le=14),
     duration_min: int = Query(default=30, ge=5, le=480),
 ) -> FreeSlotsOut:
-    return await agent_gateway.free_slots(db, ctx, day_from=day_from, days=days, duration_min=duration_min)
+    return await actions.free_slots(db, ctx, day_from=day_from, days=days, duration_min=duration_min)
 
 
 @router.put(PERSON, response_model=ContactOut, summary="Save the person's name and phone (once)")
 async def save_contact(
-    channel: Channel, external_id: ExternalId, body: ContactSave, db: Database, ctx: AgentCtx
+    channel: Channel, external_id: ExternalId, body: ContactSave, db: Database, ctx: ContactCtx
 ) -> ContactOut:
     count_person_write(channel, external_id)
-    return await agent_gateway.save_contact(db, ctx, channel, external_id, body)
+    return await actions.save_contact(db, ctx, channel, external_id, body)
 
 
 @router.get(
     f"{PERSON}/appointments", response_model=list[AgentAppointmentOut], summary="The person's coming visits"
 )
 async def list_my_appointments(
-    channel: Channel, external_id: ExternalId, db: Database, ctx: AgentCtx
+    channel: Channel, external_id: ExternalId, db: Database, ctx: ReadCtx
 ) -> list[AgentAppointmentOut]:
-    return await agent_gateway.my_appointments(db, ctx, channel, external_id)
+    return await actions.my_appointments(db, ctx, channel, external_id)
 
 
 @router.post(
@@ -80,11 +90,11 @@ async def book_appointment(
     external_id: ExternalId,
     body: AgentBooking,
     db: Database,
-    ctx: AgentCtx,
+    ctx: BookingCtx,
     idempotency_key: IdempotencyKey = None,
 ) -> AgentAppointmentOut:
     count_person_write(channel, external_id)
-    return await agent_gateway.book(db, ctx, channel, external_id, body)
+    return await actions.book(db, ctx, channel, external_id, body)
 
 
 @router.post(
@@ -93,10 +103,10 @@ async def book_appointment(
     summary="The person confirms a coming visit",
 )
 async def confirm_appointment(
-    channel: Channel, external_id: ExternalId, appointment_id: UUID, db: Database, ctx: AgentCtx
+    channel: Channel, external_id: ExternalId, appointment_id: UUID, db: Database, ctx: ChangeCtx
 ) -> AgentAppointmentOut:
     count_person_write(channel, external_id)
-    return await agent_gateway.confirm(db, ctx, channel, external_id, appointment_id)
+    return await actions.confirm(db, ctx, channel, external_id, appointment_id)
 
 
 @router.post(
@@ -110,11 +120,11 @@ async def reschedule_appointment(
     appointment_id: UUID,
     body: AgentReschedule,
     db: Database,
-    ctx: AgentCtx,
+    ctx: ChangeCtx,
     idempotency_key: IdempotencyKey = None,
 ) -> AgentAppointmentOut:
     count_person_write(channel, external_id)
-    return await agent_gateway.reschedule(db, ctx, channel, external_id, appointment_id, body)
+    return await actions.reschedule(db, ctx, channel, external_id, appointment_id, body)
 
 
 @router.post(
@@ -128,10 +138,10 @@ async def cancel_appointment(
     appointment_id: UUID,
     body: AgentCancel,
     db: Database,
-    ctx: AgentCtx,
+    ctx: ChangeCtx,
 ) -> AgentAppointmentOut:
     count_person_write(channel, external_id)
-    return await agent_gateway.cancel(db, ctx, channel, external_id, appointment_id, body)
+    return await actions.cancel(db, ctx, channel, external_id, appointment_id, body)
 
 
 @router.get(
@@ -140,6 +150,6 @@ async def cancel_appointment(
     summary="Coming visits of linked people who agreed to messages",
 )
 async def list_reminders(
-    db: Database, ctx: AgentCtx, hours: int = Query(default=26, ge=1, le=48)
+    db: Database, ctx: RemindersCtx, hours: int = Query(default=26, ge=1, le=48)
 ) -> list[ReminderOut]:
-    return await agent_gateway.reminders(db, ctx, hours=hours)
+    return await actions.reminders(db, ctx, hours=hours)

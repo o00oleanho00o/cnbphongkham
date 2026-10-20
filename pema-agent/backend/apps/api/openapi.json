@@ -8792,8 +8792,8 @@
       }
     },
     "securitySchemes": {
-      "AgentGatewayKey": {
-        "description": "The agent service's machine key (only /agent-gateway accepts it).",
+      "AgentGatewayToken": {
+        "description": "A JWT that crm-signer signs for one call (only /agent-gateway accepts it).",
         "scheme": "bearer",
         "type": "http"
       },
@@ -9972,7 +9972,7 @@
         },
         "security": [
           {
-            "AgentGatewayKey": []
+            "AgentGatewayToken": []
           }
         ],
         "summary": "Save the person's name and phone (once)",
@@ -10098,7 +10098,7 @@
         },
         "security": [
           {
-            "AgentGatewayKey": []
+            "AgentGatewayToken": []
           }
         ],
         "summary": "The person's coming visits",
@@ -10247,7 +10247,7 @@
         },
         "security": [
           {
-            "AgentGatewayKey": []
+            "AgentGatewayToken": []
           }
         ],
         "summary": "Book a visit for the person",
@@ -10389,7 +10389,7 @@
         },
         "security": [
           {
-            "AgentGatewayKey": []
+            "AgentGatewayToken": []
           }
         ],
         "summary": "Cancel a coming visit of the person",
@@ -10521,7 +10521,7 @@
         },
         "security": [
           {
-            "AgentGatewayKey": []
+            "AgentGatewayToken": []
           }
         ],
         "summary": "The person confirms a coming visit",
@@ -10682,7 +10682,7 @@
         },
         "security": [
           {
-            "AgentGatewayKey": []
+            "AgentGatewayToken": []
           }
         ],
         "summary": "Move a coming visit of the person",
@@ -10814,7 +10814,7 @@
         },
         "security": [
           {
-            "AgentGatewayKey": []
+            "AgentGatewayToken": []
           }
         ],
         "summary": "Free start times of the coming days",
@@ -10928,7 +10928,7 @@
         },
         "security": [
           {
-            "AgentGatewayKey": []
+            "AgentGatewayToken": []
           }
         ],
         "summary": "Coming visits of linked people who agreed to messages",

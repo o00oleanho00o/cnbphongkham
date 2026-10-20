@@ -1,32 +1,39 @@
 # ruff: noqa: PT018
-"""The agent gateway (docs/PLAN-crm-plugin.md): the agent's key opens it and nothing else, and every call acts
-for the person of one chat only (rules L2-L4; tests T6, T8)."""
+"""The agent gateway (docs/PLAN-crm-plugin.md): a token signed by crm-signer opens it and nothing else, and
+every call acts for the person of one chat only (rules L2-L4; tests T6, T8, step 1b)."""
 
 from __future__ import annotations
 
-import hashlib
+import base64
 import itertools
-from collections.abc import AsyncIterator, Awaitable, Callable, Iterator
+import time
+from collections.abc import AsyncIterator, Awaitable, Callable, Generator, Iterator
 from datetime import date, datetime, timedelta
 from typing import Any
 from uuid import uuid4
 
 import httpx
+import jwt
 import pytest
 import pytest_asyncio
+from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
 from fastapi import FastAPI
 from sqlalchemy import text
 from sqlalchemy.engine import Engine
 
-from pema.api.agent_gateway_auth import WRITES_PER_HOUR, reset_agent_gateway_limits
+from pema.api.agent_gateway_auth import AUDIENCE, ISSUER, WRITES_PER_HOUR, reset_agent_gateway_limits
 from pema.api.clinic_testing import ClientFactory
 from pema.clinic.actions.seed_demo import SeedResult
 from pema.config.env import get_settings
 from pema_contracts.common import VN_TZ
+from pema_contracts.roles import Permission
 
 pytestmark = pytest.mark.db
 
-KEY = "agent-gateway-test-key-0123456789abcdef"  # throwaway test value only
+KEY = Ed25519PrivateKey.generate()  # crm-signer's key, made fresh for this test run
+OTHER_KEY = Ed25519PrivateKey.generate()
+ALL_SCOPES = " ".join(p.value for p in Permission if p.value.startswith("agent."))
 GW = "/api/v1/agent-gateway"
 DOCTORS = 3  # owner, doctor.mai, doctor.an of the demo seed
 
@@ -46,9 +53,33 @@ def person() -> str:
     return f"{GW}/contacts/zalo-test/{uuid4().hex}"
 
 
+def public(key: Ed25519PrivateKey) -> str:
+    raw = key.public_key().public_bytes(Encoding.Raw, PublicFormat.Raw)
+    return base64.urlsafe_b64encode(raw).rstrip(b"=").decode()
+
+
+def token(key: Ed25519PrivateKey = KEY, *, scope: str = ALL_SCOPES, **claims: Any) -> str:
+    """What crm-signer sends: a fresh JWT per call. A claim given as None is left out."""
+    now = int(time.time())
+    body: dict[str, Any] = {"iss": ISSUER, "aud": AUDIENCE, "iat": now, "exp": now + 120, "jti": uuid4().hex}
+    body["scope"] = scope
+    body.update(claims)
+    return jwt.encode({k: v for k, v in body.items() if v is not None}, key, algorithm="EdDSA")
+
+
+class Signer(httpx.Auth):
+    def auth_flow(self, request: httpx.Request) -> Generator[httpx.Request, httpx.Response]:
+        request.headers["Authorization"] = f"Bearer {token()}"
+        yield request
+
+
+def bearer(value: str) -> dict[str, str]:
+    return {"Authorization": f"Bearer {value}"}
+
+
 @pytest.fixture
 def gateway_on(monkeypatch: pytest.MonkeyPatch, jwt_env: None) -> Iterator[None]:
-    monkeypatch.setenv("PEMA_AGENT_GATEWAY_KEY_SHA256", hashlib.sha256(KEY.encode()).hexdigest())
+    monkeypatch.setenv("PEMA_AGENT_GATEWAY_PUBLIC_KEYS", public(KEY))
     get_settings.cache_clear()
     reset_agent_gateway_limits()
     yield
@@ -60,9 +91,7 @@ def gateway_on(monkeypatch: pytest.MonkeyPatch, jwt_env: None) -> Iterator[None]
 async def agent(app: FastAPI, gateway_on: None, world: SeedResult) -> AsyncIterator[httpx.AsyncClient]:
     """The agent's client, on the seeded clinic (three doctors)."""
     transport = httpx.ASGITransport(app=app, raise_app_exceptions=False)
-    async with httpx.AsyncClient(
-        transport=transport, base_url="http://test", headers={"Authorization": f"Bearer {KEY}"}
-    ) as http:
+    async with httpx.AsyncClient(transport=transport, base_url="http://test", auth=Signer()) as http:
         yield http
 
 
@@ -101,14 +130,14 @@ def _rows(admin: Engine, sql: str, **params: Any) -> list[Any]:
         return list(conn.execute(text(sql), params).all())
 
 
-# ------------------------------------------------------------------ T6: the key, and only the key
+# ------------------------------------------------------------------ T6: the token, and only the token
 
 
-async def test_the_gateway_is_off_without_a_key_hash(app: FastAPI) -> None:
+async def test_the_gateway_is_off_without_a_public_key(app: FastAPI) -> None:
     transport = httpx.ASGITransport(app=app, raise_app_exceptions=False)
     async with httpx.AsyncClient(transport=transport, base_url="http://test") as http:
         response = await http.get(
-            f"{GW}/free-slots", params={"day_from": "2027-01-04"}, headers={"Authorization": f"Bearer {KEY}"}
+            f"{GW}/free-slots", params={"day_from": "2027-01-04"}, headers=bearer(token())
         )
     assert response.status_code == 404
 
@@ -126,14 +155,14 @@ async def test_a_wrong_key_or_none_is_refused(app: FastAPI, gateway_on: None) ->
 async def test_a_staff_cookie_does_not_open_the_gateway(
     client_factory: ClientFactory, gateway_on: None, world: SeedResult
 ) -> None:
-    """T6: the owner's session is no agent key"""
+    """T6: the owner's session is no agent token"""
     owner = await client_factory("owner")
     response = await owner.get(f"{GW}/free-slots", params={"day_from": "2027-01-04"})
     assert response.status_code == 401
 
 
-async def test_the_key_opens_no_staff_route(agent: httpx.AsyncClient, world: SeedResult) -> None:
-    """T6: the agent's key on the CRM's own routes is an anonymous caller"""
+async def test_the_token_opens_no_staff_route(agent: httpx.AsyncClient, world: SeedResult) -> None:
+    """T6: the agent's token on the CRM's own routes is an anonymous caller"""
     for path in (
         "/api/v1/patients",
         "/api/v1/appointments",
@@ -142,6 +171,62 @@ async def test_the_key_opens_no_staff_route(agent: httpx.AsyncClient, world: See
         assert (await agent.get(path)).status_code == 401, path
     created = await agent.post("/api/v1/patients", json={"full_name": "X"})
     assert created.status_code == 401
+
+
+# ------------------------------------------------------------------ step 1b: what a token must be
+
+
+async def _free_slots_with(app: FastAPI, value: str) -> int:
+    transport = httpx.ASGITransport(app=app, raise_app_exceptions=False)
+    async with httpx.AsyncClient(transport=transport, base_url="http://test") as http:
+        response = await http.get(
+            f"{GW}/free-slots", params={"day_from": "2027-01-04"}, headers=bearer(value)
+        )
+    return response.status_code
+
+
+def _expired() -> str:
+    now = int(time.time())
+    return token(iat=now - 600, exp=now - 300)
+
+
+@pytest.mark.parametrize(
+    ("label", "make"),
+    [
+        ("expired", _expired),
+        ("lives too long", lambda: token(exp=int(time.time()) + 3600)),
+        ("SSO audience of the agent", lambda: token(aud="pema-agent")),
+        ("another issuer", lambda: token(iss="pema-clinic")),
+        ("a key the API does not know", lambda: token(OTHER_KEY)),
+        ("no jti", lambda: token(jti=None)),
+        ("no expiry", lambda: token(exp=None)),
+    ],
+)
+async def test_a_token_that_is_not_crm_signers_short_one_is_refused(
+    app: FastAPI, gateway_on: None, world: SeedResult, label: str, make: Callable[[], str]
+) -> None:
+    assert await _free_slots_with(app, make()) == 401, label
+
+
+async def test_a_token_is_used_once(app: FastAPI, gateway_on: None, world: SeedResult) -> None:
+    once = token()
+    assert (await _free_slots_with(app, once), await _free_slots_with(app, once)) == (200, 401)
+
+
+async def test_a_route_needs_its_own_permission_in_the_scope(
+    app: FastAPI, gateway_on: None, world: SeedResult
+) -> None:
+    assert await _free_slots_with(app, token(scope="agent.booking.write agent.reminders.read")) == 403
+    assert await _free_slots_with(app, token(scope="agent.slots.read")) == 200
+
+
+async def test_two_public_keys_are_accepted_while_a_key_is_changed(
+    app: FastAPI, gateway_on: None, world: SeedResult, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("PEMA_AGENT_GATEWAY_PUBLIC_KEYS", f"{public(KEY)}, {public(OTHER_KEY)}")
+    get_settings.cache_clear()
+    first, second = await _free_slots_with(app, token(KEY)), await _free_slots_with(app, token(OTHER_KEY))
+    assert (first, second) == (200, 200)
 
 
 # ------------------------------------------------------------------ free times

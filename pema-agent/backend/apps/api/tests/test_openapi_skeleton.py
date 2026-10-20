@@ -76,7 +76,7 @@ def test_every_admin_and_clinic_route_requires_the_session_cookie(schema: dict[s
     for path, item in schema["paths"].items():
         if path in OPEN_PATHS or "/webhooks/" in path:
             continue
-        wanted = "AgentGatewayKey" if path.startswith(AGENT_GATEWAY) else "SessionCookie"
+        wanted = "AgentGatewayToken" if path.startswith(AGENT_GATEWAY) else "SessionCookie"
         for method, op in item.items():
             if method in HTTP_METHODS and {k for req in op.get("security", []) for k in req} != {wanted}:
                 unsecured.append(f"{method.upper()} {path}")
@@ -151,7 +151,7 @@ async def test_a_bare_app_never_serves_a_staff_route_to_an_anonymous_caller(
         body = envelope["error"]["code"]
         if path.startswith(UNWIRED_WHEN_BARE_PREFIXES):
             assert (resp.status_code, body) == (501, "not_implemented"), path
-        elif path.startswith(AGENT_GATEWAY):  # no key hash set: the gateway is off
+        elif path.startswith(AGENT_GATEWAY):  # no public key set: the gateway is off
             assert (resp.status_code, body) == (404, "not_found"), path
         elif resp.status_code == 401:
             assert body == "unauthenticated", path
