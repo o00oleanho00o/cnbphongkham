@@ -33,8 +33,22 @@ P = Permission
 
 _STAFF_COMMON: frozenset[Permission] = frozenset({P.KB_READ})
 
-OWNER_PERMISSIONS: frozenset[Permission] = frozenset(Permission)
-"""The owner holds every permission."""
+AGENT_PERMISSIONS: frozenset[Permission] = frozenset(
+    {
+        P.AGENT_SLOTS_READ,
+        P.AGENT_CONTACT_WRITE,
+        P.AGENT_BOOKING_WRITE,
+        P.AGENT_APPOINTMENT_READ,
+        P.AGENT_APPOINTMENT_CHANGE,
+        P.AGENT_REMINDERS_READ,
+    }
+)
+"""The agent service acts in the clinic through the agent gateway only, for the person of one chat link
+(.claude/rules/agent-crm-boundary.md, L2-L4; docs/PLAN-crm-plugin.md). No staff role holds these, and the
+agent holds nothing else."""
+
+OWNER_PERMISSIONS: frozenset[Permission] = frozenset(Permission) - AGENT_PERMISSIONS
+"""The owner holds every staff permission."""
 
 MANAGER_PERMISSIONS: frozenset[Permission] = frozenset(
     {
@@ -168,9 +182,6 @@ ROLE_PERMISSIONS: Mapping[Role, frozenset[Permission]] = {
     Role.ACCOUNTANT: ACCOUNTANT_PERMISSIONS,
     Role.PATIENT: PATIENT_PERMISSIONS,
 }
-
-AGENT_PERMISSIONS: frozenset[Permission] = frozenset()
-"""The agent service never acts in the clinic (.claude/rules/agent-crm-boundary.md)."""
 
 SCHEDULER_PERMISSIONS: frozenset[Permission] = frozenset(
     {

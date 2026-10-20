@@ -84,6 +84,23 @@ async def record(
     return row
 
 
+async def find_replayed_entity(session: AsyncSession, ctx: ActionContext, action: str) -> str | None:
+    """The entity this ``Idempotency-Key`` already created with ``action`` (a create has no id to ask by)."""
+    if not ctx.idempotency_key:
+        return None
+    return await session.scalar(
+        select(AuditLog.entity_id)
+        .where(
+            AuditLog.clinic_id == ctx.clinic_id,
+            AuditLog.action == action,
+            AuditLog.actor_type == ctx.actor_type.value,
+            AuditLog.details["idempotency_key"].astext == ctx.idempotency_key,
+        )
+        .order_by(AuditLog.id)
+        .limit(1)
+    )
+
+
 async def find_replay(session: AsyncSession, ctx: ActionContext, action: str, entity_id: object) -> bool:
     """``True`` when this ``Idempotency-Key`` already executed ``action`` on ``entity_id``."""
     if not ctx.idempotency_key:

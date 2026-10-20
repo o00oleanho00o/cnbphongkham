@@ -67,15 +67,21 @@ def test_every_tag_used_by_a_route_is_described(schema: dict[str, Any]) -> None:
     assert used <= described
 
 
+AGENT_GATEWAY = "/api/v1/agent-gateway/"
+
+
 def test_every_admin_and_clinic_route_requires_the_session_cookie(schema: dict[str, Any]) -> None:
+    """...and the agent gateway the agent's key, never a cookie (T6, rule L2)"""
     unsecured: list[str] = []
     for path, item in schema["paths"].items():
         if path in OPEN_PATHS or "/webhooks/" in path:
             continue
+        wanted = "AgentGatewayKey" if path.startswith(AGENT_GATEWAY) else "SessionCookie"
         for method, op in item.items():
-            if method in HTTP_METHODS and not any("SessionCookie" in req for req in op.get("security", [])):
+            if method in HTTP_METHODS and {k for req in op.get("security", []) for k in req} != {wanted}:
                 unsecured.append(f"{method.upper()} {path}")
     assert unsecured == []
+    assert any(path.startswith(AGENT_GATEWAY) for path in schema["paths"])
 
 
 async def test_health_answers_without_a_session(client: httpx.AsyncClient) -> None:
@@ -145,6 +151,8 @@ async def test_a_bare_app_never_serves_a_staff_route_to_an_anonymous_caller(
         body = envelope["error"]["code"]
         if path.startswith(UNWIRED_WHEN_BARE_PREFIXES):
             assert (resp.status_code, body) == (501, "not_implemented"), path
+        elif path.startswith(AGENT_GATEWAY):  # no key hash set: the gateway is off
+            assert (resp.status_code, body) == (404, "not_found"), path
         elif resp.status_code == 401:
             assert body == "unauthenticated", path
             unauthenticated += 1

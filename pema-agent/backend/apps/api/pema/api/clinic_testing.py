@@ -80,6 +80,7 @@ def _schema_is_current(admin: str) -> bool:
             return bool(
                 conn.execute(text("SELECT to_regclass('clinic.auth_session') IS NOT NULL")).scalar()
                 and conn.execute(text("SELECT to_regclass('clinic.guide_article') IS NOT NULL")).scalar()
+                and conn.execute(text("SELECT to_regclass('clinic.patient_channel') IS NOT NULL")).scalar()
                 and conn.execute(
                     text(
                         "SELECT EXISTS (SELECT 1 FROM information_schema.columns WHERE "

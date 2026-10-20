@@ -32,9 +32,23 @@ def test_every_role_of_the_system_has_an_entry_and_the_patient_has_none() -> Non
     assert ROLE_PERMISSIONS[Role.PATIENT] == frozenset()
 
 
-def test_owner_holds_every_permission_and_the_agent_none() -> None:
-    assert ROLE_PERMISSIONS[Role.OWNER] == frozenset(Permission)
-    assert frozenset() == AGENT_PERMISSIONS
+AGENT_GATEWAY = {
+    P.AGENT_SLOTS_READ,
+    P.AGENT_CONTACT_WRITE,
+    P.AGENT_BOOKING_WRITE,
+    P.AGENT_APPOINTMENT_READ,
+    P.AGENT_APPOINTMENT_CHANGE,
+    P.AGENT_REMINDERS_READ,
+}
+
+
+def test_owner_holds_every_staff_permission_and_the_agent_only_the_gateway() -> None:
+    """T7 (L2, L4): the agent holds the six gateway permissions and nothing else; no role holds any of them"""
+    assert ROLE_PERMISSIONS[Role.OWNER] == frozenset(Permission) - AGENT_GATEWAY
+    assert AGENT_PERMISSIONS == AGENT_GATEWAY
+    assert {p for p in Permission if p.value.startswith("agent.")} == AGENT_GATEWAY
+    for role, permissions in ROLE_PERMISSIONS.items():
+        assert not permissions & AGENT_GATEWAY, role
 
 
 def test_every_permission_code_is_granted_to_someone() -> None:
@@ -169,8 +183,9 @@ def test_require_any_needs_one_of_them() -> None:
         require_any(_ctx(Role.RECEPTION), (P.CRM_TASK_RESOLVE, P.SESSION_WRITE))
 
 
-def test_an_agent_actor_holds_no_permission() -> None:
-    assert not any(has_permission(_ctx(None, ActorType.AGENT), p) for p in Permission)
+def test_an_agent_actor_holds_no_staff_permission() -> None:
+    agent = _ctx(None, ActorType.AGENT)
+    assert {p for p in Permission if has_permission(agent, p)} == AGENT_GATEWAY
 
 
 def test_only_owner_and_doctor_are_clinical() -> None:

@@ -53,6 +53,10 @@ class Settings(BaseSettings):
     session_cookie_name: str = "pema_session"
     session_ttl_minutes: int = 480
 
+    agent_gateway_key_sha256: SecretStr | None = None
+    """``PEMA_AGENT_GATEWAY_KEY_SHA256``: hex SHA-256 of the agent's machine key (the agent holds the key in
+    ``PEMA_AGENT_GATEWAY_KEY``). Unset or empty: ``/agent-gateway`` answers 404 to everyone."""
+
     crm_runner_interval_seconds: int = 900
     """How often the API process runs the CRM rules for every clinic (0 turns the runner off). The runner
     reads ``clinic.*``, so it lives in the API process (role ``be_app``), not in the worker."""

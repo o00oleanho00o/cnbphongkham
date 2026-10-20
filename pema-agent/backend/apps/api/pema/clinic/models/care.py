@@ -42,6 +42,20 @@ class Patient(Base):
     __mapper_args__ = {"version_id_col": version}  # noqa: RUF012
 
 
+class PatientChannel(Base):
+    """Which patient the person of a chat channel is (``channel`` + its ``external_id``, e.g. a Zalo user id).
+    Written by the agent gateway on the first saved contact; nothing of it goes back to the agent."""
+
+    __tablename__ = "patient_channel"
+
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    clinic_id: Mapped[UUID]
+    channel: Mapped[str] = mapped_column(Text)
+    external_id: Mapped[str] = mapped_column(Text)
+    patient_id: Mapped[UUID]
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
 class Episode(Base):
     __tablename__ = "episode"
 

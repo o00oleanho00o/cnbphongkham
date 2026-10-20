@@ -12,6 +12,128 @@
         "title": "ActorType",
         "type": "string"
       },
+      "AgentAppointmentOut": {
+        "additionalProperties": false,
+        "description": "No note: staff write internal remarks there.",
+        "properties": {
+          "duration_min": {
+            "title": "Duration Min",
+            "type": "integer"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "starts_at": {
+            "description": "ISO 8601 timestamp with an explicit +07:00 offset.",
+            "examples": [
+              "2026-09-20T09:00:00+07:00"
+            ],
+            "format": "date-time",
+            "title": "Starts At",
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/AppointmentStatus"
+          }
+        },
+        "required": [
+          "id",
+          "starts_at",
+          "duration_min",
+          "status"
+        ],
+        "title": "AgentAppointmentOut",
+        "type": "object"
+      },
+      "AgentBooking": {
+        "additionalProperties": false,
+        "properties": {
+          "duration_min": {
+            "default": 30,
+            "maximum": 480.0,
+            "minimum": 5.0,
+            "title": "Duration Min",
+            "type": "integer"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The service the person asked for.",
+            "title": "Note"
+          },
+          "starts_at": {
+            "description": "ISO 8601 timestamp with an explicit +07:00 offset.",
+            "examples": [
+              "2026-09-20T09:00:00+07:00"
+            ],
+            "format": "date-time",
+            "title": "Starts At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "starts_at"
+        ],
+        "title": "AgentBooking",
+        "type": "object"
+      },
+      "AgentCancel": {
+        "additionalProperties": false,
+        "properties": {
+          "reason": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "reason"
+        ],
+        "title": "AgentCancel",
+        "type": "object"
+      },
+      "AgentReschedule": {
+        "additionalProperties": false,
+        "properties": {
+          "duration_min": {
+            "anyOf": [
+              {
+                "maximum": 480.0,
+                "minimum": 5.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duration Min"
+          },
+          "starts_at": {
+            "description": "ISO 8601 timestamp with an explicit +07:00 offset.",
+            "examples": [
+              "2026-09-20T09:00:00+07:00"
+            ],
+            "format": "date-time",
+            "title": "Starts At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "starts_at"
+        ],
+        "title": "AgentReschedule",
+        "type": "object"
+      },
       "AgentTokenResponse": {
         "additionalProperties": false,
         "description": "A short token (EdDSA JWT, ``aud`` ``pema-agent``) with which the clinic web's server calls the agent\nservice for the signed-in staff member. Checked by the agent against ``GET /.well-known/jwks.json``.",
@@ -1407,6 +1529,69 @@
         ],
         "title": "ConsultNoteStatus",
         "type": "string"
+      },
+      "ContactOut": {
+        "additionalProperties": false,
+        "properties": {
+          "created": {
+            "description": "True when this saved a new patient; an existing one is never changed.",
+            "title": "Created",
+            "type": "boolean"
+          },
+          "messages_consent": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Messages Consent"
+          }
+        },
+        "required": [
+          "created",
+          "messages_consent"
+        ],
+        "title": "ContactOut",
+        "type": "object"
+      },
+      "ContactSave": {
+        "additionalProperties": false,
+        "properties": {
+          "full_name": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Full Name",
+            "type": "string"
+          },
+          "messages_consent": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The person agreed (true) or refused (false) reminders by message; null leaves it as is.",
+            "title": "Messages Consent"
+          },
+          "phone": {
+            "description": "Any Vietnamese way of writing it.",
+            "maxLength": 32,
+            "minLength": 1,
+            "title": "Phone",
+            "type": "string"
+          }
+        },
+        "required": [
+          "full_name",
+          "phone"
+        ],
+        "title": "ContactSave",
+        "type": "object"
       },
       "CrmActivityCreate": {
         "additionalProperties": false,
@@ -3169,6 +3354,35 @@
         "title": "FinanceTeamOut",
         "type": "object"
       },
+      "FreeDay": {
+        "additionalProperties": false,
+        "properties": {
+          "day": {
+            "format": "date",
+            "title": "Day",
+            "type": "string"
+          },
+          "starts": {
+            "description": "Free start times of the day, earliest first.",
+            "items": {
+              "description": "ISO 8601 timestamp with an explicit +07:00 offset.",
+              "examples": [
+                "2026-09-20T09:00:00+07:00"
+              ],
+              "format": "date-time",
+              "type": "string"
+            },
+            "title": "Starts",
+            "type": "array"
+          }
+        },
+        "required": [
+          "day",
+          "starts"
+        ],
+        "title": "FreeDay",
+        "type": "object"
+      },
       "FreeSlotOut": {
         "additionalProperties": false,
         "description": "First start the validator accepts for the given patient, doctor, day and duration; ``None`` when the\nday has none (prototype: ``Khong co gio trong``).",
@@ -3191,6 +3405,28 @@
           }
         },
         "title": "FreeSlotOut",
+        "type": "object"
+      },
+      "FreeSlotsOut": {
+        "additionalProperties": false,
+        "properties": {
+          "days": {
+            "items": {
+              "$ref": "#/components/schemas/FreeDay"
+            },
+            "title": "Days",
+            "type": "array"
+          },
+          "duration_min": {
+            "title": "Duration Min",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "duration_min",
+          "days"
+        ],
+        "title": "FreeSlotsOut",
         "type": "object"
       },
       "Gender": {
@@ -5721,7 +5957,13 @@
           "admin.schedules",
           "admin.mcp",
           "admin.usage",
-          "admin.policy"
+          "admin.policy",
+          "agent.slots.read",
+          "agent.contact.write",
+          "agent.booking.write",
+          "agent.appointment.read",
+          "agent.appointment.change",
+          "agent.reminders.read"
         ],
         "title": "Permission",
         "type": "string"
@@ -6189,6 +6431,60 @@
           "alg"
         ],
         "title": "PublicJwk",
+        "type": "object"
+      },
+      "ReminderOut": {
+        "additionalProperties": false,
+        "properties": {
+          "appointment_id": {
+            "format": "uuid",
+            "title": "Appointment Id",
+            "type": "string"
+          },
+          "channel": {
+            "title": "Channel",
+            "type": "string"
+          },
+          "duration_min": {
+            "title": "Duration Min",
+            "type": "integer"
+          },
+          "external_id": {
+            "title": "External Id",
+            "type": "string"
+          },
+          "starts_at": {
+            "description": "ISO 8601 timestamp with an explicit +07:00 offset.",
+            "examples": [
+              "2026-09-20T09:00:00+07:00"
+            ],
+            "format": "date-time",
+            "title": "Starts At",
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/AppointmentStatus"
+          },
+          "updated_at": {
+            "description": "Last change of the appointment (booking, move, confirmation).",
+            "examples": [
+              "2026-09-20T09:00:00+07:00"
+            ],
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "appointment_id",
+          "channel",
+          "external_id",
+          "starts_at",
+          "duration_min",
+          "status",
+          "updated_at"
+        ],
+        "title": "ReminderOut",
         "type": "object"
       },
       "ResetPasswordRequest": {
@@ -8496,6 +8792,11 @@
       }
     },
     "securitySchemes": {
+      "AgentGatewayKey": {
+        "description": "The agent service's machine key (only /agent-gateway accepts it).",
+        "scheme": "bearer",
+        "type": "http"
+      },
       "SessionCookie": {
         "description": "HttpOnly JWT cookie set by POST /auth/login (staff).",
         "in": "cookie",
@@ -9545,6 +9846,1094 @@
         "summary": "Owner resets another staff member's password",
         "tags": [
           "admin-users"
+        ]
+      }
+    },
+    "/api/v1/agent-gateway/contacts/{channel}/{external_id}": {
+      "put": {
+        "operationId": "agent_gateway_save_contact",
+        "parameters": [
+          {
+            "description": "The chat channel.",
+            "in": "path",
+            "name": "channel",
+            "required": true,
+            "schema": {
+              "description": "The chat channel.",
+              "pattern": "^[A-Za-z0-9_.:-]{1,64}$",
+              "title": "Channel",
+              "type": "string"
+            }
+          },
+          {
+            "description": "The person's id in that channel.",
+            "in": "path",
+            "name": "external_id",
+            "required": true,
+            "schema": {
+              "description": "The person's id in that channel.",
+              "pattern": "^[A-Za-z0-9_.:@=-]{1,128}$",
+              "title": "External Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContactSave"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContactOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not authenticated."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Role lacks the permission."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found in this clinic."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Version conflict or invalid state."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation failed."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limited or channel cap reached."
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Skeleton: not implemented yet."
+          }
+        },
+        "security": [
+          {
+            "AgentGatewayKey": []
+          }
+        ],
+        "summary": "Save the person's name and phone (once)",
+        "tags": [
+          "agent-gateway"
+        ]
+      }
+    },
+    "/api/v1/agent-gateway/contacts/{channel}/{external_id}/appointments": {
+      "get": {
+        "operationId": "agent_gateway_list_my_appointments",
+        "parameters": [
+          {
+            "description": "The chat channel.",
+            "in": "path",
+            "name": "channel",
+            "required": true,
+            "schema": {
+              "description": "The chat channel.",
+              "pattern": "^[A-Za-z0-9_.:-]{1,64}$",
+              "title": "Channel",
+              "type": "string"
+            }
+          },
+          {
+            "description": "The person's id in that channel.",
+            "in": "path",
+            "name": "external_id",
+            "required": true,
+            "schema": {
+              "description": "The person's id in that channel.",
+              "pattern": "^[A-Za-z0-9_.:@=-]{1,128}$",
+              "title": "External Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/AgentAppointmentOut"
+                  },
+                  "title": "Response Agent Gateway List My Appointments",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not authenticated."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Role lacks the permission."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found in this clinic."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Version conflict or invalid state."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation failed."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limited or channel cap reached."
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Skeleton: not implemented yet."
+          }
+        },
+        "security": [
+          {
+            "AgentGatewayKey": []
+          }
+        ],
+        "summary": "The person's coming visits",
+        "tags": [
+          "agent-gateway"
+        ]
+      },
+      "post": {
+        "operationId": "agent_gateway_book_appointment",
+        "parameters": [
+          {
+            "description": "The chat channel.",
+            "in": "path",
+            "name": "channel",
+            "required": true,
+            "schema": {
+              "description": "The chat channel.",
+              "pattern": "^[A-Za-z0-9_.:-]{1,64}$",
+              "title": "Channel",
+              "type": "string"
+            }
+          },
+          {
+            "description": "The person's id in that channel.",
+            "in": "path",
+            "name": "external_id",
+            "required": true,
+            "schema": {
+              "description": "The person's id in that channel.",
+              "pattern": "^[A-Za-z0-9_.:@=-]{1,128}$",
+              "title": "External Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Repeats with the same key and body return the first result.",
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 128,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Repeats with the same key and body return the first result.",
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AgentBooking"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentAppointmentOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not authenticated."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Role lacks the permission."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found in this clinic."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Version conflict or invalid state."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation failed."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limited or channel cap reached."
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Skeleton: not implemented yet."
+          }
+        },
+        "security": [
+          {
+            "AgentGatewayKey": []
+          }
+        ],
+        "summary": "Book a visit for the person",
+        "tags": [
+          "agent-gateway"
+        ]
+      }
+    },
+    "/api/v1/agent-gateway/contacts/{channel}/{external_id}/appointments/{appointment_id}/cancel": {
+      "post": {
+        "operationId": "agent_gateway_cancel_appointment",
+        "parameters": [
+          {
+            "description": "The chat channel.",
+            "in": "path",
+            "name": "channel",
+            "required": true,
+            "schema": {
+              "description": "The chat channel.",
+              "pattern": "^[A-Za-z0-9_.:-]{1,64}$",
+              "title": "Channel",
+              "type": "string"
+            }
+          },
+          {
+            "description": "The person's id in that channel.",
+            "in": "path",
+            "name": "external_id",
+            "required": true,
+            "schema": {
+              "description": "The person's id in that channel.",
+              "pattern": "^[A-Za-z0-9_.:@=-]{1,128}$",
+              "title": "External Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "appointment_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Appointment Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AgentCancel"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentAppointmentOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not authenticated."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Role lacks the permission."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found in this clinic."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Version conflict or invalid state."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation failed."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limited or channel cap reached."
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Skeleton: not implemented yet."
+          }
+        },
+        "security": [
+          {
+            "AgentGatewayKey": []
+          }
+        ],
+        "summary": "Cancel a coming visit of the person",
+        "tags": [
+          "agent-gateway"
+        ]
+      }
+    },
+    "/api/v1/agent-gateway/contacts/{channel}/{external_id}/appointments/{appointment_id}/confirm": {
+      "post": {
+        "operationId": "agent_gateway_confirm_appointment",
+        "parameters": [
+          {
+            "description": "The chat channel.",
+            "in": "path",
+            "name": "channel",
+            "required": true,
+            "schema": {
+              "description": "The chat channel.",
+              "pattern": "^[A-Za-z0-9_.:-]{1,64}$",
+              "title": "Channel",
+              "type": "string"
+            }
+          },
+          {
+            "description": "The person's id in that channel.",
+            "in": "path",
+            "name": "external_id",
+            "required": true,
+            "schema": {
+              "description": "The person's id in that channel.",
+              "pattern": "^[A-Za-z0-9_.:@=-]{1,128}$",
+              "title": "External Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "appointment_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Appointment Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentAppointmentOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not authenticated."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Role lacks the permission."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found in this clinic."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Version conflict or invalid state."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation failed."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limited or channel cap reached."
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Skeleton: not implemented yet."
+          }
+        },
+        "security": [
+          {
+            "AgentGatewayKey": []
+          }
+        ],
+        "summary": "The person confirms a coming visit",
+        "tags": [
+          "agent-gateway"
+        ]
+      }
+    },
+    "/api/v1/agent-gateway/contacts/{channel}/{external_id}/appointments/{appointment_id}/reschedule": {
+      "post": {
+        "operationId": "agent_gateway_reschedule_appointment",
+        "parameters": [
+          {
+            "description": "The chat channel.",
+            "in": "path",
+            "name": "channel",
+            "required": true,
+            "schema": {
+              "description": "The chat channel.",
+              "pattern": "^[A-Za-z0-9_.:-]{1,64}$",
+              "title": "Channel",
+              "type": "string"
+            }
+          },
+          {
+            "description": "The person's id in that channel.",
+            "in": "path",
+            "name": "external_id",
+            "required": true,
+            "schema": {
+              "description": "The person's id in that channel.",
+              "pattern": "^[A-Za-z0-9_.:@=-]{1,128}$",
+              "title": "External Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "appointment_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Appointment Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Repeats with the same key and body return the first result.",
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 128,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Repeats with the same key and body return the first result.",
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AgentReschedule"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentAppointmentOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not authenticated."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Role lacks the permission."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found in this clinic."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Version conflict or invalid state."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation failed."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limited or channel cap reached."
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Skeleton: not implemented yet."
+          }
+        },
+        "security": [
+          {
+            "AgentGatewayKey": []
+          }
+        ],
+        "summary": "Move a coming visit of the person",
+        "tags": [
+          "agent-gateway"
+        ]
+      }
+    },
+    "/api/v1/agent-gateway/free-slots": {
+      "get": {
+        "operationId": "agent_gateway_get_free_slots",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "day_from",
+            "required": true,
+            "schema": {
+              "format": "date",
+              "title": "Day From",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "days",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "maximum": 14,
+              "minimum": 1,
+              "title": "Days",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "duration_min",
+            "required": false,
+            "schema": {
+              "default": 30,
+              "maximum": 480,
+              "minimum": 5,
+              "title": "Duration Min",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FreeSlotsOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not authenticated."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Role lacks the permission."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found in this clinic."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Version conflict or invalid state."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation failed."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limited or channel cap reached."
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Skeleton: not implemented yet."
+          }
+        },
+        "security": [
+          {
+            "AgentGatewayKey": []
+          }
+        ],
+        "summary": "Free start times of the coming days",
+        "tags": [
+          "agent-gateway"
+        ]
+      }
+    },
+    "/api/v1/agent-gateway/reminders": {
+      "get": {
+        "operationId": "agent_gateway_list_reminders",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "hours",
+            "required": false,
+            "schema": {
+              "default": 26,
+              "maximum": 48,
+              "minimum": 1,
+              "title": "Hours",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ReminderOut"
+                  },
+                  "title": "Response Agent Gateway List Reminders",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not authenticated."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Role lacks the permission."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not found in this clinic."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Version conflict or invalid state."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation failed."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Rate limited or channel cap reached."
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Skeleton: not implemented yet."
+          }
+        },
+        "security": [
+          {
+            "AgentGatewayKey": []
+          }
+        ],
+        "summary": "Coming visits of linked people who agreed to messages",
+        "tags": [
+          "agent-gateway"
         ]
       }
     },
@@ -21880,6 +23269,10 @@
     {
       "description": "Staff accounts: owner resets a password. (B1)",
       "name": "admin-users"
+    },
+    {
+      "description": "What the clinic's agent may do for the person of one chat: free times, contact, visits, reminders. Machine key only (docs/PLAN-crm-plugin.md).",
+      "name": "agent-gateway"
     },
     {
       "description": "Health.",

@@ -182,7 +182,7 @@ async def get_patient(db: ClinicDatabase, ctx: ActionContext, patient_id: UUID) 
         return await patient_to_out(session, ctx, row)
 
 
-async def _next_code(session: AsyncSession, ctx: ActionContext) -> str:
+async def next_patient_code(session: AsyncSession, ctx: ActionContext) -> str:
     highest = await session.scalar(
         select(func.max(cast(func.substring(Patient.code, r"^P([0-9]+)$"), Integer))).where(
             Patient.clinic_id == ctx.clinic_id
@@ -203,7 +203,7 @@ async def create_patient(db: ClinicDatabase, ctx: ActionContext, payload: Patien
         for _ in range(CODE_RETRIES):
             candidate = Patient(
                 clinic_id=ctx.clinic_id,
-                code=payload.code or await _next_code(session, ctx),
+                code=payload.code or await next_patient_code(session, ctx),
                 full_name=payload.full_name,
                 phone=payload.phone,
                 birth_date=payload.birth_date,
@@ -278,6 +278,7 @@ __all__ = [
     "get_patient",
     "list_patients",
     "load_patient",
+    "next_patient_code",
     "patient_to_out",
     "today_vn",
     "update_patient",

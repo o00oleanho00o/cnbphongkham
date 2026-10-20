@@ -56,6 +56,7 @@ if not ADMIN_URL:
 CLINIC_TABLES = {
     "clinic", "user_account", "patient", "episode", "treatment_plan", "treatment_session",
     "appointment", "crm_rule", "crm_task", "crm_activity", "consent", "audit_log", "guide_article",
+    "patient_channel",
 }  # fmt: skip
 
 

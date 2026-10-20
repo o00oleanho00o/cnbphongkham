@@ -481,7 +481,7 @@ def _is_set(payload: AppointmentUpdate, name: str) -> bool:
     return name in {"doctor_id", "room_id", "note"} or getattr(payload, name) is not None
 
 
-async def _transition(
+async def transition(
     db: ClinicDatabase,
     ctx: ActionContext,
     appointment_id: UUID,
@@ -493,6 +493,8 @@ async def _transition(
     target: AppointmentStatus,
     reason_required: bool = False,
 ) -> AppointmentOut:
+    """One status change. ``permission`` is the caller's gate: the staff routes pass theirs, the agent gateway
+    its own after it has checked the appointment is of the person it acts for."""
     require(ctx, permission)
     action = f"appointment.{verb}"
     async with db.session() as session:
@@ -535,7 +537,7 @@ async def confirm_appointment(
     db: ClinicDatabase, ctx: ActionContext, appointment_id: UUID, payload: AppointmentTransition
 ) -> AppointmentOut:
     """JS ``setStatus(id, 'confirmed')``: the desk confirmed the visit with the patient."""
-    return await _transition(
+    return await transition(
         db,
         ctx,
         appointment_id,
@@ -550,7 +552,7 @@ async def confirm_appointment(
 async def check_in_appointment(
     db: ClinicDatabase, ctx: ActionContext, appointment_id: UUID, payload: AppointmentTransition
 ) -> AppointmentOut:
-    return await _transition(
+    return await transition(
         db,
         ctx,
         appointment_id,
@@ -565,7 +567,7 @@ async def check_in_appointment(
 async def start_appointment(
     db: ClinicDatabase, ctx: ActionContext, appointment_id: UUID, payload: AppointmentTransition
 ) -> AppointmentOut:
-    return await _transition(
+    return await transition(
         db,
         ctx,
         appointment_id,
@@ -580,7 +582,7 @@ async def start_appointment(
 async def complete_appointment(
     db: ClinicDatabase, ctx: ActionContext, appointment_id: UUID, payload: AppointmentTransition
 ) -> AppointmentOut:
-    return await _transition(
+    return await transition(
         db,
         ctx,
         appointment_id,
@@ -595,7 +597,7 @@ async def complete_appointment(
 async def cancel_appointment(
     db: ClinicDatabase, ctx: ActionContext, appointment_id: UUID, payload: AppointmentTransition
 ) -> AppointmentOut:
-    return await _transition(
+    return await transition(
         db,
         ctx,
         appointment_id,
@@ -611,7 +613,7 @@ async def cancel_appointment(
 async def miss_appointment(
     db: ClinicDatabase, ctx: ActionContext, appointment_id: UUID, payload: AppointmentTransition
 ) -> AppointmentOut:
-    return await _transition(
+    return await transition(
         db,
         ctx,
         appointment_id,
@@ -819,6 +821,7 @@ __all__ = [
     "list_schedule",
     "miss_appointment",
     "start_appointment",
+    "transition",
     "update_appointment",
     "validate_and_check",
 ]

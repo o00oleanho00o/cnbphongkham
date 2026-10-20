@@ -110,3 +110,17 @@ class Permission(StrEnum):
     """Token usage and agent traces (may contain message text: staff-only)."""
     ADMIN_POLICY = "admin.policy"
     """Assign policy profiles, confirm zalo_uid identity links."""
+    # The agent gateway (docs/PLAN-crm-plugin.md): held by the agent actor only, never by a staff role. Each
+    # acts for the person of one chat link (``clinic.patient_channel``), never for a patient picked by id.
+    AGENT_SLOTS_READ = "agent.slots.read"
+    """Free start times of the coming days: times only, no name of anyone."""
+    AGENT_CONTACT_WRITE = "agent.contact.write"
+    """Save the name and phone of the person of a chat link (a new patient on first contact)."""
+    AGENT_BOOKING_WRITE = "agent.booking.write"
+    """Book an appointment for the person of a chat link."""
+    AGENT_APPOINTMENT_READ = "agent.appointment.read"
+    """The coming appointments of the person of a chat link."""
+    AGENT_APPOINTMENT_CHANGE = "agent.appointment.change"
+    """Confirm, move or cancel a coming appointment of the person of a chat link."""
+    AGENT_REMINDERS_READ = "agent.reminders.read"
+    """Coming visits of linked people who agreed to messages: ids, channel and time, no name, no phone."""

@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import datetime
 from uuid import UUID, uuid4
 
-from sqlalchemy import DateTime, Integer, Text
+from sqlalchemy import DateTime, Integer, Text, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from pema.clinic.models.base import Base
@@ -27,6 +27,8 @@ class Appointment(Base):
     cancelled_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), default=None)
     missed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), default=None)
     created_by: Mapped[UUID | None] = mapped_column(default=None)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    """Kept by a trigger; read only by fresh queries (the agent's reminders), never after a flush."""
     version: Mapped[int] = mapped_column(Integer, default=1)
 
     __mapper_args__ = {"version_id_col": version}  # noqa: RUF012

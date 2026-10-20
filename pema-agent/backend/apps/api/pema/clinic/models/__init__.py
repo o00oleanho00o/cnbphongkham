@@ -2,7 +2,14 @@
 
 from pema.clinic.models.audit import AuditLog
 from pema.clinic.models.base import CLINIC_SCHEMA, Base
-from pema.clinic.models.care import Consent, Episode, Patient, TreatmentPlan, TreatmentSession
+from pema.clinic.models.care import (
+    Consent,
+    Episode,
+    Patient,
+    PatientChannel,
+    TreatmentPlan,
+    TreatmentSession,
+)
 from pema.clinic.models.catalog import Protocol, Room, RoomBlock, Service, ServiceVersion
 from pema.clinic.models.clinical import (
     ConsultNote,
@@ -47,6 +54,7 @@ __all__ = [
     "Patient",
     "PatientAppEvent",
     "PatientBrief",
+    "PatientChannel",
     "PatientClinicalNote",
     "Payment",
     "ProcedureEntry",

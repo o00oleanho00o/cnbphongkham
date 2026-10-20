@@ -15,6 +15,7 @@ from pema.api.routers import (
     admin_audit,
     admin_crm_rules,
     admin_users,
+    agent_gateway,
     appointments,
     auth,
     crm,
@@ -63,6 +64,11 @@ TAGS_METADATA: list[dict[str, str]] = [
     {"name": "admin-crm", "description": "CRM automation rules. (B2)"},
     {"name": "admin-audit", "description": "Audit log reader. (B1)"},
     {"name": "admin-users", "description": "Staff accounts: owner resets a password. (B1)"},
+    {
+        "name": "agent-gateway",
+        "description": "What the clinic's agent may do for the person of one chat: free times, contact, "
+        "visits, reminders. Machine key only (docs/PLAN-crm-plugin.md).",
+    },
     {"name": "system", "description": "Health."},
 ]
 
@@ -96,6 +102,7 @@ def build_api_router() -> APIRouter:
         admin_crm_rules.router,
         admin_audit.router,
         admin_users.router,
+        agent_gateway.router,
     ):
         api.include_router(router)
     return api
