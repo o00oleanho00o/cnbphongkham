@@ -1473,6 +1473,29 @@ Chi tiết: `docs/PLAN-agent-tools.md` mục 2, 2b, 5.4.
     trong lịch sử phiên kèm một dòng `[System ...]` nói câu đó chưa gửi. Khoảng trống còn lại: tin đến trong 10–20 giây trễ khi gửi thì vẫn
     thành hai câu trả lời liên tiếp.
 
+12. **Agent đặt lịch không qua lễ tân xác nhận (chủ chọn, 2026-10-19; `PLAN-crm-plugin.md`)**: lịch agent đặt vào thẳng `booked`, không ai
+    duyệt, không báo nhân viên (chỉ màn lịch tự tải lại). Để sau: trạng thái chờ xác nhận hoặc việc `CrmTask` "kiểm lịch agent đặt",
+    thông báo cho lễ tân, gộp hồ sơ trùng (khách cũ chat Zalo lần đầu thành hồ sơ mới), xếp bác sĩ cho lịch agent đặt (`doctor_id` trống).
+    Rủi ro trong lúc chưa có: giờ bị chiếm bởi lịch đùa hay giả (chỉ giảm bằng 2 lịch/khách và giới hạn tần suất). Khách hủy muộn (trong
+    3 giờ) cũng không ai được báo.
+
+13. **Nhắc hẹn: CRM báo sự kiện, agent hẹn giờ (chủ chọn 2026-10-19, bỏ cách hỏi định kỳ; `PLAN-crm-plugin.md` mục 3.4-3.7)**. Outbox
+    `clinic.agent_event` trong CRM, worker ký HMAC gửi tới `/v1/hooks/crm/events`, agent ngủ tới mốc, đối soát một lần lúc khởi động và mỗi
+    24 giờ. Còn để sau: (a) đường gửi nguyên văn không qua model cho tin nhắc (hiện model viết từ chỉ dẫn có sẵn giờ, có thể chép sai giờ);
+    (b) trần số lượt agent trả lời mỗi khách mỗi giờ trong lõi (chặn hai bot nói chuyện với nhau);
+    (c) vòng chăm sóc lại bỏ qua khách có lịch sắp tới, và một hạn mức tin chủ động chung cho hai vòng (hiện chỉ có hạn mức ngày của bridge);
+    (d) nối hồ sơ cũ với Zalo khi số trùng (đề nghị nối, nhân viên duyệt), nhắn khách vắng mặt, nút trả lời nhanh của Zalo OA;
+    (e) màn hình cho quản trị xem sự kiện `failed_at` của outbox.
+    Rủi ro trong lúc chưa có: sự kiện đến muộn khi đường giao hỏng (đối soát bù tối đa 48 giờ), mốc nhắc mất thay vì trùng nếu agent chết giữa
+    lúc ghi dấu và lúc gửi, tin nhắc sai giờ nếu model chép sai, hai vòng chủ động có thể nhắn cùng một khách trong ngày.
+
+14. **Bảo vệ agent: các việc chủ tạm gác (2026-10-20; `PLAN-crm-plugin.md` mục 3.9-3.10)**. (a) **Duyệt tay có điều kiện** cho đặt,
+    dời, hủy lịch: đề xuất chỉ chặn hủy trong vòng 3 giờ trước giờ khám, lần dời thứ 3, người mới chưa từng đến khám; còn lại tự động.
+    (b) **Danh sách tên miền được ra internet** của container agent: proxy `egress` chỉ ghi log cho tới khi có danh sách; đọc log ra
+    danh sách thật. (c) **Chuyển khóa model, embedding, TypeSafe vào proxy** để tiến trình agent không giữ khóa nào (hiện các khóa
+    mã hóa trong DB của agent, agent giải mã được). Rủi ro trong lúc chưa có: agent bị chiếm vẫn ra được mọi nơi trên internet
+    (chỉ có log) và đọc được khóa của nhà cung cấp model.
+
 ## Suggested skills
 
 - `handoff` (`.claude/skills/handoff/SKILL.md`) — run again at the end of the next session to refresh this doc.
