@@ -181,13 +181,18 @@ Agent: kiểm chữ ký, bỏ trùng, ghi vào bảng nhắc của mình, đánh
 
 **Chỗ ghi sự kiện (cùng giao dịch):** `book_in_session`, `update_appointment`, `transition` (mọi verb), dời lịch của cổng
 agent, `record_consent` (loại `messaging`) và `save_contact`. Một hàm `agent_events.record_*(session, …)` gọi ở đó;
-test cấu trúc kiểm không có chỗ nào đổi `Appointment` mà quên gọi.
+test cấu trúc (`test_agent_events_calls.py`, đọc mã bằng AST) kiểm chỗ tạo hoặc dời lịch chính xác là bốn nơi đã biết
+và mỗi nơi đều gọi hàm ghi; chỗ thêm dòng `consent` chính xác là hai nơi.
 
 **Worker `agent-events`** (trong `AppLifecycle`, cạnh `crm-rules`):
-- Đánh thức bằng `asyncio.Event` do listener `appointment_events` (thêm khả năng nhiều listener) và hàm ghi sự kiện
-  đặt; không quét theo chu kỳ khi bảng rỗng. Khi còn dòng chờ thử lại thì ngủ tới `min(next_attempt_at)`.
+- Đánh thức bằng `asyncio.Event`: hàm ghi sự kiện gắn một hàm `after_commit` vào phiên (`agent_events.set_waker`), nên
+  worker chỉ thức sau khi giao dịch đã commit; không quét theo chu kỳ khi bảng rỗng (chờ không hạn). Khi còn dòng chờ
+  thử lại thì ngủ tới `min(next_attempt_at)`. **Khác bản đầu:** không cần thêm người nghe cho `appointment_events`.
 - Giao theo thứ tự `id`; thất bại thì `attempts+1`, `next_attempt_at = now + 30s·2^attempts` (tối đa 1 giờ); sau 8 lần
   đánh dấu `failed_at` và dừng (đối soát bù). Mỗi lần giao có `timeout` 5 giây; mọi lỗi mạng không làm worker chết.
+- (Đã làm.) Bảng `agent_event` dùng một lớp nền riêng (`OutboxBase`) vì bộ chặn audit chỉ canh dữ liệu phòng khám; việc
+  đánh dấu đã giao không phải thay đổi phòng khám nên không cần dòng audit. Dòng sự kiện chỉ được THÊM, trong giao dịch
+  của thay đổi mà nó báo (giao dịch đó có audit).
 - Ký mỗi lần giao bằng **khóa Ed25519 sẵn có của CRM** (khóa đang ký token SSO, công khai ở JWKS): thân yêu cầu là một
   JWT `iss = pema-clinic`, `aud = pema-agent-events` (khác `aud = pema-agent` của SSO), `exp` 2 phút, `jti` = `event_id`,
   sự kiện trong claim `event`. Địa chỉ đích `PEMA_AGENT_EVENTS_URL` (trong stack: `http://agent:8088/v1/hooks/crm/events`).
@@ -389,7 +394,7 @@ agent (không khóa) ──HTTP──► crm-signer (giữ khóa riêng) ──B
 | 0 | **Cứng hóa, phần test** (mục 3.10a, T9): làm được ngay, độc lập với mọi bước khác | T9 xanh |
 | 1 | CRM: cổng agent (đã viết): migration `0002`, quyền, khóa máy, chuẩn hóa số, 8 route, openapi/types | **22 test cổng qua trên DB tạm (đã chạy).** Còn chạy cả bộ test `apps/api` và `contracts` (chưa chạy), `ruff`/`pyright` sạch (đã sạch) |
 | 1b | **(đã làm)** CRM: đổi xác thực cổng từ khóa băm sang JWT Ed25519, kiểm bằng khóa công khai (mục 3.2) | Test 1b và 22 test cổng xanh, cả bộ `apps/api` xanh |
-| 2 | CRM: outbox: migration `0003`, hàm ghi sự kiện ở 5 nơi, listener nhiều người nghe, worker `agent-events`, JWT sự kiện ký bằng khóa có sẵn của CRM, biến `PEMA_AGENT_EVENTS_URL`, dọn dòng cũ | Test outbox mục 4 xanh, cả bộ `apps/api` xanh |
+| 2 | **(đã làm 2026-10-20, chờ chạy bộ test đầy đủ)** CRM: outbox: migration `0003`, hàm ghi sự kiện ở 5 nơi, listener nhiều người nghe, worker `agent-events`, JWT sự kiện ký bằng khóa có sẵn của CRM, biến `PEMA_AGENT_EVENTS_URL`, dọn dòng cũ | Test outbox mục 4 xanh, cả bộ `apps/api` xanh |
 | 3 | `crm-signer`: ứng dụng nhỏ, `keygen`, danh sách 8 route, ký JWT, chuyển tiếp, log, Dockerfile, dịch vụ trong compose | Test `crm-signer` xanh |
 | 4 | Agent: plugin `crm`: client gọi `crm-signer`, 7 tool, `crm_person`, profile, `AGENTS.md`, T4 | Test tool xanh |
 | 5 | Agent: route nhận sự kiện (JWKS, `aud` riêng), `sso` từ chối `aud` sự kiện, bảng `crm_reminder`/`crm_reminder_sent` | Test route xanh, test `sso` xanh |
