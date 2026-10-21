@@ -1,8 +1,6 @@
-"use client";
-
 // Renders the Markdown of a guide article from the plain blocks of `parseMarkdown`. Nothing here turns text into
 // HTML: every piece is a React element, so an article can never inject markup or script.
-import Link from "next/link";
+import { Link } from "@/lib/link";
 import { useMemo } from "react";
 
 import { parseMarkdown, type Block, type Inline } from "@/lib/guide/markdown-lite";

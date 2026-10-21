@@ -1,9 +1,7 @@
-"use client";
-
 // Quick orders (U5) that have something to pay and no invoice yet, with "Lập hóa đơn": the invoice is the order's
 // total, raised once (asking again returns the same one). Old web: `order-data.js` `saveOrder` rewrote an invoice
 // with every save; here the cashier raises it on purpose. Shared by the cashier and `/finance/payments`.
-import Link from "next/link";
+import { Link } from "@/lib/link";
 import { useState } from "react";
 
 import { Notice } from "@/components/ops/ops-ui";

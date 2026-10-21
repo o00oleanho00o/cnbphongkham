@@ -1,4 +1,4 @@
-// `pnpm inventory`: keeps FEATURE-INVENTORY.md honest (package U, step U1). The checks are in inventory-lib.ts.
+// `bun run inventory`: keeps FEATURE-INVENTORY.md honest (package U, step U1). The checks are in inventory-lib.ts.
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -37,7 +37,7 @@ const testFiles = TEST_ROOTS.flatMap((root) => testFilesUnder(join(FRONTEND, roo
   relative(FRONTEND, f).replaceAll("\\", "/"),
 );
 const problems = [
-  ...checkRoutes(rows, listPageRoutes(join(FRONTEND, "src/app"))),
+  ...checkRoutes(rows, listPageRoutes(join(FRONTEND, "src/routes"))),
   ...checkTestIds(ids, readOrNull),
   ...checkAllTestFilesListed(ids, testFiles),
 ];

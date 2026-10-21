@@ -30,7 +30,7 @@ vi.mock("@/lib/api/client", async (importActual) => {
     },
   };
 });
-vi.mock("next/navigation", () => ({
+vi.mock("@/lib/navigation", () => ({
   useRouter: () => ({ push: vi.fn() }),
   useSearchParams: () => new URLSearchParams(""),
 }));

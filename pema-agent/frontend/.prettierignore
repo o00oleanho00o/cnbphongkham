@@ -1,6 +1,7 @@
-.next
+.output
+dist
+src/routeTree.gen.ts
 node_modules
-pnpm-lock.yaml
 src/lib/api/schema.d.ts
 public
 playwright-report

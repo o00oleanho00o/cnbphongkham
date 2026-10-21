@@ -35,11 +35,7 @@ export function hashOf(text: string): string {
 }
 
 export function fold(text: string): string {
-  return text
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .replace(/đ/g, "d")
-    .toLowerCase();
+  return text.normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/đ/g, "d").toLowerCase();
 }
 
 // -- the YAML head -------------------------------------------------------------------------------------------
@@ -75,7 +71,7 @@ export function emptyMeta(): PreviewMeta {
 }
 
 export function readHead(text: string): { meta: PreviewMeta; body: string } {
-  const lines = text.replace(/^﻿/, "").split(/\r?\n/);
+  const lines = text.replace(/^\uFEFF/, "").split(/\r?\n/);
   const end = lines.findIndex((line, index) => index > 0 && line.trim() === "---");
   if (lines[0]?.trim() !== "---" || end < 0) return { meta: emptyMeta(), body: text };
   const fields = new Map(
@@ -113,12 +109,18 @@ interface Section {
 /** Level 0 is the text before the first heading; only headings of level 1-3 start a section. */
 export function sectionsOf(body: string): Section[] {
   const lines = body.split(/\r?\n/);
-  const scan = lines.reduce<{ fenced: boolean; heads: { index: number; level: number; title: string }[] }>(
+  const scan = lines.reduce<{
+    fenced: boolean;
+    heads: { index: number; level: number; title: string }[];
+  }>(
     (state, line, index) => {
       if (/^\s*(```|~~~)/.test(line)) return { ...state, fenced: !state.fenced };
       const found = state.fenced ? null : /^(#{1,3})\s+(.+?)\s*#*\s*$/.exec(line);
       if (!found) return state;
-      return { ...state, heads: [...state.heads, { index, level: found[1]?.length ?? 1, title: found[2] ?? "" }] };
+      return {
+        ...state,
+        heads: [...state.heads, { index, level: found[1]?.length ?? 1, title: found[2] ?? "" }],
+      };
     },
     { fenced: false, heads: [] },
   );
@@ -156,7 +158,10 @@ function chunkCounts(items: readonly Section[]): Map<Section, number> {
   return new Map(groups.map((group) => [group.head, chunksFor(group.chars)]));
 }
 
-function outlineFrom(sections: readonly Section[], counts: ReadonlyMap<Section, number>): OutlineNode[] {
+function outlineFrom(
+  sections: readonly Section[],
+  counts: ReadonlyMap<Section, number>,
+): OutlineNode[] {
   return sections
     .filter((section) => section.level > 0)
     .map((section) => ({
@@ -201,7 +206,10 @@ function internalScript(sections: readonly Section[], audience: Audience | null)
   if (audience === "staff") return [];
   const hits = sections.filter((section) => /kịch bản|nội bộ/i.test(section.title));
   if (hits.length === 0) return [];
-  const names = hits.slice(0, 2).map((section) => `"${section.title}"`).join(", ");
+  const names = hits
+    .slice(0, 2)
+    .map((section) => `"${section.title}"`)
+    .join(", ");
   return [
     {
       code: "internal_script",
@@ -214,7 +222,13 @@ function internalScript(sections: readonly Section[], audience: Audience | null)
 
 function tenantWarning(meta: PreviewMeta): PreviewWarning[] {
   if (!meta.tenant_id || meta.tenant_id === TENANT) return [];
-  return [{ code: "tenant", level: "error", text: `Tài liệu của phòng khám ${meta.tenant_id}, không phải phòng khám này.` }];
+  return [
+    {
+      code: "tenant",
+      level: "error",
+      text: `Tài liệu của phòng khám ${meta.tenant_id}, không phải phòng khám này.`,
+    },
+  ];
 }
 
 function challengeWarning(meta: PreviewMeta): PreviewWarning[] {
@@ -230,10 +244,15 @@ function challengeWarning(meta: PreviewMeta): PreviewWarning[] {
 }
 
 function relatedSources(meta: PreviewMeta, title: string, hash: string) {
-  const sameCode = meta.doc_code ? store.sources.find((source) => source.doc_code === meta.doc_code) : undefined;
-  const sameTitle = sameCode ? undefined : store.sources.find((source) => fold(source.title) === fold(title));
+  const sameCode = meta.doc_code
+    ? store.sources.find((source) => source.doc_code === meta.doc_code)
+    : undefined;
+  const sameTitle = sameCode
+    ? undefined
+    : store.sources.find((source) => fold(source.title) === fold(title));
   const remembered = hashes.get(hash);
-  const sameContent = remembered && store.sources.some((source) => source.id === remembered.id) ? remembered : null;
+  const sameContent =
+    remembered && store.sources.some((source) => source.id === remembered.id) ? remembered : null;
   return { sameCode, sameTitle, sameContent };
 }
 
@@ -287,7 +306,12 @@ function blank(input: PreviewInput, format: SourceFormat): PreviewItem {
 function fromName(input: PreviewInput, format: SourceFormat): Parsed {
   const base = blank(input, format);
   const isScan = format === "pdf" && /scan/i.test(input.name);
-  if (isScan) return { item: { ...base, error: "PDF là ảnh scan, chưa đọc được chữ" }, markdown: null, hash: "" };
+  if (isScan)
+    return {
+      item: { ...base, error: "PDF là ảnh scan, chưa đọc được chữ" },
+      markdown: null,
+      hash: "",
+    };
   const title = nameWithoutExtension(input.name);
   const outline: OutlineNode[] = [
     { level: 1, title, chunks: 0, chars: 120 },
@@ -353,7 +377,7 @@ function fromText(input: PreviewInput, text: string, format: SourceFormat): Pars
             code: "same_title",
             level: "info" as const,
             text: `Trùng tên với nguồn "${related.sameTitle.title}".`,
-            fix: "Chọn \"Thay thế nguồn cũ\" ở bước Thông tin nếu đây là bản mới.",
+            fix: 'Chọn "Thay thế nguồn cũ" ở bước Thông tin nếu đây là bản mới.',
           },
         ]
       : []),
@@ -367,7 +391,11 @@ function fromText(input: PreviewInput, text: string, format: SourceFormat): Pars
     tables_split: tableCount(body),
     warnings,
     same_code_as: related.sameCode
-      ? { id: related.sameCode.id, title: related.sameCode.title, version: related.sameCode.version }
+      ? {
+          id: related.sameCode.id,
+          title: related.sameCode.title,
+          version: related.sameCode.version,
+        }
       : null,
     same_content_as: related.sameContent,
   };

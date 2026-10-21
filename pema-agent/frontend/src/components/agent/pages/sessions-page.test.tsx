@@ -10,7 +10,7 @@ import { SessionsPage } from "./sessions-page";
 
 const nav = vi.hoisted(() => ({ search: "" }));
 
-vi.mock("next/navigation", () => ({ useSearchParams: () => new URLSearchParams(nav.search) }));
+vi.mock("@/lib/navigation", () => ({ useSearchParams: () => new URLSearchParams(nav.search) }));
 
 const row = (id: string, user: string, channel: string, count: number, compacted = false) => ({
   session_id: id,

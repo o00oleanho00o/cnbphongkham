@@ -1,5 +1,3 @@
-"use client";
-
 // "Quy tắc tự động" of `/crm` (old CRM01 `protocol` card, "Protocol chăm sóc mẫu"): the rules that turn clinic data
 // into staff tasks, as text (`GET /api/v1/crm/rules`). Read only: a rule only creates a task for a person unless
 // the clinic chose otherwise, and a message to a patient still waits for review.

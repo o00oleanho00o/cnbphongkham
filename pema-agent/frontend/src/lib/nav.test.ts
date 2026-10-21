@@ -14,7 +14,7 @@ import {
   type NavItem,
 } from "./nav";
 
-const APP_DIR = fileURLToPath(new URL("../app", import.meta.url));
+const APP_DIR = fileURLToPath(new URL("../routes", import.meta.url));
 const items: NavItem[] = NAV_SECTIONS.flatMap((s) => s.items);
 const pageRoutes = listPageRoutes(APP_DIR);
 
@@ -64,14 +64,7 @@ const REMOVED_AGENT_PAGES = [
   "/review",
   "/templates",
 ];
-const NOT_IN_MENU = [
-  "/",
-  "/login",
-  "/admin/auth",
-  "/dev/kit",
-  ...FINANCE_TABS,
-  ...AGENT_TABS,
-];
+const NOT_IN_MENU = ["/", "/login", "/admin/auth", "/dev/kit", ...FINANCE_TABS, ...AGENT_TABS];
 
 describe("menu order of the old Pema Clinic Web", () => {
   it("opens_with_the_old_workspace_section_in_the_old_order", () => {
@@ -142,7 +135,7 @@ describe("every screen stays reachable", () => {
   it("has_a_page_file_for_every_non_planned_menu_entry", () => {
     const withoutFile = items
       .filter((i) => !i.planned)
-      .filter((i) => !existsSync(`${APP_DIR}/(admin)${i.to}/page.tsx`));
+      .filter((i) => !existsSync(`${APP_DIR}/_admin${i.to}/index.tsx`));
 
     expect(withoutFile.map((i) => i.to)).toEqual([]);
   });

@@ -17,11 +17,7 @@ const NOT_FOUND = "Không tìm thấy nguồn này.";
 
 /** Lower case without accents, so "nam" finds "Nám". */
 function fold(text: string): string {
-  return text
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .replace(/đ/g, "d")
-    .toLowerCase();
+  return text.normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/đ/g, "d").toLowerCase();
 }
 
 function notFound(): Reply {
@@ -74,7 +70,9 @@ function summaryOf(sources: readonly Source[]): SourceSummary {
     embedded_percent: chunks === 0 ? 0 : Math.min(100, Math.round((embedded / chunks) * 100)),
     errors: sources.filter((item) => item.processing === "error").length,
     unapproved: sources.filter((item) => !item.approved).length,
-    processing: sources.filter((item) => item.processing === "queued" || item.processing === "processing").length,
+    processing: sources.filter(
+      (item) => item.processing === "queued" || item.processing === "processing",
+    ).length,
   };
 }
 
@@ -125,11 +123,20 @@ const approve: Change = (source) => {
   if (source.processing === "error") return { error: "Nguồn đang lỗi: nạp lại trước khi duyệt." };
   if (source.processing !== "ready") return { error: "Nguồn đang được xử lý: chờ xong rồi duyệt." };
   const at = nowIso();
-  return { source: { ...source, approved: true, approved_by: ADMIN, approved_at: at, updated_at: at }, event: ["approved", ""] };
+  return {
+    source: { ...source, approved: true, approved_by: ADMIN, approved_at: at, updated_at: at },
+    event: ["approved", ""],
+  };
 };
 
 const unapprove: Change = (source) => ({
-  source: { ...source, approved: false, approved_by: null, approved_at: null, updated_at: nowIso() },
+  source: {
+    ...source,
+    approved: false,
+    approved_by: null,
+    approved_at: null,
+    updated_at: nowIso(),
+  },
   event: ["unapproved", ""],
 });
 
@@ -145,7 +152,12 @@ const reindex: Change = (source) => ({
 });
 
 const expire: Change = (source) => ({
-  source: { ...source, lifecycle: "expired", effective_to: nowIso().slice(0, 10), updated_at: nowIso() },
+  source: {
+    ...source,
+    lifecycle: "expired",
+    effective_to: nowIso().slice(0, 10),
+    updated_at: nowIso(),
+  },
   event: ["expired", ""],
 });
 
@@ -188,7 +200,9 @@ function bulk(ctx: Ctx): Reply {
   const ids = body.ids ?? [];
   const change = changeOf(body);
   const results = ids.map((id) => ({ id, result: change ? apply(id, change) : remove(id) }));
-  const failed = results.flatMap(({ id, result }) => (result && "error" in result ? [{ id, message: result.error }] : []));
+  const failed = results.flatMap(({ id, result }) =>
+    result && "error" in result ? [{ id, message: result.error }] : [],
+  );
   const out: BulkResult = { done: ids.length - failed.length, failed };
   return { body: out };
 }
@@ -203,7 +217,11 @@ function single(change: Change) {
 
 function patch(ctx: Ctx): Reply {
   const body = bodyOf<SourcePatch>(ctx);
-  const next = replace(ctx.params.id ?? "", (source) => ({ ...source, ...body, updated_at: nowIso() }));
+  const next = replace(ctx.params.id ?? "", (source) => ({
+    ...source,
+    ...body,
+    updated_at: nowIso(),
+  }));
   if (!next) return notFound();
   record(next.id, "edited", Object.keys(body).join(", "));
   return { body: next };

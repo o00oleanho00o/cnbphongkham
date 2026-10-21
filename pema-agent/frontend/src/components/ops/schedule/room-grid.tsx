@@ -1,5 +1,3 @@
-"use client";
-
 // The room-column day grid of "Điều phối lịch" (old `schedule()` of operations-ui.js): a time axis from 08:00 to
 // 18:00 in half hours, one column per room, a card for every visit that holds the room and a hatched strip for
 // every block ("Bảo trì thiết bị laser"). An empty half hour is a button "Đặt lịch <phòng> <giờ>" that opens the

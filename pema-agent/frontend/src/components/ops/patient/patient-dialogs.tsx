@@ -1,5 +1,3 @@
-"use client";
-
 // The dialogs of the Patient 360 header and cards (package U, step U9). Copy and fields are the ones of the old
 // Clinic Web (`modalHtml` of prototype/shared/clinic.js, `crm-ui.js` "Ngày dự kiến quay lại"):
 //   AI brief        "Brief trước buổi hẹn" (WC13, WC32)   a TEMPLATE over the records, no model; a doctor edits it

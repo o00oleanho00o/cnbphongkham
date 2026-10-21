@@ -1,6 +1,6 @@
 # frontend
 
-One Next.js app (App Router, TypeScript, Tailwind v4, Vietnamese UI, mobile-first) for the whole Pema CSKH agent:
+One TanStack Start app (file routes, run by bun, TypeScript, Tailwind v4, Vietnamese UI, mobile-first) for the whole Pema CSKH agent:
 
 - **Vận hành** (clinic operations): Việc hôm nay, Hồ sơ bệnh nhân (Patient 360, read only). The inbox, the follow-up queue (review items), the message templates and the patient app's "Nhắn tin" are gone (PLAN-db-baseline D8).
 - **Tổng quan** (`/dashboard`) and **Điều phối lịch** (`/schedule`, package U step U2): the old Clinic Web's dashboard and schedule on real data. The dashboard shows only what `GET /dashboard/kpis` could count (visits by status, patients seen, CSKH follow-up numbers; no revenue, no invented figure; a rate with nothing to divide by is a dash) for today, this week or this month; a doctor sees their own visits. The schedule is one day or seven days from `GET /appointments/schedule` (columns are doctors; rooms and services come with the resources step) with the reception flow Đặt hẹn, Đã xác nhận, Đang chờ, Đang điều trị, Hoàn tất and the two ways out, Vắng hẹn and Đã hủy (with a reason). Every rule (hours, break, double booking, who may do what) is the backend's and its sentence is shown as it comes; `lib/ops/schedule-view.ts` only decides which buttons to offer. Several desks share the board through the `appointments.changed` live event.
@@ -15,22 +15,22 @@ It is UI only. Every business rule, permission and audit is the backend's (`back
 ## Run
 
 ```
-pnpm install
-pnpm dev:mock        # mock backend on :4010 plus next dev on :3000 (no other service needed)
-pnpm dev             # against the real API (PEMA_API_URL, default http://127.0.0.1:8000)
-pnpm build && pnpm start
-pnpm lint && pnpm typecheck && pnpm test
-pnpm inventory       # FEATURE-INVENTORY.md against the routes and tests on disk (fails when a screen or a test disappears)
-pnpm smoke           # Playwright: every route renders, main heading and primary control visible (needs `pnpm dev:mock`)
-pnpm visual          # Playwright: every route at the 5 viewports, fails on horizontal overflow (needs `pnpm dev:mock`)
-pnpm check           # all of the above in one go (lint, types, format, tests, inventory, then smoke and visual)
-pnpm gen:types       # ../backend/apps/api/openapi.json -> src/lib/api/schema.d.ts (never edit by hand)
-pnpm shots           # Playwright: every screen at the 5 project viewports into shots/ (needs `pnpm dev:mock` running);
+bun install
+bun run dev:mock        # mock backend on :4010 plus vite dev on :3000 (no other service needed)
+bun run dev             # against the real API (PEMA_API_URL, default http://127.0.0.1:8000)
+bun run build && bun run start      # the build is the Nitro server in .output/, run by bun
+bun run lint && bun run typecheck && bun run test
+bun run inventory       # FEATURE-INVENTORY.md against the routes and tests on disk (fails when a screen or a test disappears)
+bun run smoke           # Playwright: every route renders, main heading and primary control visible (needs `bun run dev:mock`)
+bun run visual          # Playwright: every route at the 5 viewports, fails on horizontal overflow (needs `bun run dev:mock`)
+bun run check           # all of the above in one go (lint, types, format, tests, inventory, then smoke and visual)
+bun run gen:types       # ../backend/apps/api/openapi.json -> src/lib/api/schema.d.ts (never edit by hand)
+bun run shots           # Playwright: every screen at the 5 project viewports into shots/ (needs `bun run dev:mock` running);
                      # env SHOTS_ROLE=owner|manager|doctor|cs|reception, SHOTS_ROUTES=/today,/patients. It also fails on
                      # horizontal document overflow, page errors and 5xx answers.
 ```
 
-The browser talks only to its own origin. `/api/v1/**` and `/healthz` are forwarded to the backend by two route handlers (`src/app/api/[...path]/route.ts`, `src/app/healthz/route.ts`; logic and tests in `src/lib/server/api-proxy.ts`), so the session cookie is first-party and there is no CORS. The handlers read the API address on **every request** from `PEMA_API_INTERNAL_URL` (then `PEMA_API_URL`, then `http://127.0.0.1:8000`): it is a runtime environment variable, not a build argument, so one built image runs against any API (`docker run -e PEMA_API_INTERNAL_URL=http://api:8000 ...`; changing it needs a container restart, not a rebuild). Only `/api/v1/` and `/healthz` are forwarded (a `..` or encoded slash in the path is refused with 400, anything else is 404); hop-by-hop headers and client-supplied `x-forwarded-*`/`forwarded`/`x-real-ip` are dropped; the body and the answer are streamed, never cached, every `Set-Cookie` is kept. Behind the Caddy reverse proxy (`infra/README.md`) `/api/v1` does not even reach this server: Caddy sends it straight to the API. Mock sign-in (fictional users, all with password `demo1234`): `owner@pema.test`, `manager@pema.test`, `doctor@pema.test`, `cs@pema.test`, `reception@pema.test`.
+The browser talks only to its own origin. `/api/v1/**` and `/healthz` are forwarded to the backend by server routes (`src/routes/api/$.ts`, `src/routes/agent/$.ts`, `src/routes/healthz.ts`; logic and tests in `src/lib/server/api-proxy.ts`), so the session cookie is first-party and there is no CORS. The handlers read the API address on **every request** from `PEMA_API_INTERNAL_URL` (then `PEMA_API_URL`, then `http://127.0.0.1:8000`): it is a runtime environment variable, not a build argument, so one built image runs against any API (`docker run -e PEMA_API_INTERNAL_URL=http://api:8000 ...`; changing it needs a container restart, not a rebuild). Only `/api/v1/` and `/healthz` are forwarded (a `..` or encoded slash in the path is refused with 400, anything else is 404); hop-by-hop headers and client-supplied `x-forwarded-*`/`forwarded`/`x-real-ip` are dropped; the body and the answer are streamed, never cached, every `Set-Cookie` is kept. Behind the Caddy reverse proxy (`infra/README.md`) `/api/v1` does not even reach this server: Caddy sends it straight to the API. Mock sign-in (fictional users, all with password `demo1234`): `owner@pema.test`, `manager@pema.test`, `doctor@pema.test`, `cs@pema.test`, `reception@pema.test`.
 
 ## Mock backend (`mock/`)
 
@@ -49,12 +49,13 @@ Both routes are in `openapi.json` and the generated client (`src/lib/api/schema.
 ## Layout
 
 ```
-src/app/layout.tsx, globals.css       root document, Be Vietnam Pro (local, OFL), Pema tokens, theme bootstrap
-src/app/login/                        sign-in (email + password, cookie session; one installation is one clinic)
-src/app/(admin)/layout.tsx            AppShell: /me, permission-filtered menu, phone tab bar
-src/app/(admin)/{today,patients}/          clinic operations
-src/app/(admin)/finance/{,entries,rates,payments,periods,export}/                 finance PB02 (U6)
-src/app/(admin)/admin/<area>/page.tsx  AI administration, one route per page of the original dashboard
+src/routes/__root.tsx, globals.css  root document (head, theme bootstrap), Be Vietnam Pro (local, OFL), Pema tokens
+src/routes/login/                     sign-in (email + password, cookie session; one installation is one clinic)
+src/routes/_admin/route.tsx           AppShell: /me, permission-filtered menu, phone tab bar
+src/routes/_admin/{today,patients}/        clinic operations
+src/routes/_admin/finance/{,entries,rates,payments,periods,export}/               finance PB02 (U6)
+src/routes/_admin/admin/<area>/index.tsx  AI administration, one route per page of the original dashboard
+src/routes/{api,agent}/$.ts, healthz.ts   server routes: same-origin proxy to the API and the agent
 src/components/admin/<area>/          ported components (paths fixed by docs/PORT-MAP.md)
 src/components/ops/                   clinic operation components (new, no zalo-agent original)
 src/components/catalog/, src/lib/catalog/   service catalog, protocols, doctors and rooms, photo studio (U4)

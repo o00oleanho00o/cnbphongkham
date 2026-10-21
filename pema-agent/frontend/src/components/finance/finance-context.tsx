@@ -1,5 +1,3 @@
-"use client";
-
 // What every finance page needs from the shell: the month and the projection of the address (`?month=`,
 // `?scope=own`), who may write, and a counter that "Làm mới" and every change raise so the pages load again.
 import { createContext, useContext } from "react";

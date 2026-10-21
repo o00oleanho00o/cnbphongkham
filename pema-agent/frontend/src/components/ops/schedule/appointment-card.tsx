@@ -1,5 +1,3 @@
-"use client";
-
 // One appointment on the board (old `.booking` card): time range, patient, note, doctor and the status chip,
 // plus the one button that moves the visit forward. Everything else (confirm, miss, cancel, reschedule) is in
 // the sheet that opens from the name. Status words are the old labels; colour only supports them.

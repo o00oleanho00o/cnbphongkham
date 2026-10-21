@@ -1,5 +1,3 @@
-"use client";
-
 // Model của agent: the list of models the agent keeps ready (several keys of the same provider side by side, grouped
 // by provider), the one in use, and the form to add or change one. Using a model applies from the next reply; a key is
 // stored encrypted and never shown back. The agent's own profile still answers when nothing was chosen.

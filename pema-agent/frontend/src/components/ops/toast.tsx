@@ -1,5 +1,3 @@
-"use client";
-
 // One live region for "đã sao chép", "đã lưu", "đã gửi". Every timer is cleared on unmount.
 import {
   createContext,

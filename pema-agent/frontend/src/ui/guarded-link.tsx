@@ -1,7 +1,5 @@
-"use client";
-
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { Link } from "@/lib/link";
+import { useRouter } from "@/lib/navigation";
 import type { ComponentProps, MouseEvent } from "react";
 
 import { coCanHoiTruocKhiRoi, xinPhepRoiTrang } from "@/lib/admin/shared/unsaved-changes-guard";

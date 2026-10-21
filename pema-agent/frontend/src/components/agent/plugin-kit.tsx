@@ -1,5 +1,3 @@
-"use client";
-
 // `sdk.ui` of the plugin SDK (plan C): the agent dashboard's kit (`plugins/web/ui/src/ui/kit.tsx`), same names and
 // props, drawn with this app's kit so plugin pages look like the rest of the clinic web. Where a prop does not fit
 // the app's component (a ReactNode title, a label that wraps its control, the small inline empty line) the piece

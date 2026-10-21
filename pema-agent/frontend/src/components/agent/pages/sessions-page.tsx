@@ -1,10 +1,8 @@
-"use client";
-
 // Phiên chat của agent: every conversation the agent had, whatever channel it came from (Zalo, HTTP...), newest first,
 // with a search, a channel filter and paging; a row opens the messages of the chat, where the chat can be deleted (the
 // agent then starts that conversation from nothing) or its trace opened. Ticked rows are deleted together.
-import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { Link } from "@/lib/link";
+import { useSearchParams } from "@/lib/navigation";
 import { useCallback, useEffect, useState } from "react";
 
 import { useConfirmDialog } from "@/components/admin/shared/confirm-dialog";

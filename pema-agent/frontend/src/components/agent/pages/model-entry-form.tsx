@@ -1,5 +1,3 @@
-"use client";
-
 // Add or change one model of the agent's list: ready presets (a click fills the provider, address and model; the
 // button of the chosen one stays coloured), the fields, and the model field that offers the provider's own list
 // while still taking any name typed by hand. Nothing is stored until the form is saved.

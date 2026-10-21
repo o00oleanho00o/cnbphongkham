@@ -1,5 +1,3 @@
-"use client";
-
 // List + detail layout of Inbox and the review queue. On a phone the detail is a CHILD SCREEN (the list
 // disappears while an item is open, a back button returns), as the project's mobile rule asks; from `lg`
 // both panes show side by side so the list stays visible while reading.

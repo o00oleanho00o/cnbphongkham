@@ -14,7 +14,13 @@ type Article = { id: string; title: string; body: string; tags: string[]; update
 const articles = new Map<string, Article>(
   GUIDE_SEEDS.map((g) => [
     g.id,
-    { id: g.id, title: g.name, body: g.body, tags: [GUIDE, g.topic], updated_at: isoFromNow(-3 * DAY) },
+    {
+      id: g.id,
+      title: g.name,
+      body: g.body,
+      tags: [GUIDE, g.topic],
+      updated_at: isoFromNow(-3 * DAY),
+    },
   ]),
 );
 
@@ -54,16 +60,14 @@ type Passage = { articleId: string; title: string; heading: string; text: string
 
 function passagesOf(id: string): Passage[] {
   const title = articles.get(id)?.title ?? "";
-  const sections = (articles.get(id)?.body ?? "")
-    .split(/\n(?=#{1,6}\s)/)
-    .map((block) => {
-      const [first = "", ...rest] = block.split("\n");
-      const isHeading = /^#{1,6}\s/.test(first);
-      return {
-        heading: isHeading ? first.replace(/^#{1,6}\s+/, "") : "",
-        text: (isHeading ? rest : [first, ...rest]).join("\n").trim(),
-      };
-    });
+  const sections = (articles.get(id)?.body ?? "").split(/\n(?=#{1,6}\s)/).map((block) => {
+    const [first = "", ...rest] = block.split("\n");
+    const isHeading = /^#{1,6}\s/.test(first);
+    return {
+      heading: isHeading ? first.replace(/^#{1,6}\s+/, "") : "",
+      text: (isHeading ? rest : [first, ...rest]).join("\n").trim(),
+    };
+  });
   return sections
     .filter((s) => s.text !== "")
     .map((s) => ({ articleId: id, title, heading: s.heading, text: s.text.slice(0, 700) }));

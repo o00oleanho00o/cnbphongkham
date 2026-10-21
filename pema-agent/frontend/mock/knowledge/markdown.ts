@@ -73,7 +73,9 @@ export function chunksOf(sourceId: string, markdown: string): ChunkDraft[] {
   const sections = sectionsOf(markdown);
   const paths = pathsOf(sections);
   return sections
-    .flatMap((section, index) => (carriesChunk(section) ? [{ section, path: paths[index] ?? section.title }] : []))
+    .flatMap((section, index) =>
+      carriesChunk(section) ? [{ section, path: paths[index] ?? section.title }] : [],
+    )
     .map(({ section, path }, ordinal) => ({
       id: `${sourceId}-c${ordinal + 1}`,
       ordinal,
@@ -95,7 +97,10 @@ function spanOf(sections: readonly Section[], position: number): [number, number
 }
 
 /** Takes the sections at these outline positions (with what is nested under them) out of the text. */
-export function takeSections(markdown: string, positions: readonly number[]): { kept: string; moved: string } {
+export function takeSections(
+  markdown: string,
+  positions: readonly number[],
+): { kept: string; moved: string } {
   const lines = markdown.split("\n");
   const sections = sectionsOf(markdown);
   const taken = new Set(

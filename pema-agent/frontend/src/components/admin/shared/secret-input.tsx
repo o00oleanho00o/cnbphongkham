@@ -1,5 +1,4 @@
 // ported from: web/src/shared/secret-input.tsx
-"use client";
 
 import { useState } from "react";
 import { IconEye, IconEyeOff } from "@/components/admin/shared/dashboard-icons";

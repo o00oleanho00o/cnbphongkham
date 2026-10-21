@@ -1,5 +1,3 @@
-"use client";
-
 // Tư vấn tab: key points -> structured draft -> the clinician edits and approves it into Patient 360. Source of
 // the behaviour: `consult`, `generate-note`, `approve-note` of prototype/shared/clinic.js. The draft is composed
 // from a template by the BE (not by a model); nothing is part of the record until a clinician approves it.

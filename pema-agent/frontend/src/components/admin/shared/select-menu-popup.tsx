@@ -1,5 +1,4 @@
 // ported from: web/src/shared/select-menu-popup.tsx
-"use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { IconCheck, IconSearch } from "@/components/admin/shared/dashboard-icons";

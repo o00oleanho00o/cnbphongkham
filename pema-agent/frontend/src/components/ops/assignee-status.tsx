@@ -1,5 +1,3 @@
-"use client";
-
 // One line under a "Phụ trách" box saying what is going on with the list of colleagues: still loading, or it could
 // not be read (with "Thử lại"). The box itself keeps working in both cases ("Tôi" and "Giữ nguyên" are always
 // there), so this is a hint and not an error screen. Nothing is rendered once the list is there.

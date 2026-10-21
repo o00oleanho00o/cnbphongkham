@@ -1,8 +1,8 @@
-// `pnpm shots`: screenshots of every screen at the five project viewports (AGENT.md: 1920x1020, 1440x900,
-// 1280x720, 1024x768, 390x844) against `pnpm dev:mock`. It also reports what an exit code cannot say:
+// `bun run shots`: screenshots of every screen at the five project viewports (AGENT.md: 1920x1020, 1440x900,
+// 1280x720, 1024x768, 390x844) against `bun run dev:mock`. It also reports what an exit code cannot say:
 // page errors, console errors, failed requests, and any document-level horizontal overflow.
 //
-//   SHOTS_BASE_URL=http://localhost:3000 SHOTS_ROLE=owner SHOTS_ROUTES=/today,/patients pnpm shots
+//   SHOTS_BASE_URL=http://localhost:3000 SHOTS_ROLE=owner SHOTS_ROUTES=/today,/patients bun run shots
 //   (SHOTS_VIEWPORTS=390x844,1440x900 limits the viewports)
 import { mkdirSync } from "node:fs";
 

@@ -1,6 +1,4 @@
-"use client";
-
-import Link from "next/link";
+import { Link } from "@/lib/link";
 import { memo } from "react";
 
 import { Badge, InitialAvatar } from "@/components/admin/shared/ui-bits";

@@ -1,5 +1,3 @@
-"use client";
-
 // "＋ Hồ sơ mới" of /patients (old web: `data-modal="patient"`, screen WC3 "Thêm người bệnh"). It calls the existing
 // `POST /api/v1/patients`; the code (P0xx) is made by the backend. Differences from the old modal, because this
 // record is stored and not a demo: "Ngày sinh" replaces "Tuổi" (the record keeps a birth date, never an age) and

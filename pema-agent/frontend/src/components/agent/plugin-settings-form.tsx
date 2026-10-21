@@ -1,5 +1,3 @@
-"use client";
-
 // The settings of one plugin: a form drawn from its manifest (`PATCH /v1/admin/plugins/<name>/settings`). Only the
 // fields that changed are sent; a secret left empty keeps the stored one.
 import { type FormEvent, useState } from "react";

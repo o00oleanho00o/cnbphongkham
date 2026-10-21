@@ -1,5 +1,3 @@
-"use client";
-
 // Công cụ của agent: every tool the agent has or may have, grouped as the agent's own (lõi) and the plugins', each
 // with an on/off switch and a way back to what the profile says. A switch moves at once and goes back when the
 // agent refuses. Changes apply from the next reply of the agent.

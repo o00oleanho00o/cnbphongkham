@@ -1,5 +1,3 @@
-"use client";
-
 // Small data-loading hook for the clinic screens. It keeps the last good data while a reload runs
 // (no flash of an empty list when a filter changes), ignores answers of requests that are no longer the
 // latest, and exposes `reload` for "after I changed something" refreshes.

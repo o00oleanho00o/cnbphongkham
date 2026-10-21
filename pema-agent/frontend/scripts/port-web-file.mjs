@@ -34,9 +34,9 @@ if (dirIdx >= 0) {
  * the original dashboard (see README "Layout"), so the pages are placed here instead.
  */
 const ROUTE_PAGES = {
-  "pages/contacts-page": "src/app/(admin)/admin/contacts/page.tsx",
-  "pages/friends-page": "src/app/(admin)/admin/friends/page.tsx",
-  "pages/accounts-page": "src/app/(admin)/admin/accounts/page.tsx",
+  "pages/contacts-page": "src/routes/_admin/admin/contacts/index.tsx",
+  "pages/friends-page": "src/routes/_admin/admin/friends/index.tsx",
+  "pages/accounts-page": "src/routes/_admin/admin/accounts/index.tsx",
 };
 
 /** web/src-relative path without extension -> target file (relative to frontend/) */

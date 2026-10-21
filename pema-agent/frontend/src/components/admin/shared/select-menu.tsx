@@ -1,5 +1,4 @@
 // ported from: web/src/shared/select-menu.tsx
-"use client";
 
 import { useEffect, useId, useRef, useState, type ComponentType, type SVGProps } from "react";
 import { IconChevronDown } from "@/components/admin/shared/dashboard-icons";

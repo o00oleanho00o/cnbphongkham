@@ -8,7 +8,7 @@ import { TopBar } from "./top-bar";
 const navigation = vi.hoisted(() => ({ pushed: [] as string[] }));
 
 // next/navigation is the framework's router (an external dependency): record where the search goes.
-vi.mock("next/navigation", () => ({
+vi.mock("@/lib/navigation", () => ({
   useRouter: () => ({ push: (to: string) => navigation.pushed.push(to) }),
 }));
 

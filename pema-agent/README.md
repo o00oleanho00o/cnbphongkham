@@ -60,12 +60,12 @@ Redis: hàng đợi lượt, khoá thread, gộp tin, khoá lịch      LLM: Oll
 
 ## Chạy
 
-Cần `uv` (Python 3.12+), `pnpm` (Node 22), Docker. Chạy từ thư mục `pema-agent/`. Không có `make` (Windows thuần) thì chạy tay các lệnh trong từng công thức của `Makefile`.
+Cần `uv` (Python 3.12+), `bun`, Docker. Chạy từ thư mục `pema-agent/`. Không có `make` (Windows thuần) thì chạy tay các lệnh trong từng công thức của `Makefile`.
 
 ### Cài và kiểm tra
 
 ```
-make setup        # uv sync --all-packages; pnpm install (frontend)
+make setup        # uv sync --all-packages; bun install (frontend)
 make lint         # ruff, ruff format --check, pyright strict, import-linter
 make test         # pytest; test cần DB/Redis bị BỎ QUA nếu thiếu biến môi trường
 ```
@@ -88,7 +88,7 @@ cd backend && uv run pytest apps/api/tests/policy                  # chính sác
 cd backend && uv run pytest apps/api/tests/integration             # vòng khép kín (cần DB + Redis)
 cd backend && uv run pytest ../evals                                # eval với mô hình giả (cũng nằm trong make test)
 cd backend/bridges/zalo-personal && pnpm install && pnpm test      # cầu nối (không bao giờ đăng nhập Zalo)
-cd frontend && pnpm lint && pnpm typecheck && pnpm test
+cd frontend && bun run lint && bun run typecheck && bun run test
 make openapi && make types   # sinh lại openapi.json rồi kiểu TypeScript
 ```
 
@@ -96,11 +96,11 @@ make openapi && make types   # sinh lại openapi.json rồi kiểu TypeScript
 
 ```
 cd frontend
-pnpm install
-pnpm dev:mock     # backend giả :4010 + next dev :3000
+bun install
+bun run dev:mock     # backend giả :4010 + vite dev :3000
 ```
 
-Mở `http://127.0.0.1:3000`, đăng nhập bằng email và mật khẩu `demo1234` (không còn ô phòng khám), một trong `owner@pema.test`, `manager@pema.test`, `doctor@pema.test`, `cs@pema.test`, `reception@pema.test` (người dùng hư cấu của mock). `pnpm shots` chụp mọi màn ở 5 viewport (cần mock đang chạy; thất bại nếu tràn ngang). Mock bám đúng `openapi.json` (có test hợp đồng). Đây **không** phải backend thật và chưa kiểm trên thiết bị thật.
+Mở `http://127.0.0.1:3000`, đăng nhập bằng email và mật khẩu `demo1234` (không còn ô phòng khám), một trong `owner@pema.test`, `manager@pema.test`, `doctor@pema.test`, `cs@pema.test`, `reception@pema.test` (người dùng hư cấu của mock). `bun run shots` chụp mọi màn ở 5 viewport (cần mock đang chạy; thất bại nếu tràn ngang). Mock bám đúng `openapi.json` (có test hợp đồng). Đây **không** phải backend thật và chưa kiểm trên thiết bị thật.
 
 ### Stack bằng Docker Compose
 
@@ -120,9 +120,9 @@ Tài chính PB02 (U6) chạy trong cùng API: `/api/v1/finance/*` (tổng quan t
 
 ## Ứng dụng nhân viên hợp nhất (gói U)
 
-Một FE Next.js (`frontend/`) thay cho `prototype/clinic-web`: cùng thứ tự menu và nhãn tiếng Việt của web cũ (Tổng quan, Hôm nay, Điều phối lịch, Tìm bệnh nhân, Theo dõi, Ảnh trước / sau, Bác sĩ & phòng, Dịch vụ, Thu ngân, Tài chính & tiền thủ thuật, Hỏi Pema, Hướng dẫn), thêm Zalo & CSKH, Care agent và Quản trị agent giữ nguyên. Chạy thử không cần dịch vụ nào: `cd frontend && pnpm dev:mock`, đăng nhập `owner@pema.test` / `demo1234` (mock có dữ liệu mẫu của mọi màn). Chạy thật: `make up-app` (backend + worker + FE); nạp danh mục sản phẩm một lần bằng `pema catalog import` (đoạn trên) và dữ liệu mẫu bằng `seed_demo`; đổi tài khoản mẫu trước khi dùng.
+Một FE TanStack Start (`frontend/`) thay cho `prototype/clinic-web`: cùng thứ tự menu và nhãn tiếng Việt của web cũ (Tổng quan, Hôm nay, Điều phối lịch, Tìm bệnh nhân, Theo dõi, Ảnh trước / sau, Bác sĩ & phòng, Dịch vụ, Thu ngân, Tài chính & tiền thủ thuật, Hỏi Pema, Hướng dẫn), thêm Zalo & CSKH, Care agent và Quản trị agent giữ nguyên. Chạy thử không cần dịch vụ nào: `cd frontend && bun run dev:mock`, đăng nhập `owner@pema.test` / `demo1234` (mock có dữ liệu mẫu của mọi màn). Chạy thật: `make up-app` (backend + worker + FE); nạp danh mục sản phẩm một lần bằng `pema catalog import` (đoạn trên) và dữ liệu mẫu bằng `seed_demo`; đổi tài khoản mẫu trước khi dùng.
 
-Kiểm trước khi báo xong một thay đổi giao diện: `cd frontend && pnpm check` (lint, typecheck, format, vitest, `pnpm inventory`, rồi `pnpm smoke` và `pnpm visual` với `pnpm dev:mock` đang chạy; `CHECK_SKIP_BROWSER=1` bỏ hai bước trình duyệt và báo cáo phải nói rõ). Màu và cỡ chữ lấy từ `src/ui/tokens.css` (`pnpm tokens` sinh `tokens.json` cho KMP); `FEATURE-INVENTORY.md` là danh sách tính năng đóng băng. Ảnh đối chiếu với web cũ: `frontend/visual-ref/{old,new}` (git-ignored; sinh lại bằng `web-shots.cjs` và `pnpm visual`). Bằng chứng và khoảng trống còn lại: [docs/PARITY-AI01-U.md](docs/PARITY-AI01-U.md).
+Kiểm trước khi báo xong một thay đổi giao diện: `cd frontend && bun run check` (lint, typecheck, format, vitest, `bun run inventory`, rồi `bun run smoke` và `bun run visual` với `bun run dev:mock` đang chạy; `CHECK_SKIP_BROWSER=1` bỏ hai bước trình duyệt và báo cáo phải nói rõ). Màu và cỡ chữ lấy từ `src/ui/tokens.css` (`bun run tokens` sinh `tokens.json` cho KMP); `FEATURE-INVENTORY.md` là danh sách tính năng đóng băng. Ảnh đối chiếu với web cũ: `frontend/visual-ref/{old,new}` (git-ignored; sinh lại bằng `web-shots.cjs` và `bun run visual`). Bằng chứng và khoảng trống còn lại: [docs/PARITY-AI01-U.md](docs/PARITY-AI01-U.md).
 
 Còn nằm trong repo nhưng **không còn dùng** (quyết định xóa là của chủ phòng khám): `prototype/clinic-web`, `prototype/finance/*`, `prototype/finance_server.py` và `finance_test.py` (bản dịch Python của luật tài chính có test tương đương ở `backend/apps/api/tests/clinic/test_finance_equivalence.py`), `prototype/shared/*.js` của Clinic Web. Web Patient Mobile giữ nguyên cho ứng dụng bệnh nhân.
 

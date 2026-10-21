@@ -1,5 +1,3 @@
-"use client";
-
 // Ảnh trước / sau tab: the clinical photos of the patient in a grid by stage, the consent they rest on, and the
 // upload. Photos are shown and stored, never analysed and never compared automatically (PLAN-AI01-U principle 6).
 // The images come from `GET /media/{id}/content`, which the BE audits and which needs the patient's consent for
@@ -45,8 +43,7 @@ function PhotoTile({ media, onOpen }: { media: Media; onOpen: () => void }) {
         className="block w-full overflow-hidden rounded-control border border-line bg-tile text-left hover:border-brand-500"
         aria-label={`Xem ảnh: ${captionOf(media)}`}
       >
-        {/* The image is a same-origin, cookie-authenticated stream: next/image cannot fetch it. */}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
+        {/* The image is a same-origin, cookie-authenticated stream: an image optimiser cannot fetch it. */}
         <img
           src={media.content_path}
           alt={altOf(media)}
@@ -303,7 +300,6 @@ export function PhotosTab({
           onClose={() => setOpen(null)}
           wide
         >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={open.content_path}
             alt={altOf(open)}

@@ -1,8 +1,8 @@
-// Checks behind `pnpm inventory` (package U, step U1): plain functions over text, so `src/lib/inventory.test.ts`
+// Checks behind `bun run inventory` (package U, step U1): plain functions over text, so `src/lib/inventory.test.ts`
 // can run them on small inputs. The command itself is `inventory-check.ts`.
 //
-// `pnpm inventory` fails (exit 1, one line per problem) when
-//   - a route of the first table has no `src/app/**/page.tsx`, or a page has no row;
+// `bun run inventory` fails (exit 1, one line per problem) when
+//   - a route of the first table has no `src/routes/**/index.tsx`, or a page has no row;
 //   - a test id of the file no longer exists: the file is gone, or the `::title` is not the title of an
 //     `it`, `test` or `describe` in it;
 //   - a test file under `src/` or `mock/` is not named anywhere in the inventory.
@@ -36,7 +36,7 @@ export function checkRoutes(rows: { route: string }[], pageRoutes: readonly stri
   const listed = new Set(rows.map((r) => r.route));
   const existing = new Set(pageRoutes);
   return [
-    ...rows.filter((r) => !existing.has(r.route)).map((r) => `route ${r.route} has no page.tsx`),
+    ...rows.filter((r) => !existing.has(r.route)).map((r) => `route ${r.route} has no index.tsx`),
     ...pageRoutes.filter((r) => !listed.has(r)).map((r) => `page ${r} has no row in the inventory`),
   ];
 }

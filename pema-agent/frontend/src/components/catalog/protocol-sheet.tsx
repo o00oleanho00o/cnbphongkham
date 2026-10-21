@@ -1,5 +1,3 @@
-"use client";
-
 // Add or edit a follow-up protocol (`POST /api/v1/protocols`, `PATCH /api/v1/protocols/{protocol_id}`). The
 // protocol is the chain the CRM rules follow after a session: the day of the D+1, D+3 and D+7 tasks, the day of
 // the review recommendation (D+30 for laser-co2) and how old a session may be for the chain to apply (45 days).

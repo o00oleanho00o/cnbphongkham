@@ -1,5 +1,4 @@
 // ported from: web/src/shared/confirm-dialog.tsx
-"use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useChotNen } from "@/lib/admin/shared/backdrop-close-guard";

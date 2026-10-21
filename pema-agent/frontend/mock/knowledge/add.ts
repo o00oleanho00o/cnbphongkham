@@ -27,8 +27,14 @@ function isKept(value: unknown): value is Kept {
 function preview(inputs: readonly PreviewInput[]): PreviewResult {
   const parsed = inputs.map(parseInput);
   const id = nextId("prv");
-  store.previews.set(id, { parsed: new Map(parsed.map((entry) => [entry.item.key, entry])) } satisfies Kept);
-  return { preview_id: id, items: parsed.map((entry) => entry.item), benchmark: store.settings.benchmark_mode };
+  store.previews.set(id, {
+    parsed: new Map(parsed.map((entry) => [entry.item.key, entry])),
+  } satisfies Kept);
+  return {
+    preview_id: id,
+    items: parsed.map((entry) => entry.item),
+    benchmark: store.settings.benchmark_mode,
+  };
 }
 
 function addEvent(id: string, kind: string, note: string): void {
@@ -115,7 +121,10 @@ function confirm(previewId: string, items: readonly ConfirmItem[]): Reply {
   const result: ConfirmResult = {
     batch_id: nextId("batch"),
     created,
-    skipped: [...skipped, ...unknown.map(({ item }) => ({ key: item.key, reason: "Không còn trong bản xem trước." }))],
+    skipped: [
+      ...skipped,
+      ...unknown.map(({ item }) => ({ key: item.key, reason: "Không còn trong bản xem trước." })),
+    ],
   };
   return { body: result };
 }
@@ -126,7 +135,10 @@ export function registerAdd(router: Router): void {
     return { body: preview(inputs) };
   });
   router.post(`${BASE}/sources/confirm`, null, (ctx): Reply => {
-    const { preview_id: previewId = "", items = [] } = bodyOf<{ preview_id?: string; items?: ConfirmItem[] }>(ctx);
+    const { preview_id: previewId = "", items = [] } = bodyOf<{
+      preview_id?: string;
+      items?: ConfirmItem[];
+    }>(ctx);
     return confirm(previewId, items);
   });
 }

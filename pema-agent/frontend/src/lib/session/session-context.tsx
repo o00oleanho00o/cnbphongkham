@@ -1,5 +1,3 @@
-"use client";
-
 // Session of the signed-in staff member. The BE owns authentication (httpOnly cookie) and
 // authorization; `permissions` from `GET /api/v1/me` only decide which menu entries are SHOWN. Every
 // request is still checked by the BE, so a hidden entry is a convenience and never a security control.

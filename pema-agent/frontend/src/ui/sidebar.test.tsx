@@ -10,7 +10,7 @@ import { IconCalendar } from "@/ui/icons";
 import { Sidebar } from "./sidebar";
 
 // next/navigation is the framework's router (an external dependency): the guarded links read it.
-vi.mock("next/navigation", () => ({ useRouter: () => ({ push: () => undefined }) }));
+vi.mock("@/lib/navigation", () => ({ useRouter: () => ({ push: () => undefined }) }));
 
 beforeAll(() => {
   // jsdom has no matchMedia; the theme hook of the footer listens to it.

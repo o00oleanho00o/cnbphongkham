@@ -1,5 +1,3 @@
-"use client";
-
 // Before / After Studio of one patient (`GET /api/v1/studio/{patient_id}?view=`). Old web: `clinic.js` `studio()` and
 // `photos()` (design spec I7): pick a view (Chính diện, Má trái, Má phải), see the first photo as "Trước" and the
 // latest as "Sau" side by side or with a comparison slider, zoom, and read the metadata and the notice that the
@@ -8,7 +6,7 @@
 // The photo store belongs to the Patient 360 step; until it exists the backend sends no photo and the screen shows
 // the clinic's illustrative placeholders, as the old web did for a patient with no upload. "Thêm ảnh" opens the
 // patient's record, where a photo is attached to a session together with the consent.
-import Link from "next/link";
+import { Link } from "@/lib/link";
 import { useCallback, useState } from "react";
 
 import { ListSkeleton, Notice, RetryNotice } from "@/components/ops/ops-ui";

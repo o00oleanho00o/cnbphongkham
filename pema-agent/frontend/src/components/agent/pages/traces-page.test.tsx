@@ -8,7 +8,7 @@ import { TracesPage } from "./traces-page";
 
 const nav = vi.hoisted(() => ({ search: "" }));
 
-vi.mock("next/navigation", () => ({ useSearchParams: () => new URLSearchParams(nav.search) }));
+vi.mock("@/lib/navigation", () => ({ useSearchParams: () => new URLSearchParams(nav.search) }));
 
 const TURN = "00000000-0000-4000-8a00-000000000001";
 const FAILED = "00000000-0000-4000-8a00-000000000002";

@@ -1,11 +1,9 @@
-"use client";
-
 // "Hóa đơn & thanh toán" of the cashier (old web: `operations-ui.js` `cashier()`): the invoices with the filters
 // "Tất cả", "Còn phải thu" and "Đã thanh toán", 12 per page, "Thu tiền" on an invoice with a balance (the dialog
 // `PaymentDialog`), and under the table the quick orders that have no invoice yet ("Lập hóa đơn"). Money is the
 // finance step's (U6): the BE says who may list (`finance.read` or `finance.collect`) and who may collect
 // (`finance.collect`). A role with neither is told who handles invoices.
-import Link from "next/link";
+import { Link } from "@/lib/link";
 import { useCallback, useState } from "react";
 
 import { BillableOrders } from "@/components/finance/billable-orders";

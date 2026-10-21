@@ -1,5 +1,3 @@
-"use client";
-
 // "+ Ghi nhận lượt thủ thuật đã hoàn tất" (old web: `finance.js` `entryForm()`): a collapsible form that records a
 // performed procedure for the accountant to approve. Who performed it is chosen here ("Bác sĩ chính", "Người phối
 // hợp (tùy chọn)") and is never taken from the doctor in charge of the patient; the shares of the revenue must add up

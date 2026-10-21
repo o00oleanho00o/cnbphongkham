@@ -1,9 +1,7 @@
-"use client";
-
 // Plugins của agent: the list of every plugin the agent found, one row each (name and description, origin, what it
 // adds, on or off), like a connectors list. A row opens the plugin's own page, where it is switched, set up and
 // where its pages are. "+ Thêm" holds the place of installing a plugin (zip, folder, git), not built yet.
-import Link from "next/link";
+import { Link } from "@/lib/link";
 import { useCallback, useEffect, useState } from "react";
 
 import { Button, Card, Empty, Input, Notice, PageHeader } from "@/components/agent/plugin-kit";

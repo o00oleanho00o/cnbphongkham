@@ -1,10 +1,8 @@
-"use client";
-
 // "Nhóm khách" of `/crm` (old CRM01 `segment` card): the five lifecycle stages and the at-risk cut, each with its
 // number (`GET /api/v1/crm/segments`) and, when opened, the patients in it (`GET /api/v1/crm/segments/{key}/patients`,
 // most overdue first). The marketing opt-out switch is the audited `PATCH /api/v1/patients/{id}` of Patient 360;
 // staff without `patient.write` only see the state.
-import Link from "next/link";
+import { Link } from "@/lib/link";
 import { useCallback, useState } from "react";
 
 import { useConfirmDialog } from "@/components/admin/shared/confirm-dialog";

@@ -1,9 +1,7 @@
-"use client";
-
 // The page of one agent plugin (`/admin/agent/plugins/<name>`), opened from the Plugins list: its name and switch,
 // then tabs: "Tổng quan" (errors, what it adds, its settings) and the pages the plugin ships itself (Zalo: accounts,
 // contacts...), drawn at `/admin/agent/plugins/<name>/<page>`.
-import Link from "next/link";
+import { Link } from "@/lib/link";
 import { useCallback, useEffect, useState } from "react";
 
 import {

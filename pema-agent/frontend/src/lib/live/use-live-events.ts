@@ -1,5 +1,3 @@
-"use client";
-
 // `useLiveEvents`: subscribe a screen to `GET /api/v1/events`. The screen says which event types it cares
 // about and what to do (usually "reload my list quietly"); connection, reconnection, the 10 second rule and
 // the 30 second polling fallback live in LiveConnection. Listener and timers are released on unmount.

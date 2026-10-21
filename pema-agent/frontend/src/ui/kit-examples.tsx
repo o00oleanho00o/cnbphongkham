@@ -1,5 +1,3 @@
-"use client";
-
 // Story-like examples of every kit component, shown on `/dev/kit` (development only). Nothing here is
 // real data; it exists so a change to tokens.css or a component can be looked at in one place, in light
 // and dark, at every viewport, before the screens that use it are touched.

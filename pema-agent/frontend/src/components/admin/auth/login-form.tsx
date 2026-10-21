@@ -1,12 +1,11 @@
 // ported from: web/src/pages/login-page.tsx
-"use client";
 
 // Deviations: the original asked for one shared dashboard password; the clinic CRM has users, so the
 // form is email + password and the BE answers with an httpOnly session cookie (`POST /api/v1/auth/login`).
 // One installation is ONE clinic (CONTRACTS-AI01 section 10), so there is no clinic field and nothing about
 // a clinic is remembered in the browser. After sign-in we read the permissions to land on the first screen
 // the role may open. `next` is only honoured for same-origin paths.
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "@/lib/navigation";
 import { useEffect, useState, type FormEvent } from "react";
 
 import { SecretInput } from "@/components/admin/shared/secret-input";
@@ -77,7 +76,6 @@ export function LoginForm() {
     >
       <form onSubmit={submit} className="gc-card w-full max-w-sm p-6 sm:p-8">
         <div className="mb-6 flex flex-col items-center gap-2">
-          {/* eslint-disable-next-line @next/next/no-img-element -- fixed brand asset */}
           <img src="/pema-logo.png" alt="Pema" width={294} height={156} className="h-20 w-auto" />
           <h1 className="text-section font-semibold text-ink">Đăng nhập CSKH</h1>
           <div className="text-small text-ink-soft">Chăm sóc khách hàng và trợ lý AI</div>

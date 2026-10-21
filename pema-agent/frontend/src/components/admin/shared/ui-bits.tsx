@@ -1,5 +1,4 @@
 // ported from: web/src/shared/ui-bits.tsx
-"use client";
 
 import type { ReactNode, SVGProps } from "react";
 import { IconSearch } from "@/components/admin/shared/dashboard-icons";

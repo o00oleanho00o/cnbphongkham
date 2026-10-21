@@ -4,7 +4,7 @@
 # What is routed, and what never is:
 #   /api/v1/*   -> api:8000        (except the Zalo bridge webhook, see below)
 #   /healthz    -> api:8000
-#   everything else -> frontend:3000 (the Next.js dashboard)
+#   everything else -> frontend:3000 (the TanStack Start dashboard)
 #   Postgres, Redis and the Zalo bridge are NOT routed and cannot be: Caddy is attached only to the `edge` network,
 #   where only api and frontend live. /docs, /openapi.json and every other API path fall to the frontend (404).
 #
@@ -46,7 +46,7 @@ import mode.caddy
 	encode @compressible zstd gzip
 
 	header {
-		# hide what runs behind (Caddy, Next.js)
+		# hide what runs behind (Caddy, TanStack Start)
 		-Server
 		-Via
 		-X-Powered-By

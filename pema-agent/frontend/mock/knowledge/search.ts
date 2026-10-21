@@ -17,8 +17,10 @@ function searchDebug(ctx: Ctx): Reply {
   const body = bodyOf<Partial<SearchDebugQuery>>(ctx);
   const question = (body.question ?? "").trim();
   if (!question) return refuse("Nhập câu hỏi để thử tìm.");
-  if (body.channel !== "patient" && body.channel !== "staff") return refuse("Kênh phải là bệnh nhân hoặc nhân viên.");
-  if (!body.as_of || !ISO_DAY.test(body.as_of)) return refuse("Ngày hỏi phải có dạng năm-tháng-ngày.");
+  if (body.channel !== "patient" && body.channel !== "staff")
+    return refuse("Kênh phải là bệnh nhân hoặc nhân viên.");
+  if (!body.as_of || !ISO_DAY.test(body.as_of))
+    return refuse("Ngày hỏi phải có dạng năm-tháng-ngày.");
   return { body: runSearch(store, { question, channel: body.channel, as_of: body.as_of }) };
 }
 

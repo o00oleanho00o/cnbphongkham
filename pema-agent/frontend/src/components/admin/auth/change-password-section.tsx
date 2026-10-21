@@ -1,5 +1,4 @@
 // ported from: web/src/pages/change-password-section.tsx
-"use client";
 
 import { useState } from "react";
 import { IconLock } from "@/components/admin/shared/dashboard-icons";

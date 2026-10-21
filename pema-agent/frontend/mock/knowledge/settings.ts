@@ -26,29 +26,47 @@ const PROFILE_EMBEDDING: Omit<EmbeddingSettings, "chunks_without_vector"> = {
   has_key: false,
   origin: "profile",
 };
-const PROFILE_PARSER: KnowledgeSettings["parser"] = { kind: "simple", docling_url: "", origin: "profile" };
+const PROFILE_PARSER: KnowledgeSettings["parser"] = {
+  kind: "simple",
+  docling_url: "",
+  origin: "profile",
+};
 
 const refuse = (detail: string): Reply => ({ status: 422, body: { detail } });
 
-const totalChunks = (): number => store.sources.reduce((sum, source) => sum + source.chunk_count, 0);
+const totalChunks = (): number =>
+  store.sources.reduce((sum, source) => sum + source.chunk_count, 0);
 
 /** The first reason a patch cannot be applied, or null. */
 function problemOf(patch: SettingsPatch): string | null {
   const { embedding, parser, search } = patch;
   const checks = [
-    embedding?.dimensions === undefined ? null : numberProblem(String(embedding.dimensions), RANGES.dimensions),
+    embedding?.dimensions === undefined
+      ? null
+      : numberProblem(String(embedding.dimensions), RANGES.dimensions),
     embedding?.base_url === undefined ? null : urlProblem(embedding.base_url, "Địa chỉ", false),
-    embedding?.model === undefined || embedding.model.trim() !== "" ? null : "Model: nhập tên model.",
-    parser?.docling_url === undefined ? null : urlProblem(parser.docling_url, "Địa chỉ Docling", false),
+    embedding?.model === undefined || embedding.model.trim() !== ""
+      ? null
+      : "Model: nhập tên model.",
+    parser?.docling_url === undefined
+      ? null
+      : urlProblem(parser.docling_url, "Địa chỉ Docling", false),
     search?.results === undefined ? null : numberProblem(String(search.results), RANGES.results),
-    search?.min_score === undefined ? null : numberProblem(String(search.min_score), RANGES.min_score),
-    search?.char_budget === undefined ? null : numberProblem(String(search.char_budget), RANGES.char_budget),
+    search?.min_score === undefined
+      ? null
+      : numberProblem(String(search.min_score), RANGES.min_score),
+    search?.char_budget === undefined
+      ? null
+      : numberProblem(String(search.char_budget), RANGES.char_budget),
   ];
   return checks.find((text) => text !== null) ?? null;
 }
 
 /** Another model, size or prefix means every vector is out of date. */
-function embeddingChanged(patch: NonNullable<SettingsPatch["embedding"]>, now: EmbeddingSettings): boolean {
+function embeddingChanged(
+  patch: NonNullable<SettingsPatch["embedding"]>,
+  now: EmbeddingSettings,
+): boolean {
   const keys = ["model", "dimensions", "query_prefix", "document_prefix"] as const;
   return keys.some((key) => patch[key] !== undefined && patch[key] !== now[key]);
 }
@@ -85,7 +103,9 @@ function applyPatch(change: SettingsChange): Reply {
   store.settings = {
     ...store.settings,
     embedding: patch.embedding ? patchEmbedding(patch.embedding) : store.settings.embedding,
-    parser: patch.parser ? { ...store.settings.parser, ...patch.parser, origin: "saved" } : store.settings.parser,
+    parser: patch.parser
+      ? { ...store.settings.parser, ...patch.parser, origin: "saved" }
+      : store.settings.parser,
     labelling: { ...settings.labelling, ...patch.labelling },
     judging: { ...settings.judging, ...patch.judging },
     search: { ...settings.search, ...patch.search },
@@ -106,14 +126,19 @@ function testEmbedding(): Reply {
 
 function testParser(): Reply {
   const { kind, docling_url: url } = store.settings.parser;
-  if (kind === "simple") return { body: { ok: true, ms: null, message: "Bộ đọc đơn giản không cần kết nối" } };
-  if (url.trim() === "") return { body: { ok: false, ms: null, message: "Chưa có địa chỉ Docling" } };
+  if (kind === "simple")
+    return { body: { ok: true, ms: null, message: "Bộ đọc đơn giản không cần kết nối" } };
+  if (url.trim() === "")
+    return { body: { ok: false, ms: null, message: "Chưa có địa chỉ Docling" } };
   return { body: { ok: true, ms: 220, message: "Docling trả lời" } };
 }
 
 function reembed(): Reply {
   const queued = totalChunks();
-  store.settings = { ...store.settings, embedding: { ...store.settings.embedding, chunks_without_vector: 0 } };
+  store.settings = {
+    ...store.settings,
+    embedding: { ...store.settings.embedding, chunks_without_vector: 0 },
+  };
   return { body: { queued } };
 }
 

@@ -1,5 +1,3 @@
-"use client";
-
 // Buổi điều trị tab: the form of the old "Ghi buổi điều trị" (same fields as the `session-*` inputs of
 // prototype/shared/clinic.js) and the list of recorded sessions. Saving completes the session on the BE: the plan
 // counter, the arrived appointment, the recall date, and the milestones D+1/3/7 of the CRM all follow from it.

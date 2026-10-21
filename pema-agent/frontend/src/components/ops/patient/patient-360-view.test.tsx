@@ -18,7 +18,7 @@ const api = vi.hoisted(() => ({
   search: { current: "" },
 }));
 
-vi.mock("next/navigation", () => ({
+vi.mock("@/lib/navigation", () => ({
   useRouter: () => ({ replace: api.replace }),
   usePathname: () => `/patients/${PATIENT_ID}`,
   useSearchParams: () => new URLSearchParams(api.search.current),

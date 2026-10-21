@@ -1,5 +1,3 @@
-"use client";
-
 import type { LiveMode } from "@/lib/live/live-connection";
 
 /** Shown only when the live stream has been down for over 10 seconds and the screen refreshes on a timer. */

@@ -26,8 +26,36 @@ interface Ranked {
 }
 
 const STOPWORDS = new Set([
-  "co", "khong", "la", "va", "cua", "cho", "toi", "minh", "em", "anh", "chi", "ban", "bao", "nhieu", "the", "nao", "gi",
-  "duoc", "o", "de", "voi", "ve", "mot", "cac", "thi", "nay", "hay", "xin", "a", "ah",
+  "co",
+  "khong",
+  "la",
+  "va",
+  "cua",
+  "cho",
+  "toi",
+  "minh",
+  "em",
+  "anh",
+  "chi",
+  "ban",
+  "bao",
+  "nhieu",
+  "the",
+  "nao",
+  "gi",
+  "duoc",
+  "o",
+  "de",
+  "voi",
+  "ve",
+  "mot",
+  "cac",
+  "thi",
+  "nay",
+  "hay",
+  "xin",
+  "a",
+  "ah",
 ]);
 
 const KIND_WORDS: Record<Exclude<Kind, "info">, readonly string[]> = {
@@ -37,20 +65,24 @@ const KIND_WORDS: Record<Exclude<Kind, "info">, readonly string[]> = {
 };
 
 const KIND_ORDER = ["price", "policy", "procedure"] as const;
-const KIND_TITLE: Record<Kind, string> = { price: "Giá", policy: "Chính sách", procedure: "Quy trình", info: "Thông tin" };
+const KIND_TITLE: Record<Kind, string> = {
+  price: "Giá",
+  policy: "Chính sách",
+  procedure: "Quy trình",
+  info: "Thông tin",
+};
 
 /** Removes Vietnamese diacritics (`đ` too) and lowercases. */
 export function fold(text: string): string {
-  return text
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .replace(/đ/gi, "d")
-    .toLowerCase();
+  return text.normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/đ/gi, "d").toLowerCase();
 }
 
 /** A stable number in [0, 1) for a string, so the same question gives the same fake scores. */
 function unit(text: string): number {
-  const hash = Array.from(text).reduce((sum, char) => (Math.imul(sum, 31) + char.charCodeAt(0)) >>> 0, 7);
+  const hash = Array.from(text).reduce(
+    (sum, char) => (Math.imul(sum, 31) + char.charCodeAt(0)) >>> 0,
+    7,
+  );
   return (hash % 10_000) / 10_000;
 }
 
@@ -67,7 +99,9 @@ function tokensOf(folded: string): string[] {
 
 export function recogniseServices(folded: string, services: readonly Service[]): Service[] {
   return services.filter(
-    (service) => service.enabled && [service.name, ...service.aliases].some((name) => hasWord(folded, fold(name))),
+    (service) =>
+      service.enabled &&
+      [service.name, ...service.aliases].some((name) => hasWord(folded, fold(name))),
   );
 }
 
@@ -98,7 +132,9 @@ function sectionsOf(markdown: string): { path: string; text: string }[] {
       const heading = /^(#{1,6})\s+(.*)$/.exec(line);
       const current = state.items.at(-1);
       if (!heading) {
-        const grown = current ? [...state.items.slice(0, -1), { ...current, lines: [...current.lines, line] }] : state.items;
+        const grown = current
+          ? [...state.items.slice(0, -1), { ...current, lines: [...current.lines, line] }]
+          : state.items;
         return { ...state, items: grown };
       }
       const stack = [...state.stack.slice(0, (heading[1] ?? "#").length - 1), heading[2] ?? ""];
@@ -111,7 +147,11 @@ function sectionsOf(markdown: string): { path: string; text: string }[] {
     .filter((item) => item.text.length > 0);
 }
 
-function chunksOf(source: Source, services: readonly Service[], markdown: string | undefined): Chunk[] {
+function chunksOf(
+  source: Source,
+  services: readonly Service[],
+  markdown: string | undefined,
+): Chunk[] {
   if (markdown) {
     return sectionsOf(markdown)
       .slice(0, source.chunk_count)
@@ -128,7 +168,11 @@ function chunksOf(source: Source, services: readonly Service[], markdown: string
   const kinds: readonly Kind[] = own.length === 0 ? ["info"] : KIND_ORDER;
   return named
     .flatMap((service, serviceIndex) =>
-      kinds.map((kind, kindIndex) => ({ n: serviceIndex * kinds.length + kindIndex + 1, service, kind })),
+      kinds.map((kind, kindIndex) => ({
+        n: serviceIndex * kinds.length + kindIndex + 1,
+        service,
+        kind,
+      })),
     )
     .filter(({ n }) => n <= source.chunk_count)
     .map(({ n, service, kind }) => ({
@@ -151,7 +195,12 @@ const REASON_TEXT: Record<Reason, string> = {
 
 /** Why a question may not see a source, or null when it may. Every channel shares one store for now (user,
  * 2026-10-12), so internal sources are not hidden; pass `split` to bring the patient/staff split back. */
-export function hiddenReason(source: Source, asOf: string, onlyApproved: boolean, split = false): Reason | null {
+export function hiddenReason(
+  source: Source,
+  asOf: string,
+  onlyApproved: boolean,
+  split = false,
+): Reason | null {
   if (split && source.audience === "staff") return "staff";
   if (onlyApproved && !source.approved) return "unapproved";
   const outside =
@@ -192,7 +241,9 @@ export function runSearch(store: Store, query: SearchDebugQuery): SearchDebug {
   const channelName = patient ? "bệnh nhân" : "nhân viên";
 
   const relevance = (source: Source): number => {
-    const haystack = fold(`${source.title} ${source.doc_code ?? ""} ${store.markdown.get(source.id) ?? ""}`);
+    const haystack = fold(
+      `${source.title} ${source.doc_code ?? ""} ${store.markdown.get(source.id) ?? ""}`,
+    );
     const byService = source.services.some((code) => codes.includes(code)) ? 3 : 0;
     return byService + tokens.filter((token) => haystack.includes(token)).length * 0.4;
   };
@@ -203,7 +254,9 @@ export function runSearch(store: Store, query: SearchDebugQuery): SearchDebug {
     hiddenReason(source, query.as_of, settings.search.patient_only_approved);
   const filterText = REASONS.map((reason) => ({
     reason,
-    count: relevant.filter((source) => reasonOf(source) === reason).reduce((sum, source) => sum + source.chunk_count, 0),
+    count: relevant
+      .filter((source) => reasonOf(source) === reason)
+      .reduce((sum, source) => sum + source.chunk_count, 0),
   }))
     .filter(({ count }) => count > 0)
     .map(({ reason, count }) => `${count} ${REASON_TEXT[reason]} bị lọc`)
@@ -221,7 +274,10 @@ export function runSearch(store: Store, query: SearchDebugQuery): SearchDebug {
 
   const keyword = chunks
     .filter((chunk) => hits(chunk) > 0 || chunk.kind === kind)
-    .map((chunk) => ({ chunk, score: round(2 + hits(chunk) * 1.3 + (chunk.kind === kind ? 1.6 : 0) + jitter(chunk) * 1.2) }))
+    .map((chunk) => ({
+      chunk,
+      score: round(2 + hits(chunk) * 1.3 + (chunk.kind === kind ? 1.6 : 0) + jitter(chunk) * 1.2),
+    }))
     .toSorted(byScoreDesc)
     .slice(0, 12);
 
@@ -230,7 +286,10 @@ export function runSearch(store: Store, query: SearchDebugQuery): SearchDebug {
     ? chunks
         .map((chunk) => ({
           chunk,
-          score: round(0.62 - hits(chunk) * 0.05 - (chunk.kind === kind ? 0.12 : 0) + jitter(chunk) * 0.3, 3),
+          score: round(
+            0.62 - hits(chunk) * 0.05 - (chunk.kind === kind ? 0.12 : 0) + jitter(chunk) * 0.3,
+            3,
+          ),
         }))
         .toSorted((a, b) => a.score - b.score)
         .slice(0, 12)
@@ -249,13 +308,15 @@ export function runSearch(store: Store, query: SearchDebugQuery): SearchDebug {
   // The mock has no Jev judge: the judged stage is skipped, as it is on the server while plugin jev is off.
   const reranked: Ranked[] = [];
   const pool = fused;
-  const final = pool.slice(0, settings.search.results).reduce<{ items: Ranked[]; used: number }>(
-    (state, item) =>
-      state.used + item.chunk.excerpt.length > settings.search.char_budget
-        ? state
-        : { items: [...state.items, item], used: state.used + item.chunk.excerpt.length },
-    { items: [], used: 0 },
-  ).items;
+  const final = pool
+    .slice(0, settings.search.results)
+    .reduce<{ items: Ranked[]; used: number }>(
+      (state, item) =>
+        state.used + item.chunk.excerpt.length > settings.search.char_budget
+          ? state
+          : { items: [...state.items, item], used: state.used + item.chunk.excerpt.length },
+      { items: [], used: 0 },
+    ).items;
 
   const base = Math.round(unit(folded) * 6);
   const stages: SearchStage[] = [
@@ -265,7 +326,9 @@ export function runSearch(store: Store, query: SearchDebugQuery): SearchDebug {
       3 + base,
       sentence(
         "Bỏ dấu và chuẩn hóa",
-        recognised.length ? `nhận ra ${recognised.length} dịch vụ (${codes.join(", ")})` : "không nhận ra dịch vụ nào, tìm theo từ khóa",
+        recognised.length
+          ? `nhận ra ${recognised.length} dịch vụ (${codes.join(", ")})`
+          : "không nhận ra dịch vụ nào, tìm theo từ khóa",
         `Kênh ${channelName}, ngày hỏi ${query.as_of}`,
       ),
       [],
@@ -281,7 +344,9 @@ export function runSearch(store: Store, query: SearchDebugQuery): SearchDebug {
       "vector",
       "Ứng viên vector (khoảng cách)",
       vectorOn ? 150 + base * 9 : 0,
-      vectorOn ? `${vector.length} đoạn gần nghĩa nhất (khoảng cách cosine, càng nhỏ càng gần)` : "Embedding chưa kết nối: bỏ qua nhánh vector",
+      vectorOn
+        ? `${vector.length} đoạn gần nghĩa nhất (khoảng cách cosine, càng nhỏ càng gần)`
+        : "Embedding chưa kết nối: bỏ qua nhánh vector",
       vector,
       !vectorOn,
     ),
@@ -289,7 +354,9 @@ export function runSearch(store: Store, query: SearchDebugQuery): SearchDebug {
       "fused",
       "Sau gộp RRF",
       1,
-      vectorOn ? "Gộp hai danh sách bằng RRF (k = 60)" : "Chỉ có nhánh từ khóa nên RRF giữ nguyên thứ tự",
+      vectorOn
+        ? "Gộp hai danh sách bằng RRF (k = 60)"
+        : "Chỉ có nhánh từ khóa nên RRF giữ nguyên thứ tự",
       fused,
     ),
     stage(
@@ -305,8 +372,14 @@ export function runSearch(store: Store, query: SearchDebugQuery): SearchDebug {
       "Gói cuối đúng như agent thấy",
       2,
       final.length
-        ? sentence(`${final.length} đoạn gửi cho agent (tối đa ${settings.search.results}, ngân sách ${settings.search.char_budget} ký tự)`, filterText)
-        : sentence(`Không có đoạn nào phù hợp với câu hỏi này ở kênh ${channelName}: agent sẽ nói chưa có thông tin`, filterText),
+        ? sentence(
+            `${final.length} đoạn gửi cho agent (tối đa ${settings.search.results}, ngân sách ${settings.search.char_budget} ký tự)`,
+            filterText,
+          )
+        : sentence(
+            `Không có đoạn nào phù hợp với câu hỏi này ở kênh ${channelName}: agent sẽ nói chưa có thông tin`,
+            filterText,
+          ),
       final,
     ),
   ];

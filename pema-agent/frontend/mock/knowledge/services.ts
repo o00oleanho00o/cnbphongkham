@@ -1,6 +1,9 @@
 // Routes of the fake knowledge store: the services catalogue (the backbone of the labels) and "Nhập từ bảng", which
 // really reads the pasted CSV / Markdown table with the same function the page uses to list unreadable lines.
-import type { Service, ServiceBody } from "../../../backend/apps/agent/plugins/knowledge/ui/src/types";
+import type {
+  Service,
+  ServiceBody,
+} from "../../../backend/apps/agent/plugins/knowledge/ui/src/types";
 import {
   codeProblem,
   normaliseCode,
@@ -83,6 +86,8 @@ export function registerServices(router: Router): void {
     const { text } = bodyOf<{ text?: string }>(ctx);
     return { body: preview(text ?? "") };
   });
-  router.patch(`${BASE}/{id}`, null, (ctx): Reply => update(ctx.params.id, bodyOf<Partial<ServiceBody>>(ctx)));
+  router.patch(`${BASE}/{id}`, null, (ctx): Reply =>
+    update(ctx.params.id, bodyOf<Partial<ServiceBody>>(ctx)),
+  );
   router.delete(`${BASE}/{id}`, null, (ctx): Reply => remove(ctx.params.id));
 }

@@ -40,7 +40,7 @@ describe("feature inventory checks", () => {
     const problems = checkRoutes([{ route: "/today" }, { route: "/gone" }], ["/today", "/new"]);
 
     expect(problems).toEqual([
-      "route /gone has no page.tsx",
+      "route /gone has no index.tsx",
       "page /new has no row in the inventory",
     ]);
   });

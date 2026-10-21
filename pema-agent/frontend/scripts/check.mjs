@@ -1,8 +1,8 @@
-// `pnpm check`: everything that has to be green before a change to the staff web is reported (package U, U1):
-// lint, types, formatting, unit tests, the feature inventory, then the two browser checks (`pnpm smoke`: every
-// route renders; `pnpm visual`: five viewports, no horizontal overflow) against the app on CHECK_BASE_URL
-// (default http://localhost:3000, i.e. `pnpm dev:mock` in another shell). The browser checks need that app: when
-// it does not answer, `pnpm check` FAILS and says so. `CHECK_SKIP_BROWSER=1` leaves them out on purpose
+// `bun run check`: everything that has to be green before a change to the staff web is reported (package U, U1):
+// lint, types, formatting, unit tests, the feature inventory, then the two browser checks (`bun run smoke`: every
+// route renders; `bun run visual`: five viewports, no horizontal overflow) against the app on CHECK_BASE_URL
+// (default http://localhost:3000, i.e. `bun run dev:mock` in another shell). The browser checks need that app: when
+// it does not answer, `bun run check` FAILS and says so. `CHECK_SKIP_BROWSER=1` leaves them out on purpose
 // (a machine without a browser); the report of a step must then say they were not run.
 import { spawnSync } from "node:child_process";
 
@@ -12,8 +12,8 @@ const STATIC_STEPS = ["lint", "typecheck", "format:check", "test", "inventory"];
 const BROWSER_STEPS = ["smoke", "visual"];
 
 function run(script) {
-  process.stdout.write(`\n== pnpm ${script}\n`);
-  const result = spawnSync("pnpm", [script], {
+  process.stdout.write(`\n== bun run ${script}\n`);
+  const result = spawnSync("bun", ["run", script], {
     stdio: "inherit",
     shell: true,
     env: { ...process.env, SMOKE_BASE_URL: base, VISUAL_BASE_URL: base },
@@ -44,7 +44,7 @@ if (process.env.CHECK_SKIP_BROWSER === "1") {
 }
 if (!(await appAnswers())) {
   process.stderr.write(
-    `\ncheck: nothing answers on ${base}: start \`pnpm dev:mock\` (or set CHECK_SKIP_BROWSER=1)\n`,
+    `\ncheck: nothing answers on ${base}: start \`bun run dev:mock\` (or set CHECK_SKIP_BROWSER=1)\n`,
   );
   process.exit(1);
 }

@@ -1,5 +1,3 @@
-"use client";
-
 // Small building blocks shared by the clinic operation screens. They sit on the same tokens as the ported
 // dashboard bits (`ui-bits.tsx`), which stay the source for Badge, TableShell, SectionCard, PageHeader.
 import type { ReactNode } from "react";

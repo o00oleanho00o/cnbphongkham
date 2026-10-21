@@ -1,5 +1,3 @@
-"use client";
-
 // "Hôm nay tại Pema": the reception table of the old web (`today()` in prototype/shared/crm-ui.js), added above the
 // CSKH task queue of "/today" (which stays as it is). Today's visits one row each: Giờ, Mã KH · bệnh nhân, Liên hệ,
 // Nội dung, Trạng thái, Bác sĩ, Phòng, Người tạo and the buttons Check-in / Vắng / Mời vào phòng / Mở 360. The
@@ -7,7 +5,7 @@
 // the CRM events are the ones the board already emits. Eight tiles count the day and six of them filter; search by
 // name, code or phone; paging of 25. Below `md` the table becomes the card list of the board. The old "Giá lịch dự
 // kiến" column and the money tile are not here: an appointment carries no price and no invoice in this system.
-import Link from "next/link";
+import { Link } from "@/lib/link";
 import { useCallback, useMemo, useState } from "react";
 
 import { EmptyState, ListSkeleton, RetryNotice } from "@/components/ops/ops-ui";

@@ -1,5 +1,5 @@
-// `pnpm tokens`: regenerate src/ui/tokens.json from src/ui/tokens.css (the KMP app reads the JSON).
-// `pnpm tokens --check` only compares and exits 1 when the committed JSON is stale.
+// `bun run tokens`: regenerate src/ui/tokens.json from src/ui/tokens.css (the KMP app reads the JSON).
+// `bun run tokens --check` only compares and exits 1 when the committed JSON is stale.
 import { readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
@@ -15,10 +15,10 @@ if (process.argv.includes("--check")) {
   try {
     current = readFileSync(jsonPath, "utf8");
   } catch {
-    current = "";
+    // no JSON yet: it counts as stale
   }
   if (current !== next) {
-    process.stderr.write("tokens.json is out of date: run `pnpm tokens`\n");
+    process.stderr.write("tokens.json is out of date: run `bun run tokens`\n");
     process.exitCode = 1;
   }
 } else {

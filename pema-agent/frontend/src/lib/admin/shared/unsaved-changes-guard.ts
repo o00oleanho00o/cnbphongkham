@@ -1,8 +1,8 @@
 // ported from: web/src/shared/unsaved-changes-guard.ts
 
 /**
- * Port note (Next.js): the App Router has no `useBlocker` either, so the same out-of-React guard stays
- * as the original designed it. Read "react-router" below as "the router".
+ * Port note (TanStack Start): the same out-of-React guard stays as the original designed it, not the
+ * router's own `useBlocker`. Read "react-router" below as "the router".
  *
  * Chốt "còn thay đổi chưa lưu" cho điều hướng TRONG app.
  *

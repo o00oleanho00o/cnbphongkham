@@ -1,11 +1,9 @@
-"use client";
-
 // Trace của agent: one row per turn (the agent's answer to one message): when, channel, model, steps, time, tokens and
 // how it ended; a filter on the channel, on the failed ones and on one chat (`?session=`). A row opens the steps of the
 // turn (model calls, tool calls, guards, compactions) with their time and errors. Only timings, tokens and outcomes are
 // traced; the words of the chat are in "Phiên chat".
-import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { Link } from "@/lib/link";
+import { useSearchParams } from "@/lib/navigation";
 import { useCallback, useEffect, useState } from "react";
 
 import { EmptyRow, formatTime, TableShell } from "@/components/admin/shared/ui-bits";

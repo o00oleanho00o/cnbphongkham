@@ -1,9 +1,7 @@
-"use client";
-
 // Tabs between the pages of one area (the agent's own pages and the pages its plugins ship); scrolls sideways
 // inside itself on a phone.
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { Link } from "@/lib/link";
+import { usePathname } from "@/lib/navigation";
 
 import { cx } from "@/ui/classnames";
 

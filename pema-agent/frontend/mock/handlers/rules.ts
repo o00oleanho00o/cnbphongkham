@@ -1,12 +1,6 @@
 // Mock of the CRM rules (`clinic.crm_rule`): a rule only creates a task for staff.
 import { rules } from "../data/clinic";
-import {
-  bodyOf,
-  fail,
-  type Reply,
-  type Router,
-  type Schemas,
-} from "../core";
+import { bodyOf, fail, type Reply, type Router, type Schemas } from "../core";
 
 type S = Schemas;
 

@@ -1,5 +1,3 @@
-"use client";
-
 // The two small forms of the resources screen: a treatment room (`POST /api/v1/rooms`, `PATCH /rooms/{room_id}`)
 // and a room block ("Khóa phòng", `POST /api/v1/room-blocks`). Owner and manager only (`admin.rules`). A block
 // stays inside 08:00-18:00 and needs a reason, like the old web's `block()`; the backend checks it again.

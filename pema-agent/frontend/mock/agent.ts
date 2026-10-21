@@ -389,7 +389,8 @@ const pluginList: PluginShown[] = [
   {
     name: "knowledge",
     version: "0.1.0",
-    description: "Kho tri thức: các tài liệu agent tra cứu. Thêm, duyệt nguồn, dạy tên dịch vụ, thử tìm.",
+    description:
+      "Kho tri thức: các tài liệu agent tra cứu. Thêm, duyệt nguồn, dạy tên dịch vụ, thử tìm.",
     origin: "bundled",
     enabled: true,
     error: null,

@@ -1,5 +1,3 @@
-"use client";
-
 // Cài đặt của agent: time zone, the reply after a failed turn, the variables, the persona (Vai trò), the rules and
 // the memory. Each field says where its value comes from (the stored one, or the profile's) and can go back to the
 // profile; a save sends only what changed. A persona or rules text kept in the system hides the file in git, so the

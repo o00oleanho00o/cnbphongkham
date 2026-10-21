@@ -1,5 +1,3 @@
-"use client";
-
 // "Thu tiền": the receipt of an invoice, shared by the cashier ("Hóa đơn & thanh toán", a dialog) and by
 // `/finance/payments` ("Thu tiền khách hàng", the form under the invoice select). Rules the BE keeps and this form
 // helps with: a receipt carries an idempotency key (one per attempt: a retry after a lost answer reuses it and gets the

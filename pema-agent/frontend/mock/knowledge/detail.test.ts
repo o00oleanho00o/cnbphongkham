@@ -16,13 +16,28 @@ async function call(method: string, path: string, body: unknown = {}, query = ""
   return found.route.handler(ctx);
 }
 
-const TEXT = ["# Tài liệu", "", "## Giá", "Nội dung giá", "", "### Gói lẻ", "Một buổi", "", "## Kịch bản", "Chốt khách"].join("\n");
+const TEXT = [
+  "# Tài liệu",
+  "",
+  "## Giá",
+  "Nội dung giá",
+  "",
+  "### Gói lẻ",
+  "Một buổi",
+  "",
+  "## Kịch bản",
+  "Chốt khách",
+].join("\n");
 
 beforeEach(resetStore);
 
 describe("markdown helpers", () => {
   it("paths_chunks_by_their_parent_headings", () => {
-    expect(chunksOf("s", TEXT).map((chunk) => chunk.path)).toEqual(["Tài liệu > Giá", "Tài liệu > Giá > Gói lẻ", "Tài liệu > Kịch bản"]);
+    expect(chunksOf("s", TEXT).map((chunk) => chunk.path)).toEqual([
+      "Tài liệu > Giá",
+      "Tài liệu > Giá > Gói lẻ",
+      "Tài liệu > Kịch bản",
+    ]);
     expect(chunksOf("s", TEXT).map((chunk) => chunk.id)).toEqual(["s-c1", "s-c2", "s-c3"]);
   });
 
@@ -52,41 +67,63 @@ describe("detail routes", () => {
     const source = store.sources.find((item) => item.id === "src-seed-1");
     expect(source?.processing).toBe("queued");
     expect(source?.chunk_count).toBe(3);
-    const events = (await call("GET", `${BASE}/sources/src-seed-1/events`)).body as { kind: string }[];
+    const events = (await call("GET", `${BASE}/sources/src-seed-1/events`)).body as {
+      kind: string;
+    }[];
     expect(events[0]?.kind).toBe("edited");
   });
 
   it("splits_chosen_sections_into_a_staff_source_used_at_once", async () => {
     await call("PUT", `${BASE}/sources/src-seed-1/structure`, { markdown: TEXT });
     const position = outlineOf(TEXT).findIndex((node) => node.title === "Kịch bản");
-    const reply = await call("POST", `${BASE}/sources/src-seed-1/split`, { sections: [position], title: "Kịch bản tách" });
+    const reply = await call("POST", `${BASE}/sources/src-seed-1/split`, {
+      sections: [position],
+      title: "Kịch bản tách",
+    });
     const created = reply.body as { audience: string; approved: boolean; id: string };
     expect(created.audience).toBe("staff");
     expect(created.approved).toBe(true);
-    const original = (await call("GET", `${BASE}/sources/src-seed-1/structure`)).body as { markdown: string };
+    const original = (await call("GET", `${BASE}/sources/src-seed-1/structure`)).body as {
+      markdown: string;
+    };
     expect(original.markdown).not.toContain("Chốt khách");
   });
 
   it("pages_and_searches_chunks_and_keeps_label_changes", async () => {
     await call("PUT", `${BASE}/sources/src-seed-1/structure`, { markdown: TEXT });
-    const found = (await call("GET", `${BASE}/sources/src-seed-1/chunks`, {}, "q=chot")).body as { items: { id: string }[]; total: number };
+    const found = (await call("GET", `${BASE}/sources/src-seed-1/chunks`, {}, "q=chot")).body as {
+      items: { id: string }[];
+      total: number;
+    };
     expect(found.total).toBe(1);
     await call("PATCH", `${BASE}/chunks/src-seed-1-c1`, { kind: "faq", services: ["NAM"] });
-    const all = (await call("GET", `${BASE}/sources/src-seed-1/chunks`)).body as { items: { kind: string; services: string[] }[] };
+    const all = (await call("GET", `${BASE}/sources/src-seed-1/chunks`)).body as {
+      items: { kind: string; services: string[] }[];
+    };
     expect(all.items[0]).toMatchObject({ kind: "faq", services: ["NAM"] });
   });
 
   it("restores_an_earlier_text_as_a_new_version", async () => {
     await call("PUT", `${BASE}/sources/src-seed-1/structure`, { markdown: TEXT });
-    const events = (await call("GET", `${BASE}/sources/src-seed-1/events`)).body as { id: string }[];
-    await call("PUT", `${BASE}/sources/src-seed-1/structure`, { markdown: "# Khác\n\n## Mục\nchữ" });
-    const reply = await call("POST", `${BASE}/sources/src-seed-1/restore`, { event: events[0]?.id });
+    const events = (await call("GET", `${BASE}/sources/src-seed-1/events`)).body as {
+      id: string;
+    }[];
+    await call("PUT", `${BASE}/sources/src-seed-1/structure`, {
+      markdown: "# Khác\n\n## Mục\nchữ",
+    });
+    const reply = await call("POST", `${BASE}/sources/src-seed-1/restore`, {
+      event: events[0]?.id,
+    });
     expect((reply.body as { version: string }).version).toBe("2.1");
     expect(store.markdown.get("src-seed-1")).toBe(TEXT);
   });
 
   it("refuses_to_restore_from_an_event_that_changed_no_text", async () => {
-    const events = (await call("GET", `${BASE}/sources/src-seed-1/events`)).body as { id: string }[];
-    expect((await call("POST", `${BASE}/sources/src-seed-1/restore`, { event: events[0]?.id })).status).toBe(409);
+    const events = (await call("GET", `${BASE}/sources/src-seed-1/events`)).body as {
+      id: string;
+    }[];
+    expect(
+      (await call("POST", `${BASE}/sources/src-seed-1/restore`, { event: events[0]?.id })).status,
+    ).toBe(409);
   });
 });

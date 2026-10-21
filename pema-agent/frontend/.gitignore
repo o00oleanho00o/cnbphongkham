@@ -1,7 +1,4 @@
 node_modules
-.next
-out
-next-env.d.ts
 *.tsbuildinfo
 .env
 .env.local
@@ -14,3 +11,7 @@ visual-ref/new/*
 !visual-ref/old/README.md
 !visual-ref/old/manifest.json
 !visual-ref/new/README.md
+.output
+dist
+.nitro
+.tanstack

@@ -1,5 +1,3 @@
-"use client";
-
 // Patient 360 with five tabs: Tổng quan, Tư vấn, Kế hoạch, Buổi điều trị, Ảnh (the old Clinic Web tabs). The tab
 // is kept in `?tab=` so a link opens a tab and the browser's back button works; a tab is mounted the first time
 // it is opened and then kept (hidden) so a half-written session form survives a look at the photos. Which tabs
@@ -12,7 +10,7 @@
 //   finance   patient.read_360 (amounts and buttons follow finance.* and order.*; U9)
 // The header carries "AI brief" (session.write: a template, a doctor approves it); the cards of Tổng quan open
 // "Thông tin cần nhớ", "Chăm sóc tại nhà" and "Ngày dự kiến quay lại".
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "@/lib/navigation";
 import { useState } from "react";
 
 import { InitialAvatar, Badge } from "@/components/admin/shared/ui-bits";

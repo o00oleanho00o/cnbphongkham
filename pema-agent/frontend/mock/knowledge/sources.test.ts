@@ -33,7 +33,9 @@ describe("mock knowledge sources", () => {
   it("filters_by_text_without_accents_and_by_unapproved", async () => {
     const text = (await call("GET", `${BASE}/sources?q=cam%20nang`))?.body as { total: number };
     expect(text.total).toBe(1);
-    const open = (await call("GET", `${BASE}/sources?approved=false`))?.body as { items: { approved: boolean }[] };
+    const open = (await call("GET", `${BASE}/sources?approved=false`))?.body as {
+      items: { approved: boolean }[];
+    };
     expect(open.items.every((item) => !item.approved)).toBe(true);
   });
 
@@ -43,8 +45,14 @@ describe("mock knowledge sources", () => {
   });
 
   it("bulk_is_not_taken_for_a_source_id", async () => {
-    const reply = await call("POST", `${BASE}/sources/bulk`, { ids: ["src-seed-3", "nope"], action: "approve" });
-    expect(reply?.body).toEqual({ done: 1, failed: [{ id: "nope", message: "Không tìm thấy nguồn này." }] });
+    const reply = await call("POST", `${BASE}/sources/bulk`, {
+      ids: ["src-seed-3", "nope"],
+      action: "approve",
+    });
+    expect(reply?.body).toEqual({
+      done: 1,
+      failed: [{ id: "nope", message: "Không tìm thấy nguồn này." }],
+    });
     expect(store.sources.find((item) => item.id === "src-seed-3")?.approved_by).toBe("Quản trị");
     expect(store.events.get("src-seed-3")?.map((event) => event.kind)).toEqual(["approved"]);
   });

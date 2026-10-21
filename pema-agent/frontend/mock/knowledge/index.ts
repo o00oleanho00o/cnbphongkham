@@ -1,4 +1,4 @@
-// The fake knowledge plugin (`/v1/plugins/knowledge/...`) for `pnpm dev:mock`.
+// The fake knowledge plugin (`/v1/plugins/knowledge/...`) for `bun run dev:mock`.
 import type { Router } from "../core";
 import { registerAdd } from "./add";
 import { registerDetail } from "./detail";

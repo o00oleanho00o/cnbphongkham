@@ -1,5 +1,3 @@
-"use client";
-
 // Small pieces the Patient 360 tabs share.
 import type { ReactNode } from "react";
 

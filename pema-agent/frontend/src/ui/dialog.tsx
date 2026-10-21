@@ -1,5 +1,3 @@
-"use client";
-
 // Modal for the whole app: a centred dialog, or a bottom sheet on a phone (`Sheet`). Backdrop rule of the
 // ported dashboard (`useChotNen`: close only when press AND release both land on the backdrop, so dragging
 // a text selection out of a textarea never closes the form). Escape closes, Tab stays inside, focus goes

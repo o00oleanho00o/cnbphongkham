@@ -1,5 +1,3 @@
-"use client";
-
 // Contact form of "Việc hôm nay": which channel, what happened, what is next. Web prototype source:
 // prototype/shared/crm-ui.js (modal "Chăm sóc · ...") with the same fields and rules. It only RECORDS a
 // contact the person already made; nothing is sent from here (no auto-send, a human does the contact).

@@ -1,14 +1,14 @@
-// `pnpm visual`: screenshots of every route of the app at the five project viewports, plus the check an exit
+// `bun run visual`: screenshots of every route of the app at the five project viewports, plus the check an exit
 // code cannot say on its own: no document-level horizontal overflow (`scrollWidth > innerWidth`).
 //
-// Needs the app running against the mock backend:  pnpm dev:mock   (then, in another shell)  pnpm visual
+// Needs the app running against the mock backend:  bun run dev:mock   (then, in another shell)  bun run visual
 //   VISUAL_BASE_URL=http://localhost:3000   where the app listens (default)
 //   VISUAL_ROLE=owner                       which mock user signs in (owner, manager, doctor, cs, reception)
 //   VISUAL_ROUTES=/today,/patients          limit to some routes (comma separated)
 //   VISUAL_VIEWPORTS=1920x1020,390x844      limit to some viewports
 //   VISUAL_SCHEME=dark                      take the dark-mode screenshots (files get a -dark suffix)
 //
-// Routes come from `src/app/**/page.tsx`, the same list the navigation test uses; dynamic routes get sample ids
+// Routes come from `src/routes/**/index.tsx`, the same list the navigation test uses; dynamic routes get sample ids
 // of the mock data (`SAMPLE_PARAMS`). `/dev/*` (the kit examples) is left out. Output:
 //   visual-ref/new/<viewport>-<route>.png   one image per screen and viewport (git-ignored)
 //   visual-ref/new/summary.json             per screen: viewport, route, overflow px, HTTP status, errors
@@ -24,7 +24,7 @@ const BASE = process.env.VISUAL_BASE_URL ?? "http://localhost:3000";
 const ROLE = process.env.VISUAL_ROLE ?? "owner";
 const DARK = process.env.VISUAL_SCHEME === "dark";
 const OUT = fileURLToPath(new URL("../visual-ref/new", import.meta.url));
-const APP_DIR = fileURLToPath(new URL("../src/app", import.meta.url));
+const APP_DIR = fileURLToPath(new URL("../src/routes", import.meta.url));
 
 const VIEWPORTS = [
   { name: "1920x1020", width: 1920, height: 1020 },

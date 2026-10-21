@@ -1,5 +1,3 @@
-"use client";
-
 // Add or edit a service (`POST /api/v1/services`, `PATCH /api/v1/services/{service_id}`). Old web: "Chỉnh dịch vụ"
 // (`operations-ui.js` `service`): name, minutes of treatment, minutes of room preparation, price, active; the
 // finance screen added the commission rate and its basis. Here they share one form. Only the owner and the

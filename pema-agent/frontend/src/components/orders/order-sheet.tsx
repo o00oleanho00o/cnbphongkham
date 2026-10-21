@@ -48,7 +48,6 @@ export function OrderSheet({
       <div className="order-doc-scroll">
         <article className="order-sheet">
           <header className="order-sheet-header">
-            {/* eslint-disable-next-line @next/next/no-img-element -- fixed brand asset */}
             <img src="/pema-logo.png" alt="Pema" width={294} height={156} />
             <div>
               <strong>PEMA DIGITAL CLINIC</strong>

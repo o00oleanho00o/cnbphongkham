@@ -1,5 +1,5 @@
-// Entry of the mock backend: `pnpm mock` (port 4010, override with MOCK_PORT) and
-// `PEMA_API_URL=http://127.0.0.1:4010 pnpm dev`, or `pnpm dev:mock` for both.
+// Entry of the mock backend: `bun run mock` (port 4010, override with MOCK_PORT) and
+// `PEMA_API_URL=http://127.0.0.1:4010 bun run dev`, or `bun run dev:mock` for both.
 //
 // Handlers live in mock/handlers/*.ts, one file per area, each exporting `register(router)`. They are
 // loaded by directory listing, so adding an area never touches this file.

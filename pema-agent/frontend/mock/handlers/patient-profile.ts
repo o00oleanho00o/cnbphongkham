@@ -258,7 +258,8 @@ export function register(r: Router): void {
     const patient = patientOr404(ctx);
     const user = session(ctx);
     const input = bodyOf<S["AppUpdateCreate"]>(ctx);
-    if (!holds(user, "session.write")) fail(403, "forbidden", "Bạn không có quyền thực hiện thao tác này.");
+    if (!holds(user, "session.write"))
+      fail(403, "forbidden", "Bạn không có quyền thực hiện thao tác này.");
     if (input.body.trim() === "") invalid("Hãy nhập hướng dẫn.");
     const row: StoredAppUpdate = {
       id: uid("appupd"),

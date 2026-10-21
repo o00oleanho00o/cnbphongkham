@@ -1,5 +1,3 @@
-"use client";
-
 // "Tiền sử & chẩn đoán" card of the Tư vấn tab (old web: `crm-ui.js` `clinical()`, screens WC5, WC6, WC31). A doctor
 // types the history and the finding; nothing here is suggested or filled in by a model ("Bác sĩ ghi nhận, không
 // dùng AI tự chẩn đoán"). Both texts are required. Without `session.write` the card only shows what was recorded.

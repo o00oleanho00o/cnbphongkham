@@ -1,5 +1,3 @@
-"use client";
-
 // Index of the guide (old `.guide-index`): a search box, the topic chips and one button per article. The list is
 // already loaded by the page; this component only filters and reports a choice.
 import { useMemo, useState } from "react";

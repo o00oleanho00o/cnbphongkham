@@ -40,7 +40,9 @@ describe("settings routes", () => {
     expect((reply.body as KnowledgeSettings).embedding.has_key).toBe(true);
     expect(JSON.stringify(reply.body)).not.toContain("sk-fictional-key");
     expect(JSON.stringify(store.settings)).not.toContain("sk-fictional-key");
-    expect(((await patch({ embedding: { api_key: "" } })).body as KnowledgeSettings).embedding.has_key).toBe(false);
+    expect(
+      ((await patch({ embedding: { api_key: "" } })).body as KnowledgeSettings).embedding.has_key,
+    ).toBe(false);
   });
 
   it("refuses_numbers_outside_their_ranges", async () => {
@@ -53,7 +55,11 @@ describe("settings routes", () => {
     await patch({ parser: { kind: "docling", docling_url: "http://docling.test" } });
     const reply = await patch({ reset: ["parser"] });
 
-    expect((reply.body as KnowledgeSettings).parser).toEqual({ kind: "simple", docling_url: "", origin: "profile" });
+    expect((reply.body as KnowledgeSettings).parser).toEqual({
+      kind: "simple",
+      docling_url: "",
+      origin: "profile",
+    });
   });
 
   it("says_why_the_embedding_test_fails_until_an_address_and_a_key_are_saved", async () => {

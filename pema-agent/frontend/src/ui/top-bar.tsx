@@ -1,9 +1,7 @@
-"use client";
-
 // Top bar of the old Pema Clinic Web: breadcrumbs ("Không gian phòng khám / <screen>") on the left, patient
 // search and the notification bell on the right (60px, 64px from 1600px). Below `lg` the sidebar is a drawer,
 // so the bar carries the menu button and the logo instead (the bottom tab bar holds the daily screens).
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/lib/navigation";
 import { useState, type FormEvent } from "react";
 
 import { IconGear, IconMenu, IconSearch } from "@/components/admin/shared/dashboard-icons";
@@ -58,7 +56,6 @@ export function TopBar({
           <IconMenu size={20} />
         </button>
         <GuardedLink href="/" className="flex items-center gap-2 lg:hidden" title="Về trang chính">
-          {/* eslint-disable-next-line @next/next/no-img-element -- fixed brand asset */}
           <img src="/pema-logo.png" alt="Pema" width={294} height={156} className="h-7 w-auto" />
           <span className="truncate text-body-lg font-semibold text-ink">
             {clinicName.trim() || "CSKH"}

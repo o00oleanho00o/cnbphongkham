@@ -1,5 +1,3 @@
-"use client";
-
 // The agent plugins of the section `/admin/agent`: the layout installs the SDK and loads the enabled plugins' scripts
 // once; the plugin pages read the outcome here and the registered pages from the SDK's store.
 import {

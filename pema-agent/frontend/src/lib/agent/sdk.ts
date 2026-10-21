@@ -1,5 +1,3 @@
-"use client";
-
 // The plugin SDK host (plan C): the clinic web plays the agent dashboard's part (`plugins/web/ui/src/sdk.ts`) so the
 // pages a plugin ships run here. A plugin's script is an IIFE with React left outside (`window.__PEMA_AGENT__.React`
 // and `.jsxRuntime`), so it renders with this app's React; it calls `window.__PEMA_AGENT__.register(name,

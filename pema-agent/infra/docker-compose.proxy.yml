@@ -5,7 +5,7 @@
 #   docker compose -f infra/docker-compose.yml -f infra/docker-compose.proxy.yml --env-file infra/.env \
 #       --profile proxy up -d      
 #
-# Without this file (plain `up`, `--profile app`, `pnpm dev`) the ports stay on the loopback addresses
+# Without this file (plain `up`, `--profile app`, `bun run dev`) the ports stay on the loopback addresses
 # PEMA_API_BIND / PEMA_FRONTEND_BIND: that is the development way, no proxy, no TLS, this machine only.
 #
 # `!reset` (Docker Compose 2.24+) empties the `ports` list of the base file instead of merging with it. Postgres

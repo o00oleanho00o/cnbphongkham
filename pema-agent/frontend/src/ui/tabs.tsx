@@ -1,5 +1,3 @@
-"use client";
-
 import { useRef, type KeyboardEvent, type ReactNode } from "react";
 
 import { cx } from "./classnames";

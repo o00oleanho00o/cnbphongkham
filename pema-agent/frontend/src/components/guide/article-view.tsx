@@ -1,5 +1,3 @@
-"use client";
-
 // One guide article: the old `.guide-article` card (topic eyebrow, title, lead, body, "Đọc tiếp"). The body is the
 // Markdown of the knowledge-base source (`GET /api/v1/guide/articles/{id}`); it is shown as text, never as HTML.
 import { useCallback } from "react";

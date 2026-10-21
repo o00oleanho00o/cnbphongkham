@@ -1,14 +1,13 @@
 // ported from: web/src/app.tsx (DashboardShell)
-"use client";
 
-// Deviations: react-router `Routes` became the App Router tree (this component is the `(admin)` layout);
+// Deviations: react-router `Routes` became the TanStack file-route tree (this component is the `_admin` layout);
 // the shell loads `GET /api/v1/me` (user + permissions) instead of `api.overview()`, filters the menu by
 // permission, and adds a phone tab bar. The decorative page background of the original is dropped (waves
 // belong to identity areas only, never behind tables). Auth redirects: no session -> /login.
 //
 // Package U0: the frame, sidebar and top bar are the Pema design kit (`src/ui/`, old Clinic Web look);
 // this component only loads the session and the menu and fills the kit's slots.
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter } from "@/lib/navigation";
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 
 import { coCanHoiTruocKhiRoi, xinPhepRoiTrang } from "@/lib/admin/shared/unsaved-changes-guard";
@@ -121,20 +120,20 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <SessionProvider user={me.user} permissions={me.permissions} onLoggedOut={onLoggedOut}>
-        <ShellFrame
-          sections={sections}
-          tabs={tabs}
-          online={null}
-          user={me.user}
-          pathname={pathname}
-          searchHref={allows(["patient.read"]) ? "/patients" : undefined}
-          menuOpen={menuOpen}
-          onMenu={setMenuOpen}
-          onLogoutRequest={guardedLogout}
-          forbidden={forbidden}
-        >
-          {children}
-        </ShellFrame>
+      <ShellFrame
+        sections={sections}
+        tabs={tabs}
+        online={null}
+        user={me.user}
+        pathname={pathname}
+        searchHref={allows(["patient.read"]) ? "/patients" : undefined}
+        menuOpen={menuOpen}
+        onMenu={setMenuOpen}
+        onLogoutRequest={guardedLogout}
+        forbidden={forbidden}
+      >
+        {children}
+      </ShellFrame>
     </SessionProvider>
   );
 }

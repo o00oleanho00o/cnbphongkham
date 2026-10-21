@@ -151,7 +151,7 @@ Ollama nằm trong *profile* và **chỉ bật khi gói tương ứng đã có m
 | Profile | Lệnh | Phụ thuộc |
 |---|---|---|
 | `worker` | `docker compose ... --profile worker up -d` | `pema.workers.main` của gói G |
-| `frontend` | `--profile frontend` | ứng dụng Next.js của gói E (`output: "standalone"`) |
+| `frontend` | `--profile frontend` | ứng dụng TanStack Start của gói E (chạy bằng bun) |
 | `app` | `make up-app` | worker + frontend |
 | `proxy` | `make up-proxy` | Caddy (TLS) đứng trước api và dashboard; xem mục 8a |
 | `bridge` | `--profile bridge` | gói C2 (và chấp nhận rủi ro khóa tài khoản Zalo) |

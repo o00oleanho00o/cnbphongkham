@@ -30,7 +30,6 @@ type MaybeResult<T> = { data?: T; error?: unknown; response: Response };
 export function redirectToLogin(): void {
   if (typeof window === "undefined") return;
   // Outside the React tree there is no router; a full navigation also drops stale client state.
-  // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- no router here
   if (window.location.pathname !== "/login") window.location.href = "/login";
 }
 

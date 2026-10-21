@@ -1,10 +1,8 @@
-"use client";
-
 // "Đơn thuốc & phiếu tư vấn" of one patient, at the bottom of the Kế hoạch tab of Patient 360. Old web: the
 // "Tạo đơn nháp" entry of the plan tab and the order history of the patient (`order-ui.js` `history(p)`), plus the
 // approved orders grouped the way the old Patient Mobile showed them (Đơn thuốc, Phiếu tư vấn). The grouped list is
 // the STAFF view of what the app will show; nothing here is shown to the patient yet (a later step).
-import Link from "next/link";
+import { Link } from "@/lib/link";
 import { useCallback } from "react";
 
 import { EmptyState, ListSkeleton, RetryNotice } from "@/components/ops/ops-ui";

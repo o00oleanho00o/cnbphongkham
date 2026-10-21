@@ -1,8 +1,8 @@
-// `pnpm smoke`: every route of the app renders against the mock backend: the main heading is there and the
+// `bun run smoke`: every route of the app renders against the mock backend: the main heading is there and the
 // primary control of the screen is visible (package U, step U1). It is the cheap proof that a restyle did not
 // lose a screen; FEATURE-INVENTORY.md says what each screen must keep, this script only opens them.
 //
-// Needs the app running against the mock backend:  pnpm dev:mock   (then, in another shell)  pnpm smoke
+// Needs the app running against the mock backend:  bun run dev:mock   (then, in another shell)  bun run smoke
 //   SMOKE_BASE_URL=http://localhost:3000   where the app listens (default)
 //   SMOKE_ROUTES=/today,/patients          limit to some routes (comma separated)
 //
@@ -15,7 +15,7 @@ import { chromium, type Locator, type Page } from "playwright";
 import { concreteRoute, listPageRoutes } from "./app-routes";
 
 const BASE = process.env.SMOKE_BASE_URL ?? "http://localhost:3000";
-const APP_DIR = fileURLToPath(new URL("../src/app", import.meta.url));
+const APP_DIR = fileURLToPath(new URL("../src/routes", import.meta.url));
 
 type Role = "button" | "link" | "textbox" | "searchbox" | "checkbox" | "switch";
 type Expectation = {

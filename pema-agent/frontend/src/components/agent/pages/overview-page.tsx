@@ -1,9 +1,7 @@
-"use client";
-
 // Tổng quan agent: ported from `plugins/web/ui/src/pages/overview.tsx`, on the clinic web kit (`plugin-kit`).
 /** What runs: the chat channels and the plugins' background jobs, with their last error; and a warning while the
  * agent has no model it can call (it starts without one, but then answers nothing). */
-import Link from "next/link";
+import { Link } from "@/lib/link";
 import { useCallback, useEffect, useState } from "react";
 
 import { formatCount, type Usage, usageTotals, USAGE_PATH } from "@/lib/agent/activity";

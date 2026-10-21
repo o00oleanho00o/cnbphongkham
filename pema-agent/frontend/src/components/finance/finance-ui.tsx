@@ -1,8 +1,6 @@
-"use client";
-
 // Small pieces the finance pages share: the tab bar between the screens, the status chip, the line shown while a
 // page loads and the pair "error with retry".
-import Link from "next/link";
+import { Link } from "@/lib/link";
 import type { ReactNode } from "react";
 
 import { RetryNotice } from "@/components/ops/ops-ui";

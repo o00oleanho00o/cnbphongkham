@@ -16,7 +16,14 @@ async function call(method: string, path: string, body: unknown = {}) {
   return found.route.handler(ctx);
 }
 
-const NEW_SERVICE = { code: "SEO", name: "Chăm sóc sẹo", aliases: ["sẹo"], description: "", branches: [], enabled: true };
+const NEW_SERVICE = {
+  code: "SEO",
+  name: "Chăm sóc sẹo",
+  aliases: ["sẹo"],
+  description: "",
+  branches: [],
+  enabled: true,
+};
 
 beforeEach(resetStore);
 
@@ -45,7 +52,9 @@ describe("services routes", () => {
   it("renames_the_code_inside_the_sources_that_carry_it", async () => {
     await call("PATCH", `${BASE}/svc-hori`, { code: "HORI_LASER" });
 
-    expect(store.sources.find((source) => source.id === "src-seed-1")?.services).toContain("HORI_LASER");
+    expect(store.sources.find((source) => source.id === "src-seed-1")?.services).toContain(
+      "HORI_LASER",
+    );
     expect(store.sources.some((source) => source.services.includes("HORI"))).toBe(false);
   });
 
@@ -63,7 +72,8 @@ describe("services routes", () => {
   });
 
   it("reads_a_pasted_markdown_table_into_a_preview_without_saving", async () => {
-    const text = "| code | name | aliases |\n|---|---|---|\n| LAN | Triệt lông | lông; wax |\n| NAM | Nám | nám |";
+    const text =
+      "| code | name | aliases |\n|---|---|---|\n| LAN | Triệt lông | lông; wax |\n| NAM | Nám | nám |";
     const preview = (await call("POST", `${BASE}/import`, { text })).body as Service[];
 
     expect(preview.map((service) => service.code)).toEqual(["LAN", "NAM"]);

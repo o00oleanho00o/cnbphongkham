@@ -1,10 +1,8 @@
-"use client";
-
 // New for Pema (not in the original dashboard): the daily CSKH work is done on a phone, so the four
 // operations screens get a bottom tab bar under lg, and everything else stays one tap away in the
 // drawer ("Menu"). Touch targets are at least 48px (design skill, native rule applied to the web).
-import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { Link } from "@/lib/link";
+import { usePathname, useRouter } from "@/lib/navigation";
 import type { MouseEvent } from "react";
 
 import { IconMenu } from "@/components/admin/shared/dashboard-icons";

@@ -5,7 +5,7 @@
 # ports, other volumes); see infra/README.md "One system, one clinic".
 #
 #   default (no profile)  postgres, redis, migrate (one-shot), api
-#   profile frontend      Next.js dashboard (output: "standalone"; it forwards /api/v1 to PEMA_API_INTERNAL_URL, read at
+#   profile frontend      TanStack Start dashboard (Nitro server run by bun; it forwards /api/v1 to PEMA_API_INTERNAL_URL, read at
 #                         RUNTIME, so one image serves any API address).
 #   profile proxy         Caddy reverse proxy (TLS, security headers) plus the dashboard behind it. The only service
 #                         that publishes 80/443. Run it with the override file docker-compose.proxy.yml, which turns
@@ -314,7 +314,7 @@ services:
     ports:
       - "${PEMA_FRONTEND_BIND:-127.0.0.1}:${PEMA_FRONTEND_PORT:-3000}:3000"
     healthcheck:
-      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/login').then(r=>process.exit(r.ok?0:1),()=>process.exit(1))"]
+      test: ["CMD", "bun", "-e", "fetch('http://127.0.0.1:3000/login').then(r=>process.exit(r.ok?0:1),()=>process.exit(1))"]
       interval: 10s
       timeout: 5s
       retries: 6

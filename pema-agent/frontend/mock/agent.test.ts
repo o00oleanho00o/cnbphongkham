@@ -1,4 +1,4 @@
-// The mock's agent-token route and fake agent (`pnpm dev:mock`): the owner and the manager get a short token, other
+// The mock's agent-token route and fake agent (`bun run dev:mock`): the owner and the manager get a short token, other
 // roles 403 with the API's sentence, no session 401; the fake agent wants that token and lists the Zalo plugin.
 import type { Server } from "node:http";
 import type { AddressInfo } from "node:net";

@@ -40,7 +40,7 @@ help:
 
 setup:
 	cd $(BACKEND) && uv sync --all-packages
-	cd $(FRONTEND) && pnpm install
+	cd $(FRONTEND) && bun install
 
 lint:
 	cd $(BACKEND) && uv run ruff check .
@@ -54,7 +54,7 @@ format:
 
 typecheck:
 	cd $(BACKEND) && uv run pyright
-	cd $(FRONTEND) && pnpm run check:types
+	cd $(FRONTEND) && bun run check:types
 
 test:
 	cd $(BACKEND) && uv run pytest
@@ -67,7 +67,7 @@ openapi:
 	cd $(BACKEND) && uv run python -m pema.api.export_openapi
 
 types: openapi
-	cd $(FRONTEND) && pnpm run gen:types && pnpm run check:types
+	cd $(FRONTEND) && bun run gen:types && bun run check:types
 
 db-upgrade:
 	cd $(BACKEND) && $(LOAD_ENV) uv run alembic -c apps/api/alembic.ini upgrade heads

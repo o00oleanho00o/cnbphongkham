@@ -1,5 +1,3 @@
-"use client";
-
 // Patient page of a role that reads finance but has no Patient 360: the accountant ("Đối soát & thu ngân", old web
 // `staff-context.js`: pages finance, cashier, patients, patient; capabilities billing and readFinance). It sees the
 // header (name, code, age) and the tab "Dịch vụ & tài chính" (WC27) from `GET /patients/{id}/finance-tab`, which holds

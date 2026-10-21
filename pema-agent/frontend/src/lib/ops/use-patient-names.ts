@@ -1,5 +1,3 @@
-"use client";
-
 // Task and conversation DTOs carry the patient CODE only (data minimisation). Staff need a name to
 // recognise the person, so the screens read the patient list ONCE (one request, never one per row) and
 // look names up by id. Without `patient.read` the map stays empty and the screens show the code.

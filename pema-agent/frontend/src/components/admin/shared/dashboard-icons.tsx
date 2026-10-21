@@ -1,5 +1,4 @@
 // ported from: web/src/shared/dashboard-icons.tsx
-"use client";
 
 import type { SVGProps } from "react";
 

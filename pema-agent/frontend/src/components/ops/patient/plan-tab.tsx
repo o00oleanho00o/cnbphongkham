@@ -1,5 +1,3 @@
-"use client";
-
 // Kế hoạch tab: the treatment plans of the patient with their progress, and the old "Điều chỉnh kế hoạch" form
 // (name and total number of sessions, never below what is done). Plans come from the Patient 360 read model; a
 // plan's counter moves only when a session is completed (the BE does that).

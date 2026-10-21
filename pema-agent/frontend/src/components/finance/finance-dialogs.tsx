@@ -1,5 +1,3 @@
-"use client";
-
 // The three questions the old finance page asked with the browser's `prompt()` and `confirm()`, now kit dialogs:
 // why an entry is cancelled ("Lý do hủy lượt chưa thu tiền"), whether to close a month (its entries are locked) and
 // the voucher of the payout ("Mã chứng từ chi"). The BE has the last word: its sentence is shown in the dialog and

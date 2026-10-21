@@ -1,5 +1,3 @@
-"use client";
-
 // The display names of the people of a list of chats, asked from the plugins that know them (a plugin registers
 // `personNames` with the SDK): one call per channel and plugin for a whole page of rows, never one per row. A plugin
 // that fails or knows nobody leaves the person unnamed; the list shows the user id then.

@@ -130,7 +130,8 @@ function eventsOf(source: Source): SourceEvent[] {
 
 function split(source: Source, sections: readonly number[], title: string): Reply {
   const { kept, moved } = takeSections(markdownOf(source), sections);
-  if (moved === "") return { status: 422, body: { detail: "Các mục đã chọn không còn trong bản dựng." } };
+  if (moved === "")
+    return { status: 422, body: { detail: "Các mục đã chọn không còn trong bản dựng." } };
   const made = nowIso();
   const draft: Source = {
     ...source,
@@ -163,7 +164,11 @@ function restore(source: Source, eventId: string | undefined): Reply {
   }
   const restored = withMarkdown(source, snapshots.get(event.id) ?? generateMarkdown(source.title));
   const version = bumpVersion(restored.version);
-  addEvent(source.id, "restored", `Khôi phục từ bản ngày ${event.at.slice(0, 10)}, thành phiên bản ${version}`);
+  addEvent(
+    source.id,
+    "restored",
+    `Khôi phục từ bản ngày ${event.at.slice(0, 10)}, thành phiên bản ${version}`,
+  );
   return { body: save({ ...restored, version }) };
 }
 
@@ -196,7 +201,8 @@ export function registerDetail(router: Router): void {
     const source = find(ctx.params.id);
     if (!source) return NOT_FOUND;
     const { markdown } = bodyOf<{ markdown?: string }>(ctx);
-    if (typeof markdown !== "string") return { status: 422, body: { detail: "Thiếu nội dung bản dựng." } };
+    if (typeof markdown !== "string")
+      return { status: 422, body: { detail: "Thiếu nội dung bản dựng." } };
     const saved = withMarkdown(source, markdown);
     const event = addEvent(source.id, "edited", "Sửa bản dựng cấu trúc và nạp lại");
     snapshots.set(event.id, markdown);
@@ -221,7 +227,12 @@ export function registerDetail(router: Router): void {
     const all = chunkViews(find(source.id) ?? source, markdownOf(source)).filter(
       (chunk) => wanted === "" || fold(`${chunk.path} ${chunk.text}`).includes(wanted),
     );
-    const page = clampInt(ctx.query.get("page"), 1, 1, Math.max(1, Math.ceil(all.length / PAGE_SIZE)));
+    const page = clampInt(
+      ctx.query.get("page"),
+      1,
+      1,
+      Math.max(1, Math.ceil(all.length / PAGE_SIZE)),
+    );
     const body: ChunkList = {
       items: all.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE),
       total: all.length,
@@ -231,7 +242,9 @@ export function registerDetail(router: Router): void {
     return { body };
   });
 
-  router.patch(`${BASE}/chunks/{id}`, null, (ctx): Reply => updateChunk(ctx.params.id ?? "", bodyOf<ChunkOverride>(ctx)));
+  router.patch(`${BASE}/chunks/{id}`, null, (ctx): Reply =>
+    updateChunk(ctx.params.id ?? "", bodyOf<ChunkOverride>(ctx)),
+  );
 
   router.get(`${BASE}/sources/{id}/events`, null, (ctx): Reply => {
     const source = find(ctx.params.id);

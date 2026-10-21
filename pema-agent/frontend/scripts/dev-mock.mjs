@@ -1,4 +1,4 @@
-// `pnpm dev:mock`: the mock backend plus `next dev` pointed at it (cross-platform: sets the env var
+// `bun run dev:mock`: the mock backend plus `vite dev` pointed at it (cross-platform: sets the env var
 // itself, so it works on Windows and Ubuntu). The mock also plays the agent service (mock/agent.ts).
 import { spawn } from "node:child_process";
 
@@ -12,8 +12,8 @@ const env = {
 };
 
 const children = [
-  spawn("pnpm", ["mock"], { stdio: "inherit", shell: true, env }),
-  spawn("pnpm", ["dev"], { stdio: "inherit", shell: true, env }),
+  spawn("bun", ["run", "mock"], { stdio: "inherit", shell: true, env }),
+  spawn("bun", ["run", "dev"], { stdio: "inherit", shell: true, env }),
 ];
 
 function stop() {

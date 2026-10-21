@@ -1,5 +1,3 @@
-"use client";
-
 // "Bảng tiền thủ thuật": one row per performer of every procedure (old web: `finance.js` `table()`). Revenue is the
 // performer's share of the net price; the fee is the base times the rate frozen on the entry. "Duyệt" and "Hủy"
 // exist only while the month is open, for whoever may write, on a row that is not cancelled.

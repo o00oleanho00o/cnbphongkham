@@ -1,8 +1,6 @@
-"use client";
-
 // One page an agent plugin ships (`/admin/agent/plugins/<plugin>/<page>`): the component its script registered, or
 // why it cannot be shown (still loading, script failed, plugin off, no such page).
-import Link from "next/link";
+import { Link } from "@/lib/link";
 
 import { PluginsProblem, useAgentPlugins } from "@/components/agent/agent-plugins";
 import { RetryNotice } from "@/components/ops/ops-ui";

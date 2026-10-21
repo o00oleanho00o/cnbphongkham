@@ -1,9 +1,7 @@
-"use client";
-
 // "Nhật ký chăm sóc" of `/crm` (old CRM01 `activity` card, "Kết quả chăm sóc đã ghi"): every contact the staff
 // logged, newest first (`GET /api/v1/crm/activities`), with channel and outcome as `crm-ui.js` shows them. The
 // chips narrow what is already on screen; nothing here sends a message or writes a record.
-import Link from "next/link";
+import { Link } from "@/lib/link";
 import { useCallback, useMemo, useState } from "react";
 
 import { SelectMenu, type SelectOption } from "@/components/admin/shared/select-menu";

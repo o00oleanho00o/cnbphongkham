@@ -1,5 +1,3 @@
-"use client";
-
 // Pieces of the Cài đặt page: the line above each field (label, where the value comes from, back to the profile) and
 // the editor of the variables the persona and the rules fill their {{placeholders}} with.
 import { Badge, Button, FIELD_CLASS, Input } from "@/components/agent/plugin-kit";

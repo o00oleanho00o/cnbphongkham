@@ -1,5 +1,3 @@
-"use client";
-
 // "Tạo đơn thuốc / phiếu tư vấn": the quick order. Old web: `order-ui.js` `open()` (patient, doctor, diagnosis, the
 // product search over the Excel catalog, the lines with quantity, sheet, usage, note and the reason for a changed
 // sheet, the total, the general advice and the notice). The catalog is served by the backend

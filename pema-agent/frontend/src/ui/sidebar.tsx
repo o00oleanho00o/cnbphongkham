@@ -1,5 +1,3 @@
-"use client";
-
 // The sidebar of the old Pema Clinic Web (white, 232px, logo + "PHÒNG KHÁM DA LIỄU", small-caps section
 // titles, active item on a pale blue pill) carrying the old sections first and the sections of this app
 // after them (see `lib/nav.tsx`). From `lg` it is a fixed column; below `lg` a drawer opened from the top bar.
@@ -68,7 +66,6 @@ export function Sidebar({
       >
         <div className="flex items-start gap-2.5 px-5 pt-6 pb-5">
           <GuardedLink href="/" onNavigate={onCloseMobile} className="block" title="Về trang chính">
-            {/* eslint-disable-next-line @next/next/no-img-element -- fixed 294x156 brand asset */}
             <img
               src="/pema-logo.png"
               alt="Pema"
@@ -156,7 +153,7 @@ export function Sidebar({
                   className={cx("h-2 w-2 rounded-pill", online ? "bg-success" : "bg-line-strong")}
                 />
               )}
-              {connectionLabel(online)}v{process.env.NEXT_PUBLIC_APP_VERSION}
+              {connectionLabel(online)}v{import.meta.env.VITE_APP_VERSION}
             </span>
             <div className="flex items-center gap-0.5">
               <button

@@ -1,16 +1,17 @@
-// Lists the routes of the App Router tree (`src/app/**/page.tsx`). Shared by the visual harness and by the
+// Lists the routes of the TanStack file tree (`src/routes/**/index.tsx`). Shared by the visual harness and by the
 // navigation test, so "every screen" means the same thing in both.
 import { readdirSync } from "node:fs";
 import { join } from "node:path";
 
-const PAGE_FILE = "page.tsx";
+const PAGE_FILE = "index.tsx";
 
-/** `(admin)/patients/[id]/page.tsx` -> `/patients/[id]` (route groups vanish, the root is `/`). */
+/** `_admin/patients/$id/index.tsx` -> `/patients/[id]` (pathless `_` folders vanish, the root is `/`). */
 export function routeOfPageFile(relativePath: string): string {
   const segments = relativePath
     .split(/[\\/]/)
     .slice(0, -1)
-    .filter((segment) => !(segment.startsWith("(") && segment.endsWith(")")));
+    .filter((segment) => !segment.startsWith("_"))
+    .map((segment) => segment.replace(/^\$(.+)$/, "[$1]"));
   return `/${segments.join("/")}`;
 }
 

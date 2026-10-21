@@ -8,7 +8,7 @@ import { AgentPluginsProvider } from "@/components/agent/agent-plugins";
 
 import { PluginDetailPage } from "./plugin-detail-page";
 
-vi.mock("next/navigation", () => ({ usePathname: () => "/admin/agent/plugins/knowledge" }));
+vi.mock("@/lib/navigation", () => ({ usePathname: () => "/admin/agent/plugins/knowledge" }));
 
 const knowledge = (enabled: boolean, topK = 10) => ({
   name: "knowledge",

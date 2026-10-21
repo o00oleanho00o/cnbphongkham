@@ -1,5 +1,3 @@
-"use client";
-
 // Staff a task or a conversation can be handed to (`GET /api/v1/staff/assignable`, every signed-in member may
 // read it). While it loads, or when it cannot be read, the boxes still offer "Tôi" and "Giữ nguyên"; `reload`
 // is the "Thử lại" of the error hint.

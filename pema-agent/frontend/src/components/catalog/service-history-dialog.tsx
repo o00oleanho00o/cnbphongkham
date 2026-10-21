@@ -1,5 +1,3 @@
-"use client";
-
 // History of the price and rate snapshots of one service (`GET /api/v1/services/{service_id}`). Each row is what a
 // booking or a finance entry made under that version used; nothing here can be edited (the database refuses it).
 import { useCallback } from "react";

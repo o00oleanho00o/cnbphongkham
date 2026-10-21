@@ -1,11 +1,9 @@
-"use client";
-
 // Book or open an appointment (old modal "Đặt lịch hẹn" / "Chi tiết lịch hẹn" of operations-ui.js, `edit`). The
 // fields are the ones the BE stores (patient, doctor, room, start, duration, note); the service comes with a
 // later step. Every rule (hours, break, double booking, who may do what) is the BE's: its sentence is shown
 // as it is. "Tìm giờ trống" asks the BE for the first free start instead of guessing here.
 import { useMemo, useState, type FormEvent } from "react";
-import Link from "next/link";
+import { Link } from "@/lib/link";
 
 import { Notice } from "@/components/ops/ops-ui";
 import { Sheet } from "@/components/ops/sheet";

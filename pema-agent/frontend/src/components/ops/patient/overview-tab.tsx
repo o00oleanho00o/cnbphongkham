@@ -1,10 +1,8 @@
-"use client";
-
 // Tổng quan tab: everything Patient 360 showed before the tabs (information, care after treatment, open tasks,
 // appointments, plan progress, internal care notes, conversations, consents, timeline) plus the three-figure
 // summary of the old Clinic Web. Read only: the original records stay the source of truth (AGENT.md). Internal
 // CSKH notes are marked internal and never shown to the patient.
-import Link from "next/link";
+import { Link } from "@/lib/link";
 
 import { PriorityBadge } from "@/components/ops/ops-ui";
 import { Fact, Muted } from "@/components/ops/patient/shared";

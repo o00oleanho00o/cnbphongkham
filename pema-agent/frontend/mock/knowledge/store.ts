@@ -1,4 +1,4 @@
-// The fake knowledge store behind `pnpm dev:mock`: sources, services, settings and gaps held in memory, with
+// The fake knowledge store behind `bun run dev:mock`: sources, services, settings and gaps held in memory, with
 // FICTIONAL data (the Pema demo clinic). The route files of this folder read and change this one object; the real
 // plugin is built later (docs/PLAN-knowledge-plugin.md).
 import type {
@@ -118,18 +118,82 @@ function seedSources(): Source[] {
 function seedServices(): Service[] {
   const base = { branches: [] as string[], enabled: true, description: "" };
   return [
-    { ...base, id: "svc-nam", code: "NAM", name: "Điều trị nám", aliases: ["nám", "trị nám", "nám má"], description: "Laser và liệu trình trị nám", chunk_count: 38, branches: ["Hà Nội", "HCM"] },
-    { ...base, id: "svc-hori", code: "HORI", name: "Bớt Hori", aliases: ["hori", "bớt hori", "nám hori"], description: "Điều trị bớt Hori", chunk_count: 27, branches: ["Hà Nội"] },
-    { ...base, id: "svc-tannhang", code: "TANNHANG", name: "Tàn nhang", aliases: ["tàn nhang", "đồi mồi"], chunk_count: 9, branches: ["Hà Nội"] },
-    { ...base, id: "svc-mun", code: "MUN", name: "Điều trị mụn", aliases: ["mụn", "trị mụn", "mụn viêm"], chunk_count: 14, branches: ["Hà Nội", "HCM"] },
-    { ...base, id: "svc-peel", code: "PEEL", name: "Peel da", aliases: ["peel", "lột da"], chunk_count: 5, branches: ["Hà Nội", "HCM"] },
-    { ...base, id: "svc-facial", code: "FACIAL", name: "Chăm sóc da", aliases: ["facial", "chăm sóc da mặt"], chunk_count: 6, branches: ["Hà Nội", "HCM"] },
-    { ...base, id: "svc-consult", code: "CONSULT", name: "Tư vấn", aliases: ["tư vấn", "khám tư vấn"], chunk_count: 4, enabled: true },
+    {
+      ...base,
+      id: "svc-nam",
+      code: "NAM",
+      name: "Điều trị nám",
+      aliases: ["nám", "trị nám", "nám má"],
+      description: "Laser và liệu trình trị nám",
+      chunk_count: 38,
+      branches: ["Hà Nội", "HCM"],
+    },
+    {
+      ...base,
+      id: "svc-hori",
+      code: "HORI",
+      name: "Bớt Hori",
+      aliases: ["hori", "bớt hori", "nám hori"],
+      description: "Điều trị bớt Hori",
+      chunk_count: 27,
+      branches: ["Hà Nội"],
+    },
+    {
+      ...base,
+      id: "svc-tannhang",
+      code: "TANNHANG",
+      name: "Tàn nhang",
+      aliases: ["tàn nhang", "đồi mồi"],
+      chunk_count: 9,
+      branches: ["Hà Nội"],
+    },
+    {
+      ...base,
+      id: "svc-mun",
+      code: "MUN",
+      name: "Điều trị mụn",
+      aliases: ["mụn", "trị mụn", "mụn viêm"],
+      chunk_count: 14,
+      branches: ["Hà Nội", "HCM"],
+    },
+    {
+      ...base,
+      id: "svc-peel",
+      code: "PEEL",
+      name: "Peel da",
+      aliases: ["peel", "lột da"],
+      chunk_count: 5,
+      branches: ["Hà Nội", "HCM"],
+    },
+    {
+      ...base,
+      id: "svc-facial",
+      code: "FACIAL",
+      name: "Chăm sóc da",
+      aliases: ["facial", "chăm sóc da mặt"],
+      chunk_count: 6,
+      branches: ["Hà Nội", "HCM"],
+    },
+    {
+      ...base,
+      id: "svc-consult",
+      code: "CONSULT",
+      name: "Tư vấn",
+      aliases: ["tư vấn", "khám tư vấn"],
+      chunk_count: 4,
+      enabled: true,
+    },
   ];
 }
 
 function seedGaps(): Gap[] {
-  const gap = (id: string, question: string, count: number, channel: string, last: string): Gap => ({
+  const gap = (
+    id: string,
+    question: string,
+    count: number,
+    channel: string,
+    last: string,
+  ): Gap => ({
     id,
     question,
     count,
@@ -139,9 +203,27 @@ function seedGaps(): Gap[] {
   });
   return [
     gap("gap-1", "có làm laser trị sẹo rỗ không", 7, "zalo-cskh-mau", "2026-10-11T16:20:00+07:00"),
-    gap("gap-2", "phòng khám có bãi gửi xe ô tô không", 4, "zalo-cskh-mau", "2026-10-10T10:05:00+07:00"),
-    gap("gap-3", "thanh toán bằng thẻ tín dụng có phụ phí không", 3, "zalo-bot", "2026-10-12T07:40:00+07:00"),
-    gap("gap-4", "trẻ dưới 16 tuổi có điều trị được không", 2, "zalo-cskh-mau", "2026-10-09T14:12:00+07:00"),
+    gap(
+      "gap-2",
+      "phòng khám có bãi gửi xe ô tô không",
+      4,
+      "zalo-cskh-mau",
+      "2026-10-10T10:05:00+07:00",
+    ),
+    gap(
+      "gap-3",
+      "thanh toán bằng thẻ tín dụng có phụ phí không",
+      3,
+      "zalo-bot",
+      "2026-10-12T07:40:00+07:00",
+    ),
+    gap(
+      "gap-4",
+      "trẻ dưới 16 tuổi có điều trị được không",
+      2,
+      "zalo-cskh-mau",
+      "2026-10-09T14:12:00+07:00",
+    ),
   ];
 }
 

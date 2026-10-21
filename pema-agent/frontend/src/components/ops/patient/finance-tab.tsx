@@ -1,5 +1,3 @@
-"use client";
-
 // "Dịch vụ & tài chính" tab of Patient 360 (old web: `crm-ui.js` `financial()` and the linked panels of
 // `care-finance.js`; screens WC10, WC19, WC25, WC27, WC29). Three cards:
 //   Hóa đơn của <tên>       the invoices of this patient (finance.read or finance.collect), "Mở thu ngân →"
@@ -11,7 +9,7 @@
 // Not here, on purpose: the deposit ledger ("Tiền cọc đã phân bổ") has no table in this system, so the old
 // notice about unallocated deposits is not shown; invoices are not linked to one course, so "Đã thu" is on the
 // invoice rows and not on a course card.
-import Link from "next/link";
+import { Link } from "@/lib/link";
 import { useCallback, useState, type FormEvent } from "react";
 
 import { EmptyState, ListSkeleton, Notice, RetryNotice } from "@/components/ops/ops-ui";
