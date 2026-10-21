@@ -31,6 +31,7 @@ from plugins.sso.keys import KeySet
 
 from .client import CrmClient, CrmError
 from .events import EventVerifier, events_router
+from .reminders import ReminderPolicy, Reminders
 from .store import MemoryReminderStore, PostgresReminderStore, ReminderStore
 
 CHANNEL: Final = re.compile(r"[A-Za-z0-9_.:-]{1,64}")
@@ -287,7 +288,13 @@ def register(ctx: PluginContext) -> None:
         jwks_url,
         transport=keys_transport if isinstance(keys_transport, httpx.AsyncBaseTransport) else None,
     )
-    ctx.register_routes(events_router(EventVerifier(keys), store), kind="hooks")
+    verifier = EventVerifier(keys)
+    if ctx.config.get("reminders_enabled") is not True:
+        ctx.register_routes(events_router(verifier, store), kind="hooks")
+        return
+    reminders = Reminders(store, lambda: ctx.proactive, ReminderPolicy.of(ctx.config, zone), client)
+    ctx.register_job("reminders", reminders.run)
+    ctx.register_routes(events_router(verifier, store, reminders.wake), kind="hooks")
 
 
 def reminder_store(ctx: PluginContext) -> ReminderStore:

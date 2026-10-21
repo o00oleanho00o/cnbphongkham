@@ -121,3 +121,39 @@ def test_the_newest_consent_wins(db_url: str) -> None:
         assert await other.person("zalo-acc1", "u9") is None
 
     _run(db_url, work)
+
+
+def test_the_reminder_queries(db_url: str) -> None:
+    async def work(store: PostgresReminderStore, other: PostgresReminderStore) -> None:
+        soon, later, cancelled = (
+            _visit(external_id="u777"),
+            _visit(external_id="u777", starts_at=AT + timedelta(days=3)),
+            _visit(external_id="u777", status="cancelled"),
+        )
+        for v in (soon, later, cancelled):
+            await store.apply_visit(v)
+        await store.apply_consent("zalo-acc1", "u777", True, T0)
+        await store.remember_chat("zalo-acc1", "u777", "u777")
+
+        mine = {soon.appointment_id, later.appointment_id, cancelled.appointment_id}
+        upcoming = [v.appointment_id for v in await store.upcoming(T0, AT + timedelta(days=1))]
+        assert [a for a in upcoming if a in mine] == [soon.appointment_id]
+        assert await store.claim_mark(soon, "24h", "sent")
+        assert not await store.claim_mark(soon, "24h", "sent")
+        assert await store.claim_mark(soon, "3h", "skip:too_late")
+        assert await store.handled([soon.appointment_id]) == {
+            (soon.appointment_id, AT, "24h"),
+            (soon.appointment_id, AT, "3h"),
+        }
+        assert await store.sent_since(T0) == {("zalo-acc1", "u777"): 1}
+        assert await other.sent_since(T0) == {}
+
+        assert await store.mark_gone(T0, AT + timedelta(days=4), {soon.appointment_id}) == 1
+        gone = await store.visit(later.appointment_id)
+        assert gone is not None
+        assert (gone.status, gone.version) == ("gone", 1)
+        person = await store.person("zalo-acc1", "u777")
+        assert person is not None
+        assert (person.messages_consent, person.conversation_id) == (True, "u777")
+
+    _run(db_url, work)

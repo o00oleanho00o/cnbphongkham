@@ -236,3 +236,16 @@ async def test_the_plugin_mounts_the_events_route_among_its_hooks(crm: Crm) -> N
         answer = await c.post("/events", headers={"Authorization": f"Bearer {crm.token()}"})
 
     assert answer.status_code == 200
+
+
+async def test_an_applied_event_wakes_the_reminder_loop_and_an_ignored_one_does_not(crm: Crm) -> None:
+    woken: list[int] = []
+    app = FastAPI()
+    app.include_router(
+        events_router(EventVerifier(crm.keys()), MemoryReminderStore(), lambda: woken.append(1))
+    )
+    async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://agent") as c:
+        await _send(c, crm.token({"kind": "invoice.paid"}))
+        await _send(c, crm.token())
+
+    assert woken == [1]

@@ -36,13 +36,20 @@ CREATE TABLE crm_person (
     PRIMARY KEY (tenant_id, agent, channel, external_id)
 );
 
--- The unique key that stops a reminder going out twice: written before the message is sent.
+-- Every due mark handled once: sent (written BEFORE the message goes out, so a crash never sends it twice) or
+-- skipped with the rule that stopped it (``skip:<reason>``). The unique key is what stops a reminder twice.
 CREATE TABLE crm_reminder_sent (
     tenant_id text NOT NULL,
     agent text NOT NULL,
     appointment_id uuid NOT NULL,
     starts_at timestamptz NOT NULL,
     mark text NOT NULL,
+    channel text NOT NULL,
+    external_id text NOT NULL,
+    outcome text NOT NULL,
     sent_at timestamptz NOT NULL DEFAULT now(),
     PRIMARY KEY (tenant_id, agent, appointment_id, starts_at, mark)
 );
+
+CREATE INDEX crm_reminder_sent_person ON crm_reminder_sent (tenant_id, agent, channel, external_id, sent_at)
+    WHERE outcome = 'sent';

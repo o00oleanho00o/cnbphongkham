@@ -30,3 +30,27 @@ type = "string"
 title = "CRM public keys URL"
 description = "Where the CRM publishes the public keys its events are signed with (JWKS). Public keys only: nothing here opens the CRM."
 default = "http://api:8000/api/v1/.well-known/jwks.json"
+
+[user_config.reminders_enabled]
+type = "boolean"
+title = "Reminders"
+description = "Write to people who agreed, before their visits (marks below), in their one-to-one chat. Off until switched on."
+default = false
+
+[user_config.reminder_marks]
+type = "string"
+title = "Reminder marks"
+description = "hours before the visit:minimum minutes left, comma separated. 24:360 = a day before, skipped when under 6 hours remain."
+default = "24:360,3:30"
+
+[user_config.quiet_hours]
+type = "string"
+title = "Quiet hours"
+description = "No reminder goes out between these local times (HH:MM-HH:MM); one due then waits for the end."
+default = "21:00-07:00"
+
+[user_config.reminders_per_day]
+type = "integer"
+title = "Reminders per person per day"
+description = "At most this many reminders to one person in one local day."
+default = 2

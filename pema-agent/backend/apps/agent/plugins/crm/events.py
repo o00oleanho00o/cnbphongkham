@@ -14,6 +14,7 @@ CRM does not make the older agent's outbox retry for nothing. This is a trigger 
 from __future__ import annotations
 
 import logging
+from collections.abc import Callable
 from datetime import datetime
 from typing import Annotated, Any, Final, Literal
 from uuid import UUID
@@ -124,7 +125,10 @@ async def apply(store: ReminderStore, event_id: UUID, event: dict[str, Any]) -> 
     return False
 
 
-def events_router(verifier: EventVerifier, store: ReminderStore) -> APIRouter:
+def events_router(
+    verifier: EventVerifier, store: ReminderStore, on_change: Callable[[], None] = lambda: None
+) -> APIRouter:
+    """``on_change`` runs after an event was applied: it wakes the reminder loop."""
     router = APIRouter()
 
     @router.post("/events")
@@ -145,6 +149,8 @@ def events_router(verifier: EventVerifier, store: ReminderStore) -> APIRouter:
         except (ValueError, ValidationError):
             logger.warning("a CRM event could not be read (jti %s)", claims.get("jti"))
             return _answer(422, "malformed_event")
+        if known:
+            on_change()
         return _answer(200, "applied" if known else "ignored")
 
     return router
