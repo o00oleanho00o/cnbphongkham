@@ -139,3 +139,13 @@ def test_the_agent_container_gets_only_its_own_database_and_no_port() -> None:
     service = _agent_service()
     assert set(service.get("environment", {})) == AGENT_SERVICE_ENV
     assert "ports" not in service
+
+
+def test_the_agent_container_is_read_only_and_gains_no_privilege() -> None:
+    """docs/PLAN-crm-plugin.md 3.10b: talked into anything, it writes only /data and /tmp and cannot escalate."""
+    service = _agent_service()
+    assert service.get("read_only") is True
+    assert service.get("cap_drop") == ["ALL"]
+    assert "no-new-privileges:true" in service.get("security_opt", [])
+    assert [t.split(":")[0] for t in service.get("tmpfs", [])] == ["/tmp"]
+    assert service.get("volumes") == ["agent-home:/data"]

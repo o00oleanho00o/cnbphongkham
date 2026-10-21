@@ -242,6 +242,15 @@ services:
       - "8088"
     volumes:
       - agent-home:/data
+    # Hardened (docs/PLAN-crm-plugin.md 3.10b, test T9): it talks with people outside, so it may one day be talked
+    # into anything; then it can write only its own /data (plugins, their data, the Zalo bridge's log) and /tmp
+    # (tsx's cache of the bridge, pip while an admin installs a plugin), and gains no privilege.
+    read_only: true
+    tmpfs:
+      - /tmp:size=256m
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8088/health', timeout=3).status == 200 else 1)"]
       interval: 10s
