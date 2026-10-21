@@ -9,6 +9,8 @@
 #     `docker compose logs seed`. The other accounts keep manager@example.test, doctor.mai@example.test,
 #     cs.maianh@example.test, reception.lan@example.test, ... with the same password.
 #     A second run finds the data and changes nothing.
+#   - crm-signer starts too, but only works once its key exists and the API has the public half: see infra/README.md
+#     "Agent ↔ CRM" (keygen once, then PEMA_AGENT_GATEWAY_PUBLIC_KEYS in the shell or .env.local-demo, not committed);
 #   - nothing restarts by itself: a container runs only after `docker compose up`, never when Docker starts with
 #     Windows (restart: "no"); `docker compose stop` ends it for good.
 services:
@@ -22,6 +24,7 @@ services:
     restart: "no"
 
   crm-signer:
+    profiles: !reset []
     restart: "no"
 
   frontend:
