@@ -408,3 +408,23 @@ def test_the_judge_leaves_out_an_answer_that_was_never_sent_because_the_customer
         "Khách: and the price?",
         "Agent: hours and price in one answer",
     ]
+
+
+async def test_a_plugin_writes_to_a_chat_through_the_same_outbox(tmp_path: Path) -> None:
+    runtime = _runtime(tmp_path)
+    runtime.live.use_model(ScriptedModel([reply("Phòng khám nhắc lịch 14:00 hôm nay ạ.")]))
+    channel = FakeChannel()
+    async with _running(runtime, channel) as (_, outbox):
+        runtime.plugins.use_proactive(outbox)
+        sent = await outbox.send_to(
+            channel="zalo-a1",
+            conversation_id="c9",
+            user_id="u9",
+            message_id="crm-reminder:1",
+            instruction="[Hệ thống] nhắc lịch",
+        )
+
+    assert sent == Sent(True)
+    (message,) = channel.sent
+    assert (message.conversation_id, message.text) == ("c9", "Phòng khám nhắc lịch 14:00 hôm nay ạ.")
+    assert message.metadata["proactive"] == "1"

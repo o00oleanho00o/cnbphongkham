@@ -526,8 +526,10 @@ async def _serve(profile_path: Path, *, fake: bool, host: str, port: int, home: 
                 f"http://[{local}]:{port}" if ":" in local else f"http://{local}:{port}"
             )
             dispatcher = runtime.dispatcher()
+            outbox = DispatcherOutbox(dispatcher)
+            runtime.plugins.use_proactive(outbox)
             if runtime.follow_ups is not None:
-                runtime.follow_ups.send_through(DispatcherOutbox(dispatcher))
+                runtime.follow_ups.send_through(outbox)
             app = create_app(
                 dispatcher,
                 settings,

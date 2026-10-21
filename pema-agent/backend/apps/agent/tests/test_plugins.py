@@ -356,3 +356,56 @@ def test_the_plugins_list_command_shows_what_the_dev_agent_loads(
     assert (web["enabled"], web["managed_by"]) == (True, "profile")
     assert [(s["key"], s["default"]) for s in web["settings"]] == [("token_hours", 12)]
     assert shown["broken"] == {}
+
+
+PROACTIVE = """
+from pydantic import BaseModel
+
+from agentcore import ToolOutput, ToolSpec
+
+
+class Args(BaseModel):
+    pass
+
+
+def register(ctx):
+    async def run(args, tool):
+        sent = await ctx.proactive.send_to(
+            channel="zalo-a", conversation_id="c1", user_id="u1", message_id="m1", instruction="nhắc lịch"
+        )
+        return ToolOutput(text=f"sent {sent.counted}")
+
+    ctx.register_tool(ToolSpec(name="poke", description="poke", args_model=Args, handler=run))
+"""
+
+
+async def test_a_plugin_writes_on_its_own_only_once_the_service_gives_it_the_outbox(tmp_path: Path) -> None:
+    from agent_app.plugins import PluginError, ProactiveSent
+    from agentcore import ToolContext
+
+    _plugin(tmp_path, "poker", PROACTIVE)
+    host = _host(tmp_path)
+    host.enable("poker")
+    (poke,) = host.contributions().tools
+    asked: list[dict[str, str]] = []
+
+    class Outbox:
+        async def send_to(self, **message: str) -> ProactiveSent:
+            asked.append(message)
+            return ProactiveSent(True)
+
+    with pytest.raises(PluginError, match="cannot start messages"):
+        await poke.handler(poke.args_model(), ToolContext(session_id="s"))
+    host.use_proactive(Outbox())
+    out = await poke.handler(poke.args_model(), ToolContext(session_id="s"))
+
+    assert out.text == "sent True"
+    assert asked == [
+        {
+            "channel": "zalo-a",
+            "conversation_id": "c1",
+            "user_id": "u1",
+            "message_id": "m1",
+            "instruction": "nhắc lịch",
+        }
+    ]

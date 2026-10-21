@@ -32,6 +32,7 @@ from sqlalchemy import text as sql
 from agent_app.channel_hub import SKIP_REPLY, is_skip
 from agent_app.dispatcher import Dispatcher
 from agent_app.ingress import OPEN_DELIVERY
+from agent_app.plugins import ProactiveSent
 from agent_app.storage import AgentDatabase, retrying
 from agentcore import LlmRequest, Message, ModelClient, ModelError, SessionStore
 from agentcore.channels import PROACTIVE, InboundMessage
@@ -604,11 +605,8 @@ class PostgresFollowUpStore:
 # --- writing to the customer ---
 
 
-@dataclass(frozen=True, slots=True)
-class Sent:
-    counted: bool
-    """True when the customer was written to, or may have been (it counts against the limits)."""
-    note: str = ""
+Sent = ProactiveSent
+"""What became of a follow-up: ``counted`` when the customer was written to, or may have been."""
 
 
 class Outbox(Protocol):
@@ -620,7 +618,8 @@ class Outbox(Protocol):
 
 class DispatcherOutbox:
     """The instruction goes into the queue like a message from the conversation, so the turn, the reply and
-    the send take the usual way; the message carries ``PROACTIVE`` and is never answered with an apology."""
+    the send take the usual way; the message carries ``PROACTIVE`` and is never answered with an apology.
+    ``send_to`` is the same for any chat: plugins get it as ``ctx.proactive`` (a reminder)."""
 
     def __init__(
         self,
@@ -636,12 +635,23 @@ class DispatcherOutbox:
         self._poll_s = poll_s
 
     async def send(self, row: FollowUp, external_id: str, instruction: str) -> Sent:
-        dispatcher = self._dispatcher
-        inbound = InboundMessage(
+        return await self.send_to(
             channel=row.channel,
             conversation_id=row.conversation_id,
             user_id=row.user_id,
             message_id=external_id,
+            instruction=instruction,
+        )
+
+    async def send_to(
+        self, *, channel: str, conversation_id: str, user_id: str, message_id: str, instruction: str
+    ) -> Sent:
+        dispatcher = self._dispatcher
+        inbound = InboundMessage(
+            channel=channel,
+            conversation_id=conversation_id,
+            user_id=user_id,
+            message_id=message_id,
             text=instruction,
             metadata={PROACTIVE: "1"},
         )

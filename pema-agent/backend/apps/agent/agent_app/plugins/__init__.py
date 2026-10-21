@@ -11,6 +11,8 @@ from agent_app.plugins.host import (
     PluginHost,
     PluginJob,
     PluginStatus,
+    Proactive,
+    ProactiveSent,
     RouteKind,
 )
 from agent_app.plugins.manifest import (
@@ -57,6 +59,8 @@ __all__ = [
     "PluginSource",
     "PluginStatus",
     "PluginStorage",
+    "Proactive",
+    "ProactiveSent",
     "RouteKind",
     "StorageFor",
     "discover",

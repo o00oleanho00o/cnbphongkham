@@ -19,7 +19,7 @@ from collections.abc import Callable, Coroutine, Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
 from types import ModuleType
-from typing import Any, Final, Literal
+from typing import Any, Final, Literal, Protocol
 
 from cryptography.exceptions import InvalidTag
 from fastapi import APIRouter, FastAPI
@@ -126,6 +126,24 @@ class DatabaseAccess:
     agent: str
 
 
+@dataclass(frozen=True, slots=True)
+class ProactiveSent:
+    """What became of a message the agent was asked to start on its own."""
+
+    counted: bool
+    """True when the person was written to, or may have been (it counts against any limit)."""
+    note: str = ""
+
+
+class Proactive(Protocol):
+    async def send_to(
+        self, *, channel: str, conversation_id: str, user_id: str, message_id: str, instruction: str
+    ) -> ProactiveSent:
+        """Runs ``instruction`` as a turn of that chat and sends the agent's answer through the channel like a
+        reply, unless the answer is ``SKIP``. The same ``message_id`` asked twice runs once."""
+        ...
+
+
 class PluginContext:
     """What a plugin's ``register(ctx)`` receives."""
 
@@ -143,7 +161,9 @@ class PluginContext:
         model: Callable[[], ModelClient | None] = lambda: None,
         observe: Observe | None = None,
         service: Callable[[str], object | None] = lambda name: None,
+        proactive: Callable[[], Proactive | None] = lambda: None,
     ) -> None:
+        self._proactive = proactive
         self._observe = observe
         self._service = service
         self._loaded = loaded
@@ -184,6 +204,15 @@ class PluginContext:
         found = self._model()
         if found is None:
             raise PluginError(self.name, "the agent has no model to give plugins yet")
+        return found
+
+    @property
+    def proactive(self) -> Proactive:
+        """Writes to a chat on the agent's own (a reminder), through the same queue and channels as a reply.
+        Raises ``PluginError`` while the service has no dispatcher (only ``agent serve`` has one)."""
+        found = self._proactive()
+        if found is None:
+            raise PluginError(self.name, "the agent cannot start messages here (no running service)")
         return found
 
     @property
@@ -367,6 +396,7 @@ class PluginHost:
         self.self_url: str | None = None
         """Set by the service once it listens; plugins read it through ``ctx.self_url``."""
         self._model: ModelClient | None = None
+        self._proactive: Proactive | None = None
         self._loaded: dict[str, _Loaded] = {}
         self._generation = itertools.count(1)
         self.version = 0
@@ -389,6 +419,11 @@ class PluginHost:
     def use_model(self, model: ModelClient) -> None:
         """The model plugins get through ``ctx.model``; a call made after this one uses the new one."""
         self._model = model
+
+    def use_proactive(self, sender: Proactive) -> None:
+        """What plugins write to a chat with on their own (``ctx.proactive``), once the service has its
+        dispatcher."""
+        self._proactive = sender
 
     def set_sources(self, sources: Mapping[str, PluginSource]) -> None:
         """The plugins found by a new look at the folders; enabled ones keep running from their folder."""
@@ -435,6 +470,7 @@ class PluginHost:
                     self_url=lambda: self.self_url,
                     database=self._plugin_database(source),
                     model=lambda: self._model,
+                    proactive=lambda: self._proactive,
                     observe=self.observe,
                     service=self._service,
                 )
