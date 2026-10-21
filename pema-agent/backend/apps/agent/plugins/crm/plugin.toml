@@ -1,0 +1,22 @@
+name = "crm"
+version = "0.1.0"
+description = "Lets the clinic's agent see free times and save, book, show, confirm, move and cancel the visits of the person it chats with, through crm-signer (which holds the key; this plugin holds none). Who the person is comes from the chat, never from the model."
+api = 1
+
+[user_config.base_url]
+type = "string"
+title = "crm-signer URL"
+description = "Where crm-signer forwards the agent gateway, e.g. http://crm-signer:8090/agent-gateway. Never the API itself."
+default = "http://crm-signer:8090/agent-gateway"
+
+[user_config.timeout_s]
+type = "integer"
+title = "Timeout (seconds)"
+description = "How long one call to the CRM may take (1-30)."
+default = 8
+
+[user_config.timezone]
+type = "string"
+title = "Time zone"
+description = "The clinic's time zone: a time the model writes without an offset is taken in it."
+default = "Asia/Ho_Chi_Minh"

@@ -7,6 +7,7 @@ address is written, resolved or reached through a redirect; the DNS is a table a
 from __future__ import annotations
 
 import os
+import re
 from collections.abc import Callable
 from pathlib import Path
 
@@ -35,6 +36,22 @@ def test_the_clinic_profile_holds_no_way_into_the_api_but_its_public_keys() -> N
 
     assert list(found) == ["sso.jwks_url"]
     assert found["sso.jwks_url"].endswith("/.well-known/jwks.json")
+
+
+def test_the_crm_plugin_reaches_the_crm_only_through_crm_signer_and_holds_no_secret() -> None:
+    """docs/PLAN-crm-plugin.md 4: the plugin calls crm-signer, which holds the key; nothing in the profile looks
+    like a key or a password."""
+    profile = load_profile(CLINIC)
+
+    assert profile.plugins.config("crm")["base_url"].startswith("http://crm-signer:")
+    values = [
+        value
+        for plugin in profile.plugins.enabled
+        for value in profile.plugins.config(plugin).values()
+        if isinstance(value, str)
+    ]
+    assert not [v for v in values if re.search(r"[A-Za-z0-9+/_=-]{32,}", v)]
+    assert not [v for v in values if re.search(r"(?i)(secret|password|token|api[_-]?key)=", v)]
 
 
 CRM_DATABASE = "pema"

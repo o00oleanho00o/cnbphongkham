@@ -68,6 +68,7 @@ COPY backend/packages/agent-core/pyproject.toml packages/agent-core/pyproject.to
 COPY backend/packages/secret-cipher/pyproject.toml packages/secret-cipher/pyproject.toml
 COPY backend/apps/api/pyproject.toml apps/api/pyproject.toml
 COPY backend/apps/agent/pyproject.toml apps/agent/pyproject.toml
+COPY backend/apps/crm-signer/pyproject.toml apps/crm-signer/pyproject.toml
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync ${UV_SYNC_FLAGS} --no-dev --no-install-workspace --package agent-app
 

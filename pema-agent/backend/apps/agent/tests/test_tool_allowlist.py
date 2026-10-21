@@ -41,8 +41,16 @@ APPROVED_TOOLS: dict[str, str] = {
     "studio_list": "skills",
     "studio_view": "skills",
     "studio_save": "skills",  # saves a draft; staff press "Dùng" to make it live
+    # the person of the chat only, through crm-signer (owner's plan docs/PLAN-crm-plugin.md, approved 2026-10-20)
+    "crm_free_slots": "crm",
+    "crm_save_contact": "crm",
+    "crm_book_appointment": "crm",
+    "crm_my_appointments": "crm",
+    "crm_confirm_appointment": "crm",
+    "crm_reschedule_appointment": "crm",
+    "crm_cancel_appointment": "crm",
 }
-CLINIC_PLUGINS = {"sso", "knowledge", "skills", "conversations", "jev"}
+CLINIC_PLUGINS = {"sso", "knowledge", "skills", "conversations", "jev", "crm"}
 CLINIC_PROFILE_TOOLS = {"get_datetime", "memory", "web_search", "web_fetch"}
 STARTS_A_PROCESS = {
     "agent_app/plugins/install.py",  # an admin installs a plugin's packages; no tool reaches it
