@@ -221,6 +221,17 @@ dữ liệu** về CRM.
 - `crm_reminder_sent`: (`appointment_id`, `starts_at`, `mark`) **khóa duy nhất** = khóa chống nhắc trùng.
 - `crm_person`: (`channel`, `external_id`) → cuộc chat để gửi.
 
+**Đã làm (bước 5, 2026-10-21), khác chữ ở trên:**
+- **Không cần bảng "sự kiện đã nhận".** Mọi sự kiện là trạng thái: lịch chỉ ghi khi `version` cao hơn, đồng ý nhận nhắc
+  chỉ ghi khi `occurred_at` mới hơn; sự kiện lặp, đến muộn hay đảo thứ tự đều không đổi gì sai.
+- **Đồng ý nhận nhắc nằm ở `crm_person`** (theo người), không ở `crm_reminder`: cả hai loại sự kiện đều cập nhật nó
+  theo quy tắc "mới nhất thắng".
+- **`changed_at` = lúc GIỜ của lịch được đặt** (đặt mới hoặc dời), bất kể ai làm; đổi trạng thái (xác nhận, hủy) giữ
+  nguyên. Nhờ vậy khách xác nhận qua tin nhắc không làm bỏ mốc nhắc sau, còn lịch đặt sát giờ thì bỏ mốc đã qua.
+- **Trả lời:** 200 `applied`; loại sự kiện lạ 200 `ignored` (CRM mới hơn không làm outbox thử lại vô ích); token sai
+  401; không lấy được JWKS 503 (CRM thử lại); sự kiện hỏng 422. Route chưa đánh thức job nhắc: bước 6 thêm.
+- `crm_person.conversation_id` đã có cột (trống), bước 6 điền.
+
 ### 3.5 Nhắc hẹn: đồng hồ của agent
 
 **Job `crm-reminders`** (`ctx.register_job`): vòng lặp "ngủ tới mốc gần nhất", không gọi CRM.
@@ -408,7 +419,7 @@ agent (không khóa) ──HTTP──► crm-signer (giữ khóa riêng) ──B
 | 2 | **(đã làm 2026-10-20, bộ test đầy đủ xanh: 1112 qua)** CRM: outbox: migration `0003`, hàm ghi sự kiện ở 5 nơi, listener nhiều người nghe, worker `agent-events`, JWT sự kiện ký bằng khóa có sẵn của CRM, biến `PEMA_AGENT_EVENTS_URL`, dọn dòng cũ | Test outbox mục 4 xanh, cả bộ `apps/api` xanh |
 | 3 | **(đã làm 2026-10-21)** `crm-signer`: ứng dụng nhỏ (`apps/crm-signer`, Starlette), `keygen`, danh sách 8 route, ký JWT, chuyển tiếp, log, giới hạn 300/phút, Dockerfile, dịch vụ `crm-signer` trong compose (profile `agent`, `read_only`, `cap_drop ALL`), `PEMA_AGENT_GATEWAY_PUBLIC_KEYS` vào `.env` và `api` | 24 test `crm-signer` xanh, test cổng và sự kiện xanh trên DB tạm; **chưa build Docker** |
 | 4 | **(đã làm 2026-10-21)** Agent: plugin `crm`: client gọi `crm-signer`, 7 tool, profile, `AGENTS.md`, T4, T9. **`crm_person` dời sang bước 6** (cần `conversation_id`, chỉ dùng cho tin chủ động) | 18 test plugin, T4, T9 xanh |
-| 5 | Agent: route nhận sự kiện (JWKS, `aud` riêng), `sso` từ chối `aud` sự kiện, bảng `crm_reminder`/`crm_reminder_sent` | Test route xanh, test `sso` xanh |
+| 5 | **(đã làm 2026-10-21)** Agent: route nhận sự kiện `POST /v1/hooks/crm/events` (JWKS của CRM, `aud` riêng), `sso` từ chối `aud` sự kiện (test), bảng `crm_reminder`, `crm_person`, `crm_reminder_sent` (migration plugin `0001_crm.sql`), `PEMA_AGENT_EVENTS_URL` vào compose (để trống) | 15 test route và trạng thái, 2 test Postgres, `sso`, T4 xanh |
 | 6 | Lõi và nhắc hẹn: `ctx.proactive` (tách `DispatcherOutbox`), job `crm-reminders`, đối soát; tìm `conversation_id` cho người chat | Test job và `ctx.proactive` xanh; test `follow_up` vẫn xanh |
 | 7 | **Cứng hóa, phần compose** (mục 3.10b): `read_only`, `tmpfs`, `cap_drop`, `no-new-privileges`, mạng `agent-internal`; kiểm chỗ ghi của cầu nối Zalo | Stack chạy, agent trả lời được qua Zalo, T9 xanh với compose mới |
 | 8 | **Proxy đi ra, giai đoạn 1** (mục 3.10c): **kiểm zca-js qua proxy trước**, rồi dựng `egress` chỉ ghi log, đặt `HTTPS_PROXY` cho agent; T5 vẫn xanh | Log có đủ đích; Zalo, model, kho tri thức vẫn chạy |
