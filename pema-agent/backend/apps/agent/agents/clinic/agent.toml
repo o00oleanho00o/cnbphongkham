@@ -76,3 +76,5 @@ jwks_url = "http://api:8000/api/v1/.well-known/jwks.json"
 [plugins.crm]
 # crm-signer, never the API: the agent has no way into the CRM but this narrow, signed one (test T4)
 base_url = "http://crm-signer:8090/agent-gateway"
+# the CRM's PUBLIC keys, to check the events it sends to /v1/hooks/crm/events (aud pema-agent-events)
+events_jwks_url = "http://api:8000/api/v1/.well-known/jwks.json"

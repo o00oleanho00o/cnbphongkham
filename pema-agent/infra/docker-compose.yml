@@ -176,6 +176,9 @@ services:
       # The public key(s) of crm-signer (printed by `crm-signer keygen`; two, comma separated, while a key is being
       # changed). Empty: the agent gateway /api/v1/agent-gateway answers 404 to everyone.
       PEMA_AGENT_GATEWAY_PUBLIC_KEYS: ${PEMA_AGENT_GATEWAY_PUBLIC_KEYS:-}
+      # Where the API sends what changed in the visits of the people the agent chats with (signed with the API's
+      # own key; the agent checks it with the public JWKS). Empty: no event is written and no worker runs.
+      PEMA_AGENT_EVENTS_URL: ${PEMA_AGENT_EVENTS_URL:-}
     networks:
       - default
       - edge

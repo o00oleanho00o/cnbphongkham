@@ -34,8 +34,9 @@ def test_the_clinic_profile_holds_no_way_into_the_api_but_its_public_keys() -> N
         if isinstance(value, str) and API_HOST in value
     }
 
-    assert list(found) == ["sso.jwks_url"]
-    assert found["sso.jwks_url"].endswith("/.well-known/jwks.json")
+    # only where the CRM's public keys are: SSO tokens (sso) and events (crm) are checked with them
+    assert sorted(found) == ["crm.events_jwks_url", "sso.jwks_url"]
+    assert all(url.endswith("/.well-known/jwks.json") for url in found.values())
 
 
 def test_the_crm_plugin_reaches_the_crm_only_through_crm_signer_and_holds_no_secret() -> None:

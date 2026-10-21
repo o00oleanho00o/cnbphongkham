@@ -3,6 +3,10 @@ version = "0.1.0"
 description = "Lets the clinic's agent see free times and save, book, show, confirm, move and cancel the visits of the person it chats with, through crm-signer (which holds the key; this plugin holds none). Who the person is comes from the chat, never from the model."
 api = 1
 
+[migrations]
+dir = "migrations"
+prefix = "crm_"
+
 [user_config.base_url]
 type = "string"
 title = "crm-signer URL"
@@ -20,3 +24,9 @@ type = "string"
 title = "Time zone"
 description = "The clinic's time zone: a time the model writes without an offset is taken in it."
 default = "Asia/Ho_Chi_Minh"
+
+[user_config.events_jwks_url]
+type = "string"
+title = "CRM public keys URL"
+description = "Where the CRM publishes the public keys its events are signed with (JWKS). Public keys only: nothing here opens the CRM."
+default = "http://api:8000/api/v1/.well-known/jwks.json"

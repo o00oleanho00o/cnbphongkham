@@ -7,7 +7,9 @@ tool takes a person, a phone lookup or a patient id from the model, so the model
 in front of it. A turn without a person (the CLI, the web test console) is refused. Writes carry an
 ``Idempotency-Key`` made from the session and the call, so a retried call never books twice.
 
-This is the "employee's tools" of the owner's loop frame (docs/IDEAS-agent-loops.md 5): no loop lives here.
+The tools are the "employee's tools" of the owner's loop frame (docs/IDEAS-agent-loops.md 5). The plugin also
+takes the CRM's events (``events.py``, ``POST /v1/hooks/crm/events``) into its own tables (``store.py``): the
+trigger side of the reminder loop, whose acting side is step 6.
 """
 
 from __future__ import annotations
@@ -25,8 +27,11 @@ from pydantic import BaseModel, Field
 
 from agent_app.plugins import PluginContext
 from agentcore.harness.tools.spec import ToolContext, ToolOutput, ToolSpec
+from plugins.sso.keys import KeySet
 
 from .client import CrmClient, CrmError
+from .events import EventVerifier, events_router
+from .store import MemoryReminderStore, PostgresReminderStore, ReminderStore
 
 CHANNEL: Final = re.compile(r"[A-Za-z0-9_.:-]{1,64}")
 EXTERNAL_ID: Final = re.compile(r"[A-Za-z0-9_.:@=-]{1,128}")
@@ -260,3 +265,20 @@ def register(ctx: PluginContext) -> None:
     zone = ZoneInfo(str(ctx.config.get("timezone") or "Asia/Ho_Chi_Minh"))
     for spec in CrmTools(ctx, client, zone).specs():
         ctx.register_tool(spec)
+
+    jwks_url = str(ctx.config.get("events_jwks_url") or "").strip()
+    if not jwks_url.startswith(("http://", "https://")):
+        raise ValueError("events_jwks_url must be an http:// or https:// URL")
+    keys_transport = ctx.config.get("keys_transport")  # tests: a fake JWKS of the CRM
+    keys = KeySet(
+        jwks_url,
+        transport=keys_transport if isinstance(keys_transport, httpx.AsyncBaseTransport) else None,
+    )
+    ctx.register_routes(events_router(EventVerifier(keys), reminder_store(ctx)), kind="hooks")
+
+
+def reminder_store(ctx: PluginContext) -> ReminderStore:
+    database = ctx.database
+    if database is None:
+        return MemoryReminderStore()
+    return PostgresReminderStore(database.engine, tenant_id=database.tenant_id, agent=database.agent)
