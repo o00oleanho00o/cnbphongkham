@@ -89,7 +89,6 @@ hồ sơ cũ với Zalo; nhắn khách vắng mặt; đường gửi nguyên vă
 > **Chủ duyệt 2026-10-21 (mở rộng hẹp, L5):** `GET C/appointments` thêm tối đa 3 lịch của chính người đó vừa đóng (đã
 > hủy, đã khám, khách không đến) trong 7 ngày qua, để bot nói đúng "lịch đã được hủy" thay vì đoán "chưa lưu được".
 > Chỉ mã, giờ, thời lượng, trạng thái; không lý do hủy, không ai hủy, không ghi chú. Không thêm route hay quyền.
-> Chữ của luật L4 chưa sửa (xem HANDOFF).
 
 **Bảng** `clinic.patient_channel` (migration `0002`): (`clinic_id`, `channel`, `external_id`) duy nhất → `patient_id`.
 Là dữ liệu CRM, agent không đọc được, không view, hàm SQL hay role riêng.
