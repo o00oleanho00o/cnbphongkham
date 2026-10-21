@@ -7,9 +7,9 @@ import {
   clampDelay,
   formOf,
   formProblem,
-  groupChoices,
-  personChoices,
-  shownChoices,
+  groupItems,
+  matching,
+  personItems,
   oaKeysState,
   ownItems,
   patchOf,
@@ -114,50 +114,14 @@ describe("recipients", () => {
   });
 });
 
-describe("groups to listen to", () => {
-  const seen = [
+describe("lists of people and groups", () => {
+  const groups = [
     { account_id: "nick-1", thread_id: "g1", name: "Nhóm khám" },
     { account_id: "nick-1", thread_id: "g2", name: "" },
   ];
-
-  it("offers_every_seen_group_with_its_choice_and_a_name_for_the_unnamed", () => {
-    expect(groupChoices(seen, ["g2"])).toEqual([
-      { id: "g1", name: "Nhóm khám", on: false },
-      { id: "g2", name: "(không tên)", on: true },
-    ]);
-  });
-
-  it("keeps_a_chosen_group_that_was_not_seen_so_it_can_be_switched_off", () => {
-    expect(groupChoices(seen, ["g9"]).at(-1)).toEqual({ id: "g9", name: "g9", on: true });
-  });
-
-  it("the_form_sends_the_chosen_groups_in_order", () => {
-    const form = { ...formOf(ACCOUNT), listenGroupIds: ["g3", "g1"] };
-    expect(patchOf(form).listen_group_ids).toEqual(["g1", "g3"]);
-  });
-});
-
-describe("people to answer", () => {
-  const seen = [
-    { account_id: "nick-1", user_id: "111", display_name: "Lan", first_seen: "", last_seen: "", message_count: 3 },
-    { account_id: "nick-1", user_id: "222", display_name: "", first_seen: "", last_seen: "", message_count: 1 },
-  ];
-
-  it("offers_every_person_who_wrote_off_unless_chosen", () => {
-    expect(personChoices(seen, ["222"])).toEqual([
-      { id: "111", name: "Lan", on: false },
-      { id: "222", name: "(không tên)", on: true },
-    ]);
-  });
-
-  it("keeps_a_listed_person_who_has_not_written_so_the_list_can_be_cleaned", () => {
-    expect(personChoices(seen, ["999"]).at(-1)).toEqual({ id: "999", name: "999", on: true });
-  });
-});
-
-describe("people from friends", () => {
   const wrote = [
     { account_id: "nick-1", user_id: "111", display_name: "Lan", first_seen: "", last_seen: "", message_count: 3 },
+    { account_id: "nick-1", user_id: "222", display_name: "", first_seen: "", last_seen: "", message_count: 1 },
   ];
   const friends = [
     { user_id: "111", display_name: "Lan (bạn)", avatar_url: null },
@@ -165,31 +129,41 @@ describe("people from friends", () => {
     { user_id: "444", display_name: "", avatar_url: null },
   ];
 
-  it("adds_friends_who_have_not_written_after_the_ones_who_did_and_lists_nobody_twice", () => {
-    expect(personChoices(wrote, ["333"], friends)).toEqual([
-      { id: "111", name: "Lan", on: false },
-      { id: "333", name: "Minh", on: true },
-      { id: "444", name: "(không tên)", on: false },
+  it("offers_every_seen_group_with_a_name_for_the_unnamed", () => {
+    expect(groupItems(groups, [])).toEqual([
+      { id: "g1", name: "Nhóm khám" },
+      { id: "g2", name: "(không tên)" },
     ]);
   });
-});
 
-describe("shown choices", () => {
-  const many = [
-    ...Array.from({ length: 5 }, (_, i) => ({ id: `off${i}`, name: `Khách ${i}`, on: false })),
-    { id: "late", name: "Người cuối", on: true },
-  ];
-
-  it("keeps_every_switch_that_is_on_and_caps_the_ones_that_are_off_without_reordering", () => {
-    const { shown, hidden } = shownChoices(many, "", 2);
-    expect(shown.map((c) => c.id)).toEqual(["off0", "off1", "late"]);
-    expect(hidden).toBe(3);
+  it("keeps_a_listed_group_that_was_not_seen_so_it_can_be_switched_off", () => {
+    expect(groupItems(groups, ["g9"]).at(-1)).toEqual({ id: "g9", name: "g9" });
   });
 
-  it("matches_the_name_or_the_id_ignoring_case_and_hides_nothing_when_all_fit", () => {
-    expect(shownChoices(many, "KHÁCH 3").shown.map((c) => c.id)).toEqual(["off3"]);
-    expect(shownChoices(many, "off4").shown.map((c) => c.id)).toEqual(["off4"]);
-    expect(shownChoices(many, "").hidden).toBe(0);
+  it("the_form_sends_the_chosen_groups_in_order", () => {
+    const form = { ...formOf(ACCOUNT), listenGroupIds: ["g3", "g1"] };
+    expect(patchOf(form).listen_group_ids).toEqual(["g1", "g3"]);
+  });
+
+  it("offers_who_wrote_first_then_friends_who_did_not_and_nobody_twice", () => {
+    expect(personItems(wrote, [], friends)).toEqual([
+      { id: "111", name: "Lan" },
+      { id: "222", name: "(không tên)" },
+      { id: "333", name: "Minh" },
+      { id: "444", name: "(không tên)" },
+    ]);
+  });
+
+  it("keeps_a_listed_person_who_is_neither_a_contact_nor_a_friend", () => {
+    expect(personItems(wrote, ["999"]).at(-1)).toEqual({ id: "999", name: "999" });
+  });
+
+  it("matches_the_name_or_the_id_ignoring_case_and_returns_all_for_an_empty_search", () => {
+    const items = personItems(wrote, [], friends);
+    expect(matching(items, "  MINH ").map((i) => i.id)).toEqual(["333"]);
+    expect(matching(items, "44").map((i) => i.id)).toEqual(["444"]);
+    expect(matching(items, "")).toHaveLength(4);
+    expect(matching(items, "không có")).toEqual([]);
   });
 });
 

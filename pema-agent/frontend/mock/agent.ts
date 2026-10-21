@@ -133,9 +133,22 @@ const friends = [
   { user_id: "u-mau-1001", display_name: "Khách mẫu Một", avatar_url: null },
   { user_id: "u-mau-1002", display_name: "Khách mẫu Hai", avatar_url: null },
   { user_id: "u-mau-2001", display_name: "Bạn chưa nhắn (mẫu)", avatar_url: null },
+  // enough friends to scroll the account form's list of people
+  ...Array.from({ length: 12 }, (_, i) => ({
+    user_id: `u-mau-21${String(i).padStart(2, "0")}`,
+    display_name: `Bạn mẫu ${i + 1}`,
+    avatar_url: null,
+  })),
 ];
 
-const groups = [{ account_id: "zalo-cskh-mau", thread_id: "g-mau-01", name: "Nhóm hỏi đáp (mẫu)" }];
+const groups = [
+  { account_id: "zalo-cskh-mau", thread_id: "g-mau-01", name: "Nhóm hỏi đáp (mẫu)" },
+  ...Array.from({ length: 8 }, (_, i) => ({
+    account_id: "zalo-cskh-mau",
+    thread_id: `g-mau-${String(i + 2).padStart(2, "0")}`,
+    name: `Nhóm mẫu ${i + 2}`,
+  })),
+];
 
 function numberOr(raw: string | null, fallback: number): number {
   const n = raw === null ? Number.NaN : Number.parseInt(raw, 10);

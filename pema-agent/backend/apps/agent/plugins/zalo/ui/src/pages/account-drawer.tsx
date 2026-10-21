@@ -10,16 +10,16 @@ import {
   PERSONAL_RISK,
   clampDelay,
   formOf,
-  type Choice,
   formProblem,
-  groupChoices,
-  personChoices,
-  shownChoices,
+  groupItems,
+  type Item,
+  personItems,
   oaKeysState,
   patchOf,
   toggledIds,
   withChannel,
 } from "../logic";
+import { PagedSwitches } from "../paged-switches";
 import { Drawer, Section, Switch } from "../parts";
 import { ui } from "../sdk";
 import type { Account, ChannelKind, Contact, Friend, Group, OaKeys, ReactionIcon } from "../types";
@@ -28,7 +28,7 @@ import type { Account, ChannelKind, Contact, Friend, Group, OaKeys, ReactionIcon
 const PEOPLE_SHOWN = 200;
 
 /** Above this many people the form offers a search box. */
-const SEARCH_FROM = 20;
+const SEARCH_FROM = 10;
 
 const GROUP_HINTS = {
   unsaved: "Tạo tài khoản và đăng nhập trước. Nhóm nào nhắn tới sẽ hiện ở đây để bạn bật; nhóm mới mặc định tắt.",
@@ -124,8 +124,9 @@ export function AccountDrawer({
     }
   }
 
-  const peopleChoices = personChoices(people, form.allowlistUserIds, friends);
-  const peopleShown = shownChoices(peopleChoices, peopleQuery);
+  // The lists are cut from what the account had when the form opened, so a switch turned off stays in its place.
+  const peopleItems = personItems(people, account?.allowlist.user_ids ?? [], friends);
+  const groupItemsOf = (listed: readonly string[]) => groupItems(groups, listed);
   const unknownTools = form.disabledTools.filter((t) => !tools.includes(t));
 
   return (
@@ -218,7 +219,7 @@ export function AccountDrawer({
         />
         {form.allowlistMode === "list" && (
           <>
-            {peopleChoices.length > SEARCH_FROM && (
+            {peopleItems.length > SEARCH_FROM && (
               <input
                 type="search"
                 aria-label="Tìm người theo tên hoặc ID"
@@ -228,22 +229,18 @@ export function AccountDrawer({
                 onChange={(e) => setPeopleQuery(e.target.value)}
               />
             )}
-            {peopleChoices.length > 0 && peopleShown.shown.length === 0 ? (
-              <p className="text-label text-ink-soft">Không có ai khớp "{peopleQuery.trim()}".</p>
-            ) : (
-              <ChoiceSwitches
-                explain="Chỉ người được bật mới được agent trả lời trong chat 1-1. Gồm người đã nhắn tới và bạn bè của nick. Bật xong bấm Lưu thay đổi."
-                hints={PEOPLE_HINTS}
-                saved={account !== null}
-                choices={peopleShown.shown}
-                onChoose={(userId, on) => set("allowlistUserIds", toggledIds(form.allowlistUserIds, userId, on))}
-              />
-            )}
-            {peopleShown.hidden > 0 && (
-              <p className="text-label text-ink-soft">
-                Còn {peopleShown.hidden} người nữa, gõ tên hoặc ID vào ô tìm để thấy.
-              </p>
-            )}
+            <ChoiceSwitches
+              explain="Chỉ người được bật mới được agent trả lời trong chat 1-1. Gồm người đã nhắn tới và bạn bè của nick. Bật xong bấm Lưu thay đổi."
+              hints={PEOPLE_HINTS}
+              saved={account !== null}
+              scope={`people:${accountId ?? ""}`}
+              label="Người được trả lời"
+              items={peopleItems}
+              chosen={form.allowlistUserIds}
+              query={peopleQuery}
+              noMatch={`Không có ai khớp "${peopleQuery.trim()}".`}
+              onChoose={(userId, on) => set("allowlistUserIds", toggledIds(form.allowlistUserIds, userId, on))}
+            />
             {people.length >= PEOPLE_SHOWN && (
               <p className="text-label text-ink-soft">
                 Chỉ lấy {PEOPLE_SHOWN} người nhắn gần nhất. Người nhắn cũ hơn bật ở trang Danh bạ.
@@ -272,7 +269,11 @@ export function AccountDrawer({
                 explain="Chỉ nhóm được bật mới được agent trả lời (ai trong nhóm cũng hỏi được, không xét danh sách người ở trên). Nhóm tắt: agent bỏ qua."
                 hints={GROUP_HINTS}
                 saved={account !== null}
-                choices={groupChoices(groups, form.groupAllowlistIds)}
+                scope={`reply-groups:${accountId ?? ""}`}
+                label="Nhóm được trả lời"
+                items={groupItemsOf(account?.group_allowlist.group_ids ?? [])}
+                chosen={form.groupAllowlistIds}
+                noMatch="Chưa có nhóm nào."
                 onChoose={(groupId, on) => set("groupAllowlistIds", toggledIds(form.groupAllowlistIds, groupId, on))}
               />
             )}
@@ -288,7 +289,11 @@ export function AccountDrawer({
           explain="Chỉ nhóm được bật mới được ghi nhớ (mọi nội dung). Nhóm tắt: tin không được lưu, việc trả lời do mục trên quyết định."
           hints={GROUP_HINTS}
           saved={account !== null}
-          choices={groupChoices(groups, form.listenGroupIds)}
+          scope={`listen-groups:${accountId ?? ""}`}
+          label="Nhóm lắng nghe"
+          items={groupItemsOf(account?.listen_group_ids ?? [])}
+          chosen={form.listenGroupIds}
+          noMatch="Chưa có nhóm nào."
           onChoose={(groupId, on) => set("listenGroupIds", toggledIds(form.listenGroupIds, groupId, on))}
         />
       </Section>
@@ -378,20 +383,30 @@ export function AccountDrawer({
   );
 }
 
-/** One switch per person or group seen (and per chosen one not seen yet); one that is not switched on is not chosen. */
+/** A list of people or groups as switches in a short box; a line is on when its id is among the chosen. */
 function ChoiceSwitches({
   title: heading,
   explain,
   hints,
   saved,
-  choices,
+  scope,
+  label,
+  items,
+  chosen,
+  query,
+  noMatch,
   onChoose,
 }: {
   title?: string;
   explain: string;
   hints: { unsaved: string; empty: string };
   saved: boolean;
-  choices: readonly Choice[];
+  scope: string;
+  label: string;
+  items: readonly Item[];
+  chosen: readonly string[];
+  query?: string;
+  noMatch: string;
   onChoose: (id: string, on: boolean) => void;
 }) {
   const title = heading && <p className="text-micro font-semibold tracking-wider text-ink-soft uppercase">{heading}</p>;
@@ -403,7 +418,7 @@ function ChoiceSwitches({
       </>
     );
   }
-  if (choices.length === 0) {
+  if (items.length === 0) {
     return (
       <>
         {title}
@@ -415,9 +430,7 @@ function ChoiceSwitches({
     <>
       {title}
       <p className="text-label text-ink-soft">{explain}</p>
-      {choices.map((choice) => (
-        <Switch key={choice.id} label={choice.name} hint={choice.id} checked={choice.on} onChange={(on) => onChoose(choice.id, on)} />
-      ))}
+      <PagedSwitches scope={scope} items={items} chosen={chosen} query={query} label={label} noMatch={noMatch} onChoose={onChoose} />
     </>
   );
 }

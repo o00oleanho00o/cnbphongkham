@@ -133,65 +133,51 @@ export function toggledIds(ids: readonly string[], uid: string, allowed: boolean
   return allowed ? [...rest, uid] : rest;
 }
 
-/** One switch of a list on an account's form: a person or a group, and whether it is on the list. */
-export interface Choice {
+/** One line of a list on an account's form: a person or a group. */
+export interface Item {
   id: string;
   name: string;
-  on: boolean;
 }
 
-/** The things seen (by name), then any chosen one not seen under that id, so it can be switched off. */
-function choicesOf(seen: readonly { id: string; name: string }[], chosen: readonly string[]): Choice[] {
+/** How many switches a list shows at first, and how many more each time it is scrolled to its end. */
+export const PAGE_SIZE = 5;
+
+/** The things seen (by name), then any listed one not seen under that id, so it can still be switched off. */
+function itemsOf(seen: readonly Item[], listed: readonly string[]): Item[] {
   const seenIds = new Set(seen.map((item) => item.id));
-  const unseen = chosen.filter((id) => !seenIds.has(id));
-  return [
-    ...seen.map((item) => ({ ...item, on: chosen.includes(item.id) })),
-    ...unseen.map((id) => ({ id, name: id, on: true })),
-  ];
+  return [...seen, ...listed.filter((id) => !seenIds.has(id)).map((id) => ({ id, name: id }))];
 }
 
-export const groupChoices = (seen: readonly Group[], chosen: readonly string[]): Choice[] =>
-  choicesOf(
+export const groupItems = (seen: readonly Group[], listed: readonly string[]): Item[] =>
+  itemsOf(
     seen.map((group) => ({ id: group.thread_id, name: group.name || "(không tên)" })),
-    chosen,
+    listed,
   );
 
 /** The people to offer: who wrote to the account (most recent first), then its friends who have not written yet. */
-export function personChoices(
+export function personItems(
   seen: readonly Contact[],
-  chosen: readonly string[],
+  listed: readonly string[],
   friends: readonly Friend[] = [],
-): Choice[] {
+): Item[] {
   const wrote = new Set(seen.map((contact) => contact.user_id));
-  return choicesOf(
+  return itemsOf(
     [
       ...seen.map((contact) => ({ id: contact.user_id, name: contact.display_name || "(không tên)" })),
       ...friends
         .filter((friend) => !wrote.has(friend.user_id))
         .map((friend) => ({ id: friend.user_id, name: friend.display_name || "(không tên)" })),
     ],
-    chosen,
+    listed,
   );
 }
 
-export const MAX_SHOWN_OFF = 100;
-
-/**
- * The switches to draw for a search: every match that is on, and the first `max` matches that are off, in their
- * own order (a switch does not jump when it is toggled). `hidden` counts the matches left out.
- */
-export function shownChoices(
-  choices: readonly Choice[],
-  query: string,
-  max = MAX_SHOWN_OFF,
-): { shown: Choice[]; hidden: number } {
+/** The items whose name or id holds the search text, ignoring case; all of them for an empty search. */
+export function matching(items: readonly Item[], query: string): Item[] {
   const needle = query.trim().toLocaleLowerCase();
-  const matches = choices.filter(
-    (choice) => needle === "" || choice.name.toLocaleLowerCase().includes(needle) || choice.id.toLowerCase().includes(needle),
+  return items.filter(
+    (item) => needle === "" || item.name.toLocaleLowerCase().includes(needle) || item.id.toLocaleLowerCase().includes(needle),
   );
-  const offShown = new Set(matches.filter((choice) => !choice.on).slice(0, max).map((choice) => choice.id));
-  const shown = matches.filter((choice) => choice.on || offShown.has(choice.id));
-  return { shown, hidden: matches.length - shown.length };
 }
 
 export const EMPTY_OA_KEYS: OaKeys = { app_id: "", app_secret: "", oa_secret_key: "", refresh_token: "" };

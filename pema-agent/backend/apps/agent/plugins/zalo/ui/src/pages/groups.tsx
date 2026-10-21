@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 
 import { messageOf, zalo } from "../client";
 import { toggledIds } from "../logic";
+import { PagingProvider, usePaged } from "../paging";
 import { AccountPicker, useAccounts } from "../parts";
 import { ui } from "../sdk";
 import type { Account, Group } from "../types";
@@ -52,38 +53,69 @@ export function GroupsPage() {
   const byId = new Map((accounts ?? []).map((a) => [a.id, a]));
   const listened = (groups ?? []).filter((g) => byId.get(g.account_id)?.listen_group_ids.includes(g.thread_id)).length;
   return (
-    <div>
-      <ui.PageHeader
-        title="Nhóm Zalo"
-        subtitle="Hai việc riêng cho mỗi nhóm: lắng nghe (agent ghi nhớ tin của nhóm) và, với tài khoản đặt 'chỉ trả lời nhóm trong danh sách', cho phép trả lời. Nhóm mới luôn tắt cho tới khi bạn bật."
-      />
-      {(error || accountsError) && <ui.Notice tone="danger">{error || accountsError}</ui.Notice>}
-      <div className="mb-4 sm:max-w-sm">
-        <AccountPicker accounts={accounts ?? []} value={accountId} all="Mọi tài khoản" onChange={setAccountId} />
-      </div>
-      <ui.Card>
-        {groups?.length === 0 && (
-          <ui.Empty>Chưa có nhóm nào. Một nhóm hiện ở đây sau tin nhắn đầu tiên của nhóm đó.</ui.Empty>
+    <PagingProvider>
+      <div>
+        <ui.PageHeader
+          title="Nhóm Zalo"
+          subtitle="Hai việc riêng cho mỗi nhóm: lắng nghe (agent ghi nhớ tin của nhóm) và, với tài khoản đặt 'chỉ trả lời nhóm trong danh sách', cho phép trả lời. Nhóm mới luôn tắt cho tới khi bạn bật."
+        />
+        {(error || accountsError) && <ui.Notice tone="danger">{error || accountsError}</ui.Notice>}
+        <div className="mb-4 sm:max-w-sm">
+          <AccountPicker accounts={accounts ?? []} value={accountId} all="Mọi tài khoản" onChange={setAccountId} />
+        </div>
+        <ui.Card>
+          {groups?.length === 0 && (
+            <ui.Empty>Chưa có nhóm nào. Một nhóm hiện ở đây sau tin nhắn đầu tiên của nhóm đó.</ui.Empty>
+          )}
+          {groups !== null && groups.length > 0 && (
+            <GroupList groups={groups} scope={accountId} byId={byId} onListen={listen} onAllow={allow} />
+          )}
+        </ui.Card>
+        {groups !== null && groups.length > 0 && (
+          <p className="mt-3 text-label text-ink-soft">
+            Đang nghe {listened}/{groups.length} nhóm. Nhóm tắt: tin không được lưu. Việc trả lời theo cài đặt của tài
+            khoản: mọi nhóm, hoặc chỉ nhóm được bật "Cho trả lời".
+          </p>
         )}
-        <ul className="divide-y divide-line">
-          {groups?.map((g) => (
-            <GroupRow
-              key={`${g.account_id}:${g.thread_id}`}
-              group={g}
-              account={byId.get(g.account_id)}
-              onListen={listen}
-              onAllow={allow}
-            />
-          ))}
-        </ul>
-      </ui.Card>
-      {groups !== null && groups.length > 0 && (
-        <p className="mt-3 text-label text-ink-soft">
-          Đang nghe {listened}/{groups.length} nhóm. Nhóm tắt: tin không được lưu. Việc trả lời theo cài đặt của tài khoản: mọi
-          nhóm, hoặc chỉ nhóm được bật "Cho trả lời".
-        </p>
+      </div>
+    </PagingProvider>
+  );
+}
+
+/** The groups of the page, five at first and five more each time the page is scrolled to the end of the list. */
+function GroupList({
+  groups,
+  scope,
+  byId,
+  onListen,
+  onAllow,
+}: {
+  groups: readonly Group[];
+  scope: string;
+  byId: ReadonlyMap<string, Account>;
+  onListen: (account: Account, threadId: string, listening: boolean) => Promise<void>;
+  onAllow: (account: Account, threadId: string, allowed: boolean) => Promise<void>;
+}) {
+  const { shown, hasNext, endRef } = usePaged(["groups-page", scope], groups);
+  return (
+    <>
+      <ul className="divide-y divide-line">
+        {shown.map((g) => (
+          <GroupRow
+            key={`${g.account_id}:${g.thread_id}`}
+            group={g}
+            account={byId.get(g.account_id)}
+            onListen={onListen}
+            onAllow={onAllow}
+          />
+        ))}
+      </ul>
+      {hasNext && (
+        <div ref={endRef} className="py-3 text-center text-label text-ink-soft">
+          Kéo xuống để xem thêm
+        </div>
       )}
-    </div>
+    </>
   );
 }
 
