@@ -39,6 +39,10 @@ NO_PERSON: Final = (
     "Chỉ đặt lịch được trong cuộc chat với khách (Zalo). Ở đây hãy hướng dẫn khách nhắn qua Zalo của phòng "
     "khám hoặc gọi hotline."
 )
+IN_GROUP: Final = (
+    "Trong nhóm chat không xem, đặt hay đổi lịch được vì cả nhóm đọc được. Mời khách nhắn riêng cho phòng "
+    "khám."
+)
 STATUS: Final = {
     "booked": "đã đặt, chưa xác nhận",
     "confirmed": "đã xác nhận",
@@ -92,10 +96,13 @@ Handler = Callable[[Any, ToolContext], Awaitable[ToolOutput]]
 
 
 class CrmTools:
-    def __init__(self, ctx: PluginContext, client: CrmClient, zone: ZoneInfo) -> None:
+    def __init__(
+        self, ctx: PluginContext, client: CrmClient, zone: ZoneInfo, store: ReminderStore | None = None
+    ) -> None:
         self._ctx = ctx
         self._client = client
         self._zone = zone
+        self._store = store
 
     def _person(self, tool: ToolContext) -> str | None:
         """``/contacts/{channel}/{user}`` of the chat; None when the turn has no person of a chat channel."""
@@ -126,9 +133,14 @@ class CrmTools:
 
     def _guarded(self, run: Callable[[Any, ToolContext, str], Awaitable[str]]) -> Handler:
         async def handler(args: Any, tool: ToolContext) -> ToolOutput:
+            if tool.is_group:
+                return ToolOutput(text=IN_GROUP, is_error=True)
             person = self._person(tool)
             if person is None:
                 return ToolOutput(text=NO_PERSON, is_error=True)
+            if self._store is not None and tool.conversation_id and tool.channel and tool.user_id:
+                # the one-to-one chat a reminder will go to (step 6); a group never gets this far
+                await self._store.remember_chat(tool.channel, tool.user_id, tool.conversation_id)
             try:
                 return ToolOutput(text=await run(args, tool, person))
             except CrmError as err:
@@ -263,7 +275,8 @@ def register(ctx: PluginContext) -> None:
         transport=transport if isinstance(transport, httpx.AsyncBaseTransport) else None,
     )
     zone = ZoneInfo(str(ctx.config.get("timezone") or "Asia/Ho_Chi_Minh"))
-    for spec in CrmTools(ctx, client, zone).specs():
+    store = reminder_store(ctx)
+    for spec in CrmTools(ctx, client, zone, store).specs():
         ctx.register_tool(spec)
 
     jwks_url = str(ctx.config.get("events_jwks_url") or "").strip()
@@ -274,7 +287,7 @@ def register(ctx: PluginContext) -> None:
         jwks_url,
         transport=keys_transport if isinstance(keys_transport, httpx.AsyncBaseTransport) else None,
     )
-    ctx.register_routes(events_router(EventVerifier(keys), reminder_store(ctx)), kind="hooks")
+    ctx.register_routes(events_router(EventVerifier(keys), store), kind="hooks")
 
 
 def reminder_store(ctx: PluginContext) -> ReminderStore:

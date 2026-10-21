@@ -115,6 +115,34 @@ async def test_a_tool_call_is_run_and_its_result_goes_back_to_the_model() -> Non
     assert (sent_back.tool_use_id, sent_back.content, sent_back.is_error) == ("c1", "5", False)
 
 
+async def test_a_tool_is_told_the_chat_the_turn_answers_and_whether_it_is_a_group() -> None:
+    seen: list[ToolContext] = []
+
+    async def look(args: NoArgs, ctx: ToolContext) -> ToolOutput:
+        seen.append(ctx)
+        return ToolOutput(text="ok")
+
+    spec = ToolSpec(name="look", description="look", args_model=NoArgs, handler=look)
+    for is_group in (False, True):
+        await run_turn(
+            session_id=SESSION,
+            user_text="hi",
+            prompt=PromptBuilder.fixed("system"),
+            model=ScriptedModel([calls(tool_call("look", {}, call_id="c1")), reply("done")]),
+            tools=ToolRegistry([spec]),
+            store=InMemorySessionStore(),
+            user_id="u1",
+            channel="zalo-a",
+            conversation_id="thread-9",
+            is_group=is_group,
+        )
+
+    assert [(c.user_id, c.channel, c.conversation_id, c.is_group) for c in seen] == [
+        ("u1", "zalo-a", "thread-9", False),
+        ("u1", "zalo-a", "thread-9", True),
+    ]
+
+
 async def test_the_assistant_message_is_stored_before_its_tool_runs() -> None:
     store = InMemorySessionStore()
     roles_seen_by_tool: list[list[str]] = []

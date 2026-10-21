@@ -25,6 +25,10 @@ class ToolContext:
     """The person the session talks to, set by the caller; a tool never takes it from the model."""
     channel: str | None = None
     """The channel the turn came in on (``http``, ``cli``, a plugin's channel), set by the caller."""
+    conversation_id: str | None = None
+    """The chat the turn answers (a thread of the channel), set by the caller."""
+    is_group: bool = False
+    """True in a group chat, where everyone in it reads the reply; set by the caller from the channel."""
     now: datetime | None = None
     """When the turn started (timezone-aware), from the turn's clock: the date a question is asked on, so a
     tool picks the prices and rules in force that day. A replay or a test fixes it with its own clock."""

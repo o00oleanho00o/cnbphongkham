@@ -16,8 +16,9 @@ import pytest
 from agent_app.plugins import PluginContext, PluginHost, discover
 from agent_app.runtime import BUNDLED_PLUGINS
 from agentcore.harness.tools.spec import ToolContext, ToolOutput, ToolSpec
-from plugins.crm import NO_PERSON, CrmTools
+from plugins.crm import IN_GROUP, NO_PERSON, CrmTools
 from plugins.crm.client import CLOSED, UNREACHABLE, CrmClient
+from plugins.crm.store import MemoryReminderStore
 
 BASE = "http://crm-signer:8090/agent-gateway"
 ZONE = ZoneInfo("Asia/Ho_Chi_Minh")
@@ -200,3 +201,50 @@ async def test_crm_signer_down_is_a_sentence() -> None:
 
     assert out.is_error
     assert out.text == UNREACHABLE
+
+
+async def test_in_a_group_chat_every_tool_refuses_and_nothing_is_sent() -> None:
+    signer = Signer(body=[_visit()])
+    group = ToolContext(
+        session_id="s1", user_id="u123", channel="zalo-acc1", conversation_id="g1", is_group=True
+    )
+
+    for name, spec in _tools(signer).items():
+        out = await spec.handler(spec.args_model.model_construct(), group)
+        assert out.is_error, name
+        assert out.text == IN_GROUP
+
+    assert signer.seen == []
+
+
+async def test_a_one_to_one_chat_is_remembered_for_its_reminders() -> None:
+    signer = Signer(body=[])
+    store = MemoryReminderStore()
+    client = CrmClient(BASE, timeout_s=5, transport=signer.transport)
+    tools = {s.name: s for s in CrmTools(cast(PluginContext, Chat()), client, ZONE, store).specs()}
+    chat = ToolContext(session_id="s1", user_id="u123", channel="zalo-acc1", conversation_id="u123", now=TURN)
+
+    await tools["crm_my_appointments"].handler(tools["crm_my_appointments"].args_model(), chat)
+
+    person = await store.person("zalo-acc1", "u123")
+    assert person is not None
+    assert person.conversation_id == "u123"
+
+
+def test_a_zalo_group_message_is_a_group_for_the_core() -> None:
+    from agentcore.channels import in_group
+    from plugins.zalo.inbound import ZaloInbound, to_inbound
+
+    def said(is_group: bool) -> ZaloInbound:
+        return ZaloInbound(
+            account_id="a",
+            thread_id="t",
+            is_group=is_group,
+            sender_id="s",
+            sender_name="",
+            message_id="m",
+            text="hi",
+        )
+
+    assert in_group(to_inbound(said(True)).metadata)
+    assert not in_group(to_inbound(said(False)).metadata)

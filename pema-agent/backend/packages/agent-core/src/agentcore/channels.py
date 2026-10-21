@@ -19,7 +19,15 @@ MAX_SESSION_ID_CHARS: Final = 200
 PROACTIVE: Final = "proactive"
 """The metadata key (value ``"1"``) of a message the agent starts on its own, not as an answer. A channel that
 tells the two apart (a personal account has stricter limits on messages nobody asked for) reads it."""
+THREAD_TYPE: Final = "thread_type"
+"""The metadata key a channel sets to ``GROUP`` on a message of a group chat (anything else: one to one)."""
+GROUP: Final = "group"
 _NAME: Final = re.compile(r"^[a-z0-9][a-z0-9_-]{0,63}$")
+
+
+def in_group(metadata: Mapping[str, str]) -> bool:
+    """True when the channel marked the message as one of a group chat, where everyone reads the reply."""
+    return metadata.get(THREAD_TYPE) == GROUP
 
 
 def valid_channel_name(name: str) -> bool:

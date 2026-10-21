@@ -36,7 +36,7 @@ from agentcore import (
     Tracer,
     run_turn,
 )
-from agentcore.channels import InboundMessage, session_id_for
+from agentcore.channels import InboundMessage, in_group, session_id_for
 
 CLOSE_GRACE_S: Final = 10.0
 TYPING_KEEP: Final = 512
@@ -315,6 +315,8 @@ class Dispatcher:
                 tenant_id=self.tenant_id,
                 user_id=lead.user_id,
                 channel=lead.channel,
+                conversation_id=lead.conversation_id,
+                is_group=in_group(lead.metadata),
                 context=agent.context,
                 observer=observer,
                 hooks=agent.hooks,

@@ -44,6 +44,7 @@ class Person:
     external_id: str
     messages_consent: bool | None
     consent_at: datetime | None
+    conversation_id: str | None = None
 
 
 class ReminderStore(Protocol):
@@ -58,6 +59,10 @@ class ReminderStore(Protocol):
     async def visit(self, appointment_id: UUID) -> Visit | None: ...
 
     async def person(self, channel: str, external_id: str) -> Person | None: ...
+
+    async def remember_chat(self, channel: str, external_id: str, conversation_id: str) -> None:
+        """The one-to-one chat of the person, where a reminder goes; the consent stays as it is."""
+        ...
 
 
 class MemoryReminderStore:
@@ -78,8 +83,13 @@ class MemoryReminderStore:
         held = self._people.get((channel, external_id))
         if held is not None and held.consent_at is not None and at <= held.consent_at:
             return False
-        self._people[(channel, external_id)] = Person(channel, external_id, consent, at)
+        chat = held.conversation_id if held is not None else None
+        self._people[(channel, external_id)] = Person(channel, external_id, consent, at, chat)
         return True
+
+    async def remember_chat(self, channel: str, external_id: str, conversation_id: str) -> None:
+        held = self._people.get((channel, external_id)) or Person(channel, external_id, None, None)
+        self._people[(channel, external_id)] = replace(held, conversation_id=conversation_id)
 
     async def visit(self, appointment_id: UUID) -> Visit | None:
         return self._visits.get(appointment_id)
@@ -115,8 +125,15 @@ _VISIT = text(
     "actor_type, last_event_id FROM agent_rt.crm_reminder "
     "WHERE tenant_id = :tenant_id AND agent = :agent AND appointment_id = :appointment_id"
 )
+_REMEMBER_CHAT = text(
+    "INSERT INTO agent_rt.crm_person (tenant_id, agent, channel, external_id, conversation_id) "
+    "VALUES (:tenant_id, :agent, :channel, :external_id, :conversation_id) "
+    "ON CONFLICT (tenant_id, agent, channel, external_id) DO UPDATE SET "
+    "conversation_id = EXCLUDED.conversation_id "
+    "WHERE agent_rt.crm_person.conversation_id IS DISTINCT FROM EXCLUDED.conversation_id"
+)
 _PERSON = text(
-    "SELECT channel, external_id, messages_consent, consent_at FROM agent_rt.crm_person "
+    "SELECT channel, external_id, messages_consent, consent_at, conversation_id FROM agent_rt.crm_person "
     "WHERE tenant_id = :tenant_id AND agent = :agent AND channel = :channel AND external_id = :external_id"
 )
 
@@ -157,3 +174,8 @@ class PostgresReminderStore:
         async with self._engine.connect() as conn:
             row = (await conn.execute(_PERSON, {**self._scope, **values})).first()
         return None if row is None else Person(*row)
+
+    async def remember_chat(self, channel: str, external_id: str, conversation_id: str) -> None:
+        values = {"channel": channel, "external_id": external_id, "conversation_id": conversation_id}
+        async with self._engine.begin() as conn:
+            await conn.execute(_REMEMBER_CHAT, {**self._scope, **values})
