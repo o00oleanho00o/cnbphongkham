@@ -86,6 +86,11 @@ hồ sơ cũ với Zalo; nhắn khách vắng mặt; đường gửi nguyên vă
 
 ### 3.2 Phía CRM: cổng agent (bước 1, đã viết)
 
+> **Chủ duyệt 2026-10-21 (mở rộng hẹp, L5):** `GET C/appointments` thêm tối đa 3 lịch của chính người đó vừa đóng (đã
+> hủy, đã khám, khách không đến) trong 7 ngày qua, để bot nói đúng "lịch đã được hủy" thay vì đoán "chưa lưu được".
+> Chỉ mã, giờ, thời lượng, trạng thái; không lý do hủy, không ai hủy, không ghi chú. Không thêm route hay quyền.
+> Chữ của luật L4 chưa sửa (xem HANDOFF).
+
 **Bảng** `clinic.patient_channel` (migration `0002`): (`clinic_id`, `channel`, `external_id`) duy nhất → `patient_id`.
 Là dữ liệu CRM, agent không đọc được, không view, hàm SQL hay role riêng.
 
@@ -109,7 +114,7 @@ Khóa công khai viết dạng base64url của 32 byte (trường `x` của JWK)
 | `GET /free-slots` | `day_from`, `days` (1-14), `duration_min` | giờ bắt đầu theo ngày |
 | `PUT C` | `full_name`, `phone`, `messages_consent` | `{created, messages_consent}` |
 | `POST C/appointments` | `starts_at`, `duration_min`, `note` + `Idempotency-Key` | lịch đã tạo |
-| `GET C/appointments` | không | lịch sắp tới (`id`, `starts_at`, `duration_min`, `status`) |
+| `GET C/appointments` | không | lịch sắp tới còn hiệu lực, rồi tối đa 3 lịch của người đó vừa đóng (`completed`, `cancelled`, `missed`) trong 7 ngày qua (`id`, `starts_at`, `duration_min`, `status`; không lý do hủy, không ghi chú) |
 | `POST C/appointments/{id}/confirm` | không | lịch sau khi đổi |
 | `POST C/appointments/{id}/reschedule` | `starts_at`, `duration_min?` + `Idempotency-Key` | lịch sau khi đổi |
 | `POST C/appointments/{id}/cancel` | `reason` | lịch sau khi đổi |

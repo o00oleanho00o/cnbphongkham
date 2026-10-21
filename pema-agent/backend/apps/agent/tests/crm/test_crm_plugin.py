@@ -114,6 +114,25 @@ async def test_the_person_is_the_chats_and_no_credential_is_sent() -> None:
     assert VISIT in out.text
 
 
+async def test_a_visit_just_closed_is_told_apart_from_a_coming_one_and_no_reason_is_guessed() -> None:
+    """Staff cancelled the visit the person just booked: it must not read as "never saved"."""
+    closed = _visit(status="cancelled")
+    out = await _run(_tools(Signer(body=[closed]))["crm_my_appointments"], {})
+
+    assert out.text.startswith("Khách không có lịch hẹn sắp tới còn hiệu lực.")
+    assert "Lịch vừa đóng" in out.text
+    assert "22/10/2026 09:30, 30 phút, đã hủy" in out.text
+    assert "đừng đoán" in out.text
+
+
+async def test_coming_visits_come_first_and_closed_ones_are_listed_apart() -> None:
+    body = [_visit(), _visit(id="b" * 8 + "-0000-4000-8000-000000000000", status="missed")]
+    out = await _run(_tools(Signer(body=body))["crm_my_appointments"], {})
+
+    assert out.text.index("Lịch hẹn sắp tới") < out.text.index("Lịch vừa đóng")
+    assert out.text.count("khách không đến") == 1
+
+
 async def test_free_slots_asks_for_the_days_and_shows_local_times() -> None:
     body = {"duration_min": 30, "days": [{"day": "2026-10-22", "starts": ["2026-10-22T02:00:00+00:00"]}]}
     signer = Signer(body=body)

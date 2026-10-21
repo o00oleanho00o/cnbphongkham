@@ -44,6 +44,8 @@ IN_GROUP: Final = (
     "Trong nhóm chat không xem, đặt hay đổi lịch được vì cả nhóm đọc được. Mời khách nhắn riêng cho phòng "
     "khám."
 )
+COMING: Final = ("booked", "confirmed")
+"""The statuses of a visit still to come; the gateway lists the visits closed in the last days after them."""
 STATUS: Final = {
     "booked": "đã đặt, chưa xác nhận",
     "confirmed": "đã xác nhận",
@@ -183,9 +185,19 @@ class CrmTools:
 
     async def my_appointments(self, _args: NoArgs, tool: ToolContext, person: str) -> str:
         rows = await self._client.call("GET", f"{person}/appointments")
-        if not rows:
-            return "Khách chưa có lịch hẹn sắp tới."
-        return "Lịch hẹn sắp tới của khách:\n" + "\n".join(self._visit(r) for r in rows)
+        coming = [r for r in rows if r["status"] in COMING]
+        closed = [r for r in rows if r["status"] not in COMING]
+        parts = (
+            ["Lịch hẹn sắp tới của khách:\n" + "\n".join(self._visit(r) for r in coming)]
+            if coming
+            else ["Khách không có lịch hẹn sắp tới còn hiệu lực."]
+        )
+        if closed:
+            parts.append(
+                "Lịch vừa đóng trong 7 ngày qua (không đổi được nữa; hệ thống không cho biết ai đổi hay vì "
+                "sao, đừng đoán):\n" + "\n".join(self._visit(r) for r in closed)
+            )
+        return "\n".join(parts)
 
     async def confirm(self, args: AppointmentArgs, tool: ToolContext, person: str) -> str:
         row = await self._client.call("POST", f"{person}/appointments/{args.appointment_id}/confirm")

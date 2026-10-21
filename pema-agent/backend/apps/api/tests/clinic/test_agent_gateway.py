@@ -6,14 +6,16 @@ from __future__ import annotations
 
 import time
 from collections.abc import Callable
+from datetime import timedelta
 
 import httpx
 import pytest
 from fastapi import FastAPI
+from sqlalchemy import text
 from sqlalchemy.engine import Engine
 
 from pema.api.agent_gateway_auth import WRITES_PER_HOUR
-from pema.api.clinic_testing import ClientFactory
+from pema.api.clinic_testing import DEMO_NOW, ClientFactory
 from pema.api.gateway_testing import (
     DOCTORS,
     GW,
@@ -319,6 +321,48 @@ async def test_another_person_cannot_see_or_change_a_visit(agent: httpx.AsyncCli
 
 async def test_a_person_without_a_contact_has_no_visits(agent: httpx.AsyncClient) -> None:
     assert (await agent.get(f"{person()}/appointments")).json() == []
+
+
+async def test_a_visit_just_closed_is_listed_after_the_coming_ones_without_its_reason(
+    agent: httpx.AsyncClient, saved: Save, admin: Engine
+) -> None:
+    """The agent says "that visit was cancelled" instead of guessing it was never saved; staff's reason stays here."""
+    path, other_path = await saved(), await saved()
+    gone = (await book(agent, path, at(free_day(), 9))).json()
+    kept = (await book(agent, path, at(free_day(), 10))).json()
+    await agent.post(f"{path}/appointments/{gone['id']}/cancel", json={"reason": "bận việc"})
+
+    listed = (await agent.get(f"{path}/appointments")).json()
+
+    assert [(v["id"], v["status"]) for v in listed] == [(kept["id"], "booked"), (gone["id"], "cancelled")]
+    assert all(set(v) == {"id", "starts_at", "duration_min", "status"} for v in listed)
+    assert (await agent.get(f"{other_path}/appointments")).json() == []
+    assert "bận việc" not in str(listed)
+    assert rows(admin, "SELECT count(*) FROM clinic.appointment WHERE id = :i", i=gone["id"]) == [(1,)]
+
+
+async def test_only_the_last_three_closed_visits_within_a_week_are_listed(
+    agent: httpx.AsyncClient, saved: Save, admin: Engine
+) -> None:
+    path = await saved()
+    ids: list[str] = []
+    for hour in (9, 10, 11, 14):
+        visit = (await book(agent, path, at(free_day(), hour))).json()
+        await agent.post(f"{path}/appointments/{visit['id']}/cancel", json={"reason": "x"})
+        ids.append(visit["id"])
+    assert len((await agent.get(f"{path}/appointments")).json()) == 3
+
+    eight_days_ago = DEMO_NOW - timedelta(days=8)  # the tests' clock is the demo day, not the database's
+    with admin.begin() as conn:  # the newest of them, made to look closed eight days ago
+        conn.execute(text("SET LOCAL session_replication_role = replica"))  # a trigger sets updated_at
+        conn.execute(
+            text("UPDATE clinic.appointment SET updated_at = :t WHERE id = :i"),
+            {"t": eight_days_ago, "i": ids[-1]},
+        )
+    listed = (await agent.get(f"{path}/appointments")).json()
+
+    assert len(listed) == 3
+    assert ids[-1] not in [v["id"] for v in listed]
 
 
 # ------------------------------------------------------------------ confirm, move, cancel

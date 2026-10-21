@@ -72,6 +72,13 @@ MAX_MOVES = 3
 MAX_LISTED = 10
 MAX_REMINDERS = 500
 ACTIVE = (AppointmentStatus.BOOKED.value, AppointmentStatus.CONFIRMED.value)
+CLOSED = (
+    AppointmentStatus.COMPLETED.value,
+    AppointmentStatus.CANCELLED.value,
+    AppointmentStatus.MISSED.value,
+)
+MAX_CLOSED = 3
+CLOSED_WINDOW = timedelta(days=7)
 MESSAGING = "messaging"
 _FREE = [s.value for s in rules.FREE_STATUSES]
 _LONGEST = timedelta(minutes=480)
@@ -330,6 +337,26 @@ async def _upcoming(session: AsyncSession, ctx: ActionContext, patient_id: UUID)
     )
 
 
+async def _recently_closed(session: AsyncSession, ctx: ActionContext, patient_id: UUID) -> list[Appointment]:
+    """So the agent can say "that visit was cancelled", not guess it was never saved. The status is all it
+    learns: the reason of a cancellation and the note stay with staff."""
+    return list(
+        (
+            await session.scalars(
+                select(Appointment)
+                .where(
+                    Appointment.clinic_id == ctx.clinic_id,
+                    Appointment.patient_id == patient_id,
+                    Appointment.status.in_(CLOSED),
+                    Appointment.updated_at > now() - CLOSED_WINDOW,
+                )
+                .order_by(Appointment.updated_at.desc(), Appointment.id)
+                .limit(MAX_CLOSED)
+            )
+        ).all()
+    )
+
+
 async def book(
     db: ClinicDatabase, ctx: ActionContext, channel: str, external_id: str, payload: AgentBooking
 ) -> AgentAppointmentOut:
@@ -371,7 +398,8 @@ async def my_appointments(
         link = await _link(session, ctx, channel, external_id)
         if link is None:
             return []
-        return [_out(row) for row in await _upcoming(session, ctx, link.patient_id)]
+        closed = await _recently_closed(session, ctx, link.patient_id)
+        return [_out(row) for row in [*await _upcoming(session, ctx, link.patient_id), *closed]]
 
 
 async def reschedule(
