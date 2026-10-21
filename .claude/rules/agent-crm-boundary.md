@@ -19,9 +19,9 @@ của nó, và chỉ cho người đang chat với nó.
   `clinic.patient_channel` (mối nối kênh chat → bệnh nhân) và `clinic.agent_event` (outbox sự kiện) là dữ liệu CRM; agent chỉ
   chạm chúng gián tiếp qua cổng và sự kiện ở L2.
 - **L4. Dữ liệu phòng khám vào agent theo bốn đường, không hơn:** tài liệu nhân viên đã duyệt trong kho tri thức; danh sách giờ
-  trống (không tên người); lịch sắp tới **của chính người đang chat**, kèm tối đa 3 lịch của người đó vừa đóng (đã hủy,
-  đã khám, không đến) trong 7 ngày, chỉ mã, giờ, thời lượng, trạng thái, không lý do hủy, không ghi chú (chủ duyệt
-  2026-10-21); sự kiện lịch của người đã nối (mã lịch, kênh, ID trên
+  trống (không tên người); lịch sắp tới **của chính người đang chat**, kèm tối đa 3 lịch khác của người đó đổi trong 7
+  ngày (đã đến, đang khám, đã khám, đã hủy, không đến), chỉ mã, giờ, thời lượng, trạng thái, không lý do hủy, không
+  ghi chú (chủ duyệt 2026-10-21); sự kiện lịch của người đã nối (mã lịch, kênh, ID trên
   kênh, giờ, thời lượng, trạng thái, phiên bản, đồng ý nhận nhắc; không tên, số điện thoại, bác sĩ hay ghi chú). Agent ghi vào
   CRM đúng ba thứ: hồ sơ liên hệ (họ tên, số, đồng ý nhận nhắc; lần sau không sửa hồ sơ), lịch mới, đổi trạng thái hay giờ của
   lịch thuộc người đang chat. Người là kênh và ID của cuộc chat do mã gắn, model không chọn được; trong nhóm chat các tool lịch

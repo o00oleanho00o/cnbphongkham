@@ -323,7 +323,7 @@ async def test_a_person_without_a_contact_has_no_visits(agent: httpx.AsyncClient
     assert (await agent.get(f"{person()}/appointments")).json() == []
 
 
-async def test_a_visit_just_closed_is_listed_after_the_coming_ones_without_its_reason(
+async def test_a_visit_just_changed_is_listed_after_the_coming_ones_without_its_reason(
     agent: httpx.AsyncClient, saved: Save, admin: Engine
 ) -> None:
     """The agent says "that visit was cancelled" instead of guessing it was never saved; staff's reason stays here."""
@@ -341,7 +341,24 @@ async def test_a_visit_just_closed_is_listed_after_the_coming_ones_without_its_r
     assert rows(admin, "SELECT count(*) FROM clinic.appointment WHERE id = :i", i=gone["id"]) == [(1,)]
 
 
-async def test_only_the_last_three_closed_visits_within_a_week_are_listed(
+@pytest.mark.parametrize("status", ["arrived", "in_progress"])
+async def test_a_visit_staff_marked_arrived_or_in_progress_does_not_vanish(
+    agent: httpx.AsyncClient, saved: Save, admin: Engine, status: str
+) -> None:
+    """Reception marks "đã đến" as a matter of course: the person must not hear that there is no visit."""
+    path = await saved()
+    visit = (await book(agent, path, at(free_day(), 9))).json()
+    with admin.begin() as conn:
+        conn.execute(
+            text("UPDATE clinic.appointment SET status = :s WHERE id = :i"), {"s": status, "i": visit["id"]}
+        )
+
+    listed = (await agent.get(f"{path}/appointments")).json()
+
+    assert [(v["id"], v["status"]) for v in listed] == [(visit["id"], status)]
+
+
+async def test_only_the_last_three_changed_visits_within_a_week_are_listed(
     agent: httpx.AsyncClient, saved: Save, admin: Engine
 ) -> None:
     path = await saved()

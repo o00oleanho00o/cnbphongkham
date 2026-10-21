@@ -72,13 +72,8 @@ MAX_MOVES = 3
 MAX_LISTED = 10
 MAX_REMINDERS = 500
 ACTIVE = (AppointmentStatus.BOOKED.value, AppointmentStatus.CONFIRMED.value)
-CLOSED = (
-    AppointmentStatus.COMPLETED.value,
-    AppointmentStatus.CANCELLED.value,
-    AppointmentStatus.MISSED.value,
-)
-MAX_CLOSED = 3
-CLOSED_WINDOW = timedelta(days=7)
+MAX_RECENT = 3
+RECENT_WINDOW = timedelta(days=7)
 MESSAGING = "messaging"
 _FREE = [s.value for s in rules.FREE_STATUSES]
 _LONGEST = timedelta(minutes=480)
@@ -337,9 +332,10 @@ async def _upcoming(session: AsyncSession, ctx: ActionContext, patient_id: UUID)
     )
 
 
-async def _recently_closed(session: AsyncSession, ctx: ActionContext, patient_id: UUID) -> list[Appointment]:
-    """So the agent can say "that visit was cancelled", not guess it was never saved. The status is all it
-    learns: the reason of a cancellation and the note stay with staff."""
+async def _recent_others(session: AsyncSession, ctx: ActionContext, patient_id: UUID) -> list[Appointment]:
+    """The person's visits changed in the last days that are not coming any more (arrived, being seen, done,
+    cancelled, missed), so the agent tells the status, not a guess that a visit was never saved. The status is
+    all it learns: the reason of a cancellation and the note stay with staff."""
     return list(
         (
             await session.scalars(
@@ -347,11 +343,11 @@ async def _recently_closed(session: AsyncSession, ctx: ActionContext, patient_id
                 .where(
                     Appointment.clinic_id == ctx.clinic_id,
                     Appointment.patient_id == patient_id,
-                    Appointment.status.in_(CLOSED),
-                    Appointment.updated_at > now() - CLOSED_WINDOW,
+                    Appointment.status.notin_(ACTIVE),
+                    Appointment.updated_at > now() - RECENT_WINDOW,
                 )
                 .order_by(Appointment.updated_at.desc(), Appointment.id)
-                .limit(MAX_CLOSED)
+                .limit(MAX_RECENT)
             )
         ).all()
     )
@@ -398,8 +394,8 @@ async def my_appointments(
         link = await _link(session, ctx, channel, external_id)
         if link is None:
             return []
-        closed = await _recently_closed(session, ctx, link.patient_id)
-        return [_out(row) for row in [*await _upcoming(session, ctx, link.patient_id), *closed]]
+        recent = await _recent_others(session, ctx, link.patient_id)
+        return [_out(row) for row in [*await _upcoming(session, ctx, link.patient_id), *recent]]
 
 
 async def reschedule(

@@ -73,7 +73,7 @@ async def save_contact(
 @router.get(
     f"{PERSON}/appointments",
     response_model=list[AgentAppointmentOut],
-    summary="The person's coming visits, then up to 3 closed in the last 7 days",
+    summary="The person's coming visits, then up to 3 other recent ones (7 days)",
 )
 async def list_my_appointments(
     channel: Channel, external_id: ExternalId, db: Database, ctx: ReadCtx
