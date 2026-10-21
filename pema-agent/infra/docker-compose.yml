@@ -43,6 +43,10 @@ x-signer-build: &signer-build
   context: ..
   dockerfile: infra/docker/crm-signer.Dockerfile
 
+x-egress-build: &egress-build
+  context: ..
+  dockerfile: infra/docker/egress.Dockerfile
+
 # Variables every Python process reads (pema.config.env.Settings, prefix PEMA_). Inside the compose network
 # the hosts are service names, so the URLs are composed here from the passwords in .env, not copied from it.
 # The database URL is NOT here: the API gets its role below.
@@ -233,8 +237,15 @@ services:
     depends_on:
       agent-migrate:
         condition: service_completed_successfully
+      egress:
+        condition: service_started
     environment:
       AGENT_DATABASE_URL: postgresql+psycopg://agent_rt_app:${PEMA_AGENT_RT_APP_PASSWORD:-}@postgres:5432/pema_agent
+      # The model, embedding, TypeSafe and Zalo Bot clients go out through egress, which logs every destination
+      # (phase 1: nothing blocked). web_search/web_fetch (netguard) and the Zalo bridge still go out directly.
+      HTTPS_PROXY: http://egress:3128
+      HTTP_PROXY: http://egress:3128
+      NO_PROXY: localhost,127.0.0.1,api,crm-signer,postgres,frontend,agent
     command: ["agent", "serve", "--profile", "agents/clinic", "--home", "/data", "--host", "0.0.0.0", "--port", "8088"]
     # Only the compose network reaches it (the frontend, as http://agent:8088). To look at it from the host, use
     # `docker compose exec agent ...` or add a `ports` entry in a local override file.
@@ -288,6 +299,26 @@ services:
       timeout: 5s
       retries: 6
       start_period: 10s
+
+  # The agent's way out to the internet (docs/PLAN-crm-plugin.md 3.10c): Squid, phase 1 LOGS every destination and
+  # blocks none (`docker compose logs egress`: time, client, result, bytes, method, host). Read the logs into the
+  # list of destinations the agent really needs; phase 2 allows only that list. Internal only.
+  egress:
+    profiles: ["agent"]
+    build: *egress-build
+    image: pema-agent-egress:${PEMA_IMAGE_TAG:-local}
+    restart: unless-stopped
+    expose:
+      - "3128"
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m
+      - /var/run/squid:size=1m
+      - /var/log/squid:size=1m
+      - /var/spool/squid:size=1m
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
 
   frontend:
     profiles: ["frontend", "app", "proxy"]

@@ -56,7 +56,9 @@ STARTS_A_PROCESS = {
     "agent_app/plugins/install.py",  # an admin installs a plugin's packages; no tool reaches it
     "plugins/zalo/personal/supervisor.py",  # runs the Zalo bridge (Node) next to the agent
 }
-AGENT_SERVICE_ENV = {"AGENT_DATABASE_URL"}
+AGENT_SERVICE_ENV = {"AGENT_DATABASE_URL", "HTTPS_PROXY", "HTTP_PROXY", "NO_PROXY"}
+INSIDE_THE_STACK = {"localhost", "127.0.0.1", "api", "crm-signer", "postgres"}
+"""What the agent reaches without the egress proxy: the Zalo bridge on loopback, the CRM's JWKS, crm-signer, its DB."""
 
 
 SKIPPED_DIRS = {"node_modules", "tests", "__pycache__", "dist", "ui"}
@@ -141,11 +143,22 @@ def test_the_agent_container_gets_only_its_own_database_and_no_port() -> None:
     assert "ports" not in service
 
 
+def test_the_agent_goes_out_through_egress_and_reaches_the_stack_directly() -> None:
+    """docs/PLAN-crm-plugin.md 3.10c, phase 1: the clients that read HTTPS_PROXY go through egress, which logs
+    every destination; the stack's own services are in NO_PROXY, so a call to crm-signer never leaves it."""
+    env = _agent_service()["environment"]
+    assert env["HTTPS_PROXY"] == env["HTTP_PROXY"] == "http://egress:3128"
+    assert set(env["NO_PROXY"].split(",")) >= INSIDE_THE_STACK
+    services = yaml.safe_load(COMPOSE.read_text(encoding="utf-8"))["services"]
+    assert "ports" not in services["egress"]
+    assert services["egress"]["read_only"] is True
+
+
 def test_the_agent_container_is_read_only_and_gains_no_privilege() -> None:
     """docs/PLAN-crm-plugin.md 3.10b: talked into anything, it writes only /data and /tmp and cannot escalate."""
     service = _agent_service()
     assert service.get("read_only") is True
     assert service.get("cap_drop") == ["ALL"]
     assert "no-new-privileges:true" in service.get("security_opt", [])
-    assert [t.split(":")[0] for t in service.get("tmpfs", [])] == ["/tmp"]
+    assert [t.split(":")[0] for t in service.get("tmpfs", [])] == ["/tmp"]  # noqa: S108 - a path compared
     assert service.get("volumes") == ["agent-home:/data"]

@@ -1,0 +1,3 @@
+# Build context is pema-agent/. The egress image needs only its config.
+*
+!infra/egress/squid.conf
