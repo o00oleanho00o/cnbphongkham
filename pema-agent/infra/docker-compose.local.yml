@@ -9,19 +9,36 @@
 #     `docker compose logs seed`. The other accounts keep manager@example.test, doctor.mai@example.test,
 #     cs.maianh@example.test, reception.lan@example.test, ... with the same password.
 #     A second run finds the data and changes nothing.
+#   - nothing restarts by itself: a container runs only after `docker compose up`, never when Docker starts with
+#     Windows (restart: "no"); `docker compose stop` ends it for good.
 services:
+  postgres:
+    restart: "no"
+
+  redis:
+    restart: "no"
+
+  api:
+    restart: "no"
+
+  crm-signer:
+    restart: "no"
+
   frontend:
     profiles: !reset []
+    restart: "no"
 
   agent-migrate:
     profiles: !reset []
 
   agent:
     profiles: !reset []
+    restart: "no"
 
   # The agent depends on it, so it starts with the agent.
   egress:
     profiles: !reset []
+    restart: "no"
 
   seed:
     extends:
