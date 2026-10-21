@@ -31,7 +31,13 @@ from plugins.zalo.bot.channel import ZaloBotChannel, send_error_is_retryable
 from plugins.zalo.bot.client import LoiZaloBotApi, ZaloBotClient, tao_zalo_bot_client
 from plugins.zalo.bot.parser import parse_update
 from plugins.zalo.bot.types import ZaloBotUpdate
-from plugins.zalo.models import AccountConfig, Allowlist, AllowlistMode, ChannelKind
+from plugins.zalo.models import (
+    AccountConfig,
+    Allowlist,
+    AllowlistMode,
+    ChannelKind,
+    GroupAllowlist,
+)
 
 TOKEN = "t" * 40
 ADMIN = "a" * 40
@@ -412,6 +418,34 @@ def test_who_is_answered() -> None:
     assert should_respond(closed, message).respond is False
     assert should_respond(open_, message).respond is True
     assert should_respond(_bot_account(respond_to_groups=False), in_group).respond is False
+
+
+def test_a_group_is_answered_by_the_group_list_and_a_person_by_the_people_list() -> None:
+    private = parse_update("bot-1", _update("hi", sender="u2"))
+    in_g1 = parse_update("bot-1", _update("hi", sender="u2", chat="g1"))
+    in_g2 = parse_update("bot-1", _update("hi", sender="u2", chat="g2"))
+    assert private is not None
+    assert in_g1 is not None
+    assert in_g2 is not None
+    people_listed = _bot_account(allowlist=Allowlist(mode=AllowlistMode.LIST, user_ids=["u1"]))
+    groups_listed = _bot_account(group_allowlist=GroupAllowlist(mode=AllowlistMode.LIST, group_ids=["g1"]))
+    nothing_listed = _bot_account(
+        allowlist=Allowlist(mode=AllowlistMode.LIST, user_ids=["u1"]),
+        group_allowlist=GroupAllowlist(mode=AllowlistMode.LIST),
+    )
+
+    # u2 is not on the people list: refused in a one-to-one chat, still answered in any group.
+    assert [should_respond(people_listed, m).respond for m in (private, in_g1, in_g2)] == [False, True, True]
+    # Only g1 is on the group list: any person is answered in g1, in no other group, and in a private chat.
+    assert [should_respond(groups_listed, m).respond for m in (private, in_g1, in_g2)] == [True, True, False]
+    # Both lists closed and empty of u2 and g1: nothing is answered.
+    assert [should_respond(nothing_listed, m).respond for m in (private, in_g1, in_g2)] == [
+        False,
+        False,
+        False,
+    ]
+    # A listed group is still off when the account does not answer groups at all.
+    assert should_respond(_bot_account(respond_to_groups=False), in_g1).respond is False
 
 
 def test_a_group_is_kept_only_when_it_is_on_the_list_and_a_private_chat_always() -> None:

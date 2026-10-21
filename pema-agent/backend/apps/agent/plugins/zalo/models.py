@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from enum import StrEnum
-from typing import Annotated, Any, Final
+from typing import Annotated, Any, Final, cast
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
@@ -47,12 +47,26 @@ class Allowlist(_Model):
     user_ids: list[str] = Field(default_factory=list[str], max_length=1000)
 
 
+class GroupAllowlist(_Model):
+    """Which groups the account answers in: every group, or only the listed ones. Independent of
+    ``Allowlist``, which is about the people it answers in a one-to-one chat."""
+
+    mode: AllowlistMode = AllowlistMode.ALL
+    group_ids: list[GroupId] = Field(default_factory=list[GroupId], max_length=MAX_LISTEN_GROUPS)
+
+    @field_validator("group_ids")
+    @classmethod
+    def _once_and_in_order(cls, ids: list[str]) -> list[str]:
+        return sorted(set(ids))
+
+
 class AccountConfig(_Model):
     id: str
     label: str
     channel: ChannelKind
     enabled: bool = True
     allowlist: Allowlist = Field(default_factory=Allowlist)
+    group_allowlist: GroupAllowlist = Field(default_factory=GroupAllowlist)
     group_require_mention: bool = True
     respond_to_groups: bool = True
     listen_group_ids: list[GroupId] = Field(
@@ -79,6 +93,23 @@ class AccountConfig(_Model):
             return data
         return {key: value for key, value in data.items() if key not in RETIRED_SETTINGS}  # pyright: ignore[reportUnknownVariableType]
 
+    @model_validator(mode="before")
+    @classmethod
+    def _keep_old_accounts_closed(cls, data: Any) -> Any:
+        """An account saved before ``group_allowlist`` existed whose people list was closed also kept the
+        groups closed (the people list was checked on a group's sender too). It starts with an empty group
+        list, so it answers in no group until the admin picks some, never in every group."""
+        if not isinstance(data, dict):
+            return data
+        saved = cast(dict[str, Any], data)
+        if "group_allowlist" in saved:
+            return saved
+        people: object = saved.get("allowlist")
+        closed = isinstance(people, dict) and cast(dict[str, Any], people).get("mode") == AllowlistMode.LIST
+        if not closed:
+            return saved
+        return {**saved, "group_allowlist": {"mode": AllowlistMode.LIST, "group_ids": []}}
+
     @field_validator("listen_group_ids")
     @classmethod
     def _once_and_in_order(cls, ids: list[str]) -> list[str]:
@@ -100,6 +131,7 @@ class AccountUpdate(_Model):
     label: str | None = Field(default=None, min_length=1, max_length=100)
     enabled: bool | None = None
     allowlist: Allowlist | None = None
+    group_allowlist: GroupAllowlist | None = None
     group_require_mention: bool | None = None
     respond_to_groups: bool | None = None
     listen_group_ids: list[GroupId] | None = Field(default=None, max_length=MAX_LISTEN_GROUPS)

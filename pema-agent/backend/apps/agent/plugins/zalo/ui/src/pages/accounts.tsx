@@ -139,6 +139,13 @@ function AccountCard({
           ? "Trả lời tất cả mọi người"
           : `Chỉ trả lời ${account.allowlist.user_ids.length} người trong danh sách`}
       </p>
+      <p className="text-small text-ink-soft">
+        {!account.respond_to_groups
+          ? "Không trả lời trong nhóm"
+          : account.group_allowlist.mode === "all"
+            ? "Trả lời trong mọi nhóm"
+            : `Chỉ trả lời trong ${account.group_allowlist.group_ids.length} nhóm trong danh sách`}
+      </p>
       {account.warning && (
         <div className="mt-3">
           <ui.Notice tone="warning">{account.warning}</ui.Notice>

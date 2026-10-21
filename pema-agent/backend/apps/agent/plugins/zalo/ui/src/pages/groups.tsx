@@ -34,13 +34,28 @@ export function GroupsPage() {
     }
   }
 
+  async function allow(account: Account, threadId: string, allowed: boolean) {
+    try {
+      await zalo.update(account.id, {
+        group_allowlist: {
+          mode: account.group_allowlist.mode,
+          group_ids: toggledIds(account.group_allowlist.group_ids, threadId, allowed),
+        },
+      });
+      await reloadAccounts();
+      setError("");
+    } catch (err) {
+      setError(messageOf(err));
+    }
+  }
+
   const byId = new Map((accounts ?? []).map((a) => [a.id, a]));
   const listened = (groups ?? []).filter((g) => byId.get(g.account_id)?.listen_group_ids.includes(g.thread_id)).length;
   return (
     <div>
       <ui.PageHeader
         title="Nhóm Zalo"
-        subtitle="Bật nhóm nào thì agent mới ghi nhớ tin của nhóm đó (mọi nội dung). Nhóm mới luôn tắt cho tới khi bạn bật."
+        subtitle="Hai việc riêng cho mỗi nhóm: lắng nghe (agent ghi nhớ tin của nhóm) và, với tài khoản đặt 'chỉ trả lời nhóm trong danh sách', cho phép trả lời. Nhóm mới luôn tắt cho tới khi bạn bật."
       />
       {(error || accountsError) && <ui.Notice tone="danger">{error || accountsError}</ui.Notice>}
       <div className="mb-4 sm:max-w-sm">
@@ -52,14 +67,20 @@ export function GroupsPage() {
         )}
         <ul className="divide-y divide-line">
           {groups?.map((g) => (
-            <GroupRow key={`${g.account_id}:${g.thread_id}`} group={g} account={byId.get(g.account_id)} onListen={listen} />
+            <GroupRow
+              key={`${g.account_id}:${g.thread_id}`}
+              group={g}
+              account={byId.get(g.account_id)}
+              onListen={listen}
+              onAllow={allow}
+            />
           ))}
         </ul>
       </ui.Card>
       {groups !== null && groups.length > 0 && (
         <p className="mt-3 text-label text-ink-soft">
-          Đang nghe {listened}/{groups.length} nhóm. Nhóm tắt: tin không được lưu, nhưng agent vẫn trả lời khi được gọi tên
-          trong nhóm.
+          Đang nghe {listened}/{groups.length} nhóm. Nhóm tắt: tin không được lưu. Việc trả lời theo cài đặt của tài khoản: mọi
+          nhóm, hoặc chỉ nhóm được bật "Cho trả lời".
         </p>
       )}
     </div>
@@ -70,10 +91,12 @@ function GroupRow({
   group,
   account,
   onListen,
+  onAllow,
 }: {
   group: Group;
   account: Account | undefined;
   onListen: (account: Account, threadId: string, listening: boolean) => Promise<void>;
+  onAllow: (account: Account, threadId: string, allowed: boolean) => Promise<void>;
 }) {
   const name = group.name || "(không tên)";
   return (
@@ -85,11 +108,26 @@ function GroupRow({
         </span>
       </span>
       {account && (
-        <ui.Toggle
-          checked={account.listen_group_ids.includes(group.thread_id)}
-          label={`Lắng nghe nhóm ${name}`}
-          onChange={(listening) => void onListen(account, group.thread_id, listening)}
-        />
+        <span className="flex items-center gap-4">
+          {account.group_allowlist.mode === "list" && (
+            <span className="flex items-center gap-2 text-label text-ink-soft">
+              Cho trả lời
+              <ui.Toggle
+                checked={account.group_allowlist.group_ids.includes(group.thread_id)}
+                label={`Cho trả lời trong nhóm ${name}`}
+                onChange={(allowed) => void onAllow(account, group.thread_id, allowed)}
+              />
+            </span>
+          )}
+          <span className="flex items-center gap-2 text-label text-ink-soft">
+            Lắng nghe
+            <ui.Toggle
+              checked={account.listen_group_ids.includes(group.thread_id)}
+              label={`Lắng nghe nhóm ${name}`}
+              onChange={(listening) => void onListen(account, group.thread_id, listening)}
+            />
+          </span>
+        </span>
       )}
     </li>
   );

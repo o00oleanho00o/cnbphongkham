@@ -4,6 +4,8 @@ import type {
   AccountUpdate,
   AllowlistMode,
   ChannelKind,
+  Contact,
+  Friend,
   Group,
   OaKeys,
   QrState,
@@ -31,7 +33,7 @@ export const CHANNEL_HINT: Record<ChannelKind, string> = {
   zalo_oa: "Official Account: lưu được khóa OA, nhưng kênh OA chưa chạy ở phiên bản này.",
 };
 
-/** Bots and OAs start closed: anyone with the link can write to them, a personal nick needs to be a friend. */
+/** Bots and OAs start closed, for people and for groups: anyone with the link can write to them, a personal nick needs to be a friend. */
 export const DEFAULT_ALLOWLIST: Record<ChannelKind, AllowlistMode> = {
   zalo_personal: "all",
   zalo_bot: "list",
@@ -43,7 +45,11 @@ export interface AccountForm {
   label: string;
   channel: ChannelKind;
   allowlistMode: AllowlistMode;
-  allowlistIds: string;
+  /** The people answered in a one-to-one chat when `allowlistMode` is `list`. */
+  allowlistUserIds: string[];
+  groupAllowlistMode: AllowlistMode;
+  /** The groups answered in when `groupAllowlistMode` is `list`. */
+  groupAllowlistIds: string[];
   respondToGroups: boolean;
   groupRequireMention: boolean;
   /** The groups this account listens to (their messages are kept). */
@@ -68,7 +74,9 @@ export function formOf(account: Account | null): AccountForm {
     label: account?.label ?? "",
     channel,
     allowlistMode: account?.allowlist.mode ?? DEFAULT_ALLOWLIST[channel],
-    allowlistIds: (account?.allowlist.user_ids ?? []).join("\n"),
+    allowlistUserIds: account?.allowlist.user_ids ?? [],
+    groupAllowlistMode: account?.group_allowlist.mode ?? DEFAULT_ALLOWLIST[channel],
+    groupAllowlistIds: account?.group_allowlist.group_ids ?? [],
     respondToGroups: account?.respond_to_groups ?? true,
     groupRequireMention: account?.group_require_mention ?? true,
     listenGroupIds: account?.listen_group_ids ?? [],
@@ -83,18 +91,14 @@ export function formOf(account: Account | null): AccountForm {
 }
 
 export function withChannel(form: AccountForm, channel: ChannelKind): AccountForm {
-  return { ...form, channel, allowlistMode: DEFAULT_ALLOWLIST[channel] };
-}
-
-/** One Zalo user id per line; commas and spaces separate too, repeats count once. */
-export function parseIds(text: string): string[] {
-  return [...new Set(text.split(/[\s,;]+/).filter(Boolean))];
+  return { ...form, channel, allowlistMode: DEFAULT_ALLOWLIST[channel], groupAllowlistMode: DEFAULT_ALLOWLIST[channel] };
 }
 
 export function patchOf(form: AccountForm): AccountUpdate {
   return {
     label: form.label.trim(),
-    allowlist: { mode: form.allowlistMode, user_ids: parseIds(form.allowlistIds) },
+    allowlist: { mode: form.allowlistMode, user_ids: [...form.allowlistUserIds].sort() },
+    group_allowlist: { mode: form.groupAllowlistMode, group_ids: [...form.groupAllowlistIds].sort() },
     respond_to_groups: form.respondToGroups,
     group_require_mention: form.groupRequireMention,
     listen_group_ids: [...form.listenGroupIds].sort(),
@@ -120,12 +124,8 @@ export function formProblem(form: AccountForm, creating: boolean): string | null
   }
   if (!form.label.trim()) return "Nhập tên hiển thị.";
   if (form.label.trim().length > 100) return "Tên hiển thị tối đa 100 ký tự.";
-  const bad = parseIds(form.allowlistIds).find((uid) => !ZALO_ID.test(uid));
-  if (form.allowlistMode === "list" && bad) return `User ID không hợp lệ: ${bad}`;
   return null;
 }
-
-export const ZALO_ID = /^[A-Za-z0-9_.-]{1,100}$/;
 
 /** The account's list after letting one user in or out (the mode is left as it is). */
 export function toggledIds(ids: readonly string[], uid: string, allowed: boolean): string[] {
@@ -133,20 +133,65 @@ export function toggledIds(ids: readonly string[], uid: string, allowed: boolean
   return allowed ? [...rest, uid] : rest;
 }
 
-export interface GroupChoice {
+/** One switch of a list on an account's form: a person or a group, and whether it is on the list. */
+export interface Choice {
   id: string;
   name: string;
-  listening: boolean;
+  on: boolean;
 }
 
-/** The groups to offer on an account's form: the ones seen (by name), then any chosen one not seen under that id. */
-export function groupChoices(seen: readonly Group[], listening: readonly string[]): GroupChoice[] {
-  const seenIds = new Set(seen.map((group) => group.thread_id));
-  const unseen = listening.filter((id) => !seenIds.has(id));
+/** The things seen (by name), then any chosen one not seen under that id, so it can be switched off. */
+function choicesOf(seen: readonly { id: string; name: string }[], chosen: readonly string[]): Choice[] {
+  const seenIds = new Set(seen.map((item) => item.id));
+  const unseen = chosen.filter((id) => !seenIds.has(id));
   return [
-    ...seen.map((group) => ({ id: group.thread_id, name: group.name || "(không tên)", listening: listening.includes(group.thread_id) })),
-    ...unseen.map((id) => ({ id, name: id, listening: true })),
+    ...seen.map((item) => ({ ...item, on: chosen.includes(item.id) })),
+    ...unseen.map((id) => ({ id, name: id, on: true })),
   ];
+}
+
+export const groupChoices = (seen: readonly Group[], chosen: readonly string[]): Choice[] =>
+  choicesOf(
+    seen.map((group) => ({ id: group.thread_id, name: group.name || "(không tên)" })),
+    chosen,
+  );
+
+/** The people to offer: who wrote to the account (most recent first), then its friends who have not written yet. */
+export function personChoices(
+  seen: readonly Contact[],
+  chosen: readonly string[],
+  friends: readonly Friend[] = [],
+): Choice[] {
+  const wrote = new Set(seen.map((contact) => contact.user_id));
+  return choicesOf(
+    [
+      ...seen.map((contact) => ({ id: contact.user_id, name: contact.display_name || "(không tên)" })),
+      ...friends
+        .filter((friend) => !wrote.has(friend.user_id))
+        .map((friend) => ({ id: friend.user_id, name: friend.display_name || "(không tên)" })),
+    ],
+    chosen,
+  );
+}
+
+export const MAX_SHOWN_OFF = 100;
+
+/**
+ * The switches to draw for a search: every match that is on, and the first `max` matches that are off, in their
+ * own order (a switch does not jump when it is toggled). `hidden` counts the matches left out.
+ */
+export function shownChoices(
+  choices: readonly Choice[],
+  query: string,
+  max = MAX_SHOWN_OFF,
+): { shown: Choice[]; hidden: number } {
+  const needle = query.trim().toLocaleLowerCase();
+  const matches = choices.filter(
+    (choice) => needle === "" || choice.name.toLocaleLowerCase().includes(needle) || choice.id.toLowerCase().includes(needle),
+  );
+  const offShown = new Set(matches.filter((choice) => !choice.on).slice(0, max).map((choice) => choice.id));
+  const shown = matches.filter((choice) => choice.on || offShown.has(choice.id));
+  return { shown, hidden: matches.length - shown.length };
 }
 
 export const EMPTY_OA_KEYS: OaKeys = { app_id: "", app_secret: "", oa_secret_key: "", refresh_token: "" };

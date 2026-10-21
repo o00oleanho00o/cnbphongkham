@@ -8,7 +8,10 @@ export interface Account {
   label: string;
   channel: ChannelKind;
   enabled: boolean;
+  /** The people answered in a one-to-one chat. */
   allowlist: { mode: AllowlistMode; user_ids: string[] };
+  /** The groups answered in; independent of `allowlist` (anyone in an allowed group may ask). */
+  group_allowlist: { mode: AllowlistMode; group_ids: string[] };
   group_require_mention: boolean;
   respond_to_groups: boolean;
   /** The groups whose messages are kept; a group not here is not. */

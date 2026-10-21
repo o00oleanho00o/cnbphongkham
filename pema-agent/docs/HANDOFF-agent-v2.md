@@ -54,6 +54,14 @@ revision files `0001_agent_rt` … `0012_*` or plugin files `0002_*`/`0003_*`, t
   its speakers. The group's name is still looked up so the page can offer it; it shows after the group's first
   message (the bridge cannot list all groups). A new group starts off the list. Answering is unchanged: an @mention
   in a group off the list is still answered. No keyword filter: a listened group is kept whole.
+- **Zalo: who is answered, two independent lists (2026-10-21):** `allowlist` (people, `all` or `list` of user ids)
+  decides in a one-to-one chat only; `group_allowlist` (`mode` `all` or `list`, `group_ids`) decides in a group, where
+  anyone of an allowed group may ask (the @mention rule `group_require_mention` still applies, and
+  `respond_to_groups` off still answers in no group). The people list is no longer checked on a group's sender.
+  `listen_group_ids` is unchanged (it is about keeping conversations, not answering). A new bot account starts
+  closed for groups as it does for people; an account saved before the group list whose people list was `list`
+  loads with an empty group list (no group answered until the admin picks some), never with every group open.
+  Page "Nhóm Zalo" has a "Cho trả lời" switch per group when the account's group list is `list`.
 - **Front end (done 2026-10-16, commit ccf9d6b9):** `schema.d.ts` is generated from the current API; the inbox, the
   follow-up queue, `/me/notifications`, the "Nhắn tin" button and dialog and the "Hội thoại" card of Patient 360, the
   send-mode badge of the CRM rules and the live presence helpers are gone; the mock backend serves the current

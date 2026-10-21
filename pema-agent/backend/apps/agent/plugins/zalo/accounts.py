@@ -17,7 +17,15 @@ from pydantic import ValidationError
 
 from agent_app.plugins import PluginStorage
 
-from .models import AccountConfig, AccountCreate, AccountUpdate, Allowlist, AllowlistMode, ChannelKind
+from .models import (
+    AccountConfig,
+    AccountCreate,
+    AccountUpdate,
+    Allowlist,
+    AllowlistMode,
+    ChannelKind,
+    GroupAllowlist,
+)
 
 ACCOUNT: Final = "account:"
 SECRET: Final = "secret:"  # noqa: S105 - a key prefix, not a secret
@@ -57,7 +65,15 @@ class AccountStore:
         allowlist = (
             Allowlist(mode=AllowlistMode.LIST) if body.channel is ChannelKind.ZALO_BOT else Allowlist()
         )
-        account = AccountConfig(id=body.id, label=body.label, channel=body.channel, allowlist=allowlist)
+        # The groups are closed the same way: a bot added to a group does not start answering its members.
+        group_allowlist = GroupAllowlist(mode=allowlist.mode)
+        account = AccountConfig(
+            id=body.id,
+            label=body.label,
+            channel=body.channel,
+            allowlist=allowlist,
+            group_allowlist=group_allowlist,
+        )
         await self._save(account)
         return account
 

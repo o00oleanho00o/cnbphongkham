@@ -10,18 +10,35 @@ import {
   PERSONAL_RISK,
   clampDelay,
   formOf,
-  type GroupChoice,
+  type Choice,
   formProblem,
   groupChoices,
+  personChoices,
+  shownChoices,
   oaKeysState,
-  parseIds,
   patchOf,
   toggledIds,
   withChannel,
 } from "../logic";
 import { Drawer, Section, Switch } from "../parts";
 import { ui } from "../sdk";
-import type { Account, ChannelKind, Group, OaKeys, ReactionIcon } from "../types";
+import type { Account, ChannelKind, Contact, Friend, Group, OaKeys, ReactionIcon } from "../types";
+
+/** The people a form lists: the most recent ones who wrote to the account (the Danh bạ page pages through all). */
+const PEOPLE_SHOWN = 200;
+
+/** Above this many people the form offers a search box. */
+const SEARCH_FROM = 20;
+
+const GROUP_HINTS = {
+  unsaved: "Tạo tài khoản và đăng nhập trước. Nhóm nào nhắn tới sẽ hiện ở đây để bạn bật; nhóm mới mặc định tắt.",
+  empty: "Chưa thấy nhóm nào. Một nhóm hiện ở đây sau tin nhắn đầu tiên của nhóm đó; nhóm mới mặc định tắt.",
+};
+
+const PEOPLE_HINTS = {
+  unsaved: "Tạo tài khoản và đăng nhập trước. Ai nhắn tới sẽ hiện ở đây để bạn bật; người mới mặc định tắt.",
+  empty: "Chưa có ai nhắn tới. Một người hiện ở đây sau tin nhắn đầu tiên của họ; người mới mặc định tắt.",
+};
 
 const CHANNELS: readonly ChannelKind[] = ["zalo_personal", "zalo_bot", "zalo_oa"];
 
@@ -49,6 +66,9 @@ export function AccountDrawer({
   const [icons, setIcons] = useState<ReactionIcon[]>([]);
   const [tools, setTools] = useState<string[]>([]);
   const [groups, setGroups] = useState<Group[]>([]);
+  const [people, setPeople] = useState<Contact[]>([]);
+  const [friends, setFriends] = useState<Friend[]>([]);
+  const [peopleQuery, setPeopleQuery] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -61,7 +81,15 @@ export function AccountDrawer({
   useEffect(() => {
     if (accountId === undefined) return;
     zalo.groups(accountId).then(setGroups, () => setGroups([]));
+    zalo.contacts({ account_id: accountId, limit: PEOPLE_SHOWN, offset: 0 }).then(setPeople, () => setPeople([]));
   }, [accountId]);
+
+  // The friends of a personal nick come from Zalo itself: a nick that is not running has none to offer yet.
+  const isPersonal = account?.channel === "zalo_personal";
+  useEffect(() => {
+    if (accountId === undefined || !isPersonal) return;
+    zalo.friends(accountId).then(setFriends, () => setFriends([]));
+  }, [accountId, isPersonal]);
 
   function set<K extends keyof AccountForm>(key: K, value: AccountForm[K]) {
     setForm((before) => ({ ...before, [key]: value }));
@@ -96,7 +124,8 @@ export function AccountDrawer({
     }
   }
 
-  const listIds = parseIds(form.allowlistIds);
+  const peopleChoices = personChoices(people, form.allowlistUserIds, friends);
+  const peopleShown = shownChoices(peopleChoices, peopleQuery);
   const unknownTools = form.disabledTools.filter((t) => !tools.includes(t));
 
   return (
@@ -189,30 +218,75 @@ export function AccountDrawer({
         />
         {form.allowlistMode === "list" && (
           <>
-            <textarea
-              aria-label="Danh sách user ID"
-              className={`${ui.FIELD_CLASS} min-h-24 resize-y font-mono`}
-              value={form.allowlistIds}
-              placeholder={"Mỗi dòng một user ID\n1234567890123456789"}
-              onChange={(e) => set("allowlistIds", e.target.value)}
-            />
-            <p className="text-label text-ink-soft">
-              {listIds.length === 0
-                ? "Danh sách trống: agent chưa trả lời ai. Người nhắn tới vẫn hiện ở trang Danh bạ, thêm họ từ đó."
-                : `${listIds.length} người. Thêm hoặc bỏ nhanh ở trang Danh bạ.`}
-            </p>
+            {peopleChoices.length > SEARCH_FROM && (
+              <input
+                type="search"
+                aria-label="Tìm người theo tên hoặc ID"
+                placeholder="Tìm theo tên hoặc ID"
+                className={ui.FIELD_CLASS}
+                value={peopleQuery}
+                onChange={(e) => setPeopleQuery(e.target.value)}
+              />
+            )}
+            {peopleChoices.length > 0 && peopleShown.shown.length === 0 ? (
+              <p className="text-label text-ink-soft">Không có ai khớp "{peopleQuery.trim()}".</p>
+            ) : (
+              <ChoiceSwitches
+                explain="Chỉ người được bật mới được agent trả lời trong chat 1-1. Gồm người đã nhắn tới và bạn bè của nick. Bật xong bấm Lưu thay đổi."
+                hints={PEOPLE_HINTS}
+                saved={account !== null}
+                choices={peopleShown.shown}
+                onChoose={(userId, on) => set("allowlistUserIds", toggledIds(form.allowlistUserIds, userId, on))}
+              />
+            )}
+            {peopleShown.hidden > 0 && (
+              <p className="text-label text-ink-soft">
+                Còn {peopleShown.hidden} người nữa, gõ tên hoặc ID vào ô tìm để thấy.
+              </p>
+            )}
+            {people.length >= PEOPLE_SHOWN && (
+              <p className="text-label text-ink-soft">
+                Chỉ lấy {PEOPLE_SHOWN} người nhắn gần nhất. Người nhắn cũ hơn bật ở trang Danh bạ.
+              </p>
+            )}
           </>
         )}
       </Section>
 
       <Section title="Nhóm">
         <Switch label="Trả lời trong nhóm" checked={form.respondToGroups} onChange={(v) => set("respondToGroups", v)} />
+        {form.respondToGroups && (
+          <>
+            <ui.Select
+              aria-label="Nhóm được trả lời"
+              value={form.groupAllowlistMode}
+              onChange={(e) => set("groupAllowlistMode", e.target.value === "list" ? "list" : "all")}
+              options={[
+                { value: "all", label: "Trả lời trong tất cả các nhóm" },
+                { value: "list", label: "Chỉ trả lời trong nhóm thuộc danh sách" },
+              ]}
+            />
+            {form.groupAllowlistMode === "list" && (
+              <ChoiceSwitches
+                title="Nhóm được trả lời"
+                explain="Chỉ nhóm được bật mới được agent trả lời (ai trong nhóm cũng hỏi được, không xét danh sách người ở trên). Nhóm tắt: agent bỏ qua."
+                hints={GROUP_HINTS}
+                saved={account !== null}
+                choices={groupChoices(groups, form.groupAllowlistIds)}
+                onChoose={(groupId, on) => set("groupAllowlistIds", toggledIds(form.groupAllowlistIds, groupId, on))}
+              />
+            )}
+          </>
+        )}
         <Switch
           label="Nhóm phải @nhắc tên mới trả lời"
           checked={form.groupRequireMention}
           onChange={(v) => set("groupRequireMention", v)}
         />
-        <ListenedGroups
+        <ChoiceSwitches
+          title="Nhóm lắng nghe"
+          explain="Chỉ nhóm được bật mới được ghi nhớ (mọi nội dung). Nhóm tắt: tin không được lưu, việc trả lời do mục trên quyết định."
+          hints={GROUP_HINTS}
           saved={account !== null}
           choices={groupChoices(groups, form.listenGroupIds)}
           onChoose={(groupId, on) => set("listenGroupIds", toggledIds(form.listenGroupIds, groupId, on))}
@@ -304,24 +378,28 @@ export function AccountDrawer({
   );
 }
 
-/** The groups this account keeps the messages of; a group that is not switched on is not kept. */
-function ListenedGroups({
+/** One switch per person or group seen (and per chosen one not seen yet); one that is not switched on is not chosen. */
+function ChoiceSwitches({
+  title: heading,
+  explain,
+  hints,
   saved,
   choices,
   onChoose,
 }: {
+  title?: string;
+  explain: string;
+  hints: { unsaved: string; empty: string };
   saved: boolean;
-  choices: readonly GroupChoice[];
-  onChoose: (groupId: string, on: boolean) => void;
+  choices: readonly Choice[];
+  onChoose: (id: string, on: boolean) => void;
 }) {
-  const title = <p className="text-micro font-semibold tracking-wider text-ink-soft uppercase">Nhóm lắng nghe</p>;
+  const title = heading && <p className="text-micro font-semibold tracking-wider text-ink-soft uppercase">{heading}</p>;
   if (!saved) {
     return (
       <>
         {title}
-        <p className="text-label text-ink-soft">
-          Tạo tài khoản và đăng nhập trước. Nhóm nào nhắn tới sẽ hiện ở đây để bạn bật; nhóm mới mặc định tắt.
-        </p>
+        <p className="text-label text-ink-soft">{hints.unsaved}</p>
       </>
     );
   }
@@ -329,26 +407,16 @@ function ListenedGroups({
     return (
       <>
         {title}
-        <p className="text-label text-ink-soft">
-          Chưa thấy nhóm nào. Một nhóm hiện ở đây sau tin nhắn đầu tiên của nhóm đó; nhóm mới mặc định tắt.
-        </p>
+        <p className="text-label text-ink-soft">{hints.empty}</p>
       </>
     );
   }
   return (
     <>
       {title}
-      <p className="text-label text-ink-soft">
-        Chỉ nhóm được bật mới được ghi nhớ (mọi nội dung). Nhóm tắt: tin không được lưu, agent vẫn trả lời khi được gọi tên.
-      </p>
+      <p className="text-label text-ink-soft">{explain}</p>
       {choices.map((choice) => (
-        <Switch
-          key={choice.id}
-          label={choice.name}
-          hint={choice.id}
-          checked={choice.listening}
-          onChange={(on) => onChoose(choice.id, on)}
-        />
+        <Switch key={choice.id} label={choice.name} hint={choice.id} checked={choice.on} onChange={(on) => onChoose(choice.id, on)} />
       ))}
     </>
   );

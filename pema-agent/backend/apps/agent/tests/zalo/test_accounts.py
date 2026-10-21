@@ -14,7 +14,7 @@ from agent_app.plugins.records import InMemoryPluginRecords
 from agent_app.profile import load_profile
 from agent_app.runtime import Runtime, build_runtime
 from plugins.zalo.accounts import SECRET, AccountStore
-from plugins.zalo.models import AccountConfig, AccountCreate, ChannelKind
+from plugins.zalo.models import AccountConfig, AccountCreate, AllowlistMode, ChannelKind
 from secretcipher import decrypt_with, encrypt_with
 
 TOKEN = "t" * 40
@@ -65,6 +65,8 @@ async def test_accounts_are_created_listed_changed_and_deleted(tmp_path: Path) -
     assert personal.status_code == 201
     assert personal.json()["allowlist"] == {"mode": "all", "user_ids": []}
     assert bot.json()["allowlist"] == {"mode": "list", "user_ids": []}
+    assert personal.json()["group_allowlist"] == {"mode": "all", "group_ids": []}
+    assert bot.json()["group_allowlist"] == {"mode": "list", "group_ids": []}
     assert (bot.json()["channel"], bot.json()["running"], bot.json()["has_credentials"]) == (
         "zalo_bot",
         False,
@@ -122,6 +124,49 @@ async def test_bad_changes_are_refused_and_the_kind_cannot_change(
         "Lễ tân",
     )
     runtime.close()
+
+
+async def test_the_group_list_is_changed_on_its_own_sorted_and_checked(tmp_path: Path) -> None:
+    runtime = _runtime(tmp_path)
+    async with _client(runtime) as client:
+        await client.post("/accounts", json={"id": "le-tan", "label": "Lễ tân"}, headers=HEADERS)
+        saved = await client.patch(
+            "/accounts/le-tan",
+            json={"group_allowlist": {"mode": "list", "group_ids": ["g2", "g1", "g2"]}},
+            headers=HEADERS,
+        )
+        refused = await client.patch(
+            "/accounts/le-tan",
+            json={"group_allowlist": {"mode": "list", "group_ids": ["g 1/../x"]}},
+            headers=HEADERS,
+        )
+        stored = (await client.get("/accounts", headers=HEADERS)).json()[0]
+
+    assert saved.json()["group_allowlist"] == {"mode": "list", "group_ids": ["g1", "g2"]}
+    assert saved.json()["allowlist"] == {"mode": "all", "user_ids": []}
+    assert refused.status_code == 422
+    assert stored["group_allowlist"] == {"mode": "list", "group_ids": ["g1", "g2"]}
+    runtime.close()
+
+
+def test_an_account_saved_before_the_group_list_never_opens_more_groups() -> None:
+    base = {"id": "nick", "label": "Nick", "channel": "zalo_personal"}
+    people_closed = AccountConfig.model_validate({**base, "allowlist": {"mode": "list", "user_ids": ["u1"]}})
+    people_open = AccountConfig.model_validate(base)
+    said_so = AccountConfig.model_validate(
+        {
+            **base,
+            "allowlist": {"mode": "list", "user_ids": ["u1"]},
+            "group_allowlist": {"mode": "all", "group_ids": []},
+        }
+    )
+
+    assert (people_closed.group_allowlist.mode, people_closed.group_allowlist.group_ids) == (
+        AllowlistMode.LIST,
+        [],
+    )
+    assert people_open.group_allowlist.mode is AllowlistMode.ALL
+    assert said_so.group_allowlist.mode is AllowlistMode.ALL
 
 
 async def test_bad_new_accounts_and_unknown_ones_are_refused(tmp_path: Path) -> None:

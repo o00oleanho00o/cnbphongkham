@@ -56,6 +56,7 @@ function gatewayError(status: number, kind: string, message: string): Reply {
 const ACCOUNT_DEFAULTS = {
   group_require_mention: true,
   respond_to_groups: false,
+  group_allowlist: { mode: "all", group_ids: [] as string[] },
   listen_group_ids: [] as string[],
   auto_react_icon: "heart",
   typing_indicator_enabled: true,
@@ -131,6 +132,7 @@ const friendRequests = [
 const friends = [
   { user_id: "u-mau-1001", display_name: "Khách mẫu Một", avatar_url: null },
   { user_id: "u-mau-1002", display_name: "Khách mẫu Hai", avatar_url: null },
+  { user_id: "u-mau-2001", display_name: "Bạn chưa nhắn (mẫu)", avatar_url: null },
 ];
 
 const groups = [{ account_id: "zalo-cskh-mau", thread_id: "g-mau-01", name: "Nhóm hỏi đáp (mẫu)" }];

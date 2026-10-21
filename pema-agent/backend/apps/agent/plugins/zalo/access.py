@@ -40,12 +40,18 @@ def should_respond(account: AccountConfig, msg: ZaloInbound) -> FilterDecision:
         return _skip("không có nội dung xử lý được (sticker/voice/...)")
 
     if msg.is_group:
+        # Two lists, never mixed: the group list decides in a group (anyone in an allowed group may ask), the
+        # people list decides in a one-to-one chat.
         if not account.respond_to_groups:
             return _skip("account tắt trả lời group")
+        if (
+            account.group_allowlist.mode is AllowlistMode.LIST
+            and msg.thread_id not in account.group_allowlist.group_ids
+        ):
+            return _skip("group ngoài danh sách nhóm")
         if account.group_require_mention and not msg.mentions_me:
             return _skip("group yêu cầu @mention bot")
-
-    if account.allowlist.mode is AllowlistMode.LIST and msg.sender_id not in account.allowlist.user_ids:
+    elif account.allowlist.mode is AllowlistMode.LIST and msg.sender_id not in account.allowlist.user_ids:
         return _skip("sender ngoài allowlist")
 
     return FilterDecision(respond=True, reason="ok")
