@@ -9,17 +9,19 @@ Reply to the user in Vietnamese. Open items to handle later are under "Loose end
 database one are the log of earlier stages: where they name the schema `agent`, `clinic_agent`, `agent_worker`,
 revision files `0001_agent_rt` … `0012_*` or plugin files `0002_*`/`0003_*`, those are gone (see next section).
 
-## CRM plugin (since 2026-10-21, `docs/PLAN-crm-plugin.md` steps 0–7 and 9 done)
+## CRM plugin (since 2026-10-21, `docs/PLAN-crm-plugin.md` steps 0–7, 9 and part of 10 done)
 
 - **The rules changed:** L2–L4 were opened by the owner in a narrow way and L6, L7 added; the text in force is
   `.claude/rules/agent-crm-boundary.md` (with the table of tests T1–T9). The "Database" section below still says
   "the agent holds no key of the API": still true, but it now calls `/api/v1/agent-gateway` through `crm-signer`.
 - **What exists:** CRM gateway (8 routes, Ed25519 JWT of `crm-signer`, migration `0002_patient_channel`), CRM outbox
   of events (`0003_agent_event`, worker `agent-events`), the service `apps/crm-signer`, the agent plugin `crm`
-  (7 tools, events route `/v1/hooks/crm/events`, state tables `crm_*`, reminder loop off by default), core
+  (7 tools, events route `/v1/hooks/crm/events`, state tables `crm_*`, reminder loop on in the clinic profile), core
   `ToolContext.conversation_id`/`is_group`, `ctx.proactive`, a read-only agent container.
-- **Not done:** step 8 (proxy `egress`, agent on an internal network; check zca-js through a proxy first) and step 10
-  (try it for real: needs the owner's Docker rebuild; switch-on order in `infra/README.md` "Agent ↔ CRM").
+- **Not done:** step 8 phase 2 (agent on an internal network, `web_*` and the Zalo bridge through `egress`, allow-list from
+  its logs) and the rest of step 10: booking was tried by the owner; moving, cancelling, reminders and events
+  catch-up were not. Four faults showed only when run for real (plan section 7); lesson: test the gateway on the wired
+  app, not the bare one. Switch-on order: `infra/README.md` "Agent ↔ CRM".
 - **Two sessions share this checkout** (2026-10-21): another one converts `frontend/` to TanStack Start + Bun. Never
   edit `frontend/`, never regenerate its API types, stage only your own files (`git commit -- <paths>`; for a file
   both touched, apply only your hunk with `git apply --cached`).

@@ -479,4 +479,27 @@ Giai đoạn 2 của proxy (chặn theo danh sách) chờ chủ chốt danh sác
 
 ## 7. Kết quả thử thật
 
-(chưa có)
+**2026-10-21, stack demo (`docker compose up -d --build` ở thư mục gốc), chủ nhắn bot Zalo Bot `botthang`.**
+
+Chủ nói đã tự thử và thấy bot hỏi giờ trống, đặt lịch được. Chưa có ghi chép từng câu; những phần dưới chưa thử và
+không được tính là xong: dời, hủy, đồng ý nhắc, đặt lịch cách ~3 giờ 20 phút để chờ tin nhắc, tắt agent rồi đổi lịch
+trên CRM rồi bật lại để xem sự kiện giao bù, đọc log `crm-signer` và `egress`.
+
+Bốn lỗi chỉ lộ ra khi chạy thật (test không thấy vì dùng app trần hoặc từng file riêng); đã sửa, mỗi lỗi một commit:
+
+1. **`egress` không được bật** trong stack demo: `docker-compose.local.yml` bỏ profile của `agent` nhưng không bỏ của
+   `egress`, nên `agent` "depends on undefined service". Sửa `e54cc789`.
+2. **Container tự chạy khi Windows khởi động** (`restart: unless-stopped`), làm Docker khởi động chậm. Stack demo giờ
+   đặt `restart: "no"`; chỉ chạy sau `docker compose up`. Sửa `5bae2a5f`. Container đã tạo từ trước giữ chính sách cũ
+   tới khi `up -d` tạo lại hoặc `docker update --restart=no`.
+3. **`crm-signer` không được bật** trong stack demo, nên tool lịch báo "hệ thống lịch không phản hồi". Sửa `17561baa`.
+4. **Cổng agent bị `StaffSessionMiddleware` chặn** (401 "Bạn chưa đăng nhập") vì `/api/v1/agent-gateway/` không nằm
+   trong `PUBLIC_API_PREFIXES`; test T6 dùng app trần (middleware không chặn) nên không thấy. Sửa `75ecfcaa`, kèm test
+   `apps/api/tests/api/test_agent_gateway_wiring.py` chạy trên app đã lắp middleware.
+
+Việc không phải lỗi mã: tài khoản bot có `allowlist = {mode: list, user_ids: []}` (không ai được trả lời); chủ sửa
+trên trang Zalo. Khóa `crm-signer` nằm trong volume `crm-signer-keys`, khóa công khai trong `infra/.env.local-demo`
+(không commit); `down -v` xóa khóa, phải `keygen` lại.
+
+Bật tiếp (cùng ngày): `PEMA_AGENT_EVENTS_URL` trong `.env.local-demo` và `reminders_enabled = true` trong profile
+`clinic` (cần build lại `agent` vì profile nằm trong image).
