@@ -31,8 +31,9 @@ của nó, và chỉ cho người đang chat với nó.
   http/https, chỉ nối tới địa chỉ công khai đã kiểm (không máy chủ này, không mạng riêng của stack, không `169.254.169.254`),
   mỗi lần chuyển hướng kiểm lại. Plugin không tự gọi ra internet cho model; plugin `crm` chỉ gọi `crm-signer` trong mạng của
   stack. Hạ tầng như gọi model, embedding không phải tool nên không thuộc luật này. Container agent chỉ đọc
-  (`read_only`, `cap_drop: [ALL]`, `no-new-privileges`), chỉ ghi `/data` và `/tmp`. **Chưa làm (bước 8 của kế hoạch):** agent
-  chỉ ở mạng nội bộ, mọi kết nối ra internet qua proxy `egress`, danh sách đích do chủ duyệt.
+  (`read_only`, `cap_drop: [ALL]`, `no-new-privileges`), chỉ ghi `/data` và `/tmp`. Client HTTP của agent (model, embedding,
+  TypeSafe, Zalo Bot) ra internet qua proxy `egress`, giai đoạn 1 chỉ ghi log mọi đích. **Chưa làm (bước 8 giai đoạn
+  2):** agent chỉ ở mạng nội bộ, `web_*` và cầu nối Zalo cũng qua proxy, chỉ cho đích trong danh sách chủ duyệt.
 - **L7. Danh sách tool và plugin của profile `clinic` là danh sách chủ đã duyệt.** Thêm tool, plugin, tiến trình con hay biến
   môi trường cho agent, hoặc bật `agent_writes`, là đổi kế hoạch, chủ duyệt; test giữ danh sách đỏ cho tới khi được sửa có chủ
   ý. Không bao giờ có tool đọc file, chạy lệnh hay chạy mã trong tiến trình agent.
