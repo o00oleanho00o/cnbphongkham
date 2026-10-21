@@ -369,6 +369,10 @@ agent (không khóa) ──HTTP──► crm-signer (giữ khóa riêng) ──B
   `frontend`. `agent` **chỉ** thuộc mạng này. `api` vẫn thuộc thêm mạng của nó; agent với tới `api:8000` nhưng không có
   credential nào, nên chỉ gặp 401/404 (như hôm nay).
 
+**Đã kiểm khi làm bước 7 (2026-10-21):** agent chỉ ghi vào `/data` (dữ liệu plugin `AGENT_DATA_DIR`, plugin cài thêm,
+`bridge.log`, khóa bí mật) và `/tmp` (`tsx` cache mã của cầu nối; `pip` khi quản trị cài plugin). Cầu nối Zalo có
+test `no-disk-write.test.ts` chứng minh nó không ghi đĩa. `pip` không ghi được cache vào `HOME` thì chỉ cảnh báo.
+
 **c. Proxy đi ra `egress`** (container riêng, phần mềm có sẵn: Squid hoặc tinyproxy, chỉ cấu hình, không viết code):
 - agent đặt `HTTPS_PROXY`/`HTTP_PROXY=http://egress:3128`, `NO_PROXY=crm-signer,postgres,api,localhost`;
 - **giai đoạn 1 (chủ đã gác danh sách tên miền): chỉ ghi log** mọi đích, không chặn; sau một thời gian chạy thật, đọc
@@ -436,7 +440,7 @@ agent (không khóa) ──HTTP──► crm-signer (giữ khóa riêng) ──B
 | 4 | **(đã làm 2026-10-21)** Agent: plugin `crm`: client gọi `crm-signer`, 7 tool, profile, `AGENTS.md`, T4, T9. **`crm_person` dời sang bước 6** (cần `conversation_id`, chỉ dùng cho tin chủ động) | 18 test plugin, T4, T9 xanh |
 | 5 | **(đã làm 2026-10-21)** Agent: route nhận sự kiện `POST /v1/hooks/crm/events` (JWKS của CRM, `aud` riêng), `sso` từ chối `aud` sự kiện (test), bảng `crm_reminder`, `crm_person`, `crm_reminder_sent` (migration plugin `0001_crm.sql`), `PEMA_AGENT_EVENTS_URL` vào compose (để trống) | 15 test route và trạng thái, 2 test Postgres, `sso`, T4 xanh |
 | 6 | **(đã làm 2026-10-21, ba commit)** 6a: `ToolContext` có `conversation_id`, `is_group`; tool `crm_*` từ chối trong nhóm, nhớ chat 1-1 vào `crm_person`. 6b: `DispatcherOutbox.send_to`, `ctx.proactive`. 6c: vòng nhắc `reminders` (job, tắt mặc định), đối soát, route đánh thức vòng | Bộ test agent và lõi xanh (1305), 62 test plugin `crm` gồm Postgres |
-| 7 | **Cứng hóa, phần compose** (mục 3.10b): `read_only`, `tmpfs`, `cap_drop`, `no-new-privileges`, mạng `agent-internal`; kiểm chỗ ghi của cầu nối Zalo | Stack chạy, agent trả lời được qua Zalo, T9 xanh với compose mới |
+| 7 | **(đã làm 2026-10-21, chưa thử trên stack)** **Cứng hóa, phần compose** (mục 3.10b): `read_only`, `tmpfs /tmp` 256 MB, `cap_drop: [ALL]`, `no-new-privileges`; đã kiểm chỗ ghi (chỉ `/data` và `/tmp`). **Mạng `agent-internal` dời sang bước 8** (cần `egress` trước, không thì agent mất đường gọi model và Zalo) | T9 xanh với compose mới; còn: stack chạy, agent trả lời được qua Zalo |
 | 8 | **Proxy đi ra, giai đoạn 1** (mục 3.10c): **kiểm zca-js qua proxy trước**, rồi dựng `egress` chỉ ghi log, đặt `HTTPS_PROXY` cho agent; T5 vẫn xanh | Log có đủ đích; Zalo, model, kho tri thức vẫn chạy |
 | 9 | Luật và tài liệu: `agent-crm-boundary.md` (L2-L4, L6, L7, T6-T9), `GUIDE-agent-harness.md`, `infra/README.md` (sinh khóa `crm-signer`, khóa công khai cho API, đổi khóa), HANDOFF | Đọc lại khớp code |
 | 10 | Thử thật (sau khi chủ build lại Docker): chat Zalo hỏi giờ, lưu số, đặt, xem lại, dời, hủy; đặt lịch cách ~3 giờ 20 phút, bật nhắc, chờ tin nhắc, trả lời "đồng ý"; tắt agent, đổi lịch trên CRM, bật lại, xem sự kiện được giao bù; xem log của `crm-signer` và `egress` | Ghi kết quả vào mục 7 |
