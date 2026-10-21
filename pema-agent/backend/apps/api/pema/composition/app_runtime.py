@@ -9,7 +9,9 @@ objects those need and runs their background loops inside the API process:
 * the CRM rules runner (staff tasks only; it no longer schedules messages);
 * the retention run of scope ``clinic``.
 
-The agent service never reaches this database nor calls these routes (.claude/rules/agent-crm-boundary.md).
+The agent service never reaches this database; of the API it reaches only ``/agent-gateway``, through
+crm-signer, and it hears of changes through the ``agent-events`` worker (.claude/rules/agent-crm-boundary.md,
+L2).
 """
 
 from __future__ import annotations

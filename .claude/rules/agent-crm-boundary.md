@@ -1,21 +1,58 @@
 # Ranh giới agent ↔ CRM — luật bất biến
 
-Áp cho mọi thay đổi trong `pema-agent/` (backend `apps/agent`, `apps/api`, `infra/`), kể cả do subagent làm. Agent nói chuyện với
-người ngoài (Zalo, chat web) nên **coi như có ngày bị jailbreak**: khi đó nó chỉ được phá trong vùng của nó.
+Áp cho mọi thay đổi trong `pema-agent/` (backend `apps/agent`, `apps/api`, `apps/crm-signer`, `infra/`), kể cả do subagent
+làm. Agent nói chuyện với người ngoài (Zalo, chat web) nên **coi như có ngày bị jailbreak**: khi đó nó chỉ được phá trong vùng
+của nó, và chỉ cho người đang chat với nó.
 
 - **L1. Agent không đọc ghi được DB của CRM.** Agent dùng database riêng `pema_agent`; role `agent_rt_app` không có CONNECT vào
   `pema` và không có USAGE trên schema nào ngoài `agent_rt`, `public`. Không cài `dblink`, `postgres_fdw`. Không bảng nào của app
   này đọc bảng của app kia.
-- **L2. Agent không gọi được API của CRM.** Agent không giữ khóa, mật khẩu hay tài khoản dịch vụ nào của API. Nối duy nhất là agent
-  tải khóa công khai (JWKS) để kiểm token SSO. API không bao giờ nhận token có `aud = pema-agent` làm phiên.
+- **L2. Tiến trình agent không giữ khóa, mật khẩu hay tài khoản nào của CRM.** Mọi yêu cầu agent gửi tới CRM đi qua
+  `crm-signer`, dịch vụ duy nhất giữ khóa riêng: nó chỉ nhận đúng 8 route của `/api/v1/agent-gateway` và ký cho mỗi yêu cầu
+  một JWT Ed25519 sống ngắn với đúng một quyền `agent.*` của route đó. CRM chỉ giữ khóa công khai
+  (`PEMA_AGENT_GATEWAY_PUBLIC_KEYS`; không đặt thì cổng trả 404) và chỉ mở nhóm route đó cho sáu quyền `agent.*`, không vai trò
+  nhân viên nào có chúng. API không bao giờ nhận token `aud = pema-agent` làm phiên. Chiều ngược lại: CRM ký sự kiện bằng khóa
+  riêng của CRM (`aud = pema-agent-events`) và chỉ gửi tới **một** route của agent (`/v1/hooks/crm/events`); route đó chỉ nhận,
+  không trả dữ liệu, và token sự kiện không bao giờ mở được phiên của agent (plugin `sso` từ chối `aud` đó). Agent tải khóa
+  công khai của CRM (JWKS) để kiểm token SSO và sự kiện; ngoài JWKS, profile agent chỉ giữ địa chỉ của `crm-signer`.
 - **L3. Không có "cửa sổ cho agent" bên CRM.** Không schema, view, hàm SQL hay role riêng cho agent trong database `pema`.
-- **L4. Dữ liệu phòng khám vào agent chỉ theo một đường:** nhân viên tải tài liệu đã duyệt lên kho tri thức. Không tool nào của
-  agent tra bệnh nhân, lịch hẹn, đơn, tài chính.
-- **L5. Muốn mở đường mới thì chủ hệ thống quyết**, bằng văn bản trong kế hoạch riêng; đường mới phải hẹp, chỉ đọc, có nhân viên
-  duyệt. Không tự thêm vì "tiện".
-- **L6. Tool ra internet chỉ là tool của lõi và chỉ đi qua `netguard`** (`agentcore.harness.tools.builtin.netguard`): chỉ http/https, chỉ nối tới địa chỉ công khai đã kiểm (không máy chủ này, không mạng riêng của stack, không `169.254.169.254`), mỗi lần chuyển hướng kiểm lại. Plugin không tự gọi ra internet cho model. Hạ tầng như gọi model, embedding không phải tool nên không thuộc luật này.
+  `clinic.patient_channel` (mối nối kênh chat → bệnh nhân) và `clinic.agent_event` (outbox sự kiện) là dữ liệu CRM; agent chỉ
+  chạm chúng gián tiếp qua cổng và sự kiện ở L2.
+- **L4. Dữ liệu phòng khám vào agent theo bốn đường, không hơn:** tài liệu nhân viên đã duyệt trong kho tri thức; danh sách giờ
+  trống (không tên người); lịch sắp tới **của chính người đang chat**; sự kiện lịch của người đã nối (mã lịch, kênh, ID trên
+  kênh, giờ, thời lượng, trạng thái, phiên bản, đồng ý nhận nhắc; không tên, số điện thoại, bác sĩ hay ghi chú). Agent ghi vào
+  CRM đúng ba thứ: hồ sơ liên hệ (họ tên, số, đồng ý nhận nhắc; lần sau không sửa hồ sơ), lịch mới, đổi trạng thái hay giờ của
+  lịch thuộc người đang chat. Người là kênh và ID của cuộc chat do mã gắn, model không chọn được; trong nhóm chat các tool lịch
+  từ chối. Không tool nào tra bệnh nhân khác, đơn, tài chính.
+- **L5. Muốn mở đường mới thì chủ hệ thống quyết**, bằng văn bản trong kế hoạch riêng; đường mới phải hẹp và có giới hạn. Mở
+  thêm endpoint, quyền, loại sự kiện hay trường dữ liệu nào cho agent là đổi kế hoạch. Không tự thêm vì "tiện". Đường hiện có:
+  `pema-agent/docs/PLAN-crm-plugin.md` (chủ duyệt 2026-10-19/20).
+- **L6. Tool ra internet chỉ là tool của lõi và chỉ đi qua `netguard`** (`agentcore.harness.tools.builtin.netguard`): chỉ
+  http/https, chỉ nối tới địa chỉ công khai đã kiểm (không máy chủ này, không mạng riêng của stack, không `169.254.169.254`),
+  mỗi lần chuyển hướng kiểm lại. Plugin không tự gọi ra internet cho model; plugin `crm` chỉ gọi `crm-signer` trong mạng của
+  stack. Hạ tầng như gọi model, embedding không phải tool nên không thuộc luật này. Container agent chỉ đọc
+  (`read_only`, `cap_drop: [ALL]`, `no-new-privileges`), chỉ ghi `/data` và `/tmp`. **Chưa làm (bước 8 của kế hoạch):** agent
+  chỉ ở mạng nội bộ, mọi kết nối ra internet qua proxy `egress`, danh sách đích do chủ duyệt.
+- **L7. Danh sách tool và plugin của profile `clinic` là danh sách chủ đã duyệt.** Thêm tool, plugin, tiến trình con hay biến
+  môi trường cho agent, hoặc bật `agent_writes`, là đổi kế hoạch, chủ duyệt; test giữ danh sách đỏ cho tới khi được sửa có chủ
+  ý. Không bao giờ có tool đọc file, chạy lệnh hay chạy mã trong tiến trình agent.
 
-Test giữ luật, đỏ là không merge: `apps/agent/tests/test_crm_boundary.py` (T1 db, T4), `apps/api/tests/api/test_agent_token.py`
-(T3), `apps/api/tests/test_database.py` (T2 db), cùng file `test_crm_boundary.py` cho T5 (L6: URL vào mạng nội bộ bị từ chối). Khi thêm plugin, tool hay biến môi trường cho agent, chạy lại chúng.
+Test giữ luật, đỏ là không merge:
 
-Kế hoạch gốc: `pema-agent/docs/PLAN-db-baseline.md`.
+| Test | Luật | Ở đâu |
+|---|---|---|
+| T1 (db) role agent không vào được `pema` | L1 | `apps/agent/tests/test_crm_boundary.py` |
+| T2 (db) database CRM không có gì cho agent | L1, L3 | `apps/api/tests/test_database.py` |
+| T3 token `aud = pema-agent` không mở phiên CRM | L2 | `apps/api/tests/api/test_agent_token.py` |
+| T4 profile chỉ giữ JWKS và `crm-signer`, không chuỗi giống khóa | L2 | `apps/agent/tests/test_crm_boundary.py` |
+| T5 URL vào mạng nội bộ bị từ chối | L6 | `apps/agent/tests/test_crm_boundary.py` |
+| T6 cổng chỉ nhận JWT của `crm-signer`, cookie nhân viên không mở cổng, token cổng không mở route nhân viên | L2 | `apps/api/tests/clinic/test_agent_gateway.py` |
+| T7 sáu quyền `agent.*`, không vai trò nhân viên nào có | L2 | `apps/api/tests/clinic/test_rbac_matrix.py` |
+| T8 người A không xem, đổi được lịch của người B (404) | L4 | `apps/api/tests/clinic/test_agent_gateway.py` |
+| T9 tool, plugin, tiến trình, biến môi trường, container agent đúng danh sách | L6, L7 | `apps/agent/tests/test_tool_allowlist.py` |
+| `crm-signer`: chỉ 8 route, đúng quyền mỗi route, khớp router của CRM | L2 | `apps/crm-signer/tests/test_signer.py` |
+| sự kiện: chỉ `aud = pema-agent-events`, `sso` từ chối nó; tool lịch từ chối trong nhóm, không có tham số chỉ người | L2, L4 | `apps/agent/tests/crm/` |
+
+Khi thêm plugin, tool, route cổng, loại sự kiện hay biến môi trường cho agent, chạy lại chúng.
+
+Kế hoạch: `pema-agent/docs/PLAN-db-baseline.md` (L1–L5 gốc), `pema-agent/docs/PLAN-crm-plugin.md` (L2–L4, L6, L7 mục 3.8).

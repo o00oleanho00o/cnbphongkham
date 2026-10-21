@@ -1,5 +1,6 @@
-"""The agent never reaches the clinic's CRM (.claude/rules/agent-crm-boundary.md). T4 reads the clinic profile:
-the only address of the API it may hold is where the public keys are. T1 reads the rights of ``agent_rt_app`` on
+"""The agent never reaches the clinic's CRM but through its narrow gateway (.claude/rules/agent-crm-boundary.md).
+T4 reads the clinic profile: the only addresses of the API it may hold are where the public keys are, and the
+crm plugin goes through crm-signer. T1 reads the rights of ``agent_rt_app`` on
 the server of ``PEMA_TEST_DATABASE_URL`` (read only: the role belongs to the whole cluster). T5: a tool that
 fetches a URL cannot land on this host or the private network of the stack (the CRM API among them), however the
 address is written, resolved or reached through a redirect; the DNS is a table and the network a mock."""
