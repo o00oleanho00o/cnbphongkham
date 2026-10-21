@@ -263,6 +263,21 @@ dữ liệu** về CRM.
 **Đối soát:** lúc plugin khởi động và mỗi 24 giờ, một lần `GET /reminders?hours=48`; ghi các lịch trả về (cùng quy tắc
 `version`); lịch cục bộ trong 48 giờ tới mà CRM không còn trả (đã hủy hoặc đã đổi ra ngoài khung) thì đánh dấu `gone`.
 
+**Đã làm (bước 6, 2026-10-21), khác chữ ở trên:**
+- **Ngưỡng là dữ liệu** (`ReminderPolicy` từ cài đặt plugin: `reminder_marks` "24:360,3:30" = giờ trước khám:phút
+  tối thiểu còn lại, `quiet_hours`, `reminders_per_day`), hàm `decide` thuần đọc chúng: chủ có thể thay bằng schema
+  vòng của mình mà không sửa vòng (`IDEAS-agent-loops.md` mục 5; ghi nhớ của chủ 2026-10-20).
+- **Mọi mốc đến hạn được xử lý đúng một lần** trong `crm_reminder_sent` (cột `outcome`: `sent` hoặc
+  `skip:<lý do>`); mốc bị bỏ không bị xét lại mỗi lần thức. Chỉ `wait` (giờ yên lặng) không ghi.
+- **Ghi trước, gửi sau**; không có `ctx.proactive` (ngoài `agent serve`) thì không ghi gì, lần sau thử lại.
+- **Chỉ gửi vào chat 1-1**: `conversation_id` chỉ được nhớ khi tool chạy ngoài nhóm (6a). Người chưa từng dùng tool
+  lịch trong chat riêng thì không có chat để nhắc (`skip:no_chat`).
+- **Đối soát** (`GET /reminders?hours=48` qua `crm-signer`) lúc khởi động và mỗi 24 giờ (thất bại thì 1 giờ sau):
+  lịch chưa biết thì thêm với `version` 0 (sự kiện nào cũng thắng); lịch sắp tới của người đã đồng ý mà CRM không
+  còn liệt kê thì đánh `gone` (giữ `version`). **Không sửa `ReminderOut` của CRM** (thêm `version` sẽ đổi
+  `openapi.json` và type của frontend đang được phiên khác chuyển sang TanStack Start).
+- Bật bằng `reminders_enabled = true` trong `[plugins.crm]`; profile `clinic` hiện **để tắt**.
+
 ### 3.6 Vòng lặp: bảy câu cho từng vòng
 
 Theo `IDEAS-agent-loops.md` mục 1. Bốn vòng ngoài của kế hoạch này (vòng trong `run_turn` và vòng giữa `Dispatcher`
@@ -420,7 +435,7 @@ agent (không khóa) ──HTTP──► crm-signer (giữ khóa riêng) ──B
 | 3 | **(đã làm 2026-10-21)** `crm-signer`: ứng dụng nhỏ (`apps/crm-signer`, Starlette), `keygen`, danh sách 8 route, ký JWT, chuyển tiếp, log, giới hạn 300/phút, Dockerfile, dịch vụ `crm-signer` trong compose (profile `agent`, `read_only`, `cap_drop ALL`), `PEMA_AGENT_GATEWAY_PUBLIC_KEYS` vào `.env` và `api` | 24 test `crm-signer` xanh, test cổng và sự kiện xanh trên DB tạm; **chưa build Docker** |
 | 4 | **(đã làm 2026-10-21)** Agent: plugin `crm`: client gọi `crm-signer`, 7 tool, profile, `AGENTS.md`, T4, T9. **`crm_person` dời sang bước 6** (cần `conversation_id`, chỉ dùng cho tin chủ động) | 18 test plugin, T4, T9 xanh |
 | 5 | **(đã làm 2026-10-21)** Agent: route nhận sự kiện `POST /v1/hooks/crm/events` (JWKS của CRM, `aud` riêng), `sso` từ chối `aud` sự kiện (test), bảng `crm_reminder`, `crm_person`, `crm_reminder_sent` (migration plugin `0001_crm.sql`), `PEMA_AGENT_EVENTS_URL` vào compose (để trống) | 15 test route và trạng thái, 2 test Postgres, `sso`, T4 xanh |
-| 6 | Lõi và nhắc hẹn: `ctx.proactive` (tách `DispatcherOutbox`), job `crm-reminders`, đối soát; tìm `conversation_id` cho người chat | Test job và `ctx.proactive` xanh; test `follow_up` vẫn xanh |
+| 6 | **(đã làm 2026-10-21, ba commit)** 6a: `ToolContext` có `conversation_id`, `is_group`; tool `crm_*` từ chối trong nhóm, nhớ chat 1-1 vào `crm_person`. 6b: `DispatcherOutbox.send_to`, `ctx.proactive`. 6c: vòng nhắc `reminders` (job, tắt mặc định), đối soát, route đánh thức vòng | Bộ test agent và lõi xanh (1305), 62 test plugin `crm` gồm Postgres |
 | 7 | **Cứng hóa, phần compose** (mục 3.10b): `read_only`, `tmpfs`, `cap_drop`, `no-new-privileges`, mạng `agent-internal`; kiểm chỗ ghi của cầu nối Zalo | Stack chạy, agent trả lời được qua Zalo, T9 xanh với compose mới |
 | 8 | **Proxy đi ra, giai đoạn 1** (mục 3.10c): **kiểm zca-js qua proxy trước**, rồi dựng `egress` chỉ ghi log, đặt `HTTPS_PROXY` cho agent; T5 vẫn xanh | Log có đủ đích; Zalo, model, kho tri thức vẫn chạy |
 | 9 | Luật và tài liệu: `agent-crm-boundary.md` (L2-L4, L6, L7, T6-T9), `GUIDE-agent-harness.md`, `infra/README.md` (sinh khóa `crm-signer`, khóa công khai cho API, đổi khóa), HANDOFF | Đọc lại khớp code |

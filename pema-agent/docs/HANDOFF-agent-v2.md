@@ -1495,7 +1495,7 @@ Chi tiết: `docs/PLAN-agent-tools.md` mục 2, 2b, 5.4.
     danh sách thật. (c) **Chuyển khóa model, embedding, TypeSafe vào proxy** để tiến trình agent không giữ khóa nào (hiện các khóa
     mã hóa trong DB của agent, agent giải mã được). Rủi ro trong lúc chưa có: agent bị chiếm vẫn ra được mọi nơi trên internet
     (chỉ có log) và đọc được khóa của nhà cung cấp model.
-15. **Plugin `crm` không biết chat là nhóm hay 1-1 (2026-10-21; `PLAN-crm-plugin.md` bước 4)**. `ToolContext` chỉ có `channel` và
+15. **(Đã sửa ở bước 6a, 2026-10-21: `ToolContext.is_group`, tool `crm_*` từ chối trong nhóm; phần dưới là lịch sử, phần mã kênh vẫn đúng.)** **Plugin `crm` không biết chat là nhóm hay 1-1 (2026-10-21; `PLAN-crm-plugin.md` bước 4)**. `ToolContext` chỉ có `channel` và
     `user_id` (người gửi), nên trong nhóm Zalo agent vẫn gọi được tool lịch cho người vừa nhắn, và câu trả lời (giờ hẹn, trạng
     thái) cả nhóm đọc được. Hiện chỉ chặn bằng luật mềm trong `AGENTS.md`. Sửa cứng khi làm bước 6 (thêm loại chat và
     `conversation_id` vào `ToolContext`, tool từ chối ngoài chat 1-1). Thêm: mã kênh là `zalo-<mã tài khoản>`, nên khách nhắn
