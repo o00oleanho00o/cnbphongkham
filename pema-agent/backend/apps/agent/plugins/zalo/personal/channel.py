@@ -1,6 +1,6 @@
 # ported from: src/zalo/kenh-ca-nhan.ts, src/zalo/account-manager.ts (start/attach),
 # src/zalo/send-reply-in-parts.ts
-"""One personal Zalo account as a channel of the agent, through the Node bridge.
+"""One personal Zalo account as a channel of the agent, through the Bun bridge.
 
 Starting attaches to a session the bridge already holds (the QR login just ended, or another start did it):
 every Zalo login is a risk of a lock, so it logs in with the stored credential only when there is no live

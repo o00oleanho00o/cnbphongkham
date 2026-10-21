@@ -66,7 +66,7 @@ class PluginUi:
         file = inside(folder, rest or "index.html")
         if file is None:
             if not folder.is_dir():
-                return _error(404, f"the browser files of {name} are not built (pnpm build in its ui folder)")
+                return _error(404, f"the browser files of {name} are not built (bun run build in its ui)")
             return _error(404, "no such file")
         cache = "public, max-age=31536000, immutable" if rest.startswith("assets/") else "no-cache"
         return FileResponse(

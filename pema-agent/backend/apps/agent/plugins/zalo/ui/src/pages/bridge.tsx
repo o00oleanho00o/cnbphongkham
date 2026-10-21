@@ -1,4 +1,4 @@
-/** The Node bridge personal accounts log in through: see it run. Bundled in the agent's image it needs nothing more;
+/** The Bun bridge personal accounts log in through: see it run. Bundled in the agent's image it needs nothing more;
  * otherwise (the agent run from a checkout) it is installed here (it takes minutes) and can be removed. */
 import { useCallback, useEffect, useState } from "react";
 
@@ -55,7 +55,7 @@ export function BridgePage() {
     <div>
       <ui.PageHeader
         title="Cầu nối Zalo cá nhân"
-        subtitle="Chương trình Node (zca-js) mà nick cá nhân đăng nhập và nhắn tin qua. Bot chính thức và OA không cần."
+        subtitle="Chương trình Bun (zca-js) mà nick cá nhân đăng nhập và nhắn tin qua. Bot chính thức và OA không cần."
         aside={
           <ui.Button variant="secondary" onClick={() => void reload()}>
             Làm mới
@@ -92,7 +92,7 @@ export function BridgePage() {
             </p>
           )}
           {!bridge.installed && !installing && (
-            <p className="text-small text-ink-soft">Cần Node 22 và pnpm trên máy chạy agent. Cài mất vài phút.</p>
+            <p className="text-small text-ink-soft">Cần bun 1.2+ trên máy chạy agent. Cài mất vài phút.</p>
           )}
           {bridge.error && (
             <div className="mt-3">

@@ -1,4 +1,4 @@
-"""The Node bridge's supervisor with a fake command runner: installing (checks, copy, pnpm, cleanup on failure),
+"""The Bun bridge's supervisor with a fake command runner: installing (checks, copy, bun install, cleanup on failure),
 running only while wanted, restarting after a crash, a minimal environment, uninstalling."""
 
 from __future__ import annotations
@@ -36,24 +36,22 @@ class FakeProcess:
 
 
 class FakeRunner:
-    def __init__(
-        self, *, node: str | None = "node", node_version: str = "v24.1.0", pnpm_code: int = 0
-    ) -> None:
-        self._node = node
-        self._version = node_version
-        self._pnpm_code = pnpm_code
+    def __init__(self, *, bun: str | None = "bun", bun_version: str = "1.4.3", install_code: int = 0) -> None:
+        self._bun = bun
+        self._version = bun_version
+        self._install_code = install_code
         self.commands: list[list[str]] = []
         self.spawned: list[tuple[list[str], Path, dict[str, str]]] = []
         self.processes: list[FakeProcess] = []
 
     def which(self, program: str) -> str | None:
-        return self._node if program == "node" else "pnpm"
+        return self._bun if program == "bun" else None
 
     def run(self, args: list[str], cwd: Path, timeout_s: float) -> tuple[int, str]:
         self.commands.append(args)
         if args[-1] == "--version":
             return 0, self._version
-        return self._pnpm_code, "Packages: +120\nDone in 3s"
+        return self._install_code, "Packages: +120\nDone in 3s"
 
     def spawn(self, args: list[str], cwd: Path, env: Mapping[str, str], log: Path) -> FakeProcess:
         self.spawned.append((args, cwd, dict(env)))
@@ -87,7 +85,7 @@ async def test_install_copies_the_sources_and_installs_their_packages(tmp_path: 
     version = json.loads((SOURCE / "package.json").read_text(encoding="utf-8"))["version"]
     folder = tmp_path / "bridge" / version
     assert (before.installed, after.installed, after.version) == (False, True, version)
-    assert runner.commands[-1] == ["pnpm", "install", "--frozen-lockfile", "--prod"]
+    assert runner.commands[-1] == ["bun", "install", "--frozen-lockfile", "--production"]
     assert (folder / "package.json").is_file()
     assert (folder / "src" / "index.ts").is_file()
     assert not list((folder / "src").glob("*.test.ts"))
@@ -97,9 +95,9 @@ async def test_install_copies_the_sources_and_installs_their_packages(tmp_path: 
 @pytest.mark.parametrize(
     ("runner", "error"),
     [
-        (FakeRunner(node=None), "Node.js 22.13+"),
-        (FakeRunner(node_version="v20.11.0"), "22.13"),
-        (FakeRunner(pnpm_code=1), "pnpm install"),
+        (FakeRunner(bun=None), "bun 1.2+"),
+        (FakeRunner(bun_version="1.1.45"), "1.2"),
+        (FakeRunner(install_code=1), "bun install"),
     ],
 )
 async def test_a_failed_install_leaves_nothing_and_says_why(
@@ -136,7 +134,7 @@ async def test_the_bridge_runs_only_while_installed_and_wanted(
 
     assert not_installed == (0, None)
     assert running is True
-    assert args == ["node", "--import", "tsx", "src/index.ts"]
+    assert args == ["bun", "src/index.ts"]
     assert cwd.parent == tmp_path / "bridge"
     assert env["PEMA_ZALO_PERSONAL_ENABLED"] == "true"
     assert env["PEMA_API_BASE_URL"] == "http://127.0.0.1:8080/v1/hooks/zalo"
@@ -198,7 +196,7 @@ async def test_an_external_bridge_is_always_there_and_cannot_be_installed(tmp_pa
 def _bundled_folder(tmp_path: Path) -> Path:
     """A bridge folder as the agent's image leaves it: sources plus their installed packages."""
     folder = tmp_path / "image-bridge"
-    for package in ("tsx", "zca-js"):
+    for package in ("hono", "zca-js"):
         (folder / "node_modules" / package).mkdir(parents=True)
     (folder / "package.json").write_text(json.dumps({"version": "0.1.0"}), encoding="utf-8")
     return folder

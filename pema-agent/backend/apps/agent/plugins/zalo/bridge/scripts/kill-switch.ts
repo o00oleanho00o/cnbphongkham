@@ -1,5 +1,5 @@
 /**
- * Emergency stop of the zalo-personal bridge from a terminal: `pnpm kill-switch on`.
+ * Emergency stop of the zalo-personal bridge from a terminal: `bun run kill-switch on`.
  * See README, "EMERGENCY OFF". The logic is in `src/kill-switch-cli.ts`.
  */
 import { USAGE, parseKillSwitchArgs, sendKillSwitch } from "../src/kill-switch-cli.js";

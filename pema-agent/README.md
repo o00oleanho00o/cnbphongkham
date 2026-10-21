@@ -87,7 +87,7 @@ Kiểm riêng từng phần:
 cd backend && uv run pytest apps/api/tests/policy                  # chính sách: cờ đỏ, PII, xác minh
 cd backend && uv run pytest apps/api/tests/integration             # vòng khép kín (cần DB + Redis)
 cd backend && uv run pytest ../evals                                # eval với mô hình giả (cũng nằm trong make test)
-cd backend/bridges/zalo-personal && pnpm install && pnpm test      # cầu nối (không bao giờ đăng nhập Zalo)
+cd backend/apps/agent/plugins/zalo/bridge && bun install && bun run test      # cầu nối (không bao giờ đăng nhập Zalo)
 cd frontend && bun run lint && bun run typecheck && bun run test
 make openapi && make types   # sinh lại openapi.json rồi kiểu TypeScript
 ```

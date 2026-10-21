@@ -8,7 +8,7 @@
 //   `SO_CHU_KY_CHO_THEM_TRUOC_KHI_BO_CUOC` more cycles; before that the ORIGINAL behaviour holds (log and
 //   keep backing off);
 // - `now` / `random` / `keHoach` can be injected so the reconnect logic is testable with fake timers;
-// - the log line that advises `pnpm zalo-login <id>` now points at the admin UI QR login.
+// - the log line that advises `zalo-login <id>` now points at the admin UI QR login.
 import { CloseReason } from "zca-js";
 import type { FriendEvent, Typing } from "zca-js";
 import { createLogger, errorInfo } from "./logger.js";

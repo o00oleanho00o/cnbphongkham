@@ -1,6 +1,6 @@
 # ported from: src/server/routes/account-routes.ts
 """Admin routes of the Zalo plugin, under ``/v1/plugins/zalo`` (admin token): accounts (list, create, change,
-delete), a bot's token, an OA's keys, the QR login of a personal account, the Node bridge (status, install,
+delete), a bot's token, an OA's keys, the QR login of a personal account, the Bun bridge (status, install,
 uninstall), the reaction icons the dashboard offers, the address book, group names and the friends of personal
 accounts.
 Under ``/v1/hooks/zalo`` (open): the webhook of bot accounts (secret header) and the events of the plugin's

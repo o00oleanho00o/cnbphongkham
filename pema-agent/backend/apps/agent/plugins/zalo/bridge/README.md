@@ -1,9 +1,9 @@
 # zalo-personal bridge
 
-A small Node 22+ sidecar (Hono) around [`zca-js`](https://github.com/RFS-ADRENO/zca-js) 2.1.2 that lets the Pema
+A small Bun sidecar (Hono) around [`zca-js`](https://github.com/RFS-ADRENO/zca-js) 2.1.2 that lets the Pema
 backend use a **personal Zalo account** as a messaging channel. `zca-js` is not ported to Python: it stays here, behind
 a flag, and the Python side talks to it over signed HTTP (`pema/channels/zalo_personal/bridge_client.py`). It is the
-Node half of the faithful port of `vuhai2002/zalo-agent` (`src/zalo/zalo-client.ts`, `zalo-listener.ts`,
+Bun half of the faithful port of `vuhai2002/zalo-agent` (`src/zalo/zalo-client.ts`, `zalo-listener.ts`,
 `reconnect-planner.ts`, `qr-login-manager.ts`, `reaction-icons.ts`).
 
 ## WARNING: risk of account lock and breach of the Zalo terms
@@ -31,7 +31,7 @@ Rules that follow from this, and that the code enforces where it can:
 | Flag              | `PEMA_ZALO_PERSONAL_ENABLED` is `false` in code. When false every route except `GET /health` answers `503 bridge_disabled` and `zca-js` is never instantiated. `.env.example` sets it to `true`, but **nothing runs until somebody scans a QR code** (or the API pushes a stored credential).                              |
 | Secondary account | See the warning above. The admin UI creates personal accounts with the `patient_channel` policy profile by default (every outgoing text is reviewed by a person).                                                                                                                                                          |
 | Daily cap         | The API caps proactive messages per (account, thread, day) with `SCHEDULER_MAX_PROACTIVE_PER_DAY` (default 10, configurable per channel in the admin UI). The bridge adds its own ceiling, `ZALO_BRIDGE_MAX_PROACTIVE_PER_DAY_PER_ACCOUNT` (default 100), and `ZALO_BRIDGE_MAX_SENDS_PER_MINUTE_PER_ACCOUNT` (default 20). |
-| Kill switch       | Instant. Off by default. Set from the admin UI, from the API, or straight on the bridge (`pnpm kill-switch on`). Scope `proactive` blocks every proactive message, scope `all` blocks every send.                                                                                                                          |
+| Kill switch       | Instant. Off by default. Set from the admin UI, from the API, or straight on the bridge (`bun run kill-switch on`). Scope `proactive` blocks every proactive message, scope `all` blocks every send.                                                                                                                          |
 | Breaker           | After `ZALO_BRIDGE_BLOCK_AFTER_REJECTED_SENDS` (default 5) consecutive sends refused by the Zalo server the account goes `blocked`, refuses all sends and the bridge reports `account_state: blocked`.                                                                                                                     |
 | Credential        | The Zalo cookie, `imei` and user agent are **never written to disk** by the bridge. The agent's Zalo plugin keeps them sealed with the agent's secret key in its own storage (`agent_rt.agent_plugin_record`, database `pema_agent`) and hands them over in the body of the signed `start` request; the bridge keeps them in memory.                           |
 | Transport         | The bridge listens on loopback by default. Every request, and every event it posts, carries an HMAC-SHA256 signature (`PEMA_ZALO_BRIDGE_SECRET`) with a 5 minute replay window.                                                                                                                                            |
@@ -69,9 +69,9 @@ Fastest first. Any one of them stops the sending.
 2. **From a terminal on the bridge host**, without the API or the UI:
 
    ```sh
-   pnpm kill-switch on --scope all --reason "emergency"   # blocks every send of every account
-   pnpm kill-switch status
-   pnpm kill-switch off
+   bun run kill-switch on --scope all --reason "emergency"   # blocks every send of every account
+   bun run kill-switch status
+   bun run kill-switch off
    ```
 
    It reads `PEMA_ZALO_BRIDGE_SECRET`, `PEMA_ZALO_BRIDGE_HOST` and `PEMA_ZALO_BRIDGE_PORT` from the environment or `.env`
@@ -123,11 +123,11 @@ See `.env.example`. Hard backstops: `ZALO_BRIDGE_MAX_PROACTIVE_PER_DAY_PER_ACCOU
 ## Development
 
 ```sh
-pnpm install
-pnpm test           # node --test with tsx; no network, a fake zca-js gateway
-pnpm typecheck
-pnpm lint
-pnpm format:check
+bun install
+bun run test       # bun test; no network, a fake zca-js gateway
+bun run typecheck
+bun run lint
+bun run format:check
 ```
 
 The tests never log in to Zalo. Everything in them is synthetic.

@@ -1,5 +1,5 @@
-# Pema Agent: common commands. Run from pema-agent/. Needs uv, pnpm, and docker for the db targets.
-# Windows without make: run the commands of each recipe by hand (they are plain uv/pnpm/docker calls).
+# Pema Agent: common commands. Run from pema-agent/. Needs uv, bun, and docker for the db targets.
+# Windows without make: run the commands of each recipe by hand (they are plain uv/bun/docker calls).
 # One checkout + one infra/.env = ONE clinic (single tenant): no target takes a clinic slug or id. A second clinic is
 # a second stack with its own infra/.env (infra/README.md "One system, one clinic").
 
@@ -18,7 +18,7 @@ LOAD_ENV := set -a; if [ -f ../infra/.env ]; then . ../infra/.env; fi; set +a;
         retention-dry-run backup restore-verify
 
 help:
-	@echo "setup       install Python (uv) and frontend (pnpm) dependencies"
+	@echo "setup       install Python (uv) and frontend (bun) dependencies"
 	@echo "lint        ruff + pyright (strict) + import-linter"
 	@echo "format      ruff format + autofix"
 	@echo "typecheck   pyright (backend) and tsc (frontend)"

@@ -7,7 +7,7 @@ One token source and one small component kit for the staff web, shaped to be por
 - `tokens.css` is the source: a Tailwind v4 `@theme static` block (light values) and a `.dark` block (colour
   overrides only). Components use the names (`bg-surface`, `text-ink-soft`, `border-line`, `rounded-card`,
   `text-body`, `wide:grid-cols-4` ...), never hex values; `tokens.test.ts` fails on a hard-coded colour in the kit.
-- `tokens.json` is generated from it: `pnpm tokens` (`pnpm tokens --check` fails when it is stale; the unit test
+- `tokens.json` is generated from it: `bun run tokens` (`bun run tokens --check` fails when it is stale; the unit test
   does the same). `tokens.schema.json` is its JSON Schema.
 - Groups: `color.light` / `color.dark` (overrides), `radius`, `shadow`, `text` (px), `space` (px), `layout` (px),
   `breakpoint` (rem), `z`, `font`. A name is the CSS variable without its group prefix:

@@ -51,7 +51,7 @@ const colorOf = (mode: "light" | "dark", name: string): string => {
 };
 
 describe("tokens.json", () => {
-  it("is exactly what tokens.css exports (run `pnpm tokens` after editing the CSS)", () => {
+  it("is exactly what tokens.css exports (run `bun run tokens` after editing the CSS)", () => {
     expect(JSON.stringify(committed, null, 2) + "\n").toBe(renderTokensJson(css));
   });
 

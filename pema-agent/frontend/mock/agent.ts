@@ -1,4 +1,4 @@
-// Fake agent service for `pnpm dev:mock` (plan C): `scripts/dev-mock.mjs` points `PEMA_AGENT_INTERNAL_URL` at this
+// Fake agent service for `bun run dev:mock` (plan C): `scripts/dev-mock.mjs` points `PEMA_AGENT_INTERNAL_URL` at this
 // server, so the clinic web's `/agent/...` proxy reaches it with a token from `POST /api/v1/auth/agent-token`. It
 // answers only what the plugin pages read when they open: the list of plugin scripts, the Zalo plugin's built
 // script and the Zalo plugin's lists, with FICTIONAL accounts and contacts. Not part of the clinic contract
@@ -741,7 +741,9 @@ export function buildAgentRouter(): Router {
     if (!file || !existsSync(file)) {
       return {
         status: 404,
-        body: { detail: "the browser files are not built (pnpm build in the plugin's ui folder)" },
+        body: {
+          detail: "the browser files are not built (bun run build in the plugin's ui folder)",
+        },
       };
     }
     return {

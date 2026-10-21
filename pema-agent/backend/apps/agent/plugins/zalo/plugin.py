@@ -1,5 +1,5 @@
 """The plugin at run time: keeps one channel per Zalo account that can run, in step with the stored accounts,
-and the Node bridge running while a personal account needs it.
+and the Bun bridge running while a personal account needs it.
 
 ``sync`` compares the accounts with the channels:
 

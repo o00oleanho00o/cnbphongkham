@@ -1,5 +1,5 @@
 /**
- * Logic of `pnpm kill-switch`: sign and send `POST/GET /v1/kill-switch` to the bridge.
+ * Logic of `bun run kill-switch`: sign and send `POST/GET /v1/kill-switch` to the bridge.
  *
  * New module (no TS original). The emergency stop must work even when the API and the admin UI do not,
  * so it talks to the bridge directly with the same HMAC the API uses. The CLI entry is
@@ -13,7 +13,7 @@ export type KillSwitchCommand =
   | { action: "status" };
 
 export const USAGE =
-  "Usage: pnpm kill-switch <on|off|status> [--scope all|proactive] [--reason <text>]\n" +
+  "Usage: bun run kill-switch <on|off|status> [--scope all|proactive] [--reason <text>]\n" +
   "Reads PEMA_ZALO_BRIDGE_SECRET (required), PEMA_ZALO_BRIDGE_HOST and PEMA_ZALO_BRIDGE_PORT from the environment or .env.";
 
 function readOption(args: readonly string[], name: string): string | undefined {

@@ -1,4 +1,4 @@
-"""The Node bridge on this machine: finding it ready (bundled) or installing it, running it while a personal
+"""The Bun bridge on this machine: finding it ready (bundled) or installing it, running it while a personal
 account needs it, and stopping it.
 
 Bundled: the agent's image installs the bridge's packages in the plugin's own ``bridge`` folder at build time,
@@ -8,10 +8,10 @@ account is added.
 
 Installed (no bundled copy, e.g. the agent run from a checkout): an admin presses Install; it copies the
 bridge's sources from the plugin folder into the plugin's data folder and runs
-``pnpm install --frozen-lockfile --prod`` there (the plugin folder is never written).
+``bun install --frozen-lockfile --production`` there (the plugin folder is never written).
 
 Running: while the bridge is installed and at least one personal account is enabled, the plugin's job keeps
-one ``node`` process on a free loopback port with a fresh HMAC secret; the process gets a minimal environment
+one ``bun`` process on a free loopback port with a fresh HMAC secret; the process gets a minimal environment
 (no keys of the service). It is started again after it dies (pauses 2, 5, 30, 60 s) and stopped when no
 account needs it. Its output goes to ``bridge.log`` in the data folder (the bridge never logs messages,
 names, cookies or secrets).
@@ -37,10 +37,10 @@ from typing import IO, Any, Final, Protocol, cast
 from .client import BridgeClient
 
 SOURCE: Final = Path(__file__).resolve().parents[1] / "bridge"
-COPIED: Final = ("package.json", "pnpm-lock.yaml", "pnpm-workspace.yaml", "tsconfig.json", "src")
-BUNDLED_PACKAGES: Final = ("tsx", "zca-js")
+COPIED: Final = ("package.json", "bun.lock", "tsconfig.json", "src")
+BUNDLED_PACKAGES: Final = ("hono", "zca-js")
 """Packages whose presence in ``<folder>/node_modules`` marks a ready bundled bridge."""
-MIN_NODE: Final = (22, 13)
+MIN_BUN: Final = (1, 2)
 INSTALL_TIMEOUT_S: Final = 15 * 60.0
 HEALTH_TIMEOUT_S: Final = 30.0
 RESTART_PAUSES_S: Final = (2.0, 5.0, 30.0, 60.0)
@@ -60,7 +60,7 @@ PASSED_ENV: Final = (
     "LOCALAPPDATA",
     "LANG",
 )
-"""The only variables of the service the bridge inherits: what Node needs to run, none of the service's
+"""The only variables of the service the bridge inherits: what Bun needs to run, none of the service's
 keys."""
 
 BUNDLED_REFUSAL: Final = "cầu nối có sẵn trong bản cài của agent, không cần cài hay gỡ"
@@ -290,9 +290,9 @@ class BridgeSupervisor:
         if self_url is None:
             self._error = "the service is not listening yet"
             return
-        node = self._runner.which("node")
-        if node is None:
-            self._failed("node is not installed on this machine")
+        bun = self._runner.which("bun")
+        if bun is None:
+            self._failed("bun is not installed on this machine")
             return
         folder = self._bundled_folder() if self._bundled_ready() else self._installed_folder()
         port = _free_port()
@@ -308,9 +308,7 @@ class BridgeSupervisor:
                 "ZALO_BRIDGE_LOG_LEVEL": "info",
             }
         )
-        process = self._runner.spawn(
-            [node, "--import", "tsx", "src/index.ts"], folder, env, self._data_dir() / "bridge.log"
-        )
+        process = self._runner.spawn([bun, "src/index.ts"], folder, env, self._data_dir() / "bridge.log")
         client = self._client_factory(f"http://127.0.0.1:{port}", secret)
         deadline = time.monotonic() + HEALTH_TIMEOUT_S
         while not await client.health():
@@ -336,13 +334,13 @@ class BridgeSupervisor:
 
     def _install(self) -> None:
         runner = self._runner
-        node, pnpm = runner.which("node"), runner.which("pnpm")
-        if node is None or pnpm is None:
-            raise ValueError("cài Node.js 22.13+ và pnpm trên máy chủ trước")
-        code, out = runner.run([node, "--version"], SOURCE, 30.0)
-        version = _node_version(out)
-        if code != 0 or version is None or version < MIN_NODE:
-            raise ValueError(f"cần Node.js 22.13 trở lên (máy chủ có {out.strip() or 'không rõ'})")
+        bun = runner.which("bun")
+        if bun is None:
+            raise ValueError("cài bun 1.2+ trên máy chủ trước")
+        code, out = runner.run([bun, "--version"], SOURCE, 30.0)
+        version = _bun_version(out)
+        if code != 0 or version is None or version < MIN_BUN:
+            raise ValueError(f"cần bun 1.2 trở lên (máy chủ có {out.strip() or 'không rõ'})")
         package = json.loads((SOURCE / "package.json").read_text(encoding="utf-8"))
         target = self._root() / str(package.get("version", "0"))
         shutil.rmtree(self._root(), ignore_errors=True)
@@ -355,14 +353,16 @@ class BridgeSupervisor:
                 )
             else:
                 shutil.copy2(source, target / name)
-        code, out = runner.run([pnpm, "install", "--frozen-lockfile", "--prod"], target, INSTALL_TIMEOUT_S)
+        code, out = runner.run(
+            [bun, "install", "--frozen-lockfile", "--production"], target, INSTALL_TIMEOUT_S
+        )
         self._log = out.splitlines()[-MAX_LOG_LINES:]
         if code != 0:
             shutil.rmtree(self._root(), ignore_errors=True)
-            raise ValueError("pnpm install thất bại (xem log)")
+            raise ValueError("bun install thất bại (xem log)")
         marker = {
             "version": package.get("version"),
-            "node": f"{version[0]}.{version[1]}",
+            "bun": f"{version[0]}.{version[1]}",
             "folder": target.name,
         }
         (self._root() / "installed.json").write_text(json.dumps(marker), encoding="utf-8")
@@ -403,7 +403,7 @@ def _package_version(folder: Path) -> str | None:
     return str(version) if version else None
 
 
-def _node_version(text: str) -> tuple[int, int] | None:
+def _bun_version(text: str) -> tuple[int, int] | None:
     found = re.search(r"v?(\d+)\.(\d+)", text)
     return None if found is None else (int(found.group(1)), int(found.group(2)))
 

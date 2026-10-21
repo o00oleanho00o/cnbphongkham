@@ -1,32 +1,31 @@
 # syntax=docker/dockerfile:1
-# The general agent (apps/agent): gateway, dashboard (plugin web), bundled plugins, and Node + pnpm for the plugins'
+# The general agent (apps/agent): gateway, dashboard (plugin web), bundled plugins, and bun for the plugins'
 # helper processes. The Zalo bridge's packages are installed here, in the plugin's own `bridge` folder, so the bridge
 # is ready from the start (nobody installs it from the dashboard); it runs only while a personal account needs it.
 # Build context: pema-agent/ (see docker-compose.yml). Ignore rules: agent.Dockerfile.dockerignore.
 #
-# Stages: node (Node 22 + pnpm) -> ui (builds the plugins' browser halves), bridge (the Zalo bridge's production
+# Stages: bun -> ui (builds the plugins' browser halves), bridge (the Zalo bridge's production
 # packages) ; builder (uv) -> runtime (non-root).
 # The agent app is installed editable on purpose: it finds its bundled plugins next to its package folder.
 
-FROM node:22-bookworm-slim AS node
-RUN npm install -g pnpm@11.17.0 && pnpm --version
+FROM oven/bun:1-slim AS bun
 
 
-FROM node AS ui
+FROM bun AS ui
 WORKDIR /build/plugins
-COPY backend/apps/agent/plugins/web/ui/package.json backend/apps/agent/plugins/web/ui/pnpm-lock.yaml web/ui/
-COPY backend/apps/agent/plugins/zalo/ui/package.json backend/apps/agent/plugins/zalo/ui/pnpm-lock.yaml zalo/ui/
-COPY backend/apps/agent/plugins/knowledge/ui/package.json backend/apps/agent/plugins/knowledge/ui/pnpm-lock.yaml knowledge/ui/
-COPY backend/apps/agent/plugins/skills/ui/package.json backend/apps/agent/plugins/skills/ui/pnpm-lock.yaml skills/ui/
-COPY backend/apps/agent/plugins/conversations/ui/package.json backend/apps/agent/plugins/conversations/ui/pnpm-lock.yaml conversations/ui/
-COPY backend/apps/agent/plugins/jev/ui/package.json backend/apps/agent/plugins/jev/ui/pnpm-lock.yaml jev/ui/
-RUN --mount=type=cache,target=/root/.local/share/pnpm/store \
-    cd web/ui && pnpm install --frozen-lockfile \
-    && cd ../../zalo/ui && pnpm install --frozen-lockfile \
-    && cd ../../knowledge/ui && pnpm install --frozen-lockfile \
-    && cd ../../skills/ui && pnpm install --frozen-lockfile \
-    && cd ../../conversations/ui && pnpm install --frozen-lockfile \
-    && cd ../../jev/ui && pnpm install --frozen-lockfile
+COPY backend/apps/agent/plugins/web/ui/package.json backend/apps/agent/plugins/web/ui/bun.lock web/ui/
+COPY backend/apps/agent/plugins/zalo/ui/package.json backend/apps/agent/plugins/zalo/ui/bun.lock zalo/ui/
+COPY backend/apps/agent/plugins/knowledge/ui/package.json backend/apps/agent/plugins/knowledge/ui/bun.lock knowledge/ui/
+COPY backend/apps/agent/plugins/skills/ui/package.json backend/apps/agent/plugins/skills/ui/bun.lock skills/ui/
+COPY backend/apps/agent/plugins/conversations/ui/package.json backend/apps/agent/plugins/conversations/ui/bun.lock conversations/ui/
+COPY backend/apps/agent/plugins/jev/ui/package.json backend/apps/agent/plugins/jev/ui/bun.lock jev/ui/
+RUN --mount=type=cache,target=/root/.bun/install/cache \
+    cd web/ui && bun install --frozen-lockfile \
+    && cd ../../zalo/ui && bun install --frozen-lockfile \
+    && cd ../../knowledge/ui && bun install --frozen-lockfile \
+    && cd ../../skills/ui && bun install --frozen-lockfile \
+    && cd ../../conversations/ui && bun install --frozen-lockfile \
+    && cd ../../jev/ui && bun install --frozen-lockfile
 COPY backend/apps/agent/plugins/web/ui web/ui
 COPY backend/apps/agent/plugins/zalo/ui zalo/ui
 COPY backend/apps/agent/plugins/knowledge/ui knowledge/ui
@@ -34,16 +33,17 @@ COPY backend/apps/agent/plugins/skills/ui skills/ui
 COPY backend/apps/agent/plugins/conversations/ui conversations/ui
 COPY backend/apps/agent/plugins/jev/ui jev/ui
 # plugins first: the dashboard's stylesheet scans the other plugins' sources, their builds read the SDK types.
-RUN cd zalo/ui && pnpm run build && cd ../../knowledge/ui && pnpm run build && cd ../../skills/ui && pnpm run build \
-    && cd ../../conversations/ui && pnpm run build \
-    && cd ../../jev/ui && pnpm run build \
-    && cd ../../web/ui && pnpm run build
+RUN cd zalo/ui && bun run build && cd ../../knowledge/ui && bun run build && cd ../../skills/ui && bun run build \
+    && cd ../../conversations/ui && bun run build \
+    && cd ../../jev/ui && bun run build \
+    && cd ../../web/ui && bun run build
 
 
-FROM node AS bridge
+FROM bun AS bridge
 WORKDIR /build/bridge
-COPY backend/apps/agent/plugins/zalo/bridge/package.json backend/apps/agent/plugins/zalo/bridge/pnpm-lock.yaml backend/apps/agent/plugins/zalo/bridge/pnpm-workspace.yaml ./
-RUN --mount=type=cache,target=/root/.local/share/pnpm/store     pnpm install --frozen-lockfile --prod
+COPY backend/apps/agent/plugins/zalo/bridge/package.json backend/apps/agent/plugins/zalo/bridge/bun.lock ./
+RUN --mount=type=cache,target=/root/.bun/install/cache \
+    bun install --frozen-lockfile --production
 
 
 FROM python:3.12-slim-bookworm AS builder
@@ -85,8 +85,7 @@ ENV PATH="/opt/venv/bin:${PATH}" \
     PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1
 
-COPY --from=node /usr/local/bin/ /usr/local/bin/
-COPY --from=node /usr/local/lib/node_modules/ /usr/local/lib/node_modules/
+COPY --from=bun /usr/local/bin/bun /usr/local/bin/bun
 
 RUN groupadd --system --gid 10001 agent \
     && useradd --system --uid 10001 --gid agent --home-dir /home/agent --create-home --shell /usr/sbin/nologin agent \

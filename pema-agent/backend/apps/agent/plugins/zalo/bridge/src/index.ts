@@ -5,7 +5,7 @@
  * - Disabled (the code default): serves only `GET /health` and 503 for the rest; zca-js is never loaded.
  * - Enabled: nothing logs in until the API calls `/start` or an operator scans a QR code.
  *
- * Run it with `pnpm start` (tsx).
+ * Run it with `bun run start`.
  */
 import { serve } from "@hono/node-server";
 import { ConfigError, loadConfig, type BridgeConfig } from "./config.js";

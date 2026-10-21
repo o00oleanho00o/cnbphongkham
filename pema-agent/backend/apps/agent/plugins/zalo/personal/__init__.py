@@ -1,1 +1,1 @@
-"""Personal Zalo accounts through the Node bridge (zca-js, unofficial: the account can be locked)."""
+"""Personal Zalo accounts through the Bun bridge (zca-js, unofficial: the account can be locked)."""

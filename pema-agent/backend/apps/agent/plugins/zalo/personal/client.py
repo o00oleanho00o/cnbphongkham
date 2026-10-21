@@ -1,5 +1,5 @@
 # ported from: src/zalo/zalo-client.ts (the seam only)
-"""Python face of the Node bridge that keeps ``zca-js`` (``bridge/``).
+"""Python face of the Bun bridge that keeps ``zca-js`` (``bridge/``).
 
 Everything zalo-agent did with the zca-js ``API`` object goes through ``BridgeAccountApi``, one per account;
 the lifecycle (start, stop, state, QR login) through ``BridgeClient``. Wire rules (full protocol in

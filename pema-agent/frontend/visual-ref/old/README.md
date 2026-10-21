@@ -41,7 +41,7 @@ connections above two parallel clients).
 
 ## Compare
 
-The new screenshots come from `pnpm visual` (see `../new/README.md`). The check that U0 signs is `/today`
+The new screenshots come from `bun run visual` (see `../new/README.md`). The check that U0 signs is `/today`
 at 1920x1020: `1920-today.png` here against `1920x1020-today.png` there.
 
 The old web shows synthetic demo patients only; nothing here may contain real patient data.

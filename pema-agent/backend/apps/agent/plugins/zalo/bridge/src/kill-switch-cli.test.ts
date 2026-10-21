@@ -1,4 +1,4 @@
-// Tests of the logic behind `pnpm kill-switch`.
+// Tests of the logic behind `bun run kill-switch`.
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { SIGNATURE_HEADER, TIMESTAMP_HEADER, verifySignature } from "./auth.js";

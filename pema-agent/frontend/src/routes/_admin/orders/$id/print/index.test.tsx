@@ -2,7 +2,7 @@
 // The A5 print page (`/orders/[id]/print`): an approved order can be printed (one sheet or both, picked by `?sheet=`),
 // a draft carries the draft mark, cannot be printed and says so, and nothing prints by itself. The print stylesheet
 // (A5 named page, one sheet per page, a draft prints nothing) is checked on the real page in the visual run
-// (`pnpm visual`); here the markup it relies on is pinned. Rules: `backend/apps/api/tests/clinic/test_orders_api.py`.
+// (`bun run visual`); here the markup it relies on is pinned. Rules: `backend/apps/api/tests/clinic/test_orders_api.py`.
 import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";

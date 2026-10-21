@@ -76,4 +76,4 @@ SOFTWARE.
 ## 3. Other dependencies
 
 Python and Node dependencies are installed from their registries under their own licenses (see
-`backend/uv.lock` and `frontend/pnpm-lock.yaml`). Fonts, logos and artwork of zalo-agent are NOT copied.
+`backend/uv.lock` and the `bun.lock` files of `frontend/` and the plugins). Fonts, logos and artwork of zalo-agent are NOT copied.
