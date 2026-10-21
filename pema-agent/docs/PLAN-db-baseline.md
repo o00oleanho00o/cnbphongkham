@@ -16,6 +16,9 @@ Agent nói chuyện với người ngoài (Zalo, web) nên **phải coi như có
 | L4 | Dữ liệu phòng khám vào agent chỉ theo một đường | Nhân viên tải tài liệu đã duyệt lên kho tri thức của agent. Không tool nào của agent tra bệnh nhân, lịch hẹn, đơn, tài chính |
 | L5 | Muốn mở đường mới thì người chủ hệ thống quyết | Ghi vào `.claude/rules/agent-crm-boundary.md` (AI và subagent đều đọc); đường mới phải hẹp, chỉ đọc, có nhân viên duyệt, và có thiết kế riêng |
 
+> **Đã thay (2026-10-21):** L2–L4 được chủ mở có giới hạn theo `PLAN-crm-plugin.md` mục 3.8 (cổng `agent-gateway` qua
+> `crm-signer`, sự kiện lịch); thêm L6, L7. Chữ hiện hành ở `.claude/rules/agent-crm-boundary.md`; bảng trên là bản gốc.
+
 **Test giữ luật** (chạy trong bộ test, hỏng là đỏ):
 
 - T1 (agent, `db`): `agent_rt_app` không CONNECT được database `pema`; không có USAGE trên schema nào ngoài `agent_rt` và `public`.

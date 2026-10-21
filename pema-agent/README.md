@@ -3,8 +3,10 @@
 > **Hiện trạng (2026-10-16).** Lớp agent kiểu zalo-agent mô tả trong phần lớn file này đã bị gỡ (nhánh `feat/agent-v2`).
 > Nay có hai app riêng: `backend/apps/api` (CRM phòng khám, database `pema`, schema `ctx` + `clinic`, role `be_app`) và
 > `backend/apps/agent` (agent tổng quát, plugin Zalo/web/kho tri thức, database riêng `pema_agent`, schema `agent_rt`,
-> role `agent_rt_app`). Agent không đọc được DB và không gọi được API của CRM, trừ khóa công khai JWKS để kiểm token
-> SSO: [luật ranh giới](../.claude/rules/agent-crm-boundary.md), [kế hoạch DB](docs/PLAN-db-baseline.md),
+> role `agent_rt_app`). Agent không đọc được DB của CRM và không giữ khóa nào của CRM: nó chỉ tải khóa công khai JWKS
+> (kiểm token SSO và sự kiện CRM gửi sang) và gọi một cổng hẹp `/api/v1/agent-gateway` qua dịch vụ `crm-signer` (giữ
+> khóa, ký từng yêu cầu), chỉ cho chính người đang chat: [luật ranh giới](../.claude/rules/agent-crm-boundary.md),
+> [kế hoạch DB](docs/PLAN-db-baseline.md), [kế hoạch plugin CRM](docs/PLAN-crm-plugin.md),
 > [handoff](docs/HANDOFF-agent-v2.md). Mỗi app có một migration gốc `0001_baseline`.
 
 Agent chăm sóc khách hàng (CSKH) bằng chữ qua Zalo cho Pema Digital Clinic, và CRM phòng khám phía server, trong một codebase:
@@ -182,7 +184,7 @@ PEMA_TEST_DATABASE_URL=postgresql+psycopg://... uv run pytest -c pyproject.toml 
 
 ## Quy tắc áp dụng khắp nơi
 
-- Agent không bao giờ chạm CRM: database riêng `pema_agent`, role `agent_rt_app` chỉ CONNECT được database đó, agent không giữ khóa API nào của CRM ([luật L1–L5](../.claude/rules/agent-crm-boundary.md), test T1–T4).
+- Agent không bao giờ chạm DB của CRM: database riêng `pema_agent`, role `agent_rt_app` chỉ CONNECT được database đó, tiến trình agent không giữ khóa nào của CRM; đường duy nhất vào CRM là cổng `/api/v1/agent-gateway` qua `crm-signer`, cho chính người đang chat ([luật L1–L7](../.claude/rules/agent-crm-boundary.md), test T1–T9).
 - Mọi bảng có `clinic_id` làm mã cài đặt cố định của MỘT phòng khám; không RLS, không ngữ cảnh phòng khám: mở công việc bằng `ClinicDatabase.session()`, lấy mã bằng `get_installation_clinic_id(db)`, SQL dùng `ctx.the_clinic_id()` (CONTRACTS-AI01 mục 10). Ranh giới DB là grant của `be_app` và hai database riêng; cách ly giữa các phòng khám là hạ tầng riêng cho từng phòng khám.
 - Thời gian trên đường truyền là ISO 8601 có `+07:00`. Giao diện tiếng Việt.
 - Không commit `.env`, token, số điện thoại hay tên thật. Không PII trong log.

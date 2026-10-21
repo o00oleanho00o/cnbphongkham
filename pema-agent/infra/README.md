@@ -188,6 +188,24 @@ at Zalo with the old path (`.../zalo-bot/<clinic>/<account_id>`), re-register it
 * Inside the compose network the services get their URLs composed from the passwords (host names `postgres`,
   `redis`); the `localhost` URLs in `.env` are for tools run on the host.
 
+## Agent ↔ CRM (profile `agent`; `docs/PLAN-crm-plugin.md`, `.claude/rules/agent-crm-boundary.md`)
+
+The agent books, shows, confirms, moves and cancels visits for the person it chats with, and reminds them, through
+a narrow way: it calls `crm-signer` (which holds the key and signs each call for one of 8 routes), the API checks the
+signature with a public key, and the API tells the agent what changed with events it signs itself. Everything is
+off until switched on, in this order:
+
+1. `docker compose --profile agent run --rm crm-signer crm-signer keygen` once: it prints
+   `PEMA_AGENT_GATEWAY_PUBLIC_KEYS=...`; put that line in `.env` and restart `api`. Until then the gateway answers 404.
+2. `agent-migrate` has created the crm plugin's tables (`agent db migrate-plugins`, run on every `up`).
+3. `PEMA_AGENT_EVENTS_URL=http://agent:8088/v1/hooks/crm/events` in `.env`, restart `api`. Empty: no event is written.
+   Set it only after step 2, or the agent answers 500 and the API gives up on those events after about an hour.
+4. Reminders: `reminders_enabled = true` under `[plugins.crm]` of the agent's profile (off by default); marks,
+   quiet hours and the daily cap are the plugin's settings.
+
+Key change without downtime: `keygen` into a fresh volume, put the new public key beside the old one
+(`PEMA_AGENT_GATEWAY_PUBLIC_KEYS=old,new`), restart `api`, switch `crm-signer` to the new volume, drop the old key.
+
 ## Backups
 
 `scripts/backup-postgres.sh` (verified dump + globals, encrypted with age or gpg, retention, off-site hook) and
