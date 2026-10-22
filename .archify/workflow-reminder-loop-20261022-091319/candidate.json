@@ -2,23 +2,44 @@
   "schema_version": 2,
   "diagram_type": "workflow",
   "meta": {
-    "title": "Vòng nhắc lịch: sự kiện của CRM đến tin nhắc cho khách",
+    "title": "Vòng nhắc lịch: sự kiện của CRM đến tin nhắc, mỗi mốc một ca",
     "locale": "vi",
     "output": ".archify/workflow-reminder-loop-20261022-091319/reminder-loop.html",
     "quality_profile": "showcase",
     "repository": {
       "url": "git@github-personal20:o00oleanho00o/cnbphongkham.git",
       "link_mode": "local-only",
-      "revision": "defd31b0dea3ff3835e209a3d7125eb9fbec6636"
+      "revision": "a93935770ceded4471586861fdf8611adbde3ad5"
     }
   },
   "lanes": [
-    { "id": "crm", "label": "CRM" },
-    { "id": "agent", "label": "Agent: nhận và nhớ" },
-    { "id": "loop", "label": "Vòng nhắc: quyết định" },
-    { "id": "out", "label": "Gửi" }
+    {
+      "id": "crm",
+      "label": "CRM"
+    },
+    {
+      "id": "agent",
+      "label": "Plugin crm: nhận, nhớ, chờ"
+    },
+    {
+      "id": "loop",
+      "label": "Ca reminder: động cơ chạy"
+    },
+    {
+      "id": "out",
+      "label": "Gửi"
+    }
   ],
-  "mainPath": ["change", "event", "receive", "state", "due", "decide", "claim", "send", "customer"],
+  "mainPath": [
+    "change",
+    "event",
+    "receive",
+    "state",
+    "due",
+    "decide",
+    "send",
+    "customer"
+  ],
   "nodes": [
     {
       "id": "change",
@@ -29,7 +50,12 @@
       "sublabel": "đặt, dời, hủy, nhân viên sửa",
       "width": 132,
       "sources": [
-        { "path": "pema-agent/backend/apps/api/pema/clinic/actions/agent_events.py", "line": 87, "end_line": 100, "label": "record_appointment_changed" }
+        {
+          "path": "pema-agent/backend/apps/api/pema/clinic/actions/agent_events.py",
+          "line": 87,
+          "end_line": 100,
+          "label": "record_appointment_changed"
+        }
       ]
     },
     {
@@ -41,8 +67,18 @@
       "sublabel": "outbox, JWT của CRM",
       "width": 132,
       "sources": [
-        { "path": "pema-agent/backend/apps/api/pema/clinic/models/agent_event.py", "line": 26, "end_line": 39, "label": "AgentEvent" },
-        { "path": "pema-agent/backend/apps/api/pema/composition/agent_events_worker.py", "line": 88, "end_line": 102, "label": "ký token" }
+        {
+          "path": "pema-agent/backend/apps/api/pema/clinic/models/agent_event.py",
+          "line": 26,
+          "end_line": 39,
+          "label": "AgentEvent"
+        },
+        {
+          "path": "pema-agent/backend/apps/api/pema/composition/agent_events_worker.py",
+          "line": 88,
+          "end_line": 102,
+          "label": "ký token"
+        }
       ]
     },
     {
@@ -54,7 +90,12 @@
       "sublabel": "lúc khởi động và mỗi 24 giờ",
       "width": 132,
       "sources": [
-        { "path": "pema-agent/backend/apps/agent/plugins/crm/reminders.py", "line": 250, "end_line": 292, "label": "reconcile" }
+        {
+          "path": "pema-agent/backend/apps/agent/plugins/crm/reminders.py",
+          "line": 340,
+          "end_line": 371,
+          "label": "reconcile"
+        }
       ]
     },
     {
@@ -67,7 +108,18 @@
       "width": 132,
       "tag": "chỉ nhận",
       "sources": [
-        { "path": "pema-agent/backend/apps/agent/plugins/crm/events.py", "line": 128, "end_line": 154, "label": "events_router" }
+        {
+          "path": "pema-agent/backend/apps/agent/plugins/crm/events.py",
+          "line": 140,
+          "end_line": 170,
+          "label": "events_router"
+        },
+        {
+          "path": "pema-agent/backend/apps/agent/plugins/crm/reminders.py",
+          "line": 325,
+          "end_line": 338,
+          "label": "changed"
+        }
       ]
     },
     {
@@ -79,8 +131,18 @@
       "sublabel": "phiên bản cao nhất thắng",
       "width": 132,
       "sources": [
-        { "path": "pema-agent/backend/apps/agent/plugins/crm/events.py", "line": 99, "end_line": 120, "label": "apply" },
-        { "path": "pema-agent/backend/apps/agent/plugins/crm/migrations/0001_crm.sql", "line": 6, "end_line": 55, "label": "crm_*" }
+        {
+          "path": "pema-agent/backend/apps/agent/plugins/crm/events.py",
+          "line": 100,
+          "end_line": 126,
+          "label": "apply"
+        },
+        {
+          "path": "pema-agent/backend/apps/agent/plugins/crm/migrations/0001_crm.sql",
+          "line": 6,
+          "end_line": 55,
+          "label": "crm_*"
+        }
       ]
     },
     {
@@ -88,11 +150,16 @@
       "lane": "agent",
       "col": 3,
       "type": "messagebus",
-      "label": "Chờ",
-      "sublabel": "giờ yên lặng 21:00-07:00",
+      "label": "Chờ đồng hồ",
+      "sublabel": "tới mốc, hết giờ yên lặng",
       "width": 132,
       "sources": [
-        { "path": "pema-agent/backend/apps/agent/plugins/crm/reminders.py", "line": 215, "end_line": 217, "label": "wait" }
+        {
+          "path": "pema-agent/backend/apps/agent/plugins/crm/reminders.py",
+          "line": 313,
+          "end_line": 320,
+          "label": "wait"
+        }
       ]
     },
     {
@@ -100,11 +167,16 @@
       "lane": "loop",
       "col": 2,
       "type": "backend",
-      "label": "Mốc đến hạn",
-      "sublabel": "24 giờ và 3 giờ trước lịch",
+      "label": "Mở ca mỗi mốc",
+      "sublabel": "giữ chỗ mốc rồi mở ca",
       "width": 132,
       "sources": [
-        { "path": "pema-agent/backend/apps/agent/plugins/crm/reminders.py", "line": 195, "end_line": 212, "label": "pass_once" }
+        {
+          "path": "pema-agent/backend/apps/agent/plugins/crm/reminders.py",
+          "line": 257,
+          "end_line": 301,
+          "label": "pass_once"
+        }
       ]
     },
     {
@@ -112,11 +184,22 @@
       "lane": "loop",
       "col": 3,
       "type": "security",
-      "label": "decide()",
-      "sublabel": "hàm thuần, 7 luật bỏ",
+      "label": "check",
+      "sublabel": "decide(), 7 luật bỏ",
       "width": 132,
       "sources": [
-        { "path": "pema-agent/backend/apps/agent/plugins/crm/reminders.py", "line": 119, "end_line": 140, "label": "decide" }
+        {
+          "path": "pema-agent/backend/apps/agent/plugins/crm/reminders.py",
+          "line": 303,
+          "end_line": 323,
+          "label": "check"
+        },
+        {
+          "path": "pema-agent/backend/apps/agent/plugins/crm/reminders.py",
+          "line": 127,
+          "end_line": 150,
+          "label": "decide"
+        }
       ]
     },
     {
@@ -124,24 +207,17 @@
       "lane": "loop",
       "col": 4,
       "type": "database",
-      "label": "Bỏ mốc",
-      "sublabel": "ghi lý do; mốc coi như xong",
+      "label": "Dừng ca",
+      "sublabel": "skip:<lý do> trong nhật ký",
       "width": 132,
       "tag": "kết thúc",
       "sources": [
-        { "path": "pema-agent/backend/apps/agent/plugins/crm/reminders.py", "line": 218, "end_line": 220, "label": "skip" }
-      ]
-    },
-    {
-      "id": "claim",
-      "lane": "out",
-      "col": 3,
-      "type": "database",
-      "label": "Giữ chỗ mốc",
-      "sublabel": "ghi trước khi gửi",
-      "width": 132,
-      "sources": [
-        { "path": "pema-agent/backend/apps/agent/plugins/crm/reminders.py", "line": 227, "end_line": 234, "label": "_send" }
+        {
+          "path": "pema-agent/backend/apps/agent/plugins/crm/reminders.py",
+          "line": 307,
+          "end_line": 322,
+          "label": "stop"
+        }
       ]
     },
     {
@@ -149,53 +225,148 @@
       "lane": "out",
       "col": 4,
       "type": "backend",
-      "label": "send_to",
-      "sublabel": "chạy một lượt agent",
+      "label": "send",
+      "sublabel": "lượt model, mã case:<id>:0",
       "width": 132,
       "sources": [
-        { "path": "pema-agent/backend/apps/agent/plugins/crm/reminders.py", "line": 235, "end_line": 248, "label": "send_to" }
+        {
+          "path": "pema-agent/backend/apps/agent/agent_app/cases/engine.py",
+          "line": 291,
+          "end_line": 316,
+          "label": "_run"
+        },
+        {
+          "path": "pema-agent/backend/packages/agent-core/src/agentcore/cases/rules.py",
+          "line": 245,
+          "end_line": 256,
+          "label": "turn_text"
+        }
       ]
     },
-    { "id": "customer", "lane": "out", "col": 5, "type": "external", "label": "Khách", "sublabel": "tin nhắn Zalo", "width": 132 }
+    {
+      "id": "customer",
+      "lane": "out",
+      "col": 5,
+      "type": "external",
+      "label": "Khách",
+      "sublabel": "tin nhắn Zalo",
+      "width": 132
+    }
   ],
   "edges": [
-    { "id": "change-event", "from": "change", "to": "event", "variant": "default" },
-    { "id": "event-receive", "from": "event", "to": "receive", "label": "POST", "variant": "security" },
-    { "id": "receive-state", "from": "receive", "to": "state", "label": "áp dụng", "variant": "default" },
-    { "id": "reconcile-state", "from": "reconcile", "to": "state", "label": "phiên bản 0", "variant": "dashed" },
-    { "id": "state-due", "from": "state", "to": "due", "variant": "default" },
-    { "id": "due-decide", "from": "due", "to": "decide", "label": "đến hạn", "variant": "emphasis" },
-    { "id": "decide-wait", "from": "decide", "to": "wait", "label": "wait", "variant": "dashed", "role": "branch" },
-    { "id": "wait-due", "from": "wait", "to": "due", "label": "xem lại", "variant": "dashed", "role": "return" },
-    { "id": "decide-skip", "from": "decide", "to": "skip", "label": "skip", "variant": "security", "role": "branch" },
-    { "id": "decide-claim", "from": "decide", "to": "claim", "label": "send", "variant": "emphasis" },
-    { "id": "claim-send", "from": "claim", "to": "send", "variant": "default" },
-    { "id": "send-customer", "from": "send", "to": "customer", "label": "nhắc lịch", "variant": "emphasis" }
+    {
+      "id": "change-event",
+      "from": "change",
+      "to": "event",
+      "variant": "default"
+    },
+    {
+      "id": "event-receive",
+      "from": "event",
+      "to": "receive",
+      "label": "POST",
+      "variant": "security"
+    },
+    {
+      "id": "receive-state",
+      "from": "receive",
+      "to": "state",
+      "label": "áp dụng",
+      "variant": "default"
+    },
+    {
+      "id": "reconcile-state",
+      "from": "reconcile",
+      "to": "state",
+      "label": "phiên bản 0",
+      "variant": "dashed"
+    },
+    {
+      "id": "state-due",
+      "from": "state",
+      "to": "due",
+      "label": "mỗi giờ",
+      "variant": "default"
+    },
+    {
+      "id": "due-decide",
+      "from": "due",
+      "to": "decide",
+      "label": "ca mở",
+      "variant": "emphasis"
+    },
+    {
+      "id": "decide-wait",
+      "from": "decide",
+      "to": "wait",
+      "label": "chưa tới",
+      "variant": "dashed",
+      "role": "branch"
+    },
+    {
+      "id": "wait-decide",
+      "from": "wait",
+      "to": "decide",
+      "label": "thức dậy",
+      "variant": "dashed",
+      "role": "return"
+    },
+    {
+      "id": "decide-skip",
+      "from": "decide",
+      "to": "skip",
+      "label": "bỏ",
+      "variant": "security",
+      "role": "branch"
+    },
+    {
+      "id": "decide-send",
+      "from": "decide",
+      "to": "send",
+      "label": "gửi",
+      "variant": "emphasis"
+    },
+    {
+      "id": "send-customer",
+      "from": "send",
+      "to": "customer",
+      "label": "nhắc lịch",
+      "variant": "emphasis"
+    },
+    {
+      "id": "send-decide",
+      "from": "send",
+      "to": "decide",
+      "label": "lỗi",
+      "variant": "dashed",
+      "role": "return"
+    }
   ],
   "cards": [
     {
       "dot": "cyan",
-      "title": "Điều gì khởi động vòng",
+      "title": "Điều gì khởi động",
       "items": [
-        "Một sự kiện lịch đến từ CRM, hoặc đến hạn một mốc (24 giờ, 3 giờ)",
+        "Vòng của plugin mở một ca cho mỗi mốc (24 giờ, 3 giờ) mỗi giờ và ngay sau mỗi sự kiện lịch",
+        "Đồng hồ đánh thức ca khi tới mốc; sự kiện của CRM đánh thức ngay các ca của lịch vừa đổi",
         "Đối chiếu khi agent khởi động và mỗi 24 giờ bù cho sự kiện bị lỡ"
       ]
     },
     {
       "dot": "rose",
-      "title": "Điều gì kết thúc vòng",
+      "title": "Điều gì kết thúc",
       "items": [
-        "Lịch đã qua hoặc đã hủy, khách không đồng ý nhận nhắc, đã xác nhận (mốc 24 giờ)",
-        "Lịch đặt sau mốc, quá muộn, chưa có chat, hết hạn mức ngày",
-        "Mỗi mốc chỉ giữ chỗ một lần, nên không bao giờ gửi hai lần"
+        "check bỏ: lịch hủy hay dời (ngay khi có sự kiện), không đồng ý, đã xác nhận, đặt sau mốc, quá muộn, chưa có chat, hết chỗ trong ngày",
+        "Gửi xong là hết đồ thị; gửi lỗi quay về check, lỗi 3 lần thì dừng",
+        "Mỗi mốc chỉ giữ chỗ một lần (crm_reminder_sent), mã tin case:<id>:0 không gửi hai lần"
       ]
     },
     {
       "dot": "amber",
-      "title": "Dữ liệu, không hard-code",
+      "title": "Code quyết, model viết",
       "items": [
-        "Mốc, giờ yên lặng và hạn mức ngày là cấu hình của plugin",
-        "Luật quyết định nằm trong một hàm thuần để tự thêm luật mới"
+        "Gửi hay không, lúc nào, cho ai do code (check); model chỉ viết tin hoặc trả SKIP",
+        "Trần mỗi người mỗi ngày là của động cơ, chung mọi ca (room_today); cases_enabled phải bật"
       ]
     }
   ]
