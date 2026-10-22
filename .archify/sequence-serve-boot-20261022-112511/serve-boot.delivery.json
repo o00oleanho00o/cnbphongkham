@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "a414e859-8c1d-4cd2-9667-2e20339fd16a",
+  "status": "current",
+  "command": "deliver",
+  "type": "sequence",
+  "input": "E:\\Desktop\\cnbphongkham\\.archify\\sequence-serve-boot-20261022-112511\\candidate.json",
+  "output": "E:\\Desktop\\cnbphongkham\\.archify\\sequence-serve-boot-20261022-112511\\serve-boot.html",
+  "specification": {
+    "sha256": "8a79dc5bae6250c1c32b83515f073d3daf9c83647a6c5536e14e265b09dbf30b",
+    "bytes": 8441
+  },
+  "artifact": {
+    "sha256": "00ab16f1d13fdf0ac09ba3c32e299ec25181144cf12685a0b1e9e42ff1ae2b79",
+    "bytes": 823660
+  }
+}

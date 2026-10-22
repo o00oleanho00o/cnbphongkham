@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "5735a38f-b21e-4f83-ab02-61ed79b289fc",
+  "status": "current",
+  "command": "deliver",
+  "type": "workflow",
+  "input": "E:\\Desktop\\cnbphongkham\\.archify\\workflow-reminder-loop-20261022-091319\\candidate.json",
+  "output": "E:\\Desktop\\cnbphongkham\\.archify\\workflow-reminder-loop-20261022-091319\\reminder-loop.html",
+  "specification": {
+    "sha256": "79ba1be6b8785e115db54b763933e28fa8925b8628517ce170e65a5b2b6d2592",
+    "bytes": 7520
+  },
+  "artifact": {
+    "sha256": "97cec937cbf17e6bf8b8134804ddf1f3a377f839bc4740a4dbb502388aecb5dc",
+    "bytes": 831053
+  }
+}

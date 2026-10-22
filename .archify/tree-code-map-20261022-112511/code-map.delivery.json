@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "6d6ecb84-8da9-4047-b7c3-899a5f77235d",
+  "status": "current",
+  "command": "deliver",
+  "type": "tree",
+  "input": "E:\\Desktop\\cnbphongkham\\.archify\\tree-code-map-20261022-112511\\candidate.json",
+  "output": "E:\\Desktop\\cnbphongkham\\.archify\\tree-code-map-20261022-112511\\code-map.html",
+  "specification": {
+    "sha256": "e6c84e70a0ea4b5a1cb6894632b52dbc411de88c0d9d1707218426ee899a957f",
+    "bytes": 14423
+  },
+  "artifact": {
+    "sha256": "e0cdddce2d4390f324b8f5fed83e6d948ec72e39217237172cd9695eb04333e7",
+    "bytes": 884638
+  }
+}

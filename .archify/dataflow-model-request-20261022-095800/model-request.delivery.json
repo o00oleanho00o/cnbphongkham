@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "afb5a73d-32e4-46bc-abbf-3d3a17802e8c",
+  "status": "current",
+  "command": "deliver",
+  "type": "dataflow",
+  "input": "E:\\Desktop\\cnbphongkham\\.archify\\dataflow-model-request-20261022-095800\\candidate.json",
+  "output": "E:\\Desktop\\cnbphongkham\\.archify\\dataflow-model-request-20261022-095800\\model-request.html",
+  "specification": {
+    "sha256": "4016babba1308c94870f18dd4e62dd4ed193916d65010eac2c1276a9e0c5e7b8",
+    "bytes": 7945
+  },
+  "artifact": {
+    "sha256": "0f8101da7127487789e0bcb2bcfe5e6667e5dff073c43fa3ff07ef2739883321",
+    "bytes": 824944
+  }
+}

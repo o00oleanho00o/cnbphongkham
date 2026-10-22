@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "2ebe16df-0066-4e01-944d-f9bc4e35a592",
+  "status": "current",
+  "command": "deliver",
+  "type": "dataflow",
+  "input": "E:\\Desktop\\cnbphongkham\\.archify\\dataflow-context-memory-20261022-112511\\candidate.json",
+  "output": "E:\\Desktop\\cnbphongkham\\.archify\\dataflow-context-memory-20261022-112511\\context-memory.html",
+  "specification": {
+    "sha256": "5355f03a23c6a4c79acef3a27ebef37e7b44a746afbfdf746671254c6e4badd6",
+    "bytes": 9181
+  },
+  "artifact": {
+    "sha256": "5776f58383998cc897ef49847add462128cf850dd8e195f27d3b4e9b0e82a507",
+    "bytes": 830908
+  }
+}

@@ -1,0 +1,249 @@
+{
+  "schemaVersion": 1,
+  "ok": false,
+  "command": "finalize",
+  "status": "fail",
+  "type": "architecture",
+  "quality": "showcase",
+  "startedAt": "2026-10-22T04:33:29.640Z",
+  "specification": {
+    "path": "E:\\Desktop\\cnbphongkham\\.archify\\architecture-agent-anatomy-20261022-095800\\candidate.json",
+    "sha256": "18a48dbe8dcb4bf65342322a577400c866baa20166bf96c0619c8ad56857ff7d",
+    "bytes": 21173
+  },
+  "artifact": {
+    "path": "E:\\Desktop\\cnbphongkham\\.archify\\architecture-agent-anatomy-20261022-095800\\agent-anatomy.html",
+    "sha256": "d60d27a09556d392bbc22912a302cf3a7f95be1095a9f05fd4437d141cd5e534",
+    "bytes": 850727
+  },
+  "stages": {
+    "validate": {
+      "status": "fail",
+      "exitCode": 1,
+      "durationMs": null,
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "C:\\Users\\My PC\\.agents\\skills\\archify\\bin\\archify.mjs",
+        "deliver",
+        "architecture",
+        "E:\\Desktop\\cnbphongkham\\.archify\\architecture-agent-anatomy-20261022-095800\\candidate.json",
+        "E:\\Desktop\\cnbphongkham\\.archify\\architecture-agent-anatomy-20261022-095800\\agent-anatomy.html",
+        "--quality",
+        "showcase",
+        "--repo-root",
+        "E:\\Desktop\\cnbphongkham",
+        "--json"
+      ],
+      "receipt": {
+        "schemaVersion": 1,
+        "ok": false,
+        "command": "deliver",
+        "receiptId": "79f6e305-9fd6-4b30-b70d-6489a24c0ae7",
+        "stage": "render",
+        "type": "architecture",
+        "input": "E:\\Desktop\\cnbphongkham\\.archify\\architecture-agent-anatomy-20261022-095800\\candidate.json",
+        "output": "E:\\Desktop\\cnbphongkham\\.archify\\architecture-agent-anatomy-20261022-095800\\agent-anatomy.html",
+        "error": "Architecture layout validation failed:\n- [composition/label-route-clearance] showcase architecture label \"contributions, version\" on connections[6] id \"host-to-live\" \"host\" -> \"live\" label \"contributions, version\" is 0px from connections[2] id \"cli-to-turn\" \"cli\" -> \"turn\" label \"run_turn, cùng khóa phiên\" segment 1 [673, 70] -> [673, 442] (label rect [672, 185, 116, 14]; minimum 4px) — adjust labelAt, labelDx, labelDy, or labelSegment; otherwise adjust the other relationship route/via/channel.",
+        "diagnostics": [
+          {
+            "code": "i18n/locale-fallback",
+            "severity": "warning",
+            "message": "meta.locale \"vi\" has no bundled catalog and no usable meta.translations; the Viewer chrome and <html lang> fall back to English.",
+            "subject": {
+              "diagramType": "architecture",
+              "path": "/meta/locale"
+            },
+            "evidence": {
+              "locale": "vi",
+              "bundledLocales": [
+                "en",
+                "zh-CN",
+                "zh-TW",
+                "es",
+                "ko",
+                "ar"
+              ]
+            },
+            "supportedFixes": [
+              "Supply meta.translations for this locale.",
+              "Use a bundled locale: en, zh-CN, zh-TW, es, ko, ar."
+            ]
+          },
+          {
+            "code": "composition/label-route-clearance",
+            "severity": "error",
+            "message": "[composition/label-route-clearance] showcase architecture label \"contributions, version\" on connections[6] id \"host-to-live\" \"host\" -> \"live\" label \"contributions, version\" is 0px from connections[2] id \"cli-to-turn\" \"cli\" -> \"turn\" label \"run_turn, cùng khóa phiên\" segment 1 [673, 70] -> [673, 442] (label rect [672, 185, 116, 14]; minimum 4px) — adjust labelAt, labelDx, labelDy, or labelSegment; otherwise adjust the other relationship route/via/channel.",
+            "subject": {
+              "diagramType": "architecture",
+              "collection": "connections",
+              "index": 6,
+              "id": "host-to-live",
+              "from": "host",
+              "to": "live"
+            },
+            "evidence": {
+              "label": "contributions, version",
+              "otherRelationship": {
+                "diagramType": "architecture",
+                "collection": "connections",
+                "index": 2,
+                "id": "cli-to-turn",
+                "from": "cli",
+                "to": "turn"
+              },
+              "segmentIndex": 1,
+              "clearancePx": 0,
+              "minimumPx": 4,
+              "labelRect": {
+                "relation": {
+                  "id": "host-to-live",
+                  "from": "host",
+                  "to": "live",
+                  "label": "contributions, version"
+                },
+                "relationIndex": 6,
+                "label": "contributions, version",
+                "x": 672.2,
+                "y": 185,
+                "width": 115.6,
+                "height": 14,
+                "lx": 730,
+                "ly": 195
+              },
+              "from": [
+                673,
+                70
+              ],
+              "to": [
+                673,
+                442
+              ]
+            },
+            "supportedFixes": [
+              "adjust labelAt, labelDx, labelDy, or labelSegment; otherwise adjust the other relationship route/via/channel"
+            ]
+          }
+        ],
+        "provenance": "failed",
+        "update": {
+          "status": "unavailable",
+          "installedVersion": null,
+          "availableVersion": null,
+          "releaseNotes": null,
+          "checkedAt": null,
+          "source": null,
+          "noticeRequired": false,
+          "noticeText": null,
+          "reason": "disabled"
+        }
+      },
+      "execution": "embedded-in-deliver"
+    },
+    "deliver": {
+      "status": "not-run",
+      "execution": "blocked-by-validate"
+    }
+  },
+  "browserCheck": {
+    "requested": true,
+    "ran": false
+  },
+  "diagnostics": [
+    {
+      "code": "i18n/locale-fallback",
+      "severity": "warning",
+      "message": "meta.locale \"vi\" has no bundled catalog and no usable meta.translations; the Viewer chrome and <html lang> fall back to English.",
+      "subject": {
+        "diagramType": "architecture",
+        "path": "/meta/locale"
+      },
+      "evidence": {
+        "locale": "vi",
+        "bundledLocales": [
+          "en",
+          "zh-CN",
+          "zh-TW",
+          "es",
+          "ko",
+          "ar"
+        ]
+      },
+      "supportedFixes": [
+        "Supply meta.translations for this locale.",
+        "Use a bundled locale: en, zh-CN, zh-TW, es, ko, ar."
+      ]
+    },
+    {
+      "code": "composition/label-route-clearance",
+      "severity": "error",
+      "message": "[composition/label-route-clearance] showcase architecture label \"contributions, version\" on connections[6] id \"host-to-live\" \"host\" -> \"live\" label \"contributions, version\" is 0px from connections[2] id \"cli-to-turn\" \"cli\" -> \"turn\" label \"run_turn, cùng khóa phiên\" segment 1 [673, 70] -> [673, 442] (label rect [672, 185, 116, 14]; minimum 4px) — adjust labelAt, labelDx, labelDy, or labelSegment; otherwise adjust the other relationship route/via/channel.",
+      "subject": {
+        "diagramType": "architecture",
+        "collection": "connections",
+        "index": 6,
+        "id": "host-to-live",
+        "from": "host",
+        "to": "live"
+      },
+      "evidence": {
+        "label": "contributions, version",
+        "otherRelationship": {
+          "diagramType": "architecture",
+          "collection": "connections",
+          "index": 2,
+          "id": "cli-to-turn",
+          "from": "cli",
+          "to": "turn"
+        },
+        "segmentIndex": 1,
+        "clearancePx": 0,
+        "minimumPx": 4,
+        "labelRect": {
+          "relation": {
+            "id": "host-to-live",
+            "from": "host",
+            "to": "live",
+            "label": "contributions, version"
+          },
+          "relationIndex": 6,
+          "label": "contributions, version",
+          "x": 672.2,
+          "y": 185,
+          "width": 115.6,
+          "height": 14,
+          "lx": 730,
+          "ly": 195
+        },
+        "from": [
+          673,
+          70
+        ],
+        "to": [
+          673,
+          442
+        ]
+      },
+      "supportedFixes": [
+        "adjust labelAt, labelDx, labelDy, or labelSegment; otherwise adjust the other relationship route/via/channel"
+      ]
+    }
+  ],
+  "evidence": {
+    "receipt": "E:\\Desktop\\cnbphongkham\\.archify\\architecture-agent-anatomy-20261022-095800\\review-4\\agent-anatomy.finalize.json",
+    "summaryReceipt": "E:\\Desktop\\cnbphongkham\\.archify\\architecture-agent-anatomy-20261022-095800\\review-4\\agent-anatomy.finalize-summary.json"
+  },
+  "visualReview": "not-requested",
+  "failedStage": "validate",
+  "finishedAt": "2026-10-22T04:33:30.316Z",
+  "durationMs": 676,
+  "update": {
+    "status": "current",
+    "installedVersion": "3.2.0",
+    "availableVersion": "3.2.0",
+    "releaseNotes": null,
+    "checkedAt": "2026-10-22T01:56:02.656Z",
+    "source": "cache",
+    "noticeRequired": false,
+    "noticeText": null
+  }
+}

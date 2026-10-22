@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "finalize",
+  "status": "pass",
+  "type": "tree",
+  "quality": "showcase",
+  "specification": {
+    "path": "E:\\Desktop\\cnbphongkham\\.archify\\tree-code-map-20261022-112511\\candidate.json",
+    "sha256": "e6c84e70a0ea4b5a1cb6894632b52dbc411de88c0d9d1707218426ee899a957f",
+    "bytes": 14423
+  },
+  "artifact": {
+    "path": "E:\\Desktop\\cnbphongkham\\.archify\\tree-code-map-20261022-112511\\code-map.html",
+    "sha256": "e0cdddce2d4390f324b8f5fed83e6d948ec72e39217237172cd9695eb04333e7",
+    "bytes": 884638
+  },
+  "gates": {
+    "validate": "pass",
+    "deliver": "pass",
+    "check": "pass",
+    "browser-check": "pass"
+  },
+  "diagnostics": [
+    {
+      "code": "i18n/locale-fallback",
+      "severity": "warning",
+      "message": "meta.locale \"vi\" has no bundled catalog and no usable meta.translations; the Viewer chrome and <html lang> fall back to English.",
+      "subject": {
+        "diagramType": "tree",
+        "path": "/meta/locale"
+      },
+      "evidence": {
+        "locale": "vi",
+        "bundledLocales": [
+          "en",
+          "zh-CN",
+          "zh-TW",
+          "es",
+          "ko",
+          "ar"
+        ]
+      },
+      "supportedFixes": [
+        "Supply meta.translations for this locale.",
+        "Use a bundled locale: en, zh-CN, zh-TW, es, ko, ar."
+      ]
+    }
+  ],
+  "diagnosticSummary": {
+    "total": 1,
+    "shown": 1,
+    "truncated": false
+  },
+  "evidence": {
+    "receipt": "E:\\Desktop\\cnbphongkham\\.archify\\tree-code-map-20261022-112511\\code-map.finalize.json",
+    "summaryReceipt": "E:\\Desktop\\cnbphongkham\\.archify\\tree-code-map-20261022-112511\\code-map.finalize-summary.json",
+    "browserCheckReceipt": "E:\\Desktop\\cnbphongkham\\.archify\\tree-code-map-20261022-112511\\code-map.browser-check.json"
+  },
+  "update": {
+    "status": "current",
+    "installedVersion": "3.2.0",
+    "availableVersion": "3.2.0",
+    "releaseNotes": null,
+    "checkedAt": "2026-10-22T01:56:02.656Z",
+    "source": "cache",
+    "noticeRequired": false,
+    "noticeText": null
+  },
+  "visualReview": "not-requested",
+  "durationMs": 3999,
+  "browserCheck": {
+    "requested": true,
+    "ran": true
+  }
+}

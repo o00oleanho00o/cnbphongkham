@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "f2722627-7500-4ed7-a78b-0f25a0bc7d59",
+  "status": "current",
+  "command": "deliver",
+  "type": "lifecycle",
+  "input": "E:\\Desktop\\cnbphongkham\\.archify\\lifecycle-ingress-message-20261022-112511\\candidate.json",
+  "output": "E:\\Desktop\\cnbphongkham\\.archify\\lifecycle-ingress-message-20261022-112511\\ingress-message.html",
+  "specification": {
+    "sha256": "783bf75d2e7709b2ee36cecd89177d1a8f3bbcc4c324e6fbf35e69e3a92c9904",
+    "bytes": 11531
+  },
+  "artifact": {
+    "sha256": "24d5c405747180e2705e4704ce17eab813ad739bf278fc842334967f812bc9e5",
+    "bytes": 837134
+  }
+}

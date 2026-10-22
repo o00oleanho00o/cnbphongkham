@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "ok": false,
+  "command": "finalize",
+  "status": "fail",
+  "type": "workflow",
+  "quality": "standard",
+  "specification": {
+    "path": "E:\\Desktop\\cnbphongkham\\.archify\\workflow-run-turn-loop-20261022-112511\\candidate.json",
+    "sha256": "62b1afdd0bc8665f77b677fb681eb3f066f18eb20127162ee66a23d9b6f808ce",
+    "bytes": 16522
+  },
+  "artifact": {
+    "path": "E:\\Desktop\\cnbphongkham\\.archify\\workflow-run-turn-loop-20261022-112511\\run-turn-loop.html",
+    "sha256": "bcc8c3b9cee0fa7812097bcbffa0fc99aac1c1c4a64283cfd0839003f0f9ef75",
+    "bytes": 845104
+  },
+  "gates": {
+    "validate": "pass",
+    "deliver": "pass",
+    "check": "pass",
+    "browser-check": "fail"
+  },
+  "failedStage": "browser-check",
+  "diagnostics": [
+    {
+      "code": "viewer/evidence-path-conflict",
+      "severity": "error",
+      "message": "browser-check will not replace the existing unowned evidence path \"E:\\Desktop\\cnbphongkham\\.archify\\workflow-run-turn-loop-20261022-112511\\run-turn-loop.browser-check.json\".",
+      "subject": {
+        "artifact": "E:\\Desktop\\cnbphongkham\\.archify\\workflow-run-turn-loop-20261022-112511\\run-turn-loop.html",
+        "evidencePath": "E:\\Desktop\\cnbphongkham\\.archify\\workflow-run-turn-loop-20261022-112511\\run-turn-loop.browser-check.json"
+      },
+      "evidence": {
+        "reason": {
+          "code": "ownership-artifact-mismatch"
+        }
+      },
+      "supportedFixes": [
+        "move the conflicting file aside, or choose a separate --out-dir, then rerun browser-check"
+      ]
+    }
+  ],
+  "diagnosticSummary": {
+    "total": 1,
+    "shown": 1,
+    "truncated": false
+  },
+  "evidence": {
+    "receipt": "E:\\Desktop\\cnbphongkham\\.archify\\workflow-run-turn-loop-20261022-112511\\run-turn-loop.finalize.json",
+    "summaryReceipt": "E:\\Desktop\\cnbphongkham\\.archify\\workflow-run-turn-loop-20261022-112511\\run-turn-loop.finalize-summary.json",
+    "browserCheckReceipt": "E:\\Desktop\\cnbphongkham\\.archify\\workflow-run-turn-loop-20261022-112511\\run-turn-loop.browser-check.json"
+  },
+  "update": {
+    "status": "current",
+    "installedVersion": "3.2.0",
+    "availableVersion": "3.2.0",
+    "releaseNotes": null,
+    "checkedAt": "2026-10-22T01:56:02.656Z",
+    "source": "cache",
+    "noticeRequired": false,
+    "noticeText": null
+  },
+  "visualReview": "not-requested",
+  "durationMs": 2462,
+  "browserCheck": {
+    "requested": true,
+    "ran": false
+  }
+}

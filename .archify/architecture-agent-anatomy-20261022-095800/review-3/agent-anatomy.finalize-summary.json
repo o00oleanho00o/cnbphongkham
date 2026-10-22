@@ -1,0 +1,91 @@
+{
+  "schemaVersion": 1,
+  "ok": false,
+  "command": "finalize",
+  "status": "fail",
+  "type": "architecture",
+  "quality": "showcase",
+  "specification": {
+    "path": "E:\\Desktop\\cnbphongkham\\.archify\\architecture-agent-anatomy-20261022-095800\\candidate.json",
+    "sha256": "1a174d98d6f89f3ef0b7368c49cbc2ee4d3e61a09195c66e417e985e6bb5eec8",
+    "bytes": 16353
+  },
+  "artifact": {
+    "path": "E:\\Desktop\\cnbphongkham\\.archify\\architecture-agent-anatomy-20261022-095800\\agent-anatomy.html",
+    "sha256": "d60d27a09556d392bbc22912a302cf3a7f95be1095a9f05fd4437d141cd5e534",
+    "bytes": 850727
+  },
+  "gates": {
+    "validate": "fail",
+    "deliver": "not-run",
+    "check": "not-run",
+    "browser-check": "not-run"
+  },
+  "failedStage": "validate",
+  "diagnostics": [
+    {
+      "code": "composition/desktop-readability",
+      "severity": "error",
+      "message": "Final artifact failed composition/desktop-readability.",
+      "subject": {
+        "check": "composition",
+        "nodeId": "hooks"
+      },
+      "evidence": {
+        "owner": {
+          "kind": "node",
+          "id": "hooks"
+        },
+        "viewportWidth": 1440,
+        "viewportHeight": 900,
+        "availableDiagramWidth": 930,
+        "budgetBasis": "legacy-930",
+        "readerContract": "declared-wide-v1",
+        "requestedTargetPx": 7.5,
+        "requestedTargetMet": false,
+        "budgetLimit": "legacy",
+        "viewBoxWidth": 1240,
+        "scale": 0.75,
+        "text": "pre_tool chặn; post_tool sửa",
+        "detail": "context",
+        "sourceFontPx": 7.2,
+        "projectedFontPx": 5.4,
+        "minimumProjectedFontPx": 6
+      },
+      "supportedFixes": [
+        "Preserve the semantic text and any supplied coordinates, routes, sides, channels, and labels. Compactly reflow automatic spacing and empty corridors so the complete viewBox width is at most 1116px (current 1240px; 7.2px source text at 930px desktop budget). If supplied geometry fixes that width, use a renderer-supported semantic text-size setting or renderer-level fix instead. Position-only label controls cannot repair its projection."
+      ]
+    }
+  ],
+  "diagnosticSummary": {
+    "total": 1,
+    "shown": 1,
+    "truncated": false
+  },
+  "evidence": {
+    "receipt": "E:\\Desktop\\cnbphongkham\\.archify\\architecture-agent-anatomy-20261022-095800\\review-3\\agent-anatomy.finalize.json",
+    "summaryReceipt": "E:\\Desktop\\cnbphongkham\\.archify\\architecture-agent-anatomy-20261022-095800\\review-3\\agent-anatomy.finalize-summary.json"
+  },
+  "update": {
+    "status": "current",
+    "installedVersion": "3.2.0",
+    "availableVersion": "3.2.0",
+    "releaseNotes": null,
+    "checkedAt": "2026-10-22T01:56:02.656Z",
+    "source": "cache",
+    "noticeRequired": false,
+    "noticeText": null
+  },
+  "visualReview": "not-requested",
+  "durationMs": 847,
+  "browserCheck": {
+    "requested": true,
+    "ran": false
+  },
+  "nextAction": {
+    "action": "edit-in-place",
+    "candidate": "E:\\Desktop\\cnbphongkham\\.archify\\architecture-agent-anatomy-20261022-095800\\candidate.json",
+    "constraint": "Preserve unaffected semantics and geometry; apply each diagnostic's supportedFixes, or the fix its message names, and do not replace the whole candidate.",
+    "then": "finalize-once"
+  }
+}

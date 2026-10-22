@@ -1,0 +1,155 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "finalize",
+  "status": "pass",
+  "type": "architecture",
+  "quality": "showcase",
+  "specification": {
+    "path": "E:\\Desktop\\cnbphongkham\\.archify\\architecture-agent-anatomy-20261022-095800\\candidate.json",
+    "sha256": "0bfe3f2537099600bd9aa7e0a335e17f0e294a13a439464dfc1fc2b1a3cbc328",
+    "bytes": 21168
+  },
+  "artifact": {
+    "path": "E:\\Desktop\\cnbphongkham\\.archify\\architecture-agent-anatomy-20261022-095800\\agent-anatomy.html",
+    "sha256": "0d2e16c03f35caee06380b42619bda580b27835c57e316c2f83ee1e62c327362",
+    "bytes": 862070
+  },
+  "gates": {
+    "validate": "pass",
+    "deliver": "pass",
+    "check": "pass",
+    "browser-check": "pass"
+  },
+  "diagnostics": [
+    {
+      "code": "i18n/locale-fallback",
+      "severity": "warning",
+      "message": "meta.locale \"vi\" has no bundled catalog and no usable meta.translations; the Viewer chrome and <html lang> fall back to English.",
+      "subject": {
+        "diagramType": "architecture",
+        "path": "/meta/locale"
+      },
+      "evidence": {
+        "locale": "vi",
+        "bundledLocales": [
+          "en",
+          "zh-CN",
+          "zh-TW",
+          "es",
+          "ko",
+          "ar"
+        ]
+      },
+      "supportedFixes": [
+        "Supply meta.translations for this locale.",
+        "Use a bundled locale: en, zh-CN, zh-TW, es, ko, ar."
+      ]
+    }
+  ],
+  "diagnosticSummary": {
+    "total": 1,
+    "shown": 1,
+    "truncated": false
+  },
+  "evidence": {
+    "receipt": "E:\\Desktop\\cnbphongkham\\.archify\\architecture-agent-anatomy-20261022-095800\\review-5\\agent-anatomy.finalize.json",
+    "summaryReceipt": "E:\\Desktop\\cnbphongkham\\.archify\\architecture-agent-anatomy-20261022-095800\\review-5\\agent-anatomy.finalize-summary.json",
+    "browserCheckReceipt": "E:\\Desktop\\cnbphongkham\\.archify\\architecture-agent-anatomy-20261022-095800\\review-5\\agent-anatomy.browser-check.json"
+  },
+  "update": {
+    "status": "current",
+    "installedVersion": "3.2.0",
+    "availableVersion": "3.2.0",
+    "releaseNotes": null,
+    "checkedAt": "2026-10-22T01:56:02.656Z",
+    "source": "cache",
+    "noticeRequired": false,
+    "noticeText": null
+  },
+  "visualReview": "not-requested",
+  "durationMs": 3542,
+  "browserCheck": {
+    "requested": true,
+    "ran": true
+  },
+  "visualReviewRecommendation": {
+    "action": "inspect-route-readability",
+    "signals": {
+      "resolvedCrossovers": 2,
+      "routesOverSuggestedBends": 1
+    },
+    "reason": "Automated gates passed, but crossings or detours still need perceptual review before claiming visual quality.",
+    "affectedRoutes": {
+      "crossings": [
+        {
+          "left": {
+            "id": "cli-to-turn",
+            "from": "cli",
+            "to": "turn",
+            "label": "run_turn, cùng khóa phiên",
+            "collectionIndex": 2,
+            "artifactIndex": 3
+          },
+          "right": {
+            "id": "host-to-live",
+            "from": "host",
+            "to": "live",
+            "label": "góp gì, version",
+            "collectionIndex": 6,
+            "artifactIndex": 7
+          },
+          "point": [
+            673,
+            205
+          ]
+        },
+        {
+          "left": {
+            "id": "turn-to-model",
+            "from": "turn",
+            "to": "model",
+            "label": "complete()",
+            "collectionIndex": 16,
+            "artifactIndex": 17
+          },
+          "right": {
+            "id": "turn-to-context",
+            "from": "turn",
+            "to": "context",
+            "label": "nén khi quá ngưỡng",
+            "collectionIndex": 17,
+            "artifactIndex": 18
+          },
+          "point": [
+            605,
+            556
+          ],
+          "sharedNode": "turn"
+        }
+      ],
+      "detours": [
+        {
+          "relationship": {
+            "id": "cli-to-turn",
+            "from": "cli",
+            "to": "turn",
+            "label": "run_turn, cùng khóa phiên",
+            "collectionIndex": 2,
+            "artifactIndex": 3
+          },
+          "bends": 4,
+          "stretch": 1
+        }
+      ],
+      "truncated": false
+    },
+    "hints": [
+      "turn has 4 relationships facing its right side, which fits 3 ports: make that side at least 74px, or move some of those neighbours so they face another side of turn.",
+      "cli → turn crosses host → live: move the node of whichever is a branch, return, or second entrance to the other side of the main path, so that relationship runs through an empty corridor.",
+      "turn → model and turn → context cross next to turn: move node model or context so the two reach turn from different sides (for example one level with it, one directly above or below it).",
+      "cli → turn needs 4 bends: move node cli or turn so they share a row or column with matching centers, or sit diagonally with a clear corner."
+    ],
+    "repair": "Trace these relationships at the desktop viewport. For Architecture, use references/architecture-layout-repair.md: reflow a blocked main path or tangled connected scene, and repair an isolated defect locally only when the surrounding composition is accepted. Preserve all semantic content and user-fixed geometry. Rerun finalize once after the edit."
+  }
+}

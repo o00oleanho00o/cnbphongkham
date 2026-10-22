@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "finalize",
+  "status": "pass",
+  "type": "sequence",
+  "quality": "showcase",
+  "specification": {
+    "path": "E:\\Desktop\\cnbphongkham\\.archify\\sequence-serve-boot-20261022-112511\\candidate.json",
+    "sha256": "8a79dc5bae6250c1c32b83515f073d3daf9c83647a6c5536e14e265b09dbf30b",
+    "bytes": 8441
+  },
+  "artifact": {
+    "path": "E:\\Desktop\\cnbphongkham\\.archify\\sequence-serve-boot-20261022-112511\\serve-boot.html",
+    "sha256": "00ab16f1d13fdf0ac09ba3c32e299ec25181144cf12685a0b1e9e42ff1ae2b79",
+    "bytes": 823660
+  },
+  "gates": {
+    "validate": "pass",
+    "deliver": "pass",
+    "check": "pass",
+    "browser-check": "pass"
+  },
+  "diagnostics": [
+    {
+      "code": "i18n/locale-fallback",
+      "severity": "warning",
+      "message": "meta.locale \"vi\" has no bundled catalog and no usable meta.translations; the Viewer chrome and <html lang> fall back to English.",
+      "subject": {
+        "diagramType": "sequence",
+        "path": "/meta/locale"
+      },
+      "evidence": {
+        "locale": "vi",
+        "bundledLocales": [
+          "en",
+          "zh-CN",
+          "zh-TW",
+          "es",
+          "ko",
+          "ar"
+        ]
+      },
+      "supportedFixes": [
+        "Supply meta.translations for this locale.",
+        "Use a bundled locale: en, zh-CN, zh-TW, es, ko, ar."
+      ]
+    }
+  ],
+  "diagnosticSummary": {
+    "total": 1,
+    "shown": 1,
+    "truncated": false
+  },
+  "evidence": {
+    "receipt": "E:\\Desktop\\cnbphongkham\\.archify\\sequence-serve-boot-20261022-112511\\serve-boot.finalize.json",
+    "summaryReceipt": "E:\\Desktop\\cnbphongkham\\.archify\\sequence-serve-boot-20261022-112511\\serve-boot.finalize-summary.json",
+    "browserCheckReceipt": "E:\\Desktop\\cnbphongkham\\.archify\\sequence-serve-boot-20261022-112511\\serve-boot.browser-check.json"
+  },
+  "update": {
+    "status": "current",
+    "installedVersion": "3.2.0",
+    "availableVersion": "3.2.0",
+    "releaseNotes": null,
+    "checkedAt": "2026-10-22T01:56:02.656Z",
+    "source": "cache",
+    "noticeRequired": false,
+    "noticeText": null
+  },
+  "visualReview": "not-requested",
+  "durationMs": 2955,
+  "browserCheck": {
+    "requested": true,
+    "ran": true
+  }
+}

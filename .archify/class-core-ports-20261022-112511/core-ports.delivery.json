@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "75b1789b-2710-4947-a799-c6e129f188b5",
+  "status": "current",
+  "command": "deliver",
+  "type": "class",
+  "input": "E:\\Desktop\\cnbphongkham\\.archify\\class-core-ports-20261022-112511\\candidate.json",
+  "output": "E:\\Desktop\\cnbphongkham\\.archify\\class-core-ports-20261022-112511\\core-ports.html",
+  "specification": {
+    "sha256": "52fc0abd0e6d1d21b6489c2ca0a954517c1cff68f5194371bb6c279d7e0af231",
+    "bytes": 14827
+  },
+  "artifact": {
+    "sha256": "32098d1bb817ad2c4c2e0d9f8651e7c4d57b3d45117043ddb1403e27a4ff78e4",
+    "bytes": 852446
+  }
+}

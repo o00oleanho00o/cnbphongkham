@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "ab795bb9-1cbc-4019-9445-c2cbb32ed8e2",
+  "status": "current",
+  "command": "deliver",
+  "type": "sequence",
+  "input": "E:\\Desktop\\cnbphongkham\\.archify\\sequence-plugin-toggle-20261022-112511\\candidate.json",
+  "output": "E:\\Desktop\\cnbphongkham\\.archify\\sequence-plugin-toggle-20261022-112511\\plugin-toggle.html",
+  "specification": {
+    "sha256": "ddda64fe1cde84180348212212301f165d893b163015115914f8374255df46e7",
+    "bytes": 7453
+  },
+  "artifact": {
+    "sha256": "6c1764ab605172b122d1e7c908ac3cbfee9b6eeb1b1ab6ea8f798f75677616b1",
+    "bytes": 823958
+  }
+}

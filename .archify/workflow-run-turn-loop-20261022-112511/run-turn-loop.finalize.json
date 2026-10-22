@@ -1,0 +1,704 @@
+{
+  "schemaVersion": 1,
+  "ok": false,
+  "command": "finalize",
+  "status": "fail",
+  "type": "workflow",
+  "quality": "standard",
+  "startedAt": "2026-10-22T04:45:35.255Z",
+  "specification": {
+    "path": "E:\\Desktop\\cnbphongkham\\.archify\\workflow-run-turn-loop-20261022-112511\\candidate.json",
+    "sha256": "62b1afdd0bc8665f77b677fb681eb3f066f18eb20127162ee66a23d9b6f808ce",
+    "bytes": 16522
+  },
+  "artifact": {
+    "path": "E:\\Desktop\\cnbphongkham\\.archify\\workflow-run-turn-loop-20261022-112511\\run-turn-loop.html",
+    "sha256": "bcc8c3b9cee0fa7812097bcbffa0fc99aac1c1c4a64283cfd0839003f0f9ef75",
+    "bytes": 845104
+  },
+  "stages": {
+    "validate": {
+      "status": "pass",
+      "exitCode": 0,
+      "durationMs": null,
+      "execution": "embedded-in-deliver",
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "C:\\Users\\My PC\\.agents\\skills\\archify\\bin\\archify.mjs",
+        "deliver",
+        "workflow",
+        "E:\\Desktop\\cnbphongkham\\.archify\\workflow-run-turn-loop-20261022-112511\\candidate.json",
+        "E:\\Desktop\\cnbphongkham\\.archify\\workflow-run-turn-loop-20261022-112511\\run-turn-loop.html",
+        "--quality",
+        "standard",
+        "--repo-root",
+        "E:\\Desktop\\cnbphongkham",
+        "--json"
+      ],
+      "receipt": {
+        "schemaVersion": 1,
+        "ok": true,
+        "command": "validate",
+        "specification": {
+          "sha256": "62b1afdd0bc8665f77b677fb681eb3f066f18eb20127162ee66a23d9b6f808ce",
+          "bytes": 16522
+        },
+        "validation": {
+          "checksPassed": 9,
+          "checkCount": 9,
+          "compositionProfile": "standard",
+          "compositionStatus": "pass",
+          "errors": 0,
+          "warnings": 4,
+          "compositionIssues": [
+            {
+              "severity": "warning",
+              "code": "composition/proper-crossing",
+              "relationship": {
+                "id": "model-retry",
+                "from": "model",
+                "to": "retry",
+                "label": "ModelError",
+                "collectionIndex": 8,
+                "artifactIndex": 9
+              },
+              "otherRelationship": {
+                "id": "results-request",
+                "from": "results",
+                "to": "request",
+                "label": "bước tiếp",
+                "collectionIndex": 14,
+                "artifactIndex": 15
+              },
+              "point": [
+                540,
+                296
+              ]
+            },
+            {
+              "severity": "warning",
+              "code": "composition/proper-crossing",
+              "relationship": {
+                "id": "request-compact",
+                "from": "request",
+                "to": "compact",
+                "label": "quá 75% cửa sổ",
+                "collectionIndex": 11,
+                "artifactIndex": 12
+              },
+              "otherRelationship": {
+                "id": "results-request",
+                "from": "results",
+                "to": "request",
+                "label": "bước tiếp",
+                "collectionIndex": 14,
+                "artifactIndex": 15
+              },
+              "point": [
+                465,
+                296
+              ]
+            },
+            {
+              "severity": "warning",
+              "code": "composition/proper-crossing",
+              "relationship": {
+                "id": "results-request",
+                "from": "results",
+                "to": "request",
+                "label": "bước tiếp",
+                "collectionIndex": 14,
+                "artifactIndex": 15
+              },
+              "otherRelationship": {
+                "id": "retry-model",
+                "from": "retry",
+                "to": "model",
+                "label": "gọi lại",
+                "collectionIndex": 15,
+                "artifactIndex": 16
+              },
+              "point": [
+                588,
+                330
+              ]
+            },
+            {
+              "severity": "warning",
+              "code": "composition/desktop-readability",
+              "nodeId": "repair",
+              "owner": {
+                "kind": "node",
+                "id": "repair"
+              },
+              "viewportWidth": 1440,
+              "viewportHeight": 900,
+              "availableDiagramWidth": 930,
+              "budgetBasis": "legacy-930",
+              "readerContract": "declared-wide-v1",
+              "requestedTargetPx": null,
+              "requestedTargetMet": null,
+              "budgetLimit": "legacy",
+              "viewBoxWidth": 1146,
+              "scale": 0.8115183246073299,
+              "text": "tool call thiếu kết quả",
+              "detail": "context",
+              "sourceFontPx": 6,
+              "projectedFontPx": 4.869109947643979,
+              "minimumProjectedFontPx": 6
+            }
+          ]
+        }
+      }
+    },
+    "deliver": {
+      "status": "pass",
+      "exitCode": 0,
+      "durationMs": 832,
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "C:\\Users\\My PC\\.agents\\skills\\archify\\bin\\archify.mjs",
+        "deliver",
+        "workflow",
+        "E:\\Desktop\\cnbphongkham\\.archify\\workflow-run-turn-loop-20261022-112511\\candidate.json",
+        "E:\\Desktop\\cnbphongkham\\.archify\\workflow-run-turn-loop-20261022-112511\\run-turn-loop.html",
+        "--quality",
+        "standard",
+        "--repo-root",
+        "E:\\Desktop\\cnbphongkham",
+        "--json"
+      ],
+      "receipt": {
+        "schemaVersion": 1,
+        "receiptId": "33f12ba5-5f1d-42bc-9fd2-2c4da1c8852b",
+        "ok": true,
+        "command": "deliver",
+        "type": "workflow",
+        "input": "E:\\Desktop\\cnbphongkham\\.archify\\workflow-run-turn-loop-20261022-112511\\candidate.json",
+        "output": "E:\\Desktop\\cnbphongkham\\.archify\\workflow-run-turn-loop-20261022-112511\\run-turn-loop.html",
+        "specification": {
+          "sha256": "62b1afdd0bc8665f77b677fb681eb3f066f18eb20127162ee66a23d9b6f808ce",
+          "bytes": 16522
+        },
+        "artifact": {
+          "sha256": "bcc8c3b9cee0fa7812097bcbffa0fc99aac1c1c4a64283cfd0839003f0f9ef75",
+          "bytes": 845104
+        },
+        "validation": {
+          "checksPassed": 9,
+          "checkCount": 9,
+          "compositionProfile": "standard",
+          "compositionStatus": "pass",
+          "errors": 0,
+          "warnings": 4,
+          "compositionIssues": [
+            {
+              "severity": "warning",
+              "code": "composition/proper-crossing",
+              "relationship": {
+                "id": "model-retry",
+                "from": "model",
+                "to": "retry",
+                "label": "ModelError",
+                "collectionIndex": 8,
+                "artifactIndex": 9
+              },
+              "otherRelationship": {
+                "id": "results-request",
+                "from": "results",
+                "to": "request",
+                "label": "bước tiếp",
+                "collectionIndex": 14,
+                "artifactIndex": 15
+              },
+              "point": [
+                540,
+                296
+              ]
+            },
+            {
+              "severity": "warning",
+              "code": "composition/proper-crossing",
+              "relationship": {
+                "id": "request-compact",
+                "from": "request",
+                "to": "compact",
+                "label": "quá 75% cửa sổ",
+                "collectionIndex": 11,
+                "artifactIndex": 12
+              },
+              "otherRelationship": {
+                "id": "results-request",
+                "from": "results",
+                "to": "request",
+                "label": "bước tiếp",
+                "collectionIndex": 14,
+                "artifactIndex": 15
+              },
+              "point": [
+                465,
+                296
+              ]
+            },
+            {
+              "severity": "warning",
+              "code": "composition/proper-crossing",
+              "relationship": {
+                "id": "results-request",
+                "from": "results",
+                "to": "request",
+                "label": "bước tiếp",
+                "collectionIndex": 14,
+                "artifactIndex": 15
+              },
+              "otherRelationship": {
+                "id": "retry-model",
+                "from": "retry",
+                "to": "model",
+                "label": "gọi lại",
+                "collectionIndex": 15,
+                "artifactIndex": 16
+              },
+              "point": [
+                588,
+                330
+              ]
+            },
+            {
+              "severity": "warning",
+              "code": "composition/desktop-readability",
+              "nodeId": "repair",
+              "owner": {
+                "kind": "node",
+                "id": "repair"
+              },
+              "viewportWidth": 1440,
+              "viewportHeight": 900,
+              "availableDiagramWidth": 930,
+              "budgetBasis": "legacy-930",
+              "readerContract": "declared-wide-v1",
+              "requestedTargetPx": null,
+              "requestedTargetMet": null,
+              "budgetLimit": "legacy",
+              "viewBoxWidth": 1146,
+              "scale": 0.8115183246073299,
+              "text": "tool call thiếu kết quả",
+              "detail": "context",
+              "sourceFontPx": 6,
+              "projectedFontPx": 4.869109947643979,
+              "minimumProjectedFontPx": 6
+            }
+          ]
+        },
+        "evidence": {
+          "verified": true,
+          "repository": "git@github-personal20:o00oleanho00o/cnbphongkham.git",
+          "revision": "7d86533840b79a213b046bf19e0de37db65f3b14",
+          "references": 28,
+          "linkMode": "local-only"
+        },
+        "diagnostics": [
+          {
+            "code": "i18n/locale-fallback",
+            "severity": "warning",
+            "message": "meta.locale \"vi\" has no bundled catalog and no usable meta.translations; the Viewer chrome and <html lang> fall back to English.",
+            "subject": {
+              "diagramType": "workflow",
+              "path": "/meta/locale"
+            },
+            "evidence": {
+              "locale": "vi",
+              "bundledLocales": [
+                "en",
+                "zh-CN",
+                "zh-TW",
+                "es",
+                "ko",
+                "ar"
+              ]
+            },
+            "supportedFixes": [
+              "Supply meta.translations for this locale.",
+              "Use a bundled locale: en, zh-CN, zh-TW, es, ko, ar."
+            ]
+          }
+        ],
+        "update": {
+          "status": "unavailable",
+          "installedVersion": null,
+          "availableVersion": null,
+          "releaseNotes": null,
+          "checkedAt": null,
+          "source": null,
+          "noticeRequired": false,
+          "noticeText": null,
+          "reason": "disabled"
+        }
+      },
+      "stderr": "archify: meta.locale \"vi\" has no bundled catalog and no usable meta.translations; the Viewer chrome and <html lang> fall back to English."
+    },
+    "check": {
+      "status": "pass",
+      "exitCode": 0,
+      "durationMs": 199,
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "C:\\Users\\My PC\\.agents\\skills\\archify\\bin\\archify.mjs",
+        "check",
+        "E:\\Desktop\\cnbphongkham\\.archify\\workflow-run-turn-loop-20261022-112511\\run-turn-loop.html",
+        "--require-provenance"
+      ],
+      "receipt": {
+        "ok": true,
+        "file": "E:\\Desktop\\cnbphongkham\\.archify\\workflow-run-turn-loop-20261022-112511\\run-turn-loop.html",
+        "artifact": {
+          "sha256": "bcc8c3b9cee0fa7812097bcbffa0fc99aac1c1c4a64283cfd0839003f0f9ef75",
+          "bytes": 845104
+        },
+        "checks": [
+          {
+            "name": "single_svg",
+            "ok": true,
+            "details": [
+              "found 1 <svg> block(s)"
+            ]
+          },
+          {
+            "name": "finite_svg",
+            "ok": true,
+            "details": []
+          },
+          {
+            "name": "orthogonal_arrows",
+            "ok": true,
+            "details": []
+          },
+          {
+            "name": "label_route_clearance",
+            "ok": true,
+            "details": []
+          },
+          {
+            "name": "relationship_crossings",
+            "ok": true,
+            "details": [
+              "[composition/proper-crossing] standard relationship id \"model-retry\" (\"model\" -> \"retry\") crosses relationship id \"results-request\" (\"results\" -> \"request\") at [540, 296]",
+              "[composition/proper-crossing] standard relationship id \"request-compact\" (\"request\" -> \"compact\") crosses relationship id \"results-request\" (\"results\" -> \"request\") at [465, 296]",
+              "[composition/proper-crossing] standard relationship id \"results-request\" (\"results\" -> \"request\") crosses relationship id \"retry-model\" (\"retry\" -> \"model\") at [588, 330]"
+            ]
+          },
+          {
+            "name": "relationship_corridors",
+            "ok": true,
+            "details": []
+          },
+          {
+            "name": "container_border_runs",
+            "ok": true,
+            "details": []
+          },
+          {
+            "name": "route_rhythm",
+            "ok": true,
+            "details": []
+          },
+          {
+            "name": "legend_clearance",
+            "ok": true,
+            "details": []
+          }
+        ],
+        "composition": {
+          "schemaVersion": 1,
+          "profile": "standard",
+          "status": "pass",
+          "summary": {
+            "errors": 0,
+            "warnings": 4
+          },
+          "metrics": {
+            "properCrossings": 3,
+            "resolvedCrossovers": 0,
+            "ambiguousCorridors": 0,
+            "arrowheadCollisions": 0,
+            "containerBorderRuns": 0,
+            "labelRouteClearanceIssues": 0,
+            "labelCanvasOverflowIssues": 0,
+            "minLabelRouteClearance": 14.2,
+            "desktopReadabilityIssues": 1,
+            "viewportHeightIssues": 0,
+            "minProjectedNodeTextPx": 4.869109947643979,
+            "maxBends": 0,
+            "routesOverSuggestedBends": 0,
+            "maxStretch": 1,
+            "routesOverSuggestedStretch": 0,
+            "minSegmentPx": 8,
+            "minInteriorSegmentPx": null,
+            "shortSegmentCount": 9,
+            "shortEndpointSegmentCount": 9,
+            "shortInteriorSegmentCount": 0,
+            "microSegmentCount": 0
+          },
+          "suggestedLimits": {
+            "bendsPerRelationship": 2,
+            "stretch": 1.35,
+            "segmentPx": 16,
+            "microSegmentPx": 8
+          },
+          "routeReview": {
+            "crossings": [],
+            "detours": []
+          },
+          "leadingSpace": {
+            "measured": false,
+            "reviewSuggested": false
+          },
+          "desktopReadability": {
+            "budgetBasis": "legacy-930",
+            "readerContract": "declared-wide-v1",
+            "availableDiagramWidth": 930,
+            "actualBudgetPx": 930,
+            "limit": "legacy",
+            "requestedTargetPx": null,
+            "requestedTargetMet": null,
+            "hardFloorPx": 6,
+            "hardFloorMet": false,
+            "minimumOwner": {
+              "kind": "node",
+              "id": "repair"
+            },
+            "minimumSourceTextPx": 6,
+            "minimumProjectedTextPx": 4.869109947643979,
+            "semanticTextCount": 41
+          },
+          "issues": [
+            {
+              "severity": "warning",
+              "code": "composition/proper-crossing",
+              "relationship": {
+                "id": "model-retry",
+                "from": "model",
+                "to": "retry",
+                "label": "ModelError",
+                "collectionIndex": 8,
+                "artifactIndex": 9
+              },
+              "otherRelationship": {
+                "id": "results-request",
+                "from": "results",
+                "to": "request",
+                "label": "bước tiếp",
+                "collectionIndex": 14,
+                "artifactIndex": 15
+              },
+              "point": [
+                540,
+                296
+              ]
+            },
+            {
+              "severity": "warning",
+              "code": "composition/proper-crossing",
+              "relationship": {
+                "id": "request-compact",
+                "from": "request",
+                "to": "compact",
+                "label": "quá 75% cửa sổ",
+                "collectionIndex": 11,
+                "artifactIndex": 12
+              },
+              "otherRelationship": {
+                "id": "results-request",
+                "from": "results",
+                "to": "request",
+                "label": "bước tiếp",
+                "collectionIndex": 14,
+                "artifactIndex": 15
+              },
+              "point": [
+                465,
+                296
+              ]
+            },
+            {
+              "severity": "warning",
+              "code": "composition/proper-crossing",
+              "relationship": {
+                "id": "results-request",
+                "from": "results",
+                "to": "request",
+                "label": "bước tiếp",
+                "collectionIndex": 14,
+                "artifactIndex": 15
+              },
+              "otherRelationship": {
+                "id": "retry-model",
+                "from": "retry",
+                "to": "model",
+                "label": "gọi lại",
+                "collectionIndex": 15,
+                "artifactIndex": 16
+              },
+              "point": [
+                588,
+                330
+              ]
+            },
+            {
+              "severity": "warning",
+              "code": "composition/desktop-readability",
+              "nodeId": "repair",
+              "owner": {
+                "kind": "node",
+                "id": "repair"
+              },
+              "viewportWidth": 1440,
+              "viewportHeight": 900,
+              "availableDiagramWidth": 930,
+              "budgetBasis": "legacy-930",
+              "readerContract": "declared-wide-v1",
+              "requestedTargetPx": null,
+              "requestedTargetMet": null,
+              "budgetLimit": "legacy",
+              "viewBoxWidth": 1146,
+              "scale": 0.8115183246073299,
+              "text": "tool call thiếu kết quả",
+              "detail": "context",
+              "sourceFontPx": 6,
+              "projectedFontPx": 4.869109947643979,
+              "minimumProjectedFontPx": 6
+            }
+          ]
+        },
+        "provenance": "current",
+        "deliveryReceiptId": "33f12ba5-5f1d-42bc-9fd2-2c4da1c8852b"
+      }
+    },
+    "browser-check": {
+      "status": "fail",
+      "exitCode": 1,
+      "durationMs": 28,
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "C:\\Users\\My PC\\.agents\\skills\\archify\\bin\\archify.mjs",
+        "browser-check",
+        "E:\\Desktop\\cnbphongkham\\.archify\\workflow-run-turn-loop-20261022-112511\\run-turn-loop.html",
+        "--json",
+        "--require-provenance"
+      ],
+      "execution": "in-process",
+      "receipt": {
+        "schemaVersion": 1,
+        "ok": false,
+        "command": "browser-check",
+        "evidenceKind": "automated-browser",
+        "status": "fail",
+        "visualReview": "not-requested",
+        "provenance": "current",
+        "deliveryReceiptId": "33f12ba5-5f1d-42bc-9fd2-2c4da1c8852b",
+        "artifact": {
+          "path": "E:\\Desktop\\cnbphongkham\\.archify\\workflow-run-turn-loop-20261022-112511\\run-turn-loop.html",
+          "sha256": "bcc8c3b9cee0fa7812097bcbffa0fc99aac1c1c4a64283cfd0839003f0f9ef75",
+          "bytes": 845104
+        },
+        "state": {
+          "detail": "read",
+          "motion": "still"
+        },
+        "chrome": {
+          "status": "not-checked",
+          "executable": null
+        },
+        "diagnostics": [
+          {
+            "code": "viewer/evidence-path-conflict",
+            "severity": "error",
+            "message": "browser-check will not replace the existing unowned evidence path \"E:\\Desktop\\cnbphongkham\\.archify\\workflow-run-turn-loop-20261022-112511\\run-turn-loop.browser-check.json\".",
+            "subject": {
+              "artifact": "E:\\Desktop\\cnbphongkham\\.archify\\workflow-run-turn-loop-20261022-112511\\run-turn-loop.html",
+              "evidencePath": "E:\\Desktop\\cnbphongkham\\.archify\\workflow-run-turn-loop-20261022-112511\\run-turn-loop.browser-check.json"
+            },
+            "evidence": {
+              "reason": {
+                "code": "ownership-artifact-mismatch"
+              }
+            },
+            "supportedFixes": [
+              "move the conflicting file aside, or choose a separate --out-dir, then rerun browser-check"
+            ]
+          }
+        ],
+        "containment": {
+          "status": "fail",
+          "policy": "fit-or-reader-declared-readable-vertical-scroll",
+          "viewports": []
+        },
+        "themeStates": {
+          "status": "fail",
+          "viewports": []
+        },
+        "readability": {
+          "status": "fail",
+          "minimumProjectedNodeTextPx": 6,
+          "viewports": []
+        },
+        "viewerChrome": {
+          "status": "fail",
+          "viewports": []
+        },
+        "captures": {
+          "status": "not-requested",
+          "screenshots": [],
+          "contactSheet": null
+        },
+        "sidecars": {
+          "receipt": "run-turn-loop.browser-check.json",
+          "files": []
+        },
+        "error": "browser-check will not replace the existing unowned evidence path \"E:\\Desktop\\cnbphongkham\\.archify\\workflow-run-turn-loop-20261022-112511\\run-turn-loop.browser-check.json\"."
+      }
+    }
+  },
+  "browserCheck": {
+    "requested": true,
+    "ran": false
+  },
+  "diagnostics": [
+    {
+      "code": "viewer/evidence-path-conflict",
+      "severity": "error",
+      "message": "browser-check will not replace the existing unowned evidence path \"E:\\Desktop\\cnbphongkham\\.archify\\workflow-run-turn-loop-20261022-112511\\run-turn-loop.browser-check.json\".",
+      "subject": {
+        "artifact": "E:\\Desktop\\cnbphongkham\\.archify\\workflow-run-turn-loop-20261022-112511\\run-turn-loop.html",
+        "evidencePath": "E:\\Desktop\\cnbphongkham\\.archify\\workflow-run-turn-loop-20261022-112511\\run-turn-loop.browser-check.json"
+      },
+      "evidence": {
+        "reason": {
+          "code": "ownership-artifact-mismatch"
+        }
+      },
+      "supportedFixes": [
+        "move the conflicting file aside, or choose a separate --out-dir, then rerun browser-check"
+      ]
+    }
+  ],
+  "evidence": {
+    "receipt": "E:\\Desktop\\cnbphongkham\\.archify\\workflow-run-turn-loop-20261022-112511\\run-turn-loop.finalize.json",
+    "summaryReceipt": "E:\\Desktop\\cnbphongkham\\.archify\\workflow-run-turn-loop-20261022-112511\\run-turn-loop.finalize-summary.json",
+    "browserCheckReceipt": "E:\\Desktop\\cnbphongkham\\.archify\\workflow-run-turn-loop-20261022-112511\\run-turn-loop.browser-check.json"
+  },
+  "visualReview": "not-requested",
+  "failedStage": "browser-check",
+  "finishedAt": "2026-10-22T04:45:37.718Z",
+  "durationMs": 2462,
+  "update": {
+    "status": "current",
+    "installedVersion": "3.2.0",
+    "availableVersion": "3.2.0",
+    "releaseNotes": null,
+    "checkedAt": "2026-10-22T01:56:02.656Z",
+    "source": "cache",
+    "noticeRequired": false,
+    "noticeText": null
+  }
+}

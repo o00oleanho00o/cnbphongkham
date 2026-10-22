@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "ab1e8df8-03fe-43ed-96fb-aba125ea097f",
+  "status": "current",
+  "command": "deliver",
+  "type": "architecture",
+  "input": "E:\\Desktop\\cnbphongkham\\.archify\\architecture-stack-overview-20261022-092501\\candidate.json",
+  "output": "E:\\Desktop\\cnbphongkham\\.archify\\architecture-stack-overview-20261022-092501\\stack-overview.html",
+  "specification": {
+    "sha256": "3e69a5ed51dc24a73cdda96f56830cb476d7b26fa0f703f8c8ed48f794346787",
+    "bytes": 7614
+  },
+  "artifact": {
+    "sha256": "c92e90fdf739a7e398a0dabf193ee8e0bf57c2b07c8a64043b011884dbcdd977",
+    "bytes": 832959
+  }
+}

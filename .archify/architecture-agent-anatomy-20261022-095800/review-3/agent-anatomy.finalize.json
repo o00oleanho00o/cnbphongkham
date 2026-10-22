@@ -1,0 +1,359 @@
+{
+  "schemaVersion": 1,
+  "ok": false,
+  "command": "finalize",
+  "status": "fail",
+  "type": "architecture",
+  "quality": "showcase",
+  "startedAt": "2026-10-22T04:32:37.893Z",
+  "specification": {
+    "path": "E:\\Desktop\\cnbphongkham\\.archify\\architecture-agent-anatomy-20261022-095800\\candidate.json",
+    "sha256": "1a174d98d6f89f3ef0b7368c49cbc2ee4d3e61a09195c66e417e985e6bb5eec8",
+    "bytes": 16353
+  },
+  "artifact": {
+    "path": "E:\\Desktop\\cnbphongkham\\.archify\\architecture-agent-anatomy-20261022-095800\\agent-anatomy.html",
+    "sha256": "d60d27a09556d392bbc22912a302cf3a7f95be1095a9f05fd4437d141cd5e534",
+    "bytes": 850727
+  },
+  "stages": {
+    "validate": {
+      "status": "fail",
+      "exitCode": 1,
+      "durationMs": null,
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "C:\\Users\\My PC\\.agents\\skills\\archify\\bin\\archify.mjs",
+        "deliver",
+        "architecture",
+        "E:\\Desktop\\cnbphongkham\\.archify\\architecture-agent-anatomy-20261022-095800\\candidate.json",
+        "E:\\Desktop\\cnbphongkham\\.archify\\architecture-agent-anatomy-20261022-095800\\agent-anatomy.html",
+        "--quality",
+        "showcase",
+        "--repo-root",
+        "E:\\Desktop\\cnbphongkham",
+        "--json"
+      ],
+      "receipt": {
+        "schemaVersion": 1,
+        "ok": false,
+        "command": "deliver",
+        "receiptId": "6a702d2c-e847-49b4-9dd3-b7935fbe8f0a",
+        "stage": "check",
+        "type": "architecture",
+        "input": "E:\\Desktop\\cnbphongkham\\.archify\\architecture-agent-anatomy-20261022-095800\\candidate.json",
+        "output": "E:\\Desktop\\cnbphongkham\\.archify\\architecture-agent-anatomy-20261022-095800\\agent-anatomy.html",
+        "error": "Final artifact check failed; the previous artifact was preserved.",
+        "diagnostics": [
+          {
+            "code": "composition/desktop-readability",
+            "severity": "error",
+            "message": "Final artifact failed composition/desktop-readability.",
+            "subject": {
+              "check": "composition",
+              "nodeId": "hooks"
+            },
+            "evidence": {
+              "owner": {
+                "kind": "node",
+                "id": "hooks"
+              },
+              "viewportWidth": 1440,
+              "viewportHeight": 900,
+              "availableDiagramWidth": 930,
+              "budgetBasis": "legacy-930",
+              "readerContract": "declared-wide-v1",
+              "requestedTargetPx": 7.5,
+              "requestedTargetMet": false,
+              "budgetLimit": "legacy",
+              "viewBoxWidth": 1240,
+              "scale": 0.75,
+              "text": "pre_tool chặn; post_tool sửa",
+              "detail": "context",
+              "sourceFontPx": 7.2,
+              "projectedFontPx": 5.4,
+              "minimumProjectedFontPx": 6
+            },
+            "supportedFixes": [
+              "Preserve the semantic text and any supplied coordinates, routes, sides, channels, and labels. Compactly reflow automatic spacing and empty corridors so the complete viewBox width is at most 1116px (current 1240px; 7.2px source text at 930px desktop budget). If supplied geometry fixes that width, use a renderer-supported semantic text-size setting or renderer-level fix instead. Position-only label controls cannot repair its projection."
+            ]
+          }
+        ],
+        "provenance": "failed",
+        "checker": {
+          "ok": false,
+          "file": "E:\\Desktop\\cnbphongkham\\.archify\\architecture-agent-anatomy-20261022-095800\\agent-anatomy.html",
+          "artifact": {
+            "sha256": "cf080edb396e7c5e57968589519450803ba9d1f61d0dd2620fdbcb94c6b882d8",
+            "bytes": 862016
+          },
+          "checks": [
+            {
+              "name": "single_svg",
+              "ok": true,
+              "details": [
+                "found 1 <svg> block(s)"
+              ]
+            },
+            {
+              "name": "finite_svg",
+              "ok": true,
+              "details": []
+            },
+            {
+              "name": "orthogonal_arrows",
+              "ok": true,
+              "details": []
+            },
+            {
+              "name": "label_route_clearance",
+              "ok": true,
+              "details": []
+            },
+            {
+              "name": "relationship_crossings",
+              "ok": true,
+              "details": []
+            },
+            {
+              "name": "relationship_corridors",
+              "ok": true,
+              "details": []
+            },
+            {
+              "name": "container_border_runs",
+              "ok": true,
+              "details": []
+            },
+            {
+              "name": "route_rhythm",
+              "ok": true,
+              "details": []
+            },
+            {
+              "name": "legend_clearance",
+              "ok": true,
+              "details": []
+            }
+          ],
+          "composition": {
+            "schemaVersion": 1,
+            "profile": "showcase",
+            "status": "fail",
+            "summary": {
+              "errors": 1,
+              "warnings": 0
+            },
+            "metrics": {
+              "properCrossings": 0,
+              "resolvedCrossovers": 2,
+              "ambiguousCorridors": 0,
+              "arrowheadCollisions": 0,
+              "containerBorderRuns": 0,
+              "labelRouteClearanceIssues": 0,
+              "labelCanvasOverflowIssues": 0,
+              "minLabelRouteClearance": 5.8,
+              "desktopReadabilityIssues": 1,
+              "viewportHeightIssues": 0,
+              "minProjectedNodeTextPx": 5.4,
+              "maxBends": 2,
+              "routesOverSuggestedBends": 0,
+              "maxStretch": 1,
+              "routesOverSuggestedStretch": 0,
+              "minSegmentPx": 24,
+              "minInteriorSegmentPx": 143,
+              "shortSegmentCount": 0,
+              "shortEndpointSegmentCount": 0,
+              "shortInteriorSegmentCount": 0,
+              "microSegmentCount": 0
+            },
+            "suggestedLimits": {
+              "bendsPerRelationship": 2,
+              "stretch": 1.35,
+              "segmentPx": 16,
+              "microSegmentPx": 8
+            },
+            "routeReview": {
+              "crossings": [
+                {
+                  "left": {
+                    "id": "cli-to-turn",
+                    "from": "cli",
+                    "to": "turn",
+                    "label": "run_turn, cùng khóa phiên",
+                    "collectionIndex": 2,
+                    "artifactIndex": 3
+                  },
+                  "right": {
+                    "id": "live-to-dispatcher",
+                    "from": "live",
+                    "to": "dispatcher",
+                    "label": "Agent hiện hành",
+                    "collectionIndex": 5,
+                    "artifactIndex": 6
+                  },
+                  "point": [
+                    480,
+                    220
+                  ]
+                },
+                {
+                  "left": {
+                    "id": "turn-to-model",
+                    "from": "turn",
+                    "to": "model",
+                    "label": "complete()",
+                    "collectionIndex": 16,
+                    "artifactIndex": 17
+                  },
+                  "right": {
+                    "id": "turn-to-context",
+                    "from": "turn",
+                    "to": "context",
+                    "label": "nén khi quá ngưỡng",
+                    "collectionIndex": 17,
+                    "artifactIndex": 18
+                  },
+                  "point": [
+                    605,
+                    616
+                  ],
+                  "sharedNode": "turn"
+                }
+              ],
+              "detours": []
+            },
+            "leadingSpace": {
+              "measured": true,
+              "emptyTopPx": 40,
+              "emptyTopRatio": 0.044,
+              "occupiedTop": 40,
+              "viewBoxTop": 0,
+              "canvasHeight": 918,
+              "typicalNodeHeight": 60,
+              "reviewSuggested": false
+            },
+            "desktopReadability": {
+              "budgetBasis": "legacy-930",
+              "readerContract": "declared-wide-v1",
+              "availableDiagramWidth": 930,
+              "actualBudgetPx": 930,
+              "limit": "legacy",
+              "requestedTargetPx": 7.5,
+              "requestedTargetMet": false,
+              "hardFloorPx": 6,
+              "hardFloorMet": false,
+              "minimumOwner": {
+                "kind": "node",
+                "id": "hooks"
+              },
+              "minimumSourceTextPx": 7.2,
+              "minimumProjectedTextPx": 5.4,
+              "semanticTextCount": 60
+            },
+            "issues": [
+              {
+                "severity": "error",
+                "code": "composition/desktop-readability",
+                "nodeId": "hooks",
+                "owner": {
+                  "kind": "node",
+                  "id": "hooks"
+                },
+                "viewportWidth": 1440,
+                "viewportHeight": 900,
+                "availableDiagramWidth": 930,
+                "budgetBasis": "legacy-930",
+                "readerContract": "declared-wide-v1",
+                "requestedTargetPx": 7.5,
+                "requestedTargetMet": false,
+                "budgetLimit": "legacy",
+                "viewBoxWidth": 1240,
+                "scale": 0.75,
+                "text": "pre_tool chặn; post_tool sửa",
+                "detail": "context",
+                "sourceFontPx": 7.2,
+                "projectedFontPx": 5.4,
+                "minimumProjectedFontPx": 6
+              }
+            ]
+          }
+        },
+        "update": {
+          "status": "unavailable",
+          "installedVersion": null,
+          "availableVersion": null,
+          "releaseNotes": null,
+          "checkedAt": null,
+          "source": null,
+          "noticeRequired": false,
+          "noticeText": null,
+          "reason": "disabled"
+        }
+      },
+      "stderr": "archify: meta.locale \"vi\" has no bundled catalog and no usable meta.translations; the Viewer chrome and <html lang> fall back to English.",
+      "execution": "embedded-in-deliver"
+    },
+    "deliver": {
+      "status": "not-run",
+      "execution": "blocked-by-validate"
+    }
+  },
+  "browserCheck": {
+    "requested": true,
+    "ran": false
+  },
+  "diagnostics": [
+    {
+      "code": "composition/desktop-readability",
+      "severity": "error",
+      "message": "Final artifact failed composition/desktop-readability.",
+      "subject": {
+        "check": "composition",
+        "nodeId": "hooks"
+      },
+      "evidence": {
+        "owner": {
+          "kind": "node",
+          "id": "hooks"
+        },
+        "viewportWidth": 1440,
+        "viewportHeight": 900,
+        "availableDiagramWidth": 930,
+        "budgetBasis": "legacy-930",
+        "readerContract": "declared-wide-v1",
+        "requestedTargetPx": 7.5,
+        "requestedTargetMet": false,
+        "budgetLimit": "legacy",
+        "viewBoxWidth": 1240,
+        "scale": 0.75,
+        "text": "pre_tool chặn; post_tool sửa",
+        "detail": "context",
+        "sourceFontPx": 7.2,
+        "projectedFontPx": 5.4,
+        "minimumProjectedFontPx": 6
+      },
+      "supportedFixes": [
+        "Preserve the semantic text and any supplied coordinates, routes, sides, channels, and labels. Compactly reflow automatic spacing and empty corridors so the complete viewBox width is at most 1116px (current 1240px; 7.2px source text at 930px desktop budget). If supplied geometry fixes that width, use a renderer-supported semantic text-size setting or renderer-level fix instead. Position-only label controls cannot repair its projection."
+      ]
+    }
+  ],
+  "evidence": {
+    "receipt": "E:\\Desktop\\cnbphongkham\\.archify\\architecture-agent-anatomy-20261022-095800\\review-3\\agent-anatomy.finalize.json",
+    "summaryReceipt": "E:\\Desktop\\cnbphongkham\\.archify\\architecture-agent-anatomy-20261022-095800\\review-3\\agent-anatomy.finalize-summary.json"
+  },
+  "visualReview": "not-requested",
+  "failedStage": "validate",
+  "finishedAt": "2026-10-22T04:32:38.741Z",
+  "durationMs": 847,
+  "update": {
+    "status": "current",
+    "installedVersion": "3.2.0",
+    "availableVersion": "3.2.0",
+    "releaseNotes": null,
+    "checkedAt": "2026-10-22T01:56:02.656Z",
+    "source": "cache",
+    "noticeRequired": false,
+    "noticeText": null
+  }
+}

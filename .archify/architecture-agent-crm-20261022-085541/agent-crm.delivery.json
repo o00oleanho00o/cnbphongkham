@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "b5107b5e-ce3a-4839-bff1-df07678272f9",
+  "status": "current",
+  "command": "deliver",
+  "type": "architecture",
+  "input": "E:\\Desktop\\cnbphongkham\\.archify\\architecture-agent-crm-20261022-085541\\candidate.json",
+  "output": "E:\\Desktop\\cnbphongkham\\.archify\\architecture-agent-crm-20261022-085541\\agent-crm.html",
+  "specification": {
+    "sha256": "dc56a3589ea3f40c4a2254b8baf0def3dd44025f336c223e62771ae8724380cc",
+    "bytes": 5596
+  },
+  "artifact": {
+    "sha256": "ff99edd869fb3442ccaa9e6e36b9d7d38b6a5cec1e7abbaf237b9f2fc98e3b00",
+    "bytes": 824823
+  }
+}

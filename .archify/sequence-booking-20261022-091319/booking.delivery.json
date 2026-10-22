@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "0c22c882-7907-4b2d-818d-ef87ab491cdf",
+  "status": "current",
+  "command": "deliver",
+  "type": "sequence",
+  "input": "E:\\Desktop\\cnbphongkham\\.archify\\sequence-booking-20261022-091319\\candidate.json",
+  "output": "E:\\Desktop\\cnbphongkham\\.archify\\sequence-booking-20261022-091319\\booking.html",
+  "specification": {
+    "sha256": "7d91697a669b81890f66f621559164e65d09f90b0bfd5c5e25389e6d51ab7d96",
+    "bytes": 5482
+  },
+  "artifact": {
+    "sha256": "0665c21fa4276814e203654d13b7cbde4c7d6fba0a42ef369b3a47c2827efd97",
+    "bytes": 823480
+  }
+}

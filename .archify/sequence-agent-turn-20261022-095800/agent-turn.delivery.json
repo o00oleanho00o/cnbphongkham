@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "11339caa-c177-4e63-84b7-dfba81298658",
+  "status": "current",
+  "command": "deliver",
+  "type": "sequence",
+  "input": "E:\\Desktop\\cnbphongkham\\.archify\\sequence-agent-turn-20261022-095800\\candidate.json",
+  "output": "E:\\Desktop\\cnbphongkham\\.archify\\sequence-agent-turn-20261022-095800\\agent-turn.html",
+  "specification": {
+    "sha256": "246f69a447c460f52d57195516ad0a859bf2bfa904663ab5d37b968f16616734",
+    "bytes": 10717
+  },
+  "artifact": {
+    "sha256": "c7a498b79641083303f2e97fccde647dc8655eb5c21ef972c0e86a901ae43ad0",
+    "bytes": 831716
+  }
+}

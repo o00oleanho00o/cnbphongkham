@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "e3b7d349-8414-473f-9e5c-9c38a02a7e81",
+  "status": "current",
+  "command": "deliver",
+  "type": "tree",
+  "input": "E:\\Desktop\\cnbphongkham\\.archify\\tree-plugin-contract-20261022-095800\\candidate.json",
+  "output": "E:\\Desktop\\cnbphongkham\\.archify\\tree-plugin-contract-20261022-095800\\plugin-contract.html",
+  "specification": {
+    "sha256": "2c19f6aefd16e57d413df0aecef0a30b7ccacdad0e446f0d96ec5829b1f9afbe",
+    "bytes": 12429
+  },
+  "artifact": {
+    "sha256": "d10c51fd397ffa11099f5daabc1a2d712546d76e0a41431451405451305e6f58",
+    "bytes": 888724
+  }
+}

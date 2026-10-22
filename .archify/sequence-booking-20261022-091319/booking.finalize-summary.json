@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "finalize",
+  "status": "pass",
+  "type": "sequence",
+  "quality": "showcase",
+  "specification": {
+    "path": "E:\\Desktop\\cnbphongkham\\.archify\\sequence-booking-20261022-091319\\candidate.json",
+    "sha256": "7d91697a669b81890f66f621559164e65d09f90b0bfd5c5e25389e6d51ab7d96",
+    "bytes": 5482
+  },
+  "artifact": {
+    "path": "E:\\Desktop\\cnbphongkham\\.archify\\sequence-booking-20261022-091319\\booking.html",
+    "sha256": "0665c21fa4276814e203654d13b7cbde4c7d6fba0a42ef369b3a47c2827efd97",
+    "bytes": 823480
+  },
+  "gates": {
+    "validate": "pass",
+    "deliver": "pass",
+    "check": "pass",
+    "browser-check": "pass"
+  },
+  "diagnostics": [
+    {
+      "code": "i18n/locale-fallback",
+      "severity": "warning",
+      "message": "meta.locale \"vi\" has no bundled catalog and no usable meta.translations; the Viewer chrome and <html lang> fall back to English.",
+      "subject": {
+        "diagramType": "sequence",
+        "path": "/meta/locale"
+      },
+      "evidence": {
+        "locale": "vi",
+        "bundledLocales": [
+          "en",
+          "zh-CN",
+          "zh-TW",
+          "es",
+          "ko",
+          "ar"
+        ]
+      },
+      "supportedFixes": [
+        "Supply meta.translations for this locale.",
+        "Use a bundled locale: en, zh-CN, zh-TW, es, ko, ar."
+      ]
+    }
+  ],
+  "diagnosticSummary": {
+    "total": 1,
+    "shown": 1,
+    "truncated": false
+  },
+  "evidence": {
+    "receipt": "E:\\Desktop\\cnbphongkham\\.archify\\sequence-booking-20261022-091319\\booking.finalize.json",
+    "summaryReceipt": "E:\\Desktop\\cnbphongkham\\.archify\\sequence-booking-20261022-091319\\booking.finalize-summary.json",
+    "browserCheckReceipt": "E:\\Desktop\\cnbphongkham\\.archify\\sequence-booking-20261022-091319\\booking.browser-check.json"
+  },
+  "update": {
+    "status": "current",
+    "installedVersion": "3.2.0",
+    "availableVersion": "3.2.0",
+    "releaseNotes": null,
+    "checkedAt": "2026-10-22T01:56:02.656Z",
+    "source": "cache",
+    "noticeRequired": false,
+    "noticeText": null
+  },
+  "visualReview": "not-requested",
+  "durationMs": 3316,
+  "browserCheck": {
+    "requested": true,
+    "ran": true
+  }
+}

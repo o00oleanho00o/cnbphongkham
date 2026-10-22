@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "e6607839-924e-4d5b-a909-79b76774ade6",
+  "status": "current",
+  "command": "deliver",
+  "type": "architecture",
+  "input": "E:\\Desktop\\cnbphongkham\\.archify\\architecture-agent-anatomy-20261022-095800\\candidate.json",
+  "output": "E:\\Desktop\\cnbphongkham\\.archify\\architecture-agent-anatomy-20261022-095800\\agent-anatomy.html",
+  "specification": {
+    "sha256": "0bfe3f2537099600bd9aa7e0a335e17f0e294a13a439464dfc1fc2b1a3cbc328",
+    "bytes": 21168
+  },
+  "artifact": {
+    "sha256": "0d2e16c03f35caee06380b42619bda580b27835c57e316c2f83ee1e62c327362",
+    "bytes": 862070
+  }
+}

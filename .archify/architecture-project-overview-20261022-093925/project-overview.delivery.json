@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "f64a1aa2-b9cc-46b3-b7a3-4abc37f9cf35",
+  "status": "current",
+  "command": "deliver",
+  "type": "architecture",
+  "input": "E:\\Desktop\\cnbphongkham\\.archify\\architecture-project-overview-20261022-093925\\candidate.json",
+  "output": "E:\\Desktop\\cnbphongkham\\.archify\\architecture-project-overview-20261022-093925\\project-overview.html",
+  "specification": {
+    "sha256": "0e777629a124b380aee32a12ec905309bc7e1062f0db19bb2552de26097e8861",
+    "bytes": 7987
+  },
+  "artifact": {
+    "sha256": "56cbd68f4b6629854e9f3e3dcc6483fac9dadbc2560a47ee15f14f07d6fcb742",
+    "bytes": 836812
+  }
+}
