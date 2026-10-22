@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "8533a806-73d9-425d-a6b8-e7f170df3fed",
+  "status": "current",
+  "command": "deliver",
+  "type": "workflow",
+  "input": "E:\\Desktop\\cnbphongkham\\.archify\\workflow-case-loop-20261022-171500\\candidate.json",
+  "output": "E:\\Desktop\\cnbphongkham\\.archify\\workflow-case-loop-20261022-171500\\case-loop.html",
+  "specification": {
+    "sha256": "cc9a0e7dfebd7615758f7bf5ef78bc0f7604d94fbf0d38f57764dc8759cce957",
+    "bytes": 10587
+  },
+  "artifact": {
+    "sha256": "431b457bd3d23065025a05538d8fd9d2479bf2f7f151906ab79738b2d59600c9",
+    "bytes": 834082
+  }
+}
