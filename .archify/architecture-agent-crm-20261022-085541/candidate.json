@@ -1,0 +1,134 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Agent ↔ CRM: khách nhắn Zalo để đặt lịch",
+    "locale": "vi",
+    "output": ".archify/architecture-agent-crm-20261022-085541/agent-crm.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "git@github-personal20:o00oleanho00o/cnbphongkham.git",
+      "link_mode": "local-only",
+      "revision": "0cc60554f18d15043fcdd67334fb623562e5d039"
+    }
+  },
+  "components": [
+    { "id": "customer", "type": "external", "label": "Khách", "sublabel": "Zalo Bot / Zalo cá nhân", "pos": [40, 190], "size": [130, 60] },
+    {
+      "id": "agent",
+      "type": "backend",
+      "label": "Agent clinic",
+      "sublabel": "plugin crm: 7 tool",
+      "pos": [290, 190],
+      "size": [130, 60],
+      "tag": "chỉ đọc, không khóa",
+      "sources": [
+        { "path": "pema-agent/backend/apps/agent/plugins/crm/__init__.py", "line": 101, "end_line": 120, "label": "CrmTools" },
+        { "path": "pema-agent/backend/apps/agent/plugins/crm/events.py", "line": 128, "end_line": 150, "label": "nhận sự kiện" }
+      ]
+    },
+    {
+      "id": "agentdb",
+      "type": "database",
+      "label": "pema_agent",
+      "sublabel": "crm_* : nhắc, người, đã gửi",
+      "pos": [290, 40],
+      "size": [130, 60],
+      "sources": [
+        { "path": "pema-agent/backend/apps/agent/plugins/crm/store.py", "line": 231, "end_line": 250, "label": "PostgresReminderStore" }
+      ]
+    },
+    {
+      "id": "signer",
+      "type": "security",
+      "label": "crm-signer",
+      "sublabel": "giữ khóa Ed25519",
+      "pos": [540, 190],
+      "size": [130, 60],
+      "tag": "8 route cố định",
+      "sources": [
+        { "path": "pema-agent/backend/apps/crm-signer/crm_signer/routes.py", "line": 35, "end_line": 44, "label": "ROUTES" },
+        { "path": "pema-agent/backend/apps/crm-signer/crm_signer/app.py", "line": 104, "end_line": 125, "label": "forward" }
+      ]
+    },
+    {
+      "id": "api",
+      "type": "backend",
+      "label": "API CRM",
+      "sublabel": "/agent-gateway",
+      "pos": [790, 190],
+      "size": [130, 60],
+      "tag": "6 quyền agent.*",
+      "sources": [
+        { "path": "pema-agent/backend/apps/api/pema/api/routers/agent_gateway.py", "line": 40, "end_line": 66, "label": "router" },
+        { "path": "pema-agent/backend/apps/api/pema/api/agent_gateway_auth.py", "line": 118, "end_line": 155, "label": "kiểm JWT" }
+      ]
+    },
+    {
+      "id": "crmdb",
+      "type": "database",
+      "label": "pema (CRM)",
+      "sublabel": "lịch, kênh chat, outbox",
+      "pos": [1040, 190],
+      "size": [130, 60],
+      "sources": [
+        { "path": "pema-agent/backend/apps/api/pema/clinic/models/scheduling.py", "line": 14, "end_line": 34, "label": "Appointment" },
+        { "path": "pema-agent/backend/apps/api/pema/clinic/models/care.py", "line": 45, "end_line": 60, "label": "PatientChannel" }
+      ]
+    },
+    {
+      "id": "worker",
+      "type": "messagebus",
+      "label": "Worker agent-events",
+      "sublabel": "outbox: clinic.agent_event",
+      "pos": [1040, 340],
+      "size": [130, 60],
+      "sources": [
+        { "path": "pema-agent/backend/apps/api/pema/composition/agent_events_worker.py", "line": 88, "end_line": 102, "label": "ký token" },
+        { "path": "pema-agent/backend/apps/api/pema/clinic/models/agent_event.py", "line": 26, "end_line": 39, "label": "AgentEvent" }
+      ]
+    }
+  ],
+  "boundaries": [
+    { "kind": "security-group", "label": "Agent: không vào được pema", "wraps": ["agent", "agentdb"] },
+    { "kind": "region", "label": "CRM: dữ liệu bệnh nhân", "wraps": ["api", "crmdb", "worker"] }
+  ],
+  "connections": [
+    { "id": "customer-to-agent", "from": "customer", "to": "agent", "label": "tin nhắn", "variant": "emphasis" },
+    { "id": "agent-to-signer", "from": "agent", "to": "signer", "label": "không khóa" },
+    { "id": "signer-to-api", "from": "signer", "to": "api", "label": "JWT 60 giây", "variant": "security" },
+    { "id": "api-to-crmdb", "from": "api", "to": "crmdb", "label": "đọc/ghi lịch" },
+    { "id": "agent-to-agentdb", "from": "agent", "to": "agentdb", "label": "crm_*" },
+    { "id": "worker-reads-outbox", "from": "worker", "to": "crmdb", "label": "đọc outbox", "variant": "dashed" },
+    { "id": "worker-to-agent", "from": "worker", "to": "agent", "label": "sự kiện lịch (JWT)", "variant": "security", "fromSide": "left", "toSide": "bottom" }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Đặt lịch (đi)",
+      "items": [
+        "Người là kênh + ID của cuộc chat do mã gắn, model không chọn được",
+        "Trong nhóm chat các tool lịch từ chối",
+        "Mỗi lời gọi ký riêng một JWT, đúng một quyền agent.*"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Sự kiện (về)",
+      "items": [
+        "CRM ký bằng khóa riêng của CRM, aud pema-agent-events",
+        "Agent chỉ có khóa công khai (JWKS), chỉ nhận ở /v1/hooks/crm/events",
+        "Sự kiện là trạng thái: phiên bản cao nhất thắng; vòng nhắc chạy từ đó"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Agent thấy gì",
+      "items": [
+        "Giờ trống (không tên), lịch sắp tới và tối đa 3 lịch đổi trong 7 ngày của chính người chat",
+        "Không lý do hủy, không ghi chú, không bệnh nhân khác",
+        "Ra internet qua proxy egress (hiện chỉ ghi log)"
+      ]
+    }
+  ]
+}
