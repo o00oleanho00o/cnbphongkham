@@ -36,7 +36,7 @@ from agentcore import (
     Tracer,
     run_turn,
 )
-from agentcore.channels import InboundMessage, in_group, session_id_for
+from agentcore.channels import PROACTIVE, InboundMessage, in_group, session_id_for
 
 CLOSE_GRACE_S: Final = 10.0
 TYPING_KEEP: Final = 512
@@ -228,7 +228,7 @@ class Dispatcher:
                     self._wanted.discard(session_id)
                     while (queued := await self.ingress.next_queued(self.tenant_id, session_id)) is not None:
                         mode = self.settings.mode_for(queued.channel)
-                        if mode != "followup":
+                        if mode != "followup" and not _proactive(queued):  # nobody types a proactive one
                             await self._quiet(queued)
                         claimed = await self.ingress.claim(queued.id)
                         if claimed is None:
@@ -267,12 +267,14 @@ class Dispatcher:
 
     async def _gather(self, lead: IngressRecord, limit: int) -> list[IngressRecord]:
         """Claims the next queued messages of the same person, in order, up to the first one from someone
-        else: a reply never jumps ahead of another person's message."""
-        if limit <= 0:
+        else: a reply never jumps ahead of another person's message. A proactive message (a reminder, a case's
+        turn) carries the person's id but is the agent's own: it never joins a turn nor takes others into its
+        own, since only the lead's answer is sent and a ``SKIP`` would swallow the person's reply."""
+        if limit <= 0 or _proactive(lead):
             return []
         joined: list[IngressRecord] = []
         for record in await self.ingress.queued_in_session(self.tenant_id, lead.session_id, limit):
-            if record.user_id != lead.user_id:
+            if record.user_id != lead.user_id or _proactive(record):
                 break
             claimed = await self.ingress.claim(record.id)
             if claimed is None:
@@ -397,3 +399,7 @@ class Dispatcher:
         for task in pending:
             task.cancel()
         await asyncio.gather(*pending, return_exceptions=True)
+
+
+def _proactive(record: IngressRecord) -> bool:
+    return record.metadata.get(PROACTIVE) == "1"

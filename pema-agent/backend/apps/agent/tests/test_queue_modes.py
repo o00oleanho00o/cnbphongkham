@@ -15,7 +15,7 @@ from agent_app.ingress import IngressRecord
 from agent_app.profile import Profile, load_profile
 from agent_app.runtime import Runtime, build_runtime
 from agentcore import AssistantResult, InMemoryTracer, LlmRequest, ModelError, StreamSink
-from agentcore.channels import InboundMessage
+from agentcore.channels import PROACTIVE, InboundMessage
 from agentcore.harness.model.scripted import calls, reply, tool_call
 
 DEV_PROFILE = Path(__file__).resolve().parents[1] / "agents" / "dev"
@@ -293,3 +293,71 @@ def test_the_clinic_agent_waits_longer_for_zalo_customers_than_for_the_console()
     assert settings.wait_for("zalo-nick") == (5.0, 20.0)
     assert (settings.typing_hold_s, settings.typing_max_wait_s) == (6.0, 30.0)
     runtime.close()
+
+
+def _proactive(message_id: str, text: str, user: str = "u1") -> InboundMessage:
+    """A message the agent starts itself (a reminder, a case's turn): the person's id, marked proactive."""
+    return InboundMessage("http", "c1", user, message_id, text, metadata={PROACTIVE: "1"})
+
+
+async def test_a_proactive_message_never_joins_a_burst_of_the_person(tmp_path: Path) -> None:
+    model = Model([_answer("a"), _answer("SKIP"), _answer("c")])
+    dispatcher = _dispatcher(_runtime(tmp_path), model, "collect")
+
+    records = [
+        (await dispatcher.accept(_inbound("m1", "from the person")))[0],
+        (await dispatcher.accept(_proactive("p1", "[Case · x] remind")))[0],
+        (await dispatcher.accept(_inbound("m2", "the person again")))[0],
+    ]
+    for record in records:
+        await dispatcher.wait(record.id, 5.0)
+
+    assert model.asked == ["from the person", "[Case · x] remind", "the person again"]
+    await dispatcher.close()
+
+
+async def test_a_skipped_proactive_turn_never_swallows_the_persons_reply(tmp_path: Path) -> None:
+    model = Model([_answer("SKIP"), _answer("here is your answer")])
+    dispatcher = _dispatcher(_runtime(tmp_path), model, "collect")
+
+    first, _ = await dispatcher.accept(_proactive("p1", "[Case · x] remind"), deliver=True)
+    second, _ = await dispatcher.accept(_inbound("m1", "is it open today?"), deliver=True)
+    proactive, person = [await dispatcher.wait(r.id, 5.0) for r in (first, second)]
+
+    assert model.asked == ["[Case · x] remind", "is it open today?"]
+    assert person.reply is not None
+    assert (person.reply.text, person.delivery) == ("here is your answer", "pending")
+    assert proactive.reply is not None
+    assert proactive.reply.turn_id != person.reply.turn_id
+    await dispatcher.close()
+
+
+@pytest.mark.parametrize("proactive_first", [True, False])
+async def test_steer_never_mixes_a_proactive_turn_with_the_persons(
+    tmp_path: Path, proactive_first: bool
+) -> None:
+    release = asyncio.Event()
+
+    async def call_a_tool(request: LlmRequest) -> AssistantResult:
+        await release.wait()
+        return calls(tool_call("get_datetime", {}))
+
+    runtime = _runtime(tmp_path)
+    model = Model([call_a_tool, _answer("first done"), _answer("second done")])
+    dispatcher = _dispatcher(runtime, model, "steer")
+    proactive = _proactive("p1", "[Case · x] remind")
+    person = _inbound("m1", "what time is it")
+    lead, later = (proactive, person) if proactive_first else (person, proactive)
+
+    first, _ = await dispatcher.accept(lead, deliver=True)
+    await asyncio.wait_for(model.started.wait(), 5.0)
+    second, _ = await dispatcher.accept(later, deliver=True)
+    release.set()
+    done = [await dispatcher.wait(r.id, 5.0) for r in (first, second)]
+
+    assert model.asked[0] == lead.text
+    assert later.text not in model.asked[1]  # not steered into the running turn
+    assert model.asked[2] == later.text  # its own turn
+    assert [r.reply and r.reply.text for r in done] == ["first done", "second done"]
+    assert [r.delivery for r in done] == ["pending", "pending"]
+    await dispatcher.close()
