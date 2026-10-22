@@ -335,6 +335,11 @@ _LAST_TURN = sql(
     "WHERE tenant_id = :tenant_id AND session_id = :session_id AND agent = :agent "
     "ORDER BY started_at DESC LIMIT 1"
 )
+_USED_SINCE = sql(
+    "SELECT coalesce(sum(input_tokens + output_tokens) FILTER (WHERE session_id = :session_id), 0) "
+    "AS in_session, coalesce(sum(input_tokens + output_tokens), 0) AS total FROM agent_rt.agent_turn "
+    "WHERE tenant_id = :tenant_id AND agent = :agent AND started_at >= :since"
+)
 _TURN_EVENTS = sql(
     "SELECT kind, step, name, duration_ms, is_error, detail FROM agent_rt.agent_turn_event "
     "WHERE turn_id = :turn_id ORDER BY seq"
@@ -401,6 +406,18 @@ class PostgresTracer:
                 return _turn_trace(row, await _events(conn, row.turn_id))
 
         return await retrying("load trace", work)
+
+    async def used_since(self, tenant_id: str, session_id: str, since: datetime) -> tuple[int, int]:
+        """Tokens (prompt and generated) this agent's turns started since ``since`` used: (this session,
+        all)."""
+        params = {"tenant_id": tenant_id, "session_id": session_id, "agent": self._agent, "since": since}
+
+        async def work() -> tuple[int, int]:
+            async with self._engine.connect() as conn:
+                row = (await conn.execute(_USED_SINCE, params)).one()
+            return int(row.in_session), int(row.total)
+
+        return await retrying("count tokens", work)
 
 
 async def _events(conn: AsyncConnection, turn_id: object) -> tuple[TraceEvent, ...]:

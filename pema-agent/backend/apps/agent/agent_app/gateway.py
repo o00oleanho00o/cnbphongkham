@@ -268,6 +268,8 @@ class AgentSettingsPatch(_Body):
     follow_up_channels: list[str] | None = Field(default=None, max_length=20)
     cases_enabled: bool | None = None
     proactive_per_person_per_day: int | None = Field(default=None, ge=1, le=20)
+    tokens_per_session_per_day: int | None = Field(default=None, ge=10_000, le=100_000_000)
+    tokens_per_day: int | None = Field(default=None, ge=100_000, le=2_000_000_000)
     variables: dict[str, str | None] | None = None
 
 

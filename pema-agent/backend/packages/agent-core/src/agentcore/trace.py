@@ -67,6 +67,12 @@ class InMemoryTracer:
             None,
         )
 
+    async def used_since(self, tenant_id: str, session_id: str, since: datetime) -> tuple[int, int]:
+        """Tokens (prompt and generated) the turns started since ``since`` used: (this session, all)."""
+        turns = [t for t in self.traces if t.tenant_id == tenant_id and t.started_at >= since]
+        spent = [(t.session_id, t.usage.input_tokens + t.usage.output_tokens) for t in turns]
+        return sum(n for s, n in spent if s == session_id), sum(n for _, n in spent)
+
 
 def usage_detail(usage: Usage) -> dict[str, int]:
     return {name: value for name, value in usage.model_dump().items() if value}

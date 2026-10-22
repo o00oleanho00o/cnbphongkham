@@ -16,6 +16,7 @@ from agent_app.agent_settings import (
     resolve_agent,
 )
 from agent_app.cases import CasesConfig
+from agent_app.dispatcher import TokenBudget
 from agent_app.follow_up import FollowUpConfig, FollowUps, InMemoryFollowUpStore
 from agent_app.gateway import GatewaySettings, create_app
 from agent_app.profile import Profile, load_profile
@@ -180,6 +181,22 @@ async def test_cases_are_off_until_switched_on_and_the_daily_cap_has_bounds() ->
             await settings.update({"proactive_per_person_per_day": refused})
     await settings.update({"cases_enabled": None, "proactive_per_person_per_day": None})
     assert settings.effective.cases == CasesConfig(False, 2)
+
+
+async def test_the_daily_token_budget_has_a_default_and_bounds() -> None:
+    settings = AgentSettings(_profile(), InMemoryAgentSettingsStore(), tenant_id="t")
+    assert settings.effective.budget == TokenBudget()
+
+    shown = await settings.update({"tokens_per_session_per_day": 50_000, "tokens_per_day": 1_000_000})
+
+    assert settings.effective.budget == TokenBudget(50_000, 1_000_000)
+    assert (shown["tokens_per_session_per_day"], shown["tokens_per_day"]) == (50_000, 1_000_000)
+    assert shown["sources"]["tokens_per_day"] == "db"
+    for name, refused in (("tokens_per_session_per_day", 9_999), ("tokens_per_day", 2_000_000_001)):
+        with pytest.raises(SettingsError):
+            await settings.update({name: refused})
+    await settings.update({"tokens_per_session_per_day": None, "tokens_per_day": None})
+    assert settings.effective.budget == TokenBudget()
 
 
 @pytest.mark.parametrize("channels", [["Bad Name"], ["ok", ""], [f"c{n}" for n in range(21)]])

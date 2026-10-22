@@ -471,6 +471,8 @@ def test_agent_settings_are_stored_per_agent_and_a_clear_never_lowers_the_versio
             memory_agent_chars=500,
             follow_up_enabled=True,
             follow_up_channels=("zalo-a1", "zalo-b2"),
+            tokens_per_session_per_day=50_000,
+            tokens_per_day=1_000_000,
             variables={"clinic": "Pema"},
             tools={"web_fetch": True, "kb_search": False},
             updated_by="an@admin",
@@ -497,6 +499,8 @@ def test_the_database_refuses_agent_settings_outside_their_limits(db_url: str) -
             StoredAgentSettings(memory_agent_chars=5),
             StoredAgentSettings(failure_reply="x" * 1001),
             StoredAgentSettings(timezone=""),
+            StoredAgentSettings(tokens_per_session_per_day=9_999),
+            StoredAgentSettings(tokens_per_day=2_000_000_001),
         ):
             with pytest.raises(Exception, match="agent_settings"):
                 await store.save("t", bad)

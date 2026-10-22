@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
+from datetime import datetime, time
 from pathlib import Path
 from typing import Final, Protocol
 from zoneinfo import ZoneInfo
@@ -83,6 +84,8 @@ class TraceLog(Protocol):
 
     async def last(self, tenant_id: str, session_id: str) -> TurnTrace | None: ...
 
+    async def used_since(self, tenant_id: str, session_id: str, since: datetime) -> tuple[int, int]: ...
+
 
 @dataclass(frozen=True, slots=True)
 class Runtime:
@@ -113,6 +116,13 @@ class Runtime:
         """Before a turn: follows changes made since the last look (through this or another process)."""
         await self.plugin_manager.refresh()
         await self.agent_settings.refresh()
+
+    async def over_budget(self, tenant_id: str, session_id: str) -> str | None:
+        """Why a turn of this session may not run today (the settings' ``TokenBudget``), or None."""
+        effective = self.agent_settings.effective
+        local = datetime.now(ZoneInfo(effective.profile.agent.timezone))
+        start = datetime.combine(local.date(), time(0), local.tzinfo)
+        return effective.budget.spent(*await self.tracer.used_since(tenant_id, session_id, start))
 
     @property
     def agent(self) -> Agent:
@@ -166,6 +176,7 @@ class Runtime:
                 typing_max_wait_s=loop.queue_typing_max_wait_s,
             ),
             before_turn=self.refresh,
+            over_budget=self.over_budget,
         )
 
 

@@ -83,6 +83,27 @@ class DispatchSettings:
         return self.wait_by_prefix[max(matching, key=len)]
 
 
+@dataclass(frozen=True, slots=True)
+class TokenBudget:
+    """Tokens (prompt, cached ones included, and generated) turns may use in one local day. Checked before a
+    turn, so the turn that crosses the line still ends; a turn refused fails with ``token_budget``."""
+
+    per_session_per_day: int = 2_000_000
+    per_day: int = 50_000_000
+    """Every session of the agent together."""
+
+    def spent(self, session: int, total: int) -> str | None:
+        if session >= self.per_session_per_day:
+            return "this conversation's daily token budget is spent"
+        if total >= self.per_day:
+            return "the agent's daily token budget is spent"
+        return None
+
+
+class BudgetSpentError(Exception):
+    """The turn is not run: a daily token budget is spent."""
+
+
 class StreamObserver:
     """Turns one run into events for a live client. Only names reach the client: no reasoning, no tool
     arguments or results."""
@@ -128,9 +149,12 @@ class Dispatcher:
         sessions: PostgresSessionStore | None = None,
         settings: DispatchSettings | None = None,
         before_turn: Callable[[], Awaitable[None]] | None = None,
+        over_budget: Callable[[str, str], Awaitable[str | None]] | None = None,
     ) -> None:
+        """``over_budget(tenant_id, session_id)`` says why a turn of that session may not run now, or None."""
         self._agent = agent
         self._before_turn = before_turn
+        self._over_budget = over_budget
         self.store = store
         self.ingress = ingress
         self.settings = settings or DispatchSettings()
@@ -302,6 +326,12 @@ class Dispatcher:
         reply: TurnReply | None = None
         error_kind = "unknown"
         try:
+            if self._over_budget is not None:
+                # shortcut: turns of other sessions running now are not counted yet, so the agent budget
+                # may be passed by up to max_concurrent_turns turns; reserve tokens first if that matters.
+                spent = await self._over_budget(self.tenant_id, lead.session_id)
+                if spent is not None:
+                    raise BudgetSpentError(spent)
             if self._sessions is not None:
                 await self._sessions.open_session(
                     self.tenant_id, lead.session_id, channel=lead.channel, user_id=lead.user_id
@@ -330,6 +360,9 @@ class Dispatcher:
             reply = TurnReply.of(result)
         except ModelError as err:
             error_kind = err.kind
+        except BudgetSpentError as err:
+            logger.warning("message %d not run: %s", lead.id, err)
+            error_kind = "token_budget"
         except Exception as err:
             logger.warning("message %d failed (%s)", lead.id, type(err).__name__)
             error_kind = type(err).__name__

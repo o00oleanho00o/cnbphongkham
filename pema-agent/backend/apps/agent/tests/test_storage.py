@@ -11,7 +11,7 @@ from __future__ import annotations
 import asyncio
 import os
 from collections.abc import Awaitable, Callable, Iterator
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
@@ -315,6 +315,11 @@ def test_a_turn_trace_is_stored_and_read_back(admin: tuple[str, Engine]) -> None
         assert saved.events[1].detail["call_id"] == "c1"
         assert await tracer.last("t", "other") is None
         assert await PostgresTracer(db, agent="other", model="m1").last("t", "s1") is None
+        # the daily token budget counts prompt and generated tokens of the turns since a moment, per agent
+        assert await tracer.used_since("t", "s1", NOW) == (11, 11)
+        assert await tracer.used_since("t", "s2", NOW) == (0, 11)
+        assert await tracer.used_since("t", "s1", NOW + timedelta(seconds=1)) == (0, 0)
+        assert await PostgresTracer(db, agent="other", model="m1").used_since("t", "s1", NOW) == (0, 0)
 
     _run(admin[0], check)
     with admin[1].connect() as conn:

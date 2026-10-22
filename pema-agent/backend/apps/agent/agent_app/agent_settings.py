@@ -23,6 +23,7 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 from sqlalchemy import text as sql
 
 from agent_app.cases.engine import CasesConfig
+from agent_app.dispatcher import TokenBudget
 from agent_app.follow_up import MAX_CHANNELS, FollowUpConfig
 from agent_app.live import LiveAgent
 from agent_app.profile import Profile, fill_variables
@@ -44,8 +45,13 @@ VARIABLE_NAME: Final = re.compile(r"^[a-z][a-z0-9_]{0,63}$")
 TEXT_FIELDS: Final = ("timezone", "failure_reply", "persona", "rules")
 MEMORY_FIELDS: Final = ("memory_enabled", "memory_agent_chars", "memory_user_chars")
 CASE_FIELDS: Final = ("cases_enabled", "proactive_per_person_per_day")
-SCALAR_FIELDS: Final = (*TEXT_FIELDS, *MEMORY_FIELDS, "follow_up_enabled", *CASE_FIELDS)
+BUDGET_FIELDS: Final = ("tokens_per_session_per_day", "tokens_per_day")
+SCALAR_FIELDS: Final = (*TEXT_FIELDS, *MEMORY_FIELDS, "follow_up_enabled", *CASE_FIELDS, *BUDGET_FIELDS)
 MAX_PROACTIVE_PER_DAY: Final = 20
+TOKEN_LIMITS: Final = {
+    "tokens_per_session_per_day": (10_000, 100_000_000),
+    "tokens_per_day": (100_000, 2_000_000_000),
+}
 
 FieldSource = Literal["db", "profile"]
 
@@ -79,6 +85,9 @@ class StoredAgentSettings:
     """The emergency switch of every case (off until switched on)."""
     proactive_per_person_per_day: int | None = None
     """Messages all cases together may start with one person in one local day (None: the default, 2)."""
+    tokens_per_session_per_day: int | None = None
+    tokens_per_day: int | None = None
+    """The daily token budget (``TokenBudget``) of one session and of the whole agent (None: the default)."""
     variables: Mapping[str, str] = field(default_factory=dict[str, str])
     """Only the variables whose value an admin changed; the others keep the profile's."""
     tools: Mapping[str, bool] = field(default_factory=dict[str, bool])
@@ -106,6 +115,7 @@ class EffectiveAgent:
     version: int
     follow_up: FollowUpConfig = field(default_factory=FollowUpConfig)
     cases: CasesConfig = field(default_factory=CasesConfig)
+    budget: TokenBudget = field(default_factory=TokenBudget)
 
 
 def core_tool_names() -> list[str]:
@@ -163,6 +173,13 @@ def resolve_agent(profile: Profile, stored: StoredAgentSettings | None) -> Effec
     cases = CasesConfig(
         bool(stored.cases_enabled), stored.proactive_per_person_per_day or CasesConfig().per_person_per_day
     )
+    for name in BUDGET_FIELDS:
+        sources[name] = "db" if getattr(stored, name) is not None else "profile"
+    default = TokenBudget()
+    budget = TokenBudget(
+        stored.tokens_per_session_per_day or default.per_session_per_day,
+        stored.tokens_per_day or default.per_day,
+    )
     return EffectiveAgent(
         profile=laid,
         disabled_tools=disabled,
@@ -170,6 +187,7 @@ def resolve_agent(profile: Profile, stored: StoredAgentSettings | None) -> Effec
         version=stored.version,
         follow_up=follow_up,
         cases=cases,
+        budget=budget,
     )
 
 
@@ -193,24 +211,28 @@ class InMemoryAgentSettingsStore:
 _GET = sql(
     "SELECT timezone, failure_reply, persona, rules, memory_enabled, memory_agent_chars, memory_user_chars, "
     "variables, tools, follow_up_enabled, follow_up_channels, cases_enabled, proactive_per_person_per_day, "
-    "version, updated_by FROM agent_rt.agent_settings "
+    "tokens_per_session_per_day, tokens_per_day, version, updated_by FROM agent_rt.agent_settings "
     "WHERE tenant_id = :tenant_id AND agent = :agent"
 )
 _VERSION = sql("SELECT version FROM agent_rt.agent_settings WHERE tenant_id = :tenant_id AND agent = :agent")
 _SAVE = sql(
     "INSERT INTO agent_rt.agent_settings (tenant_id, agent, timezone, failure_reply, persona, rules, "
     "memory_enabled, memory_agent_chars, memory_user_chars, follow_up_enabled, follow_up_channels, "
-    "cases_enabled, proactive_per_person_per_day, variables, tools, updated_by) "
+    "cases_enabled, proactive_per_person_per_day, tokens_per_session_per_day, tokens_per_day, variables, "
+    "tools, updated_by) "
     "VALUES (:tenant_id, :agent, :timezone, :failure_reply, :persona, :rules, :memory_enabled, "
     ":memory_agent_chars, :memory_user_chars, :follow_up_enabled, CAST(:follow_up_channels AS jsonb), "
-    ":cases_enabled, :proactive_per_person_per_day, "
+    ":cases_enabled, :proactive_per_person_per_day, :tokens_per_session_per_day, :tokens_per_day, "
     "CAST(:variables AS jsonb), CAST(:tools AS jsonb), :updated_by) "
     "ON CONFLICT (tenant_id, agent) DO UPDATE SET timezone = EXCLUDED.timezone, "
     "failure_reply = EXCLUDED.failure_reply, persona = EXCLUDED.persona, rules = EXCLUDED.rules, "
     "memory_enabled = EXCLUDED.memory_enabled, memory_agent_chars = EXCLUDED.memory_agent_chars, "
     "memory_user_chars = EXCLUDED.memory_user_chars, follow_up_enabled = EXCLUDED.follow_up_enabled, "
     "follow_up_channels = EXCLUDED.follow_up_channels, cases_enabled = EXCLUDED.cases_enabled, "
-    "proactive_per_person_per_day = EXCLUDED.proactive_per_person_per_day, variables = EXCLUDED.variables, "
+    "proactive_per_person_per_day = EXCLUDED.proactive_per_person_per_day, "
+    "tokens_per_session_per_day = EXCLUDED.tokens_per_session_per_day, "
+    "tokens_per_day = EXCLUDED.tokens_per_day, "
+    "variables = EXCLUDED.variables, "
     "tools = EXCLUDED.tools, updated_by = EXCLUDED.updated_by, "
     "version = agent_rt.agent_settings.version + 1, updated_at = now() RETURNING version"
 )
@@ -242,6 +264,8 @@ class PostgresAgentSettingsStore:
                 follow_up_channels=tuple(row.follow_up_channels),
                 cases_enabled=row.cases_enabled,
                 proactive_per_person_per_day=row.proactive_per_person_per_day,
+                tokens_per_session_per_day=row.tokens_per_session_per_day,
+                tokens_per_day=row.tokens_per_day,
                 variables=dict(row.variables),
                 tools=dict(row.tools),
                 version=row.version,
@@ -360,6 +384,8 @@ class AgentSettings:
             "follow_up_channels": list(effective.follow_up.channels),
             "cases_enabled": effective.cases.enabled,
             "proactive_per_person_per_day": effective.cases.per_person_per_day,
+            "tokens_per_session_per_day": effective.budget.per_session_per_day,
+            "tokens_per_day": effective.budget.per_day,
             "sources": dict(effective.sources),
             "stored": not stored.empty,
             "version": stored.version,
@@ -494,6 +520,9 @@ def _check_scalar(name: str, value: Any) -> None:
         raise SettingsError("invalid", f"{name} is between {MIN_MEMORY_CHARS} and {MAX_TEXT_CHARS}")
     elif name == "proactive_per_person_per_day" and not 1 <= value <= MAX_PROACTIVE_PER_DAY:
         raise SettingsError("invalid", f"{name} is between 1 and {MAX_PROACTIVE_PER_DAY}")
+    elif name in TOKEN_LIMITS and not TOKEN_LIMITS[name][0] <= value <= TOKEN_LIMITS[name][1]:
+        low, high = TOKEN_LIMITS[name]
+        raise SettingsError("invalid", f"{name} is between {low} and {high}")
 
 
 def _merged_variables(current: Mapping[str, str], changes: Mapping[str, str | None] | None) -> dict[str, str]:
