@@ -288,8 +288,10 @@ thật đầu tiên chạy hết vòng: plugin khai báo ca, động cơ đợi 
 ### 6.2 Hình của ca `reminder`
 
 - **State** (`ReminderCase`): `appointment_id`, `starts_at`, `mark` (`24h`, `3h`), `status` (lấy lại lúc kiểm),
-  `looks` (bộ đếm).
-- **Đồ thị:** `check` (`CodeNode`) → `send` (`TurnNode`); cạnh quay `check → check` mang bộ đếm `looks`, trần 10.
+  hai bộ đếm `looks` và `retries`.
+- **Đồ thị:** `check` (`CodeNode`) → `send` (`TurnNode`). Cạnh quay `check → check` mang bộ đếm `looks`, trần 10.
+  **Cạnh lỗi** `send → check` (`on="error"`) mang bộ đếm `retries`, trần 3 (chủ chọn 2026-10-22). Mọi lần gửi,
+  kể cả lần thử lại sau lỗi, đều đi qua `check` ngay trước đó.
 - **`check`:** đọc lại lịch và người từ `crm_reminder`, `crm_person`, chạy `decide()` như hôm nay (bảy lý do bỏ giữ
   nguyên):
   - chưa tới mốc → `next="check"`, chờ đồng hồ tới `due_at`;
@@ -317,11 +319,16 @@ thật đầu tiên chạy hết vòng: plugin khai báo ca, động cơ đợi 
   trước khi ghi sự kiện. Ghi xong, với mỗi mốc của lịch cũ, nó gọi `ctx.cases.wake("reminder", key)`. Ca thức
   dậy và chạy `check` ngay: lịch hủy thì dừng với `skip:over`, dời giờ thì dừng với `skip:moved`. Nhật ký ghi
   đúng lúc có sự kiện, không phải lúc tới mốc. Ca cho giờ mới do vòng quét mở như cũ, vì `on_change` vẫn đánh
-  thức vòng quét. Chỉ đánh thức ca có con trỏ ở `check`: con trỏ chỉ nằm ở `send` khi lượt gửi lỗi và đang chờ
-  thử lại, mà đánh thức lúc đó thì sẽ gửi luôn, không kiểm lại.
+  thức vòng quét. Không cần điều kiện "chỉ đánh thức ca ở `check`": nhờ cạnh lỗi, con trỏ không bao giờ nằm
+  chờ ở `send`.
 
-### 6.4 Đổi ở động cơ (nhỏ, chung cho mọi ca)
+### 6.4 Đổi ở lõi và động cơ (nhỏ, chung cho mọi ca)
 
+- **Cạnh lỗi.** `Edge` thêm `on: Literal["ok", "error"] = "ok"` (`agentcore.cases`, tầng hình, thuần). Cạnh
+  thường đọc như cũ; cạnh `error` chỉ đi khi nút ở đầu cạnh lỗi. Luật sẵn có vẫn áp: cạnh quay lui phải có bộ
+  đếm có trần. Động cơ (`_retry_later`): nút lỗi mà có cạnh `error` thì dời con trỏ theo cạnh đó, cộng bộ đếm
+  (chạm trần thì dừng ca), rồi chờ 5 phút. Không có cạnh lỗi thì giữ như cũ (thử lại ở chính nút đó). Động
+  cơ không biết ca của ai; plugin chỉ khai báo cạnh, không chạm con trỏ.
 - `CaseEngine.room_today(plugin, kind, channel, user_id) -> int`: số tin mọi ca còn được gửi người này hôm nay, bằng
   `min(spec.budget, cài đặt) - đã gửi`, đúng phép tính của `blocked`.
 - `ctx.cases.room_today(kind, channel, user_id)` gọi tới nó (`Cases`, `CaseService`).
@@ -342,10 +349,12 @@ thật đầu tiên chạy hết vòng: plugin khai báo ca, động cơ đợi 
 - Model thấy lời dặn trong khung của ca (tiếng Anh của harness và lời dặn tiếng Việt của plugin). Hai tool
   `case_done`, `case_wait_until` có trong profile `clinic` (đã duyệt L7, T9).
 - Mã tin đổi từ `crm-reminder:…` sang `case:<id>:0`.
-- **Giới hạn biết trước** (ghi `shortcut:` trong code): lượt gửi lỗi (hàng đợi lỗi DB, hết giờ chờ) thì động cơ
-  thử lại sau 5 phút ngay ở `send`, không chạy lại `check`. Nếu trong 5 phút đó lịch bị hủy hay vừa vào giờ yên
-  lặng, tin vẫn đi. Mã tin giữ nguyên nên không bao giờ gửi hai lần. Nâng cấp khi cần: cho lỗi ở `TurnNode` quay
-  con trỏ về nút trước.
+- **Gửi lỗi thì kiểm lại rồi mới thử.** `send_to` chỉ ném lỗi khi không nói được với hàng đợi (DB lỗi); hết giờ
+  chờ hay kênh không gửi được thì nó trả kết quả, ca kết thúc bình thường. Khi lỗi, ca quay về `check` theo cạnh
+  lỗi, 5 phút sau kiểm lại (lịch, đồng ý, giờ yên lặng, chỗ trong ngày) rồi mới gửi; lỗi tới lần thứ 3 thì ca
+  dừng. Lần thử lại dùng cùng số lượt, nên cùng mã tin: tin đã vào hàng đợi thì không bao giờ gửi hai lần.
+- **Lỗ còn lại** (ghi `shortcut:` trong code): tin đã vào hàng đợi rồi DB lỗi lúc chờ kết quả, rồi lịch bị hủy
+  trong 5 phút sau đó. Tin trong hàng đợi vẫn được dispatcher chạy, kiểm lại không thu hồi được.
 
 ### 6.7 Test
 
@@ -357,11 +366,14 @@ thật đầu tiên chạy hết vòng: plugin khai báo ca, động cơ đợi 
   - lịch hủy trước mốc → `skip:over`, không gửi;
   - lịch dời giờ → ca cũ `skip:moved`, ca mới theo giờ mới;
   - sự kiện hủy hay dời làm ca đang đợi dừng ngay, không đợi tới mốc;
-  - ca có con trỏ ở `send` không bị sự kiện đánh thức;
+  - gửi lỗi rồi lịch bị hủy → ca quay về `check` và dừng, không gửi;
+  - gửi lỗi rồi lịch vẫn còn → lần sau gửi đúng một tin; lỗi 3 lần thì ca dừng;
   - mốc đã có trong `crm_reminder_sent` (gửi trước khi chuyển) không gửi lại;
   - hết chỗ trong ngày → `skip:daily_cap`;
   - `cases_enabled` tắt thì không gửi gì.
-- **Động cơ:** `room_today` khớp với `blocked`.
+- **Động cơ:** `room_today` khớp với `blocked`; ca không có cạnh lỗi thử lại ở chính nút như cũ.
+- **Lõi** (`test_cases.py`): cạnh `error` quay lui không có bộ đếm bị từ chối; cạnh `error` không được chọn khi
+  nút chạy xong bình thường.
 - **Chạy lại:** `tests/crm/`, `test_cases_engine.py`, `test_tool_allowlist.py` (T9) và các test ranh giới của `crm`.
 
 ### 6.8 Sau khi xanh
