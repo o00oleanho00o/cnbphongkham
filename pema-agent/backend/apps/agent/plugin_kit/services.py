@@ -1,4 +1,5 @@
-"""Services one plugin gives to the others (``ctx.provide`` / ``ctx.use``), and the contracts they follow.
+"""Services one plugin gives to the others (``ctx.provide`` / ``ctx.use``), and the contracts they follow. The
+harness only carries them by name; which plugin provides one is that plugin's business.
 
 A service is an object a plugin hands the host under a name; another plugin asks for it by name and the type
 it expects, and gets ``None`` while no enabled plugin provides it (the plugin that needs it then does
@@ -12,9 +13,9 @@ from collections.abc import Mapping, Sequence
 from typing import Any, Final, Protocol, runtime_checkable
 
 EMBEDDINGS: Final = "embeddings"
-"""The name of the embedding service (``EmbeddingService``), provided by ``knowledge``."""
+"""The name of the embedding service (``EmbeddingService``)."""
 JUDGE: Final = "judge"
-"""The name of the judging service (``JudgeService``), provided by ``jev``."""
+"""The name of the judging service (``JudgeService``)."""
 
 
 class EmbeddingUnavailableError(Exception):

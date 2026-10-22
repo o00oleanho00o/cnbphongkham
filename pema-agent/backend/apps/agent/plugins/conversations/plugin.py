@@ -18,8 +18,9 @@ from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
 from typing import Final
 
-from agent_app.plugins import EMBEDDINGS, EmbeddingService, PluginContext, PluginDatabase
+from agent_app.plugins import PluginContext, PluginDatabase
 from agentcore.channels import ObservedMessage
+from plugin_kit import EMBEDDINGS, EmbeddingService
 
 from .episode_store import EpisodeStore, InMemoryEpisodeStore, PostgresEpisodeStore
 from .models import NewMessage, Role, conversation_id

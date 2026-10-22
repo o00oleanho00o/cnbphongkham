@@ -12,11 +12,12 @@ import httpx
 import pytest
 
 from agent_app.gateway import GatewaySettings, create_app
-from agent_app.plugins import JudgeUnavailableError, PluginHost, discover
+from agent_app.plugins import PluginHost, discover
 from agent_app.profile import load_profile
 from agent_app.runtime import BUNDLED_PLUGINS, Runtime, build_runtime
 from agentcore import InMemorySessionStore, InMemoryTracer, PromptBuilder, run_turn
 from agentcore.harness.model.scripted import ScriptedModel, calls, reply, tool_call
+from plugin_kit import JudgeUnavailableError
 from plugins.knowledge.judging import NOT_ON, QUESTIONS, JudgePlan, judge_hits, reasons, state_of
 from plugins.knowledge.models import Chunk, Hit
 from tests.knowledge.test_embedding_plugin import ADMIN, ASKED, BASE, PIGMENT, PRICE, TOKEN

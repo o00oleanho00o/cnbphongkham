@@ -27,7 +27,7 @@ from pydantic import BaseModel, Field
 
 from agent_app.plugins import PluginContext
 from agentcore.harness.tools.spec import ToolContext, ToolOutput, ToolSpec
-from plugins.sso.keys import KeySet
+from plugin_kit import KeySet
 
 from .client import CrmClient, CrmError
 from .events import EventVerifier, events_router

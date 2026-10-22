@@ -24,11 +24,11 @@ from typing import Final
 
 from pydantic import BaseModel, Field
 
-from agent_app.plugins import EmbeddingService, EmbeddingUnavailableError
 from agentcore import ToolContext, ToolOutput, ToolSpec
 from agentcore.harness.hooks import HookContext, PreModelHook
 from agentcore.harness.model.types import LlmRequest
 from agentcore.messages import Message, TextBlock
+from plugin_kit import EmbeddingService, EmbeddingUnavailableError
 
 from .episode_store import EpisodeStore
 from .episodes import GAP_S, cut

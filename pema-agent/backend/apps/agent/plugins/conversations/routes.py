@@ -10,8 +10,9 @@ from typing import Annotated, Any, Final
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, status
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints
 
-from agent_app.plugins import EmbeddingUnavailableError, PluginError
+from agent_app.plugins import PluginError
 from agentcore.channels import valid_channel_name
+from plugin_kit import EmbeddingUnavailableError
 
 from .models import Conversation
 from .plugin import ConversationsPlugin

@@ -10,15 +10,9 @@ from typing import Any, Protocol, runtime_checkable
 import httpx
 import pytest
 
-from agent_app.plugins import (
-    EMBEDDINGS,
-    EmbeddingService,
-    EmbeddingUnavailableError,
-    PluginError,
-    PluginHost,
-    discover,
-)
+from agent_app.plugins import PluginError, PluginHost, discover
 from agent_app.runtime import BUNDLED_PLUGINS
+from plugin_kit import EMBEDDINGS, EmbeddingService, EmbeddingUnavailableError
 from secretcipher import encrypt_with
 from tests.knowledge.fake_embedding import KEY, embeddings_transport, status_transport
 

@@ -17,7 +17,9 @@ cho harness. Mọi tính năng (RAG, CRM, nhắc lịch, chăm sóc lại…) l�
   plugin) ← Chạy (`agent_app/cases`, động cơ, store) ← Nội dung (plugin: khai báo ca bằng `ctx.register_case`, mở hay
   đánh thức ca bằng `ctx.cases`). Lõi và động cơ không bao giờ import plugin, không bao giờ có `if kind == "..."`,
   không đọc bảng của plugin. Plugin không bao giờ sửa con trỏ, trạng thái hay bản ghi ca của động cơ, chỉ đi qua
-  `ctx.cases`.
+  `ctx.cases`. **Plugin không import plugin khác**: cái nhiều plugin cùng dùng (hợp đồng dịch vụ `ctx.provide` /
+  `ctx.use`, bộ khóa JWKS) nằm ở `apps/agent/plugin_kit/`, thư mục trung lập không import `agent_app` hay `plugins`.
+  Harness không mang hợp đồng của một tính năng cụ thể, không gọi tên plugin nào (kể cả trong cảnh báo).
 - **H2. Vòng và đồ thị là dữ liệu.** Trigger, điều kiện dừng, state, cạnh, bộ đếm, trần là dữ liệu khai báo trong
   `CaseSpec`, không viết cứng trong vòng lặp. Chủ sẽ tự làm graph engineering sau: không chốt cứng thứ gì ngăn việc đổi
   `Edge.when`, `CodeNode.run` thành biểu thức dữ liệu.
@@ -49,6 +51,14 @@ cho harness. Mọi tính năng (RAG, CRM, nhắc lịch, chăm sóc lại…) l�
 - **H11. Plan trước, code sau.** Thay đổi lớn (khái niệm lõi, động cơ, đổi hành vi cho khách) viết vào kế hoạch, chờ chủ
   nói "go". Tool mới cho profile `clinic` là đổi L7: chủ duyệt bằng văn bản, sửa danh sách T9.
 
+## Vi phạm đang biết (sửa xong thì xóa dòng)
+
+Rà toàn bộ code theo H1–H11 ngày 2026-10-22. Agent sau gặp chỗ này thì không bắt chước, và không thêm chỗ mới.
+
+| Chỗ | Luật | Vì sao chưa sửa | Sửa ở đâu |
+|---|---|---|---|
+| Chăm sóc lại là tính năng nằm trong harness: `agent_app/follow_up.py`, settings `follow_up_*`, route `/v1/admin/follow-ups`; tự gửi tin ngoài động cơ ca, nên không bị tính vào trần mỗi người mỗi ngày | "mọi thứ là plugin", H6 | route và settings đang được frontend dùng; frontend do phiên Claude khác giữ | `pema-agent/docs/PLAN-case-loop.md` mục 3 bước 3 (DESIGN 2.5): plugin `follow_up` trên động cơ |
+
 ## Khi viết một ca mới (checklist)
 
 1. State là `BaseModel`; khóa ca (`key`) xác định "một lần" theo nghĩa nghiệp vụ (ví dụ một mốc của một lịch).
@@ -64,6 +74,7 @@ cho harness. Mọi tính năng (RAG, CRM, nhắc lịch, chăm sóc lại…) l�
 | Test | Luật | Ở đâu |
 |---|---|---|
 | harness không import plugin | H1 | `apps/agent/tests/test_tool_allowlist.py::test_the_harness_never_imports_what_plugs_into_it` |
+| plugin không import plugin khác; `plugin_kit` không import harness hay plugin | H1 | `apps/agent/tests/test_tool_allowlist.py::test_a_plugin_never_imports_another_plugin_and_the_kit_imports_neither_side` |
 | spec sai luật bị từ chối (cạnh lùi không bộ đếm, cạnh lỗi có điều kiện…) | H2, H3 | `packages/agent-core/tests/test_cases.py` |
 | tool điều khiển chỉ khi có plugin khai báo ca; lượt khách không điều khiển ca; quyết định sống qua khởi động lại; `room_today` khớp `blocked` | H4, H6, H7, H8, H9 | `apps/agent/tests/test_cases_engine.py` |
 | tin chủ động không gộp lượt | H8 | `apps/agent/tests/test_queue_modes.py` |

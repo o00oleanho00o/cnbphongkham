@@ -37,6 +37,10 @@ revision files `0001_agent_rt` … `0012_*` or plugin files `0002_*`/`0003_*`, t
   `token_budget` (the customer gets the failure reply; a proactive message is skipped). Migration
   `0006_token_budget`. The turn that crosses the line still ends; turns running at once may overshoot the agent
   budget by those turns.
+- **Plugin kit (2026-10-22, plan section 3 item 2):** what plugins share lives in `apps/agent/plugin_kit/` (service
+  contracts `EMBEDDINGS`, `JUDGE` and their protocols; `KeySet` for JWKS, moved from `plugins/sso/keys.py`). A plugin
+  never imports another plugin (T9). The rule file `.claude/rules/agent-harness.md` (H1-H11) lists the one known
+  violation left: the follow-up loop inside the harness.
 - **Known limits:** cases run one after another in a pass; a turn sent before a restart and sent again by id is
   logged as sent twice, so the daily cap may count it twice (it sends less, never more).
 
@@ -973,7 +977,7 @@ Goal (user): rebuild zalo-agent as ONE plugin of `apps/agent`, the way Claude/Co
   hub/host; bridge 296 test qua. **Chưa làm:** tìm kiếm ngữ nghĩa và cắt tình huống (GĐ4); test với tài khoản Zalo thật
   (chưa kiểm tra isSelf thật qua bridge).
 - **Kho kịch bản (GĐ4, 2026-10-14, nhánh `feat/knowledge-embedding`).** Lõi: `ctx.provide(tên, dịch vụ)` và
-  `ctx.use(tên, kiểu)` (`agent_app/plugins/services.py`; `PluginHost.use`), hợp đồng `EmbeddingService`
+  `ctx.use(tên, kiểu)` (`agent_app/plugins/services.py`, nay ở `plugin_kit/services.py`; `PluginHost.use`), hợp đồng `EmbeddingService`
   (`space`, `embed_documents`, `embed_query`; lỗi `EmbeddingUnavailableError`). `knowledge` cung cấp dịch vụ `embeddings`
   (`SharedEmbeddings`, dùng khóa, địa chỉ, cache câu hỏi của nó; người dùng không thấy khóa). Plugin `conversations`
   (migration `0002`, bảng `cv_episode`, `cv_episode_vector`, cột `cv_conversation.cut_upto`): job `cut` mỗi 2 phút

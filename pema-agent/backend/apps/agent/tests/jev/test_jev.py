@@ -12,9 +12,10 @@ import httpx
 import pytest
 
 from agent_app.gateway import GatewaySettings, create_app
-from agent_app.plugins import JUDGE, JudgeService, JudgeUnavailableError, PluginHost, discover
+from agent_app.plugins import PluginHost, discover
 from agent_app.profile import load_profile
 from agent_app.runtime import BUNDLED_PLUGINS, Runtime, build_runtime
+from plugin_kit import JUDGE, JudgeService, JudgeUnavailableError
 from plugins.jev.client import ENDPOINT
 from secretcipher import encrypt_with
 

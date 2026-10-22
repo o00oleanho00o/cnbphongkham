@@ -23,7 +23,7 @@ from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field, replace
 from typing import Any, Final, Literal
 
-from agent_app.plugins import JudgeService, JudgeUnavailableError
+from plugin_kit import JudgeService, JudgeUnavailableError
 
 from .models import Hit
 

@@ -29,18 +29,8 @@ from agent_app.plugins.manifest import (
     read_manifest,
 )
 from agent_app.plugins.records import PluginStorage, StorageFor
-from agent_app.plugins.services import (
-    EMBEDDINGS,
-    JUDGE,
-    EmbeddingService,
-    EmbeddingUnavailableError,
-    JudgeService,
-    JudgeUnavailableError,
-)
 
 __all__ = [
-    "EMBEDDINGS",
-    "JUDGE",
     "PLUGIN_API",
     "CaseService",
     "Cases",
@@ -49,10 +39,6 @@ __all__ = [
     "DatabaseAccess",
     "Discovery",
     "Disposer",
-    "EmbeddingService",
-    "EmbeddingUnavailableError",
-    "JudgeService",
-    "JudgeUnavailableError",
     "PluginContext",
     "PluginDatabase",
     "PluginError",

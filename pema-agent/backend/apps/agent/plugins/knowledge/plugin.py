@@ -15,9 +15,10 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from pydantic import BaseModel, Field
 
-from agent_app.plugins import JUDGE, JudgeService, PluginContext, PluginDatabase, PluginError
+from agent_app.plugins import PluginContext, PluginDatabase, PluginError
 from agentcore import PromptEnv, SessionSection, ToolContext, ToolOutput, ToolSpec, TurnInfo, TurnSection
 from agentcore.prompt.data import SessionData
+from plugin_kit import JUDGE, JudgeService
 
 from .embedder import IDLE_S, Embedder
 from .embedding import EmbeddingClient, EmbeddingConfig

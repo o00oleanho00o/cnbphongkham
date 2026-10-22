@@ -7,8 +7,8 @@ import logging
 from collections.abc import Sequence
 from typing import Any
 
-from agent_app.plugins import EmbeddingUnavailableError
 from agent_app.plugins.records import InMemoryPluginRecords
+from plugin_kit import EmbeddingUnavailableError
 from tests.knowledge.fake_embedding import concept_vector
 
 SPACE = "0123456789abcdef"

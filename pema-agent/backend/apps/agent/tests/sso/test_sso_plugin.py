@@ -20,8 +20,8 @@ from agent_app.auth import ADMIN, CHAT, Principal
 from agent_app.gateway import GatewaySettings, create_app
 from agent_app.profile import load_profile
 from agent_app.runtime import build_runtime
+from plugin_kit import KeySet, KeysUnavailableError
 from plugins.sso import Settings, authenticator, scopes_of
-from plugins.sso.keys import KeySet, KeysUnavailableError
 
 CLINIC_PROFILE = Path(__file__).resolve().parents[2] / "agents" / "clinic"
 ISSUER = "pema-clinic"

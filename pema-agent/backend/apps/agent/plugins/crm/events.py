@@ -25,7 +25,7 @@ from fastapi import APIRouter, Header
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ValidationError
 
-from plugins.sso.keys import KeySet, KeysUnavailableError
+from plugin_kit import KeySet, KeysUnavailableError
 
 from .store import ReminderStore, Visit
 

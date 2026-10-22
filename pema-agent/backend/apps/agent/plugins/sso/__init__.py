@@ -17,8 +17,7 @@ import jwt
 
 from agent_app.auth import ADMIN, CHAT, Authenticator, Principal
 from agent_app.plugins import PluginContext
-
-from .keys import KeySet
+from plugin_kit import KeySet
 
 ALGORITHMS: Final = frozenset({"EdDSA", "ES256", "RS256"})
 LEEWAY_S: Final = 30

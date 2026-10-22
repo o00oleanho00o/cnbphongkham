@@ -207,7 +207,10 @@ Test DB cần container `pema-scratch-pg` và `PEMA_TEST_DATABASE_URL`, không b
    mặc định 50 triệu), hai cột của `agent_settings` (migration `0006_token_budget`, có index `agent_turn(tenant_id,
    agent, started_at)`). Quá trần thì lượt không chạy, tin hỏng với `token_budget`: khách nhận câu báo lỗi có sẵn,
    tin chủ động bị bỏ qua, lượt của ca tính là đã dùng. Lượt vượt trần vẫn chạy hết (kiểm trước lượt, không giữa lượt).
-2. Hợp đồng `JudgeService`, `EmbeddingService` ra package trung lập.
+2. ~~Hợp đồng `JudgeService`, `EmbeddingService` ra package trung lập~~ **đã làm 2026-10-22:** thư mục trung lập
+   `apps/agent/plugin_kit/` (không phải package mới: image đã chép cả `apps/agent`, nên Dockerfile, compose, `uv.lock`
+   không đổi) giữ hợp đồng dịch vụ và `KeySet` (trước ở `plugins/sso/keys.py`, `crm` import thẳng). Harness hết mang
+   hợp đồng riêng, CLI hết gọi tên plugin `web`; T9 thêm test plugin không import plugin khác.
 3. **Chăm sóc lại thành plugin `follow_up` trên động cơ** (DESIGN 2.5). Lý do chưa làm ngay: route
   `/v1/admin/follow-ups` và hai trường `follow_up_*` của settings đang được frontend dùng, mà frontend do phiên
   Claude khác giữ; đổi cùng lúc với phiên đó.

@@ -18,10 +18,10 @@ from jwt.algorithms import OKPAlgorithm
 
 from agent_app.plugins import PluginHost, discover
 from agent_app.runtime import BUNDLED_PLUGINS
+from plugin_kit import KeySet
 from plugins.crm.events import AUDIENCE, ISSUER, EventVerifier, events_router
 from plugins.crm.store import MemoryReminderStore, Visit
 from plugins.sso import Settings, authenticator
-from plugins.sso.keys import KeySet
 
 JWKS = "http://api:8000/api/v1/.well-known/jwks.json"
 VISIT = uuid4()

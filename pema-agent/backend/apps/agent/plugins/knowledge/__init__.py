@@ -14,7 +14,8 @@ from __future__ import annotations
 
 import httpx
 
-from agent_app.plugins import EMBEDDINGS, PluginContext
+from agent_app.plugins import PluginContext
+from plugin_kit import EMBEDDINGS
 
 from .embedding import EmbeddingClient
 from .plugin import KnowledgePlugin

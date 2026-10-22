@@ -14,7 +14,7 @@ from typing import Any, Final, cast
 
 import httpx
 
-from agent_app.plugins import JudgeUnavailableError
+from plugin_kit import JudgeUnavailableError
 
 ENDPOINT: Final = "https://api.typesafe.ai/v1/systemone"
 RETRY_AFTER_S: Final = 0.3

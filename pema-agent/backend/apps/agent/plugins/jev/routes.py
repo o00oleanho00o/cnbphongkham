@@ -9,7 +9,8 @@ from typing import Any, Final, Self
 from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from agent_app.plugins import JudgeUnavailableError, PluginError
+from agent_app.plugins import PluginError
+from plugin_kit import JudgeUnavailableError
 
 from .plugin import MAX_DAILY_TOKENS, USD_PER_INPUT_TOKEN, JevPlugin
 

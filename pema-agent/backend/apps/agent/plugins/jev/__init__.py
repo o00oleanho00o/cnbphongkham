@@ -9,7 +9,8 @@ from __future__ import annotations
 
 import httpx
 
-from agent_app.plugins import JUDGE, PluginContext
+from agent_app.plugins import PluginContext
+from plugin_kit import JUDGE
 
 from .client import JevClient
 from .plugin import JevPlugin

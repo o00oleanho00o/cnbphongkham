@@ -516,8 +516,8 @@ async def _serve(profile_path: Path, *, fake: bool, host: str, port: int, home: 
             return EXIT_CONFIG_ERROR
         if db is None:
             _write(f"warning: no {DATABASE_URL_ENV}: messages and sessions live in process memory only\n")
-        if "web" not in runtime.plugins.enabled():
-            _write("warning: the web plugin is off: nobody can sign in to the gateway\n")
+        if not runtime.plugins.contributions().authenticators:
+            _write("warning: no enabled plugin signs people in: nobody can sign in to the gateway\n")
         try:
             await runtime.start()
             # Helper processes of plugins call back over loopback, whatever address the service binds.

@@ -7,7 +7,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from itertools import batched
 
-from agent_app.plugins import EmbeddingUnavailableError
+from plugin_kit import EmbeddingUnavailableError
 
 from .embedding import EMBED_BATCH, EmbeddingError
 from .plugin import KnowledgePlugin

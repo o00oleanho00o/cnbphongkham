@@ -15,7 +15,8 @@ from datetime import UTC, datetime
 from typing import Any, Final, cast
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
-from agent_app.plugins import JudgeUnavailableError, PluginContext, PluginError
+from agent_app.plugins import PluginContext, PluginError
+from plugin_kit import JudgeUnavailableError
 
 from .client import JevClient, Meter
 

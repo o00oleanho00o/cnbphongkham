@@ -69,7 +69,12 @@ SKIPPED_DIRS = {"node_modules", "tests", "__pycache__", "dist", "ui"}
 
 
 def _python_files() -> list[tuple[str, Path]]:
-    roots = [("agentcore", CORE), ("agent_app", AGENT / "agent_app"), ("plugins", AGENT / "plugins")]
+    roots = [
+        ("agentcore", CORE),
+        ("agent_app", AGENT / "agent_app"),
+        ("plugin_kit", AGENT / "plugin_kit"),
+        ("plugins", AGENT / "plugins"),
+    ]
     found: list[tuple[str, Path]] = []
     for label, root in roots:
         for folder, dirs, files in os.walk(root):
@@ -116,6 +121,25 @@ def test_the_harness_never_imports_what_plugs_into_it() -> None:
         if label != "plugins"
         for module in _imports(path)
         if module.split(".")[0] == "plugins" or (label == "agentcore" and module.split(".")[0] == "agent_app")
+    ]
+    assert wrong == []
+
+
+def test_a_plugin_never_imports_another_plugin_and_the_kit_imports_neither_side() -> None:
+    """What plugins share lives in ``plugin_kit`` (.claude/rules/agent-harness.md H1): a plugin that imports
+    another breaks when that one changes or is switched off, and a kit that imported the harness or a plugin
+    would not be neutral."""
+    wrong = [
+        f"{path.relative_to(AGENT)}: {module}"
+        for label, path in _python_files()
+        if label in ("plugins", "plugin_kit")
+        for module in _imports(path)
+        if (label == "plugin_kit" and module.split(".")[0] in ("agent_app", "plugins"))
+        or (
+            label == "plugins"
+            and module.split(".")[0] == "plugins"
+            and module.split(".")[1:2] != [_owner(label, path)]
+        )
     ]
     assert wrong == []
 
