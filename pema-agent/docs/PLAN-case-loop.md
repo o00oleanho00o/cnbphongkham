@@ -342,6 +342,10 @@ thật đầu tiên chạy hết vòng: plugin khai báo ca, động cơ đợi 
 - Model thấy lời dặn trong khung của ca (tiếng Anh của harness và lời dặn tiếng Việt của plugin). Hai tool
   `case_done`, `case_wait_until` có trong profile `clinic` (đã duyệt L7, T9).
 - Mã tin đổi từ `crm-reminder:…` sang `case:<id>:0`.
+- **Giới hạn biết trước** (ghi `shortcut:` trong code): lượt gửi lỗi (hàng đợi lỗi DB, hết giờ chờ) thì động cơ
+  thử lại sau 5 phút ngay ở `send`, không chạy lại `check`. Nếu trong 5 phút đó lịch bị hủy hay vừa vào giờ yên
+  lặng, tin vẫn đi. Mã tin giữ nguyên nên không bao giờ gửi hai lần. Nâng cấp khi cần: cho lỗi ở `TurnNode` quay
+  con trỏ về nút trước.
 
 ### 6.7 Test
 
