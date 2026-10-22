@@ -1,0 +1,398 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Một ca chạy thế nào: plugin cho nội dung, động cơ chạy, luật cứng chặn trước mỗi nút",
+    "locale": "vi",
+    "output": ".archify/workflow-case-loop-20261022-171500/case-loop.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "git@github-personal20:o00oleanho00o/cnbphongkham.git",
+      "link_mode": "local-only",
+      "revision": "e2142ea4553c1d56138264ba805be792e0e614c1"
+    }
+  },
+  "lanes": [
+    {
+      "id": "plugin",
+      "label": "Plugin: khai báo và mở ca"
+    },
+    {
+      "id": "engine",
+      "label": "Động cơ ca (agent_app.cases)"
+    },
+    {
+      "id": "rules",
+      "label": "Luật thuần (agentcore.cases)",
+      "variant": "exception"
+    },
+    {
+      "id": "chat",
+      "label": "Chat của khách: hàng đợi, run_turn"
+    }
+  ],
+  "phases": [
+    {
+      "id": "p-wake",
+      "label": "Khởi động",
+      "fromCol": 0,
+      "toCol": 0
+    },
+    {
+      "id": "p-run",
+      "label": "Chặn rồi chạy nút",
+      "fromCol": 1,
+      "toCol": 2,
+      "variant": "emphasis"
+    },
+    {
+      "id": "p-end",
+      "label": "Quyết, lưu, chờ hay kết thúc",
+      "fromCol": 3,
+      "toCol": 4
+    }
+  ],
+  "mainPath": [
+    "open",
+    "wake",
+    "gate",
+    "node",
+    "turn",
+    "tools",
+    "apply",
+    "save"
+  ],
+  "nodes": [
+    {
+      "id": "open",
+      "lane": "plugin",
+      "col": 0,
+      "type": "external",
+      "label": "Plugin mở ca",
+      "sublabel": "ctx.cases.open(kind, key)",
+      "sources": [
+        {
+          "path": "pema-agent/backend/apps/agent/agent_app/plugins/host.py",
+          "line": 372,
+          "end_line": 377,
+          "label": "register_case"
+        },
+        {
+          "path": "pema-agent/backend/apps/agent/agent_app/cases/engine.py",
+          "line": 127,
+          "end_line": 156,
+          "label": "open_for"
+        }
+      ]
+    },
+    {
+      "id": "customer",
+      "lane": "chat",
+      "col": 0,
+      "type": "frontend",
+      "label": "Khách nhắn",
+      "sublabel": "mọi kênh qua ChannelHub",
+      "sources": [
+        {
+          "path": "pema-agent/backend/apps/agent/agent_app/channel_hub.py",
+          "line": 312,
+          "end_line": 319,
+          "label": "heard"
+        },
+        {
+          "path": "pema-agent/backend/apps/agent/agent_app/cases/engine.py",
+          "line": 188,
+          "end_line": 205,
+          "label": "on_inbound"
+        }
+      ]
+    },
+    {
+      "id": "wake",
+      "lane": "engine",
+      "col": 0,
+      "type": "backend",
+      "label": "Thức",
+      "sublabel": "mở, tới wake_at, khách, sự kiện",
+      "sources": [
+        {
+          "path": "pema-agent/backend/apps/agent/agent_app/cases/engine.py",
+          "line": 169,
+          "end_line": 186,
+          "label": "_wake"
+        },
+        {
+          "path": "pema-agent/backend/apps/agent/agent_app/cases/engine.py",
+          "line": 207,
+          "end_line": 231,
+          "label": "run, pass_once"
+        }
+      ]
+    },
+    {
+      "id": "gate",
+      "lane": "rules",
+      "col": 1,
+      "type": "security",
+      "label": "blocked()",
+      "sublabel": "công tắc, hạn, trần",
+      "tag": "trần/người/ngày: chờ",
+      "sources": [
+        {
+          "path": "pema-agent/backend/packages/agent-core/src/agentcore/cases/rules.py",
+          "line": 102,
+          "end_line": 137,
+          "label": "blocked"
+        }
+      ]
+    },
+    {
+      "id": "node",
+      "lane": "engine",
+      "col": 2,
+      "type": "backend",
+      "label": "Chạy nút",
+      "sublabel": "tối đa 10 nút một lượt quét",
+      "sources": [
+        {
+          "path": "pema-agent/backend/apps/agent/agent_app/cases/engine.py",
+          "line": 233,
+          "end_line": 273,
+          "label": "step"
+        }
+      ]
+    },
+    {
+      "id": "code",
+      "lane": "plugin",
+      "col": 2,
+      "type": "backend",
+      "label": "CodeNode",
+      "sublabel": "mã của plugin quyết",
+      "sources": [
+        {
+          "path": "pema-agent/backend/apps/agent/agent_app/cases/engine.py",
+          "line": 274,
+          "end_line": 278,
+          "label": "_run: nút mã"
+        }
+      ]
+    },
+    {
+      "id": "turn",
+      "lane": "chat",
+      "col": 2,
+      "type": "messagebus",
+      "label": "Lượt model",
+      "sublabel": "tin case:id:lượt vào hàng đợi",
+      "tag": "goal + verify + bước",
+      "sources": [
+        {
+          "path": "pema-agent/backend/apps/agent/agent_app/cases/engine.py",
+          "line": 279,
+          "end_line": 299,
+          "label": "_run: nút model"
+        },
+        {
+          "path": "pema-agent/backend/packages/agent-core/src/agentcore/cases/rules.py",
+          "line": 195,
+          "end_line": 206,
+          "label": "turn_text"
+        }
+      ]
+    },
+    {
+      "id": "tools",
+      "lane": "chat",
+      "col": 3,
+      "type": "security",
+      "label": "case_done, case_wait_until",
+      "sublabel": "model điều khiển ca",
+      "sources": [
+        {
+          "path": "pema-agent/backend/packages/agent-core/src/agentcore/cases/tools.py",
+          "line": 65,
+          "end_line": 97,
+          "label": "make_case_tools"
+        },
+        {
+          "path": "pema-agent/backend/apps/agent/agent_app/cases/engine.py",
+          "line": 112,
+          "end_line": 118,
+          "label": "take"
+        }
+      ]
+    },
+    {
+      "id": "apply",
+      "lane": "rules",
+      "col": 3,
+      "type": "backend",
+      "label": "apply()",
+      "sublabel": "cạnh, bộ đếm, chờ",
+      "sources": [
+        {
+          "path": "pema-agent/backend/packages/agent-core/src/agentcore/cases/rules.py",
+          "line": 163,
+          "end_line": 192,
+          "label": "apply"
+        }
+      ]
+    },
+    {
+      "id": "save",
+      "lane": "engine",
+      "col": 4,
+      "type": "database",
+      "label": "agent_case + nhật ký",
+      "sublabel": "ca chờ nằm ở đây",
+      "sources": [
+        {
+          "path": "pema-agent/backend/apps/agent/agent_app/cases/store.py",
+          "line": 310,
+          "end_line": 332,
+          "label": "save"
+        },
+        {
+          "path": "pema-agent/backend/apps/agent/agent_app/cases/engine.py",
+          "line": 265,
+          "end_line": 272,
+          "label": "lưu, lost"
+        }
+      ],
+      "tag": "lưu khi version đúng"
+    },
+    {
+      "id": "end",
+      "lane": "rules",
+      "col": 4,
+      "type": "security",
+      "label": "Kết thúc",
+      "sublabel": "done hoặc stopped",
+      "sources": [
+        {
+          "path": "pema-agent/backend/packages/agent-core/src/agentcore/cases/rules.py",
+          "line": 150,
+          "end_line": 160,
+          "label": "_end"
+        },
+        {
+          "path": "pema-agent/backend/apps/agent/agent_app/cases/engine.py",
+          "line": 311,
+          "end_line": 347,
+          "label": "_blocked, _close"
+        }
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "id": "open-wake",
+      "from": "open",
+      "to": "wake",
+      "label": "mở ca",
+      "variant": "emphasis"
+    },
+    {
+      "id": "customer-wake",
+      "from": "customer",
+      "to": "wake",
+      "label": "đánh thức",
+      "variant": "default",
+      "role": "branch"
+    },
+    {
+      "id": "wake-gate",
+      "from": "wake",
+      "to": "gate",
+      "variant": "emphasis"
+    },
+    {
+      "id": "gate-node",
+      "from": "gate",
+      "to": "node",
+      "label": "qua",
+      "variant": "emphasis"
+    },
+    {
+      "id": "node-code",
+      "from": "node",
+      "to": "code",
+      "label": "nút mã",
+      "variant": "default",
+      "role": "branch"
+    },
+    {
+      "id": "node-turn",
+      "from": "node",
+      "to": "turn",
+      "label": "nút model",
+      "variant": "emphasis"
+    },
+    {
+      "id": "turn-tools",
+      "from": "turn",
+      "to": "tools",
+      "variant": "emphasis"
+    },
+    {
+      "id": "tools-apply",
+      "from": "tools",
+      "to": "apply",
+      "label": "Decision",
+      "variant": "emphasis"
+    },
+    {
+      "id": "code-apply",
+      "from": "code",
+      "to": "apply",
+      "label": "Decision",
+      "variant": "default",
+      "role": "branch"
+    },
+    {
+      "id": "apply-save",
+      "from": "apply",
+      "to": "save",
+      "variant": "emphasis"
+    },
+    {
+      "id": "apply-end",
+      "from": "apply",
+      "to": "end",
+      "label": "đạt / dừng",
+      "variant": "security",
+      "role": "error"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Ba tầng, một chiều",
+      "items": [
+        "agentcore.cases chỉ có hình và luật thuần, không biết DB, model hay plugin nào",
+        "Động cơ ở agent_app chạy mọi ca như nhau; nội dung (goal, state, nút, cạnh, luật dừng) do plugin khai báo qua register_case",
+        "Hai tool điều khiển chỉ có khi một plugin đang bật khai báo ca"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Cái gì chặn vòng quay mãi",
+      "items": [
+        "Ca chờ (khách hay giờ) nằm trong agent_case; khách nhắn, tới wake_at hoặc plugin gọi wake thì quay lại Thức",
+        "Cạnh quay lại bắt buộc có bộ đếm với trần; tới trần thì ca dừng",
+        "Trước mỗi nút: công tắc cases_enabled, hạn max_age, trần lượt và tin của ca, trần tin mỗi người mỗi ngày (cộng mọi ca)",
+        "Khách nhắn kiểu 'đừng nhắn nữa' (stop_if) dừng ca trước khi chạy nút nào"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Không chạy hai lần",
+      "items": [
+        "Một ca sống mỗi (plugin, kind, key); lưu chỉ thắng khi version còn đúng, bên thua ghi 'lost'",
+        "Lượt model vào hàng đợi với mã case:id:lượt, nên chạy đúng một lần và giữ khóa phiên như mọi tin",
+        "Động cơ không cầm khóa phiên: lượt cầm, cầm trước là tự khóa mình"
+      ]
+    }
+  ]
+}

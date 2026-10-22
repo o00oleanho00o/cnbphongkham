@@ -108,9 +108,13 @@
       <strong>Vòng chăm sóc lại</strong>
       <span>Hội thoại im thì model phán đoán, mã quyết có gửi không (giờ, khoảng cách, số lần), gửi qua hàng đợi như mọi trả lời.</span>
     </a>
-    <a class="card" href="erd-agent-rt-20261022-112511/agent-rt.html">
+    <a class="card" href="workflow-case-loop-20261022-171500/case-loop.html">
+      <strong>Một ca chạy thế nào</strong>
+      <span>Vòng ngoài lượt: plugin mở ca, động cơ thức nó, luật cứng chặn trước mỗi nút, nút mã hay lượt model, case_done và case_wait_until, lưu theo version.</span>
+    </a>
+    <a class="card" href="erd-agent-rt-20261022-171500/agent-rt.html">
       <strong>Schema agent_rt</strong>
-      <span>14 bảng của lõi với mọi cột: phiên và lịch sử, hàng đợi, trace, cài đặt, plugin; chỉ hai FK thật, còn lại nối theo giá trị.</span>
+      <span>16 bảng của lõi với mọi cột: phiên và lịch sử, hàng đợi, trace, cài đặt, plugin, ca; ba FK thật, còn lại nối theo giá trị.</span>
       <small>Vẽ ở mức standard (dày hơn) vì nhiều cột; bảng của plugin (kb_, sk_, cv_, crm_) không ở đây.</small>
     </a>
   </div>
@@ -145,7 +149,7 @@
   </div>
 
   <footer>
-    Vẽ bằng Archify từ mã tại commit <code>7d86533</code> (2026-10-22). Giao diện của trình xem bằng tiếng Anh; nội dung sơ đồ bằng tiếng Việt. Vẽ lại: sửa <code>candidate.json</code> trong thư mục của sơ đồ rồi chạy <code>archify finalize</code>.
+    Vẽ bằng Archify từ mã tại commit <code>7d86533</code> (2026-10-22); sơ đồ ca và schema agent_rt tại <code>e2142ea</code>. Giao diện của trình xem bằng tiếng Anh; nội dung sơ đồ bằng tiếng Việt. Vẽ lại: sửa <code>candidate.json</code> trong thư mục của sơ đồ rồi chạy <code>archify finalize</code>.
   </footer>
 </main>
 </body>

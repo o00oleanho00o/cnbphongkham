@@ -2,14 +2,14 @@
   "schema_version": 1,
   "diagram_type": "erd",
   "meta": {
-    "title": "Schema agent_rt: mọi bảng của lõi agent (không tính bảng của plugin)",
+    "title": "Schema agent_rt: mọi bảng của lõi agent, kể cả ca (không tính bảng của plugin)",
     "locale": "vi",
-    "output": ".archify/erd-agent-rt-20261022-112511/agent-rt.html",
+    "output": ".archify/erd-agent-rt-20261022-171500/agent-rt.html",
     "quality_profile": "standard",
     "repository": {
       "url": "git@github-personal20:o00oleanho00o/cnbphongkham.git",
       "link_mode": "local-only",
-      "revision": "7d86533840b79a213b046bf19e0de37db65f3b14"
+      "revision": "e2142ea4553c1d56138264ba805be792e0e614c1"
     }
   },
   "layout": {
@@ -563,6 +563,12 @@
           "line": 3,
           "end_line": 6,
           "label": "+ follow_up_*"
+        },
+        {
+          "path": "pema-agent/backend/apps/agent/alembic/versions/0004_cases.sql",
+          "line": 62,
+          "end_line": 65,
+          "label": "+ cases_*"
         }
       ],
       "attributes": [
@@ -621,6 +627,14 @@
           "type": "jsonb"
         },
         {
+          "name": "cases_enabled",
+          "type": "boolean"
+        },
+        {
+          "name": "proactive_per_person_per_day",
+          "type": "integer (1–20)"
+        },
+        {
           "name": "version",
           "type": "integer"
         },
@@ -632,7 +646,8 @@
           "name": "updated_by",
           "type": "text"
         }
-      ]
+      ],
+      "width": 340
     },
     {
       "id": "agent_model_settings",
@@ -964,6 +979,173 @@
         }
       ],
       "width": 280
+    },
+    {
+      "id": "agent_case",
+      "label": "agent_case",
+      "tag": "ca",
+      "row": 2,
+      "col": 2,
+      "sources": [
+        {
+          "path": "pema-agent/backend/apps/agent/alembic/versions/0004_cases.sql",
+          "line": 4,
+          "end_line": 35,
+          "label": "agent_case"
+        },
+        {
+          "path": "pema-agent/backend/apps/agent/alembic/versions/0004_cases.sql",
+          "line": 38,
+          "end_line": 39,
+          "label": "một ca sống mỗi khóa"
+        }
+      ],
+      "attributes": [
+        {
+          "name": "id",
+          "type": "bigint identity",
+          "key": "pk"
+        },
+        {
+          "name": "tenant_id",
+          "type": "text"
+        },
+        {
+          "name": "agent",
+          "type": "text"
+        },
+        {
+          "name": "plugin",
+          "type": "text"
+        },
+        {
+          "name": "kind",
+          "type": "text (8 loại)"
+        },
+        {
+          "name": "key",
+          "type": "text (≤200)"
+        },
+        {
+          "name": "channel",
+          "type": "text"
+        },
+        {
+          "name": "conversation_id",
+          "type": "text"
+        },
+        {
+          "name": "user_id",
+          "type": "text"
+        },
+        {
+          "name": "session_id",
+          "type": "text"
+        },
+        {
+          "name": "goal",
+          "type": "text (≤500)"
+        },
+        {
+          "name": "status",
+          "type": "text (5 giá trị)"
+        },
+        {
+          "name": "node",
+          "type": "text"
+        },
+        {
+          "name": "state",
+          "type": "jsonb"
+        },
+        {
+          "name": "wait_for",
+          "type": "text (3 giá trị)"
+        },
+        {
+          "name": "wake_at",
+          "type": "timestamptz"
+        },
+        {
+          "name": "deadline",
+          "type": "timestamptz"
+        },
+        {
+          "name": "turns",
+          "type": "integer"
+        },
+        {
+          "name": "proactive_sent",
+          "type": "integer"
+        },
+        {
+          "name": "end_reason",
+          "type": "text (≤300)"
+        },
+        {
+          "name": "version",
+          "type": "integer"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamptz"
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamptz"
+        },
+        {
+          "name": "closed_at",
+          "type": "timestamptz"
+        }
+      ]
+    },
+    {
+      "id": "agent_case_event",
+      "label": "agent_case_event",
+      "tag": "ca",
+      "row": 3,
+      "col": 2,
+      "sources": [
+        {
+          "path": "pema-agent/backend/apps/agent/alembic/versions/0004_cases.sql",
+          "line": 46,
+          "end_line": 56,
+          "label": "agent_case_event"
+        }
+      ],
+      "attributes": [
+        {
+          "name": "case_id",
+          "type": "bigint",
+          "key": [
+            "pk",
+            "fk"
+          ],
+          "references": "agent_case.id"
+        },
+        {
+          "name": "seq",
+          "type": "integer",
+          "key": "pk"
+        },
+        {
+          "name": "at",
+          "type": "timestamptz"
+        },
+        {
+          "name": "kind",
+          "type": "text (8 loại)"
+        },
+        {
+          "name": "node",
+          "type": "text"
+        },
+        {
+          "name": "detail",
+          "type": "jsonb (≤2000)"
+        }
+      ]
     }
   ],
   "relationships": [
@@ -1045,14 +1227,33 @@
       "toOptional": true,
       "identifying": false,
       "variant": "dashed"
+    },
+    {
+      "id": "case-event",
+      "from": "agent_case_event",
+      "to": "agent_case",
+      "label": "FK, xóa theo",
+      "fromCardinality": "many",
+      "toCardinality": "one"
+    },
+    {
+      "id": "case-ingress",
+      "from": "agent_ingress",
+      "to": "agent_case",
+      "label": "external_id case:id:lượt",
+      "fromCardinality": "many",
+      "toCardinality": "one",
+      "fromOptional": true,
+      "identifying": false,
+      "variant": "dashed"
     }
   ],
   "cards": [
     {
       "dot": "cyan",
-      "title": "Chỉ hai FK thật",
+      "title": "Chỉ ba FK thật",
       "items": [
-        "agent_message → agent_session và agent_turn_event → agent_turn (ON DELETE CASCADE): xóa phiên là xóa lịch sử; xóa turn là xóa sự kiện",
+        "agent_message → agent_session, agent_turn_event → agent_turn và agent_case_event → agent_case (ON DELETE CASCADE): xóa phiên là xóa lịch sử; xóa turn hay ca là xóa nhật ký của nó",
         "Mọi liên kết khác là theo giá trị (session_id, conversation_id, tên plugin): các bảng có thể sống độc lập, kể cả dữ liệu plugin khi plugin tắt",
         "Mọi bảng khóa theo (tenant_id, agent): một database phục vụ nhiều agent, phiên của agent này không đọc được từ agent khác (SessionOwnerError)"
       ]
@@ -1062,7 +1263,7 @@
       "title": "Ai ghi bảng nào",
       "items": [
         "run_turn: agent_message (append có seq), agent_session (prompt_text, summary), agent_turn + agent_turn_event (một giao dịch, cuối lượt)",
-        "Dispatcher / ChannelHub: agent_ingress (status, delivery); FollowUps: agent_follow_up",
+        "Dispatcher / ChannelHub: agent_ingress (status, delivery); FollowUps: agent_follow_up; động cơ ca: agent_case (lưu theo version), agent_case_event (dòng sent đếm trần mỗi người mỗi ngày)",
         "Trang quản trị: agent_settings, agent_model_settings, agent_model_entry, agent_plugin; tool memory: agent_memory; plugin: agent_plugin_record"
       ]
     },
