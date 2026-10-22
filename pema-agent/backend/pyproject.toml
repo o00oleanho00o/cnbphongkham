@@ -113,7 +113,7 @@ forbidden_modules = ["pema.api", "pema.composition", "pema.bootstrap"]
 [[tool.importlinter.contracts]]
 name = "support packages reach the clinic only through pema.clinic.actions"
 type = "forbidden"
-source_modules = ["pema.knowledge", "pema.retention", "pema.live"]
+source_modules = ["pema.retention", "pema.live"]
 forbidden_modules = [
     "pema.clinic.models",
     "pema.clinic.domain",
@@ -130,7 +130,6 @@ source_modules = [
     "pema.clinic",
     "pema.config",
     "pema.core",
-    "pema.knowledge",
     "pema.live",
     "pema.retention",
     "pema.shared",
