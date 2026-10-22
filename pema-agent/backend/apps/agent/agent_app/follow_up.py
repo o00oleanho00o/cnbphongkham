@@ -35,6 +35,7 @@ from agent_app.ingress import OPEN_DELIVERY
 from agent_app.plugins import ProactiveSent
 from agent_app.storage import AgentDatabase, retrying
 from agentcore import LlmRequest, Message, ModelClient, ModelError, SessionStore
+from agentcore.cases import CASE_MARK
 from agentcore.channels import PROACTIVE, InboundMessage
 from agentcore.loop.run_turn import SYSTEM_NOTE_PREFIX
 
@@ -298,7 +299,7 @@ def render_transcript(messages: Sequence[Message], policy: FollowUpPolicy = DEFA
                 lines.pop()
             continue
         if message.role == "user":
-            instructed = text.startswith(INSTRUCTION_MARK)
+            instructed = text.startswith((INSTRUCTION_MARK, CASE_MARK))
             if instructed:
                 continue
         elif instructed and is_skip(text):

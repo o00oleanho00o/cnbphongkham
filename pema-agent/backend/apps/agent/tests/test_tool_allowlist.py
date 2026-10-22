@@ -29,6 +29,10 @@ APPROVED_TOOLS: dict[str, str] = {
     "web_search": "agentcore",
     "web_fetch": "agentcore",
     "memory": "agentcore",
+    # steer the case of the chat (docs/DESIGN-case-loop.md, owner approved 2026-10-22): no network, writes
+    # only agent_rt, refused outside a case's turn
+    "case_done": "agentcore",
+    "case_wait_until": "agentcore",
     # plugins
     "kb_search": "knowledge",
     "kb_read": "knowledge",
@@ -91,6 +95,29 @@ def _tool_specs() -> dict[str, list[str]]:
             assert isinstance(name, ast.Constant), f"{path}: a ToolSpec whose name is not a literal"
             found.setdefault(str(name.value), []).append(_owner(label, path))
     return found
+
+
+def _imports(path: Path) -> set[str]:
+    found: set[str] = set()
+    for node in ast.walk(ast.parse(path.read_text(encoding="utf-8"))):
+        if isinstance(node, ast.Import):
+            found.update(alias.name for alias in node.names)
+        elif isinstance(node, ast.ImportFrom) and node.module and node.level == 0:
+            found.add(node.module)
+    return found
+
+
+def test_the_harness_never_imports_what_plugs_into_it() -> None:
+    """Agent = model + harness, everything else a plugin: the core imports neither the service nor a plugin,
+    and the service imports no plugin. A plugin reaches the harness through ``ctx``, never the other way."""
+    wrong = [
+        f"{path.name}: {module}"
+        for label, path in _python_files()
+        if label != "plugins"
+        for module in _imports(path)
+        if module.split(".")[0] == "plugins" or (label == "agentcore" and module.split(".")[0] == "agent_app")
+    ]
+    assert wrong == []
 
 
 def test_every_tool_in_the_code_is_on_the_approved_list() -> None:

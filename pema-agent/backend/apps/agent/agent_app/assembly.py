@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Collection, Mapping, Sequence
 from dataclasses import dataclass, replace
+from typing import Any
 
 from agent_app.model_factory import build_model, resolve_model_settings
 from agent_app.plugins.host import Contributions, Section
@@ -15,6 +16,7 @@ from agentcore import (
     PromptBuilder,
     PromptEnv,
     ToolRegistry,
+    ToolSpec,
     builtin_sections,
 )
 from agentcore.harness.hooks import HookSet, injection_guard, result_warning, secret_redactor
@@ -43,6 +45,7 @@ def build_agent(
     model: ModelClient | None = None,
     plugins: Contributions | None = None,
     disabled_tools: Collection[str] = (),
+    case_tools: Sequence[ToolSpec[Any]] = (),
 ) -> Agent:
     """Without a backend or store, memory and agent-written skills live in process memory. A given ``model``
     (the settings-aware one of a service) picks its own reasoning effort, so the policy leaves it unset.
@@ -56,6 +59,8 @@ def build_agent(
     if profile.memory.enabled:
         memory = MemoryService(memory_backend or InMemoryMemoryBackend(), profile.memory_limits())
         tools.register(make_memory_tool(memory, agent=name))
+    for spec in case_tools:  # the steering tools of cases (``case_done``, ``case_wait_until``)
+        tools.register(spec)
     for spec in added.tools:
         if spec.name not in disabled_tools:
             tools.register(spec)

@@ -530,6 +530,8 @@ async def _serve(profile_path: Path, *, fake: bool, host: str, port: int, home: 
             runtime.plugins.use_proactive(outbox)
             if runtime.follow_ups is not None:
                 runtime.follow_ups.send_through(outbox)
+            if runtime.cases is not None:
+                runtime.cases.attach(outbox, dispatcher.session_for)
             app = create_app(
                 dispatcher,
                 settings,
@@ -540,6 +542,7 @@ async def _serve(profile_path: Path, *, fake: bool, host: str, port: int, home: 
                 jobs=runtime.job_runner(),
                 agent_settings=runtime.agent_settings,
                 follow_ups=runtime.follow_ups,
+                cases=runtime.cases,
             )
             server = uvicorn.Server(
                 uvicorn.Config(app, host=host, port=port, log_level="info", access_log=False)

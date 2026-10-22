@@ -91,6 +91,7 @@ class ChannelHub:
         settings: DeliverySettings | None = None,
         failure_reply: str | Callable[[], str] = "",
         observe: Observe | None = None,
+        heard: Callable[[InboundMessage], Awaitable[None]] | None = None,
         clock: Callable[[], float] = time.monotonic,
         sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
         rand: Callable[[float, float], float] = random.uniform,
@@ -103,6 +104,7 @@ class ChannelHub:
         # a function: an admin may change the text while the service runs
         self._failure_reply = failure_reply if callable(failure_reply) else lambda: failure_reply
         self._observe = observe
+        self._heard = heard
         self._clock = clock
         self._sleep = sleep
         self._rand = rand
@@ -310,6 +312,11 @@ class ChannelHub:
             record, created = await self._dispatcher.accept(inbound, deliver=True)
             if created and not record.finished and isinstance(adapter, ShowsTyping):
                 self._show_typing(adapter, record)
+            if created and self._heard is not None:
+                try:
+                    await self._heard(inbound)
+                except Exception as err:  # the message is stored and answered whatever a listener does
+                    logger.warning("a listener of %s failed (%s)", name, type(err).__name__)
 
         return receive
 

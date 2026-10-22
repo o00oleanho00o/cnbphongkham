@@ -15,6 +15,7 @@ from agent_app.agent_settings import (
     StoredAgentSettings,
     resolve_agent,
 )
+from agent_app.cases import CasesConfig
 from agent_app.follow_up import FollowUpConfig, FollowUps, InMemoryFollowUpStore
 from agent_app.gateway import GatewaySettings, create_app
 from agent_app.profile import Profile, load_profile
@@ -163,6 +164,22 @@ async def test_the_follow_up_loop_is_off_until_an_admin_switches_it_on_for_chann
     shown = await settings.update({"follow_up_enabled": None, "follow_up_channels": None})
     assert settings.effective.follow_up == FollowUpConfig(False, ())
     assert shown["stored"] is False
+
+
+async def test_cases_are_off_until_switched_on_and_the_daily_cap_has_bounds() -> None:
+    settings = AgentSettings(_profile(), InMemoryAgentSettingsStore(), tenant_id="t")
+    assert settings.effective.cases == CasesConfig(False, 2)
+
+    shown = await settings.update({"cases_enabled": True, "proactive_per_person_per_day": 1})
+
+    assert settings.effective.cases == CasesConfig(True, 1)
+    assert (shown["cases_enabled"], shown["proactive_per_person_per_day"]) == (True, 1)
+    assert shown["sources"]["cases_enabled"] == "db"
+    for refused in (0, 21):
+        with pytest.raises(SettingsError):
+            await settings.update({"proactive_per_person_per_day": refused})
+    await settings.update({"cases_enabled": None, "proactive_per_person_per_day": None})
+    assert settings.effective.cases == CasesConfig(False, 2)
 
 
 @pytest.mark.parametrize("channels", [["Bad Name"], ["ok", ""], [f"c{n}" for n in range(21)]])

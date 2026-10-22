@@ -22,6 +22,7 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from sqlalchemy import text as sql
 
+from agent_app.cases.engine import CasesConfig
 from agent_app.follow_up import MAX_CHANNELS, FollowUpConfig
 from agent_app.live import LiveAgent
 from agent_app.profile import Profile, fill_variables
@@ -42,7 +43,9 @@ MEMORY_TOOL: Final = "memory"
 VARIABLE_NAME: Final = re.compile(r"^[a-z][a-z0-9_]{0,63}$")
 TEXT_FIELDS: Final = ("timezone", "failure_reply", "persona", "rules")
 MEMORY_FIELDS: Final = ("memory_enabled", "memory_agent_chars", "memory_user_chars")
-SCALAR_FIELDS: Final = (*TEXT_FIELDS, *MEMORY_FIELDS, "follow_up_enabled")
+CASE_FIELDS: Final = ("cases_enabled", "proactive_per_person_per_day")
+SCALAR_FIELDS: Final = (*TEXT_FIELDS, *MEMORY_FIELDS, "follow_up_enabled", *CASE_FIELDS)
+MAX_PROACTIVE_PER_DAY: Final = 20
 
 FieldSource = Literal["db", "profile"]
 
@@ -72,6 +75,10 @@ class StoredAgentSettings:
     follow_up_enabled: bool | None = None
     follow_up_channels: tuple[str, ...] = ()
     """The channels the follow-up loop watches, by the name the channel hub gives them."""
+    cases_enabled: bool | None = None
+    """The emergency switch of every case (off until switched on)."""
+    proactive_per_person_per_day: int | None = None
+    """Messages all cases together may start with one person in one local day (None: the default, 2)."""
     variables: Mapping[str, str] = field(default_factory=dict[str, str])
     """Only the variables whose value an admin changed; the others keep the profile's."""
     tools: Mapping[str, bool] = field(default_factory=dict[str, bool])
@@ -98,6 +105,7 @@ class EffectiveAgent:
     sources: Mapping[str, FieldSource]
     version: int
     follow_up: FollowUpConfig = field(default_factory=FollowUpConfig)
+    cases: CasesConfig = field(default_factory=CasesConfig)
 
 
 def core_tool_names() -> list[str]:
@@ -150,8 +158,18 @@ def resolve_agent(profile: Profile, stored: StoredAgentSettings | None) -> Effec
     sources["follow_up_enabled"] = "db" if stored.follow_up_enabled is not None else "profile"
     sources["follow_up_channels"] = "db" if stored.follow_up_channels else "profile"
     follow_up = FollowUpConfig(bool(stored.follow_up_enabled), tuple(stored.follow_up_channels))
+    for name in CASE_FIELDS:
+        sources[name] = "db" if getattr(stored, name) is not None else "profile"
+    cases = CasesConfig(
+        bool(stored.cases_enabled), stored.proactive_per_person_per_day or CasesConfig().per_person_per_day
+    )
     return EffectiveAgent(
-        profile=laid, disabled_tools=disabled, sources=sources, version=stored.version, follow_up=follow_up
+        profile=laid,
+        disabled_tools=disabled,
+        sources=sources,
+        version=stored.version,
+        follow_up=follow_up,
+        cases=cases,
     )
 
 
@@ -174,23 +192,25 @@ class InMemoryAgentSettingsStore:
 
 _GET = sql(
     "SELECT timezone, failure_reply, persona, rules, memory_enabled, memory_agent_chars, memory_user_chars, "
-    "variables, tools, follow_up_enabled, follow_up_channels, version, updated_by "
-    "FROM agent_rt.agent_settings "
+    "variables, tools, follow_up_enabled, follow_up_channels, cases_enabled, proactive_per_person_per_day, "
+    "version, updated_by FROM agent_rt.agent_settings "
     "WHERE tenant_id = :tenant_id AND agent = :agent"
 )
 _VERSION = sql("SELECT version FROM agent_rt.agent_settings WHERE tenant_id = :tenant_id AND agent = :agent")
 _SAVE = sql(
     "INSERT INTO agent_rt.agent_settings (tenant_id, agent, timezone, failure_reply, persona, rules, "
     "memory_enabled, memory_agent_chars, memory_user_chars, follow_up_enabled, follow_up_channels, "
-    "variables, tools, updated_by) "
+    "cases_enabled, proactive_per_person_per_day, variables, tools, updated_by) "
     "VALUES (:tenant_id, :agent, :timezone, :failure_reply, :persona, :rules, :memory_enabled, "
     ":memory_agent_chars, :memory_user_chars, :follow_up_enabled, CAST(:follow_up_channels AS jsonb), "
+    ":cases_enabled, :proactive_per_person_per_day, "
     "CAST(:variables AS jsonb), CAST(:tools AS jsonb), :updated_by) "
     "ON CONFLICT (tenant_id, agent) DO UPDATE SET timezone = EXCLUDED.timezone, "
     "failure_reply = EXCLUDED.failure_reply, persona = EXCLUDED.persona, rules = EXCLUDED.rules, "
     "memory_enabled = EXCLUDED.memory_enabled, memory_agent_chars = EXCLUDED.memory_agent_chars, "
     "memory_user_chars = EXCLUDED.memory_user_chars, follow_up_enabled = EXCLUDED.follow_up_enabled, "
-    "follow_up_channels = EXCLUDED.follow_up_channels, variables = EXCLUDED.variables, "
+    "follow_up_channels = EXCLUDED.follow_up_channels, cases_enabled = EXCLUDED.cases_enabled, "
+    "proactive_per_person_per_day = EXCLUDED.proactive_per_person_per_day, variables = EXCLUDED.variables, "
     "tools = EXCLUDED.tools, updated_by = EXCLUDED.updated_by, "
     "version = agent_rt.agent_settings.version + 1, updated_at = now() RETURNING version"
 )
@@ -220,6 +240,8 @@ class PostgresAgentSettingsStore:
                 memory_user_chars=row.memory_user_chars,
                 follow_up_enabled=row.follow_up_enabled,
                 follow_up_channels=tuple(row.follow_up_channels),
+                cases_enabled=row.cases_enabled,
+                proactive_per_person_per_day=row.proactive_per_person_per_day,
                 variables=dict(row.variables),
                 tools=dict(row.tools),
                 version=row.version,
@@ -336,6 +358,8 @@ class AgentSettings:
             "memory_user_chars": memory.user_chars,
             "follow_up_enabled": effective.follow_up.enabled,
             "follow_up_channels": list(effective.follow_up.channels),
+            "cases_enabled": effective.cases.enabled,
+            "proactive_per_person_per_day": effective.cases.per_person_per_day,
             "sources": dict(effective.sources),
             "stored": not stored.empty,
             "version": stored.version,
@@ -468,6 +492,8 @@ def _check_scalar(name: str, value: Any) -> None:
         and not MIN_MEMORY_CHARS <= value <= MAX_TEXT_CHARS
     ):
         raise SettingsError("invalid", f"{name} is between {MIN_MEMORY_CHARS} and {MAX_TEXT_CHARS}")
+    elif name == "proactive_per_person_per_day" and not 1 <= value <= MAX_PROACTIVE_PER_DAY:
+        raise SettingsError("invalid", f"{name} is between 1 and {MAX_PROACTIVE_PER_DAY}")
 
 
 def _merged_variables(current: Mapping[str, str], changes: Mapping[str, str | None] | None) -> dict[str, str]:

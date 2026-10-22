@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 from agent_app.plugins.host import (
+    Cases,
+    CaseService,
     Contributions,
     DatabaseAccess,
     Disposer,
@@ -40,6 +42,8 @@ __all__ = [
     "EMBEDDINGS",
     "JUDGE",
     "PLUGIN_API",
+    "CaseService",
+    "Cases",
     "ConfigField",
     "Contributions",
     "DatabaseAccess",

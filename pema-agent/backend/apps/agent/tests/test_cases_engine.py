@@ -1,0 +1,408 @@
+"""The case engine: a case runs its code node then its model turn and waits for the customer; the steering tools
+end it or make it wait; the customer's message wakes it or stops it; the switch, the per-person cap, a lost
+save and a failing node each hold; and plugins declare cases through ``ctx.register_case`` / ``ctx.cases``."""
+
+from __future__ import annotations
+
+import textwrap
+from dataclasses import replace
+from datetime import UTC, datetime, timedelta
+from pathlib import Path
+from typing import Any
+from zoneinfo import ZoneInfo
+
+import pytest
+from pydantic import BaseModel
+
+from agent_app.cases import NO_CASE, CaseEngine, CasesConfig, InMemoryCaseStore
+from agent_app.plugins import PluginError, PluginHost, ProactiveSent, discover
+from agentcore import ToolContext, ToolOutput, ToolSpec
+from agentcore.cases import (
+    Budget,
+    CaseRecord,
+    CaseSpec,
+    CodeNode,
+    Decision,
+    Edge,
+    Graph,
+    StopRules,
+    Trigger,
+    TurnNode,
+)
+from agentcore.channels import PROACTIVE, InboundMessage
+
+# 10:00 in Vietnam
+NOW = datetime(2026, 10, 22, 3, 0, tzinfo=UTC)
+ZONE = ZoneInfo("Asia/Ho_Chi_Minh")
+ON = CasesConfig(enabled=True, per_person_per_day=2)
+
+
+class Quiet(BaseModel):
+    unanswered: int = 0
+    verdict: str = "later"
+
+
+class Judge:
+    """A code node whose decisions the test sets."""
+
+    def __init__(self, *decisions: Decision | Exception) -> None:
+        self.decisions = list(decisions)
+        self.seen: list[Quiet] = []
+
+    async def __call__(self, state: Quiet, now: datetime) -> Decision:
+        self.seen.append(state)
+        found = self.decisions.pop(0) if self.decisions else Decision()
+        if isinstance(found, Exception):
+            raise found
+        return found
+
+
+def _spec(judge: Judge, kind: str = "follow_up", **kw: Any) -> CaseSpec:
+    def stop_if(state: Quiet, text: str) -> str | None:
+        return "asked not to be written to" if "đừng nhắn" in text else None
+
+    base: dict[str, Any] = {
+        "kind": kind,
+        "state_model": Quiet,
+        "goal": lambda s: "the customer books or says no",  # pyright: ignore[reportUnknownLambdaType]
+        "triggers": (Trigger("clock"), Trigger("customer_message")),
+        "graph": Graph(
+            start="judge",
+            nodes=(CodeNode("judge", judge), TurnNode("write", lambda s, now: "write one short message")),  # pyright: ignore[reportUnknownLambdaType]
+            edges=(
+                Edge("judge", "write", when=lambda s: s.verdict == "later"),  # pyright: ignore[reportUnknownLambdaType]
+                Edge("write", "judge", counter="unanswered"),
+            ),
+        ),
+        "verify": lambda s: "crm_my_appointments",  # pyright: ignore[reportUnknownLambdaType]
+        "stop": StopRules(max_turns=4, max_proactive=3, counters={"unanswered": 3}),
+        "stop_if": stop_if,
+    }
+    base.update(kw)
+    return CaseSpec(**base)
+
+
+class FakeChat:
+    """Stands in for the queue: records each turn, and lets the 'model' call a steering tool while it runs."""
+
+    def __init__(self, engine_tools: list[ToolSpec[Any]], counted: bool = True) -> None:
+        self.tools = {t.name: t for t in engine_tools}
+        self.counted = counted
+        self.turns: list[dict[str, str]] = []
+        self.calls: list[tuple[str, dict[str, Any]]] = []
+        self.outputs: list[ToolOutput] = []
+
+    async def send_to(
+        self, *, channel: str, conversation_id: str, user_id: str, message_id: str, instruction: str
+    ) -> ProactiveSent:
+        self.turns.append({"channel": channel, "message_id": message_id, "instruction": instruction})
+        ctx = ToolContext(session_id="s1", channel=channel, conversation_id=conversation_id, now=NOW)
+        for name, args in self.calls:
+            spec = self.tools[name]
+            self.outputs.append(await spec.handler(spec.args_model.model_validate(args), ctx))
+        self.calls = []
+        return ProactiveSent(self.counted)
+
+
+class Setup:
+    def __init__(self, *specs: CaseSpec, config: CasesConfig = ON, counted: bool = True) -> None:
+        self.store = InMemoryCaseStore()
+        self.now = NOW
+        self.config = config
+        self.specs = {s.kind: ("demo", s) for s in specs}
+        self.engine = CaseEngine(
+            self.store,
+            lambda: self.specs,
+            config=lambda: self.config,
+            zone=lambda: ZONE,
+            clock=lambda: self.now,
+        )
+        self.chat = FakeChat(self.engine.tools(), counted)
+
+        async def session_for(channel: str, conversation_id: str) -> str:
+            return f"session-{conversation_id}"
+
+        self.engine.attach(self.chat, session_for)
+
+    async def open(self, kind: str = "follow_up", key: str = "c1", user: str = "u1") -> CaseRecord:
+        return await self.engine.open_for(
+            "demo", kind, key, channel="zalo-a", conversation_id=key, user_id=user, state=Quiet()
+        )
+
+    async def events(self, case_id: int) -> list[str]:
+        return [e["kind"] for e in await self.store.events(case_id)]
+
+
+def _inbound(text: str, conversation_id: str = "c1", **metadata: str) -> InboundMessage:
+    return InboundMessage(
+        channel="zalo-a",
+        conversation_id=conversation_id,
+        user_id="u1",
+        message_id=f"m-{text}",
+        text=text,
+        metadata=metadata,
+    )
+
+
+async def test_a_case_runs_its_code_node_then_writes_and_waits_for_the_customer() -> None:
+    judge = Judge()
+    s = Setup(_spec(judge))
+    case = await s.open()
+    assert (case.status, case.node, case.session_id) == ("open", "judge", "session-c1")
+
+    assert await s.engine.pass_once() == 1
+
+    after = await s.store.get(case.id)
+    assert after is not None
+    assert (after.status, after.wait_for, after.node) == ("waiting", "customer", "judge")
+    assert (after.turns, after.proactive_sent, after.state["unanswered"]) == (1, 1, 1)
+    [turn] = s.chat.turns
+    assert turn["message_id"] == f"case:{case.id}:0"
+    assert turn["instruction"].startswith("[Case · follow_up] Goal: the customer books or says no")
+    assert await s.events(case.id) == ["opened", "decision", "sent", "decision"]
+
+
+async def test_opening_the_same_case_twice_keeps_one() -> None:
+    s = Setup(_spec(Judge()))
+    first = await s.open()
+    second = await s.open()
+    assert first.id == second.id
+    assert await s.events(first.id) == ["opened"]
+
+
+async def test_case_done_in_the_turn_closes_the_case() -> None:
+    s = Setup(_spec(Judge()))
+    case = await s.open()
+    s.chat.calls = [("case_done", {"reason": "crm says confirmed"})]
+    await s.engine.pass_once()
+    after = await s.store.get(case.id)
+    assert after is not None
+    assert (after.status, after.end_reason) == ("done", "crm says confirmed")
+    assert not s.chat.outputs[0].is_error
+
+
+async def test_case_wait_until_in_the_turn_sets_the_wake_up() -> None:
+    s = Setup(_spec(Judge()))
+    case = await s.open()
+    at = NOW + timedelta(days=1)
+    s.chat.calls = [("case_wait_until", {"wait_for": "clock", "until": at.isoformat(), "why": "call back"})]
+    await s.engine.pass_once()
+    after = await s.store.get(case.id)
+    assert after is not None
+    assert (after.status, after.wait_for, after.wake_at) == ("waiting", "clock", at)
+    assert await s.engine.pass_once() == 0  # not due yet
+    s.now = at
+    assert await s.engine.pass_once() == 1
+
+
+async def test_outside_a_case_the_steering_tools_refuse() -> None:
+    s = Setup(_spec(Judge()))
+    done = s.chat.tools["case_done"]
+    out = await done.handler(
+        done.args_model.model_validate({"reason": "x"}),
+        ToolContext(session_id="s1", channel="zalo-a", conversation_id="c1"),
+    )
+    assert (out.is_error, out.text) == (True, NO_CASE)
+
+
+async def test_the_customer_writing_wakes_the_case() -> None:
+    judge = Judge(Decision(), Decision(patch={"verdict": "booked"}))
+    s = Setup(_spec(judge))
+    case = await s.open()
+    await s.engine.pass_once()
+    s.now = NOW + timedelta(minutes=10)
+    await s.engine.on_inbound(_inbound("mai em qua nhé"))
+    woken = await s.store.get(case.id)
+    assert woken is not None
+    assert woken.wake_at == s.now
+    await s.engine.pass_once()
+    after = await s.store.get(case.id)
+    assert after is not None
+    assert (after.status, after.end_reason) == ("done", "end of the graph")
+    assert len(judge.seen) == 2
+
+
+async def test_a_customer_who_asks_to_stop_ends_the_case_before_any_node() -> None:
+    judge = Judge()
+    s = Setup(_spec(judge))
+    case = await s.open()
+    await s.engine.pass_once()
+    await s.engine.on_inbound(_inbound("thôi đừng nhắn nữa"))
+    after = await s.store.get(case.id)
+    assert after is not None
+    assert (after.status, after.end_reason) == ("stopped", "asked not to be written to")
+    assert len(judge.seen) == 1
+
+
+async def test_group_and_proactive_messages_wake_nothing() -> None:
+    s = Setup(_spec(Judge()))
+    case = await s.open()
+    await s.engine.pass_once()
+    before = await s.store.get(case.id)
+    await s.engine.on_inbound(_inbound("đừng nhắn", thread_type="group"))
+    await s.engine.on_inbound(_inbound("đừng nhắn", **{PROACTIVE: "1"}))
+    assert await s.store.get(case.id) == before
+
+
+async def test_the_switch_off_runs_nothing_and_closes_nothing() -> None:
+    s = Setup(_spec(Judge()), config=CasesConfig(enabled=False))
+    case = await s.open()
+    assert await s.engine.pass_once() == 0
+    assert s.chat.turns == []
+    after = await s.store.get(case.id)
+    assert after is not None
+    assert after.status == "open"
+
+
+async def test_the_daily_cap_of_a_person_counts_every_kind_of_case() -> None:
+    s = Setup(_spec(Judge()), _spec(Judge(), kind="reminder"), config=CasesConfig(True, per_person_per_day=1))
+    first = await s.open()
+    await s.engine.pass_once()
+    second = await s.open(kind="reminder", key="c2")
+    await s.engine.pass_once()
+    held = await s.store.get(second.id)
+    assert held is not None
+    assert (held.status, held.wait_for, held.node) == ("waiting", "clock", "write")
+    assert held.wake_at == datetime(2026, 10, 23, tzinfo=ZONE)
+    assert [t["message_id"] for t in s.chat.turns] == [f"case:{first.id}:0"]
+    assert "blocked" in await s.events(second.id)
+
+
+async def test_a_skipped_message_does_not_count_but_the_case_still_waits() -> None:
+    s = Setup(_spec(Judge()), counted=False)
+    case = await s.open()
+    await s.engine.pass_once()
+    after = await s.store.get(case.id)
+    assert after is not None
+    assert (after.status, after.wait_for, after.turns, after.proactive_sent) == ("waiting", "customer", 1, 0)
+    assert "sent" not in await s.events(case.id)
+
+
+async def test_a_save_on_a_stale_version_is_dropped() -> None:
+    s = Setup(_spec(Judge()))
+    case = await s.open()
+    newer = await s.store.save(replace(case, goal="changed elsewhere"))
+    assert newer is not None
+    result = await s.engine.step(case, ON)  # the old copy
+    assert result == case
+    current = await s.store.get(case.id)
+    assert current == newer
+    assert "lost" in await s.events(case.id)
+
+
+async def test_a_failing_node_is_tried_again_later() -> None:
+    s = Setup(_spec(Judge(RuntimeError("crm down"))))
+    case = await s.open()
+    await s.engine.pass_once()
+    after = await s.store.get(case.id)
+    assert after is not None
+    assert (after.status, after.node, after.wake_at) == ("waiting", "judge", NOW + timedelta(minutes=5))
+    assert "error" in await s.events(case.id)
+
+
+async def test_the_counter_cap_ends_the_loop() -> None:
+    """Three unanswered messages end it (the daily cap is raised so only the counter decides)."""
+    s = Setup(
+        _spec(Judge(), budget=Budget(per_person_per_day=5)), config=CasesConfig(True, per_person_per_day=5)
+    )
+    case = await s.open()
+    for minutes in (0, 10, 20):
+        s.now = NOW + timedelta(minutes=minutes)
+        await s.engine.on_inbound(_inbound(f"ừ {minutes}"))
+        await s.engine.pass_once()
+    after = await s.store.get(case.id)
+    assert after is not None
+    assert (after.status, after.end_reason, after.proactive_sent) == ("stopped", "unanswered reached 3", 3)
+
+
+async def test_a_plugin_opens_only_its_own_kinds() -> None:
+    s = Setup(_spec(Judge()))
+    with pytest.raises(ValueError, match="no case"):
+        await s.engine.open_for(
+            "other", "follow_up", "k", channel="zalo-a", conversation_id="c1", user_id="u1", state=Quiet()
+        )
+
+
+# --- the plugin contract ---
+
+CASE_PLUGIN = """
+from pydantic import BaseModel
+
+from agentcore.cases import CaseSpec, CodeNode, Decision, Graph, Trigger
+
+
+class State(BaseModel):
+    pass
+
+
+async def judge(state, now):
+    return Decision()
+
+
+def register(ctx):
+    for kind in ctx.config.get("kinds", ["ping"]):
+        ctx.register_case(
+            CaseSpec(
+                kind=kind,
+                state_model=State,
+                goal=lambda s: "g",
+                triggers=(Trigger("clock"),),
+                graph=Graph("judge", (CodeNode("judge", judge),)),
+                verify=lambda s: "v",
+            )
+        )
+    if ctx.config.get("use"):
+        ctx.cases
+"""
+
+
+def _host(tmp_path: Path, *names: str) -> PluginHost:
+    for name in names:
+        folder = tmp_path / name
+        folder.mkdir(parents=True)
+        (folder / "plugin.toml").write_text(f'name = "{name}"\n', encoding="utf-8")
+        (folder / "__init__.py").write_text(textwrap.dedent(CASE_PLUGIN), encoding="utf-8")
+    return PluginHost(discover([("agent", tmp_path)]).plugins, {})
+
+
+def test_a_plugin_declares_its_cases_and_they_go_with_it(tmp_path: Path) -> None:
+    host = _host(tmp_path, "a")
+    host.enable("a")
+    assert [(plugin, spec.kind) for plugin, spec in host.contributions().cases] == [("a", "ping")]
+    host.disable("a")
+    assert host.contributions().cases == ()
+
+
+def test_a_kind_of_case_belongs_to_one_plugin(tmp_path: Path) -> None:
+    host = _host(tmp_path, "a", "b")
+    host.enable("a")
+    with pytest.raises(PluginError, match="case ping already comes from a"):
+        host.enable("b")
+    with pytest.raises(PluginError, match="registered twice"):
+        host.enable("b", {"kinds": ["x", "x"]})
+
+
+def test_ctx_cases_needs_a_running_engine(tmp_path: Path) -> None:
+    host = _host(tmp_path, "a")
+    with pytest.raises(PluginError, match="runs no cases"):
+        host.enable("a", {"use": True})
+
+
+def test_the_steering_tools_come_only_with_a_plugin_that_declares_cases(tmp_path: Path) -> None:
+    from agent_app.profile import load_profile
+    from agent_app.runtime import build_runtime
+
+    host = _host(tmp_path, "a")
+    runtime = build_runtime(
+        load_profile(Path(__file__).resolve().parents[1] / "agents" / "dev"),
+        fake=True,
+        env={},
+        db=None,
+        plugins=host,
+    )
+    steering = {"case_done", "case_wait_until"}
+    assert not steering & set(runtime.agent.tools.names())
+    host.enable("a", {"use": True})  # ctx.cases works: the runtime gave the host its engine
+    assert steering <= set(runtime.agent.tools.names())
+    host.disable("a")
+    assert not steering & set(runtime.agent.tools.names())

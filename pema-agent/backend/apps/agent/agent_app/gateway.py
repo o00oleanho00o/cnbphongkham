@@ -27,6 +27,7 @@ import time
 from collections import deque
 from collections.abc import AsyncGenerator, Awaitable, Callable, Sequence
 from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
 from typing import Annotated, Any, Final, Literal
 from uuid import UUID
@@ -41,6 +42,7 @@ from starlette.types import ASGIApp, Receive, Scope, Send
 from agent_app.activity import Activity
 from agent_app.agent_settings import AgentSettings, SettingsError
 from agent_app.auth import ADMIN, CHAT, Authenticator, Principal
+from agent_app.cases import CaseEngine
 from agent_app.channel_hub import ChannelHub
 from agent_app.dispatcher import Dispatcher, StreamObserver
 from agent_app.follow_up import FollowUps
@@ -54,6 +56,7 @@ from agent_app.plugins.manager import PluginManager, PluginNotFoundError
 from agent_app.plugins.manifest import PluginError
 from agent_app.storage import AgentDatabase
 from agentcore import ReasoningEffort, ToolUseBlock
+from agentcore.cases import CaseRecord
 from agentcore.channels import InboundMessage, valid_channel_name
 from agentcore.harness.model.reasoning import OpenAIDialect
 
@@ -263,6 +266,8 @@ class AgentSettingsPatch(_Body):
     memory_user_chars: int | None = Field(default=None, ge=100, le=20_000)
     follow_up_enabled: bool | None = None
     follow_up_channels: list[str] | None = Field(default=None, max_length=20)
+    cases_enabled: bool | None = None
+    proactive_per_person_per_day: int | None = Field(default=None, ge=1, le=20)
     variables: dict[str, str | None] | None = None
 
 
@@ -332,6 +337,7 @@ def create_app(
     activity: Activity | None = None,
     agent_settings: AgentSettings | None = None,
     follow_ups: FollowUps | None = None,
+    cases: CaseEngine | None = None,
 ) -> FastAPI:
     @contextlib.asynccontextmanager
     async def lifespan(_: FastAPI) -> AsyncGenerator[None]:
@@ -342,6 +348,8 @@ def create_app(
             background.append(asyncio.create_task(jobs.run(), name="plugin jobs"))
         if follow_ups is not None:
             background.append(asyncio.create_task(follow_ups.run(), name="follow-ups"))
+        if cases is not None:
+            background.append(asyncio.create_task(cases.run(), name="cases"))
         try:
             yield
         finally:
@@ -417,8 +425,8 @@ def create_app(
         session_id = await dispatcher.reset(CHANNEL, body.conversation_id or body.user_id)
         return {"session_id": session_id}
 
-    if (admin, plugins, channels, jobs, agent_settings, follow_ups) != (None,) * 6:
-        _add_admin_routes(app, gate, admin, plugins, channels, jobs, agent_settings, follow_ups)
+    if (admin, plugins, channels, jobs, agent_settings, follow_ups, cases) != (None,) * 7:
+        _add_admin_routes(app, gate, admin, plugins, channels, jobs, agent_settings, follow_ups, cases)
         profile = dispatcher.agent.profile
         _add_activity_routes(
             app,
@@ -568,6 +576,7 @@ def _add_admin_routes(
     jobs: JobRunner | None = None,
     agent_settings: AgentSettings | None = None,
     follow_ups: FollowUps | None = None,
+    cases: CaseEngine | None = None,
 ) -> None:
     """Model settings (read with the key masked, change, clear, test), the plugin manager, the plugins' own
     admin routes, and the state of channels and plugin jobs."""
@@ -618,6 +627,9 @@ def _add_admin_routes(
         @app.get("/v1/admin/follow-ups", dependencies=[authorized])
         async def list_follow_ups() -> dict[str, Any]:
             return {"follow_ups": await loop.status()}
+
+    if cases is not None:
+        _add_case_routes(app, cases, authorized)
 
     if admin is None:
         return
@@ -690,6 +702,53 @@ def _add_settings_routes(app: FastAPI, settings: AgentSettings, authorized: Any)
     @app.put("/v1/admin/tools/{name}", dependencies=[authorized])
     async def switch_tool(name: ToolNameParam, body: ToolSwitch, request: Request) -> Response:
         return await answer(settings.set_tool(name, body.enabled, by=who(request)))
+
+
+CaseStatusParam = Literal["open", "waiting", "needs_human", "done", "stopped"]
+
+
+def _add_case_routes(app: FastAPI, cases: CaseEngine, authorized: Any) -> None:
+    """Read only: the cases, newest first, and one case with its log. Resuming or closing one by hand comes
+    with ``case_need_human``."""
+    store = cases.store
+
+    @app.get("/v1/admin/cases", dependencies=[authorized])
+    async def list_cases(status: CaseStatusParam | None = None, limit: int = 50) -> dict[str, Any]:
+        rows = await store.list(status, max(1, min(limit, 200)))
+        return {"cases": [_case(r) for r in rows]}
+
+    @app.get("/v1/admin/cases/{case_id}", dependencies=[authorized])
+    async def show_case(case_id: int) -> Response:
+        record = await store.get(case_id)
+        if record is None:
+            return _error(404, "not_found", "no such case")
+        return JSONResponse({**_case(record), "events": await store.events(case_id)})
+
+
+def _case(record: CaseRecord) -> dict[str, Any]:
+    def shown(value: datetime | None) -> str | None:
+        return None if value is None else value.isoformat()
+
+    return {
+        "id": record.id,
+        "kind": record.kind,
+        "key": record.key,
+        "channel": record.channel,
+        "conversation_id": record.conversation_id,
+        "goal": record.goal,
+        "status": record.status,
+        "node": record.node,
+        "state": dict(record.state),
+        "wait_for": record.wait_for,
+        "wake_at": shown(record.wake_at),
+        "deadline": shown(record.deadline),
+        "turns": record.turns,
+        "proactive_sent": record.proactive_sent,
+        "end_reason": record.end_reason,
+        "created_at": shown(record.created_at),
+        "updated_at": shown(record.updated_at),
+        "closed_at": shown(record.closed_at),
+    }
 
 
 def _add_model_entry_routes(app: FastAPI, admin: ModelAdmin, authorized: Any) -> None:

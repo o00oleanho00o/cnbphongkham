@@ -23,6 +23,7 @@ from typing import Any, Final, Literal, Protocol
 
 from cryptography.exceptions import InvalidTag
 from fastapi import APIRouter, FastAPI
+from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncEngine
 
 from agent_app.auth import Authenticator
@@ -31,6 +32,7 @@ from agent_app.plugins.manifest import PluginError, PluginSource, UiSpec
 from agent_app.plugins.migrations import NOT_MIGRATED, latest_applied, migration_files
 from agent_app.plugins.records import InMemoryPluginRecords, PluginStorage, StorageFor
 from agentcore import ModelClient, ToolSpec
+from agentcore.cases import CaseRecord, CaseSpec
 from agentcore.channels import ChannelAdapter, Observe, ObservedMessage, valid_channel_name
 from agentcore.harness.hooks import Hook
 from agentcore.prompt import SessionSection, StepSection, TurnSection
@@ -80,6 +82,8 @@ class Contributions:
     jobs: tuple[PluginJob, ...] = ()
     authenticators: tuple[Authenticator, ...] = ()
     observers: tuple[Observe, ...] = ()
+    cases: tuple[tuple[str, CaseSpec], ...] = ()
+    """(plugin, spec) of every kind of case."""
 
 
 @dataclass(slots=True)
@@ -94,6 +98,7 @@ class _Loaded:
     jobs: list[PluginJob] = field(default_factory=list[PluginJob])
     authenticators: list[Authenticator] = field(default_factory=list[Authenticator])
     observers: list[Observe] = field(default_factory=list[Observe])
+    cases: list[CaseSpec] = field(default_factory=list[CaseSpec])
     services: dict[str, object] = field(default_factory=dict[str, object])
     routes: dict[RouteKind, FastAPI] = field(default_factory=dict[RouteKind, FastAPI])
     disposers: list[Disposer] = field(default_factory=list[Disposer])
@@ -144,6 +149,54 @@ class Proactive(Protocol):
         ...
 
 
+class CaseService(Protocol):
+    """The case engine as the host sees it; plugins get it through ``ctx.cases``, bound to their name."""
+
+    async def open_for(
+        self,
+        plugin: str,
+        kind: str,
+        key: str,
+        *,
+        channel: str,
+        conversation_id: str,
+        user_id: str,
+        state: BaseModel,
+    ) -> CaseRecord: ...
+
+    async def wake_for(self, plugin: str, kind: str, key: str, patch: Mapping[str, Any] | None) -> bool: ...
+
+    async def get_for(self, plugin: str, kind: str, key: str) -> CaseRecord | None: ...
+
+
+@dataclass(frozen=True, slots=True)
+class Cases:
+    """What a plugin does with its own kinds of case (``ctx.cases``): open one (idempotent per key while it
+    is live), wake one (an event changed something; ``patch`` goes into its state), read one."""
+
+    service: CaseService
+    plugin: str
+
+    async def open(
+        self, kind: str, key: str, *, channel: str, conversation_id: str, user_id: str, state: BaseModel
+    ) -> CaseRecord:
+        return await self.service.open_for(
+            self.plugin,
+            kind,
+            key,
+            channel=channel,
+            conversation_id=conversation_id,
+            user_id=user_id,
+            state=state,
+        )
+
+    async def wake(self, kind: str, key: str, patch: Mapping[str, Any] | None = None) -> bool:
+        return await self.service.wake_for(self.plugin, kind, key, patch)
+
+    async def get(self, kind: str, key: str) -> CaseRecord | None:
+        return await self.service.get_for(self.plugin, kind, key)
+
+
 class PluginContext:
     """What a plugin's ``register(ctx)`` receives."""
 
@@ -162,8 +215,10 @@ class PluginContext:
         observe: Observe | None = None,
         service: Callable[[str], object | None] = lambda name: None,
         proactive: Callable[[], Proactive | None] = lambda: None,
+        cases: Callable[[], CaseService | None] = lambda: None,
     ) -> None:
         self._proactive = proactive
+        self._cases = cases
         self._observe = observe
         self._service = service
         self._loaded = loaded
@@ -214,6 +269,15 @@ class PluginContext:
         if found is None:
             raise PluginError(self.name, "the agent cannot start messages here (no running service)")
         return found
+
+    @property
+    def cases(self) -> Cases:
+        """Opens, wakes and reads this plugin's cases (``register_case``). Raises ``PluginError`` while the
+        service has no case engine."""
+        found = self._cases()
+        if found is None:
+            raise PluginError(self.name, "the agent runs no cases here (no running service)")
+        return Cases(found, self.name)
 
     @property
     def storage(self) -> PluginStorage:
@@ -304,6 +368,13 @@ class PluginContext:
         if any(j.name == name for j in self._loaded.jobs):
             raise PluginError(self.name, f"job {name} registered twice")
         return self._add(self._loaded.jobs, PluginJob(self.name, name, run))
+
+    def register_case(self, spec: CaseSpec) -> Disposer:
+        """A kind of case (a goal the agent works on across many wake-ups); the engine runs it, the plugin
+        opens and wakes cases of it through ``ctx.cases``. A kind belongs to one plugin."""
+        if any(c.kind == spec.kind for c in self._loaded.cases):
+            raise PluginError(self.name, f"case {spec.kind} registered twice")
+        return self._add(self._loaded.cases, spec)
 
     def register_authenticator(self, authenticator: Authenticator) -> Disposer:
         """Turns bearer tokens of its own (a login, an API key) into a caller of the gateway; asked after the
@@ -397,6 +468,7 @@ class PluginHost:
         """Set by the service once it listens; plugins read it through ``ctx.self_url``."""
         self._model: ModelClient | None = None
         self._proactive: Proactive | None = None
+        self._cases: CaseService | None = None
         self._loaded: dict[str, _Loaded] = {}
         self._generation = itertools.count(1)
         self.version = 0
@@ -424,6 +496,10 @@ class PluginHost:
         """What plugins write to a chat with on their own (``ctx.proactive``), once the service has its
         dispatcher."""
         self._proactive = sender
+
+    def use_cases(self, engine: CaseService) -> None:
+        """The case engine plugins reach through ``ctx.cases``."""
+        self._cases = engine
 
     def set_sources(self, sources: Mapping[str, PluginSource]) -> None:
         """The plugins found by a new look at the folders; enabled ones keep running from their folder."""
@@ -471,6 +547,7 @@ class PluginHost:
                     database=self._plugin_database(source),
                     model=lambda: self._model,
                     proactive=lambda: self._proactive,
+                    cases=lambda: self._cases,
                     observe=self.observe,
                     service=self._service,
                 )
@@ -507,6 +584,7 @@ class PluginHost:
             jobs=tuple(j for p in loaded for j in p.jobs),
             authenticators=tuple(a for p in loaded for a in p.authenticators),
             observers=tuple(o for p in loaded for o in p.observers),
+            cases=tuple((p.source.name, c) for p in loaded for c in p.cases),
         )
 
     async def observe(self, message: ObservedMessage) -> None:
@@ -586,6 +664,7 @@ class PluginHost:
                 ("prompt section", {s.name for s in candidate.sections}, {s.name for s in other.sections}),
                 ("channel", {c.name for c in candidate.channels}, {c.name for c in other.channels}),
                 ("service", set(candidate.services), set(other.services)),
+                ("case", {c.kind for c in candidate.cases}, {c.kind for c in other.cases}),
             ):
                 clash = sorted(mine & theirs)
                 if clash:

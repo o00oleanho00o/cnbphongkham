@@ -6,6 +6,7 @@ from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Final, Protocol
+from zoneinfo import ZoneInfo
 
 import agent_app
 from agent_app.agent_settings import (
@@ -14,6 +15,7 @@ from agent_app.agent_settings import (
     PostgresAgentSettingsStore,
 )
 from agent_app.assembly import Agent, build_agent
+from agent_app.cases import CaseEngine, CaseStore, InMemoryCaseStore, PostgresCaseStore
 from agent_app.channel_hub import PACED_DELIVERY, ChannelHub, DeliverySettings
 from agent_app.dispatcher import Dispatcher, DispatchSettings
 from agent_app.follow_up import FollowUps, PostgresFollowUpStore
@@ -99,6 +101,8 @@ class Runtime:
     agent_settings: AgentSettings
     follow_ups: FollowUps | None = None
     """Judges the conversations that went quiet (Postgres only); runs once an admin switches it on."""
+    cases: CaseEngine | None = None
+    """Runs the cases plugins declare; runs once an admin switches cases on."""
 
     async def start(self) -> None:
         """Applies what is stored: the plugins that are on, then the agent's settings."""
@@ -130,6 +134,7 @@ class Runtime:
             settings=settings or PACED_DELIVERY,
             failure_reply=lambda: self.agent.profile.agent.failure_reply,
             observe=self.plugins.observe,
+            heard=None if self.cases is None else self.cases.on_inbound,
         )
 
     def job_runner(self, settings: JobSettings | None = None) -> JobRunner:
@@ -251,6 +256,16 @@ def build_runtime(
         tenant_id=tenant_id,
     )
 
+    case_store: CaseStore = (
+        InMemoryCaseStore() if db is None else PostgresCaseStore(db, tenant_id=tenant_id, agent=name)
+    )
+    cases = CaseEngine(
+        case_store,
+        lambda: {spec.kind: (plugin, spec) for plugin, spec in live.host.contributions().cases},
+        config=lambda: agent_settings.effective.cases,
+        zone=lambda: ZoneInfo(agent_settings.effective.profile.agent.timezone),
+    )
+
     def build(added: Contributions) -> Agent:
         effective = agent_settings.effective
         return build_agent(
@@ -261,11 +276,14 @@ def build_runtime(
             model=model,
             plugins=added,
             disabled_tools=effective.disabled_tools,
+            # only while a plugin declares cases: an agent without any keeps its prompt (and its cache)
+            case_tools=cases.tools() if added.cases else (),
         )
 
     access = None if db is None else DatabaseAccess(db.engine, tenant_id=tenant_id, agent=name)
     live = LiveAgent(build, plugins or start_plugins(profile, env, storage=records.storage, database=access))
     agent_settings.attach(live)
+    live.host.use_cases(cases)
     live.host.use_model(model or build_model(profile, fake=True))
     installed = env.get(PLUGIN_DIR_ENV)
     plugin_manager = PluginManager(
@@ -291,6 +309,7 @@ def build_runtime(
             dynamic_model=dynamic,
             plugin_manager=plugin_manager,
             agent_settings=agent_settings,
+            cases=cases,
         )
     sessions = PostgresSessionStore(db, agent=name)
     follow_ups = FollowUps(
@@ -315,4 +334,5 @@ def build_runtime(
         plugin_manager=plugin_manager,
         agent_settings=agent_settings,
         follow_ups=follow_ups,
+        cases=cases,
     )

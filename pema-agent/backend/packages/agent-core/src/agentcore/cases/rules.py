@@ -127,12 +127,12 @@ def blocked(
         return None
     if record.turns >= spec.stop.max_turns:
         return Block("max_turns")
-    if node.sends and record.proactive_sent >= spec.stop.max_proactive:
+    if record.proactive_sent >= spec.stop.max_proactive:
         return Block("max_proactive")
     cap = spec.budget.per_person_per_day
     if per_person_per_day is not None:
         cap = min(cap, per_person_per_day)
-    if node.sends and sent_to_person_today >= cap:
+    if sent_to_person_today >= cap:
         return Block("person_daily_cap", next_day)
     return None
 
@@ -182,7 +182,7 @@ def apply(spec: CaseSpec, record: CaseRecord, decision: Decision, now: datetime)
             return _end(record, "stopped", f"{edge.counter} reached {cap}", now, **changes)
     wait_for = decision.wait_for
     wake_at = decision.wake_at
-    if wait_for is None and isinstance(ran, TurnNode) and ran.sends:
+    if wait_for is None and isinstance(ran, TurnNode):
         wait_for = "customer"  # it wrote (or chose to say nothing): the next move is the customer's
     if wake_at is not None:
         wake_at = min(wake_at, record.deadline)

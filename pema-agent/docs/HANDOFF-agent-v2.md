@@ -9,6 +9,22 @@ Reply to the user in Vietnamese. Open items to handle later are under "Loose end
 database one are the log of earlier stages: where they name the schema `agent`, `clinic_agent`, `agent_worker`,
 revision files `0001_agent_rt` … `0012_*` or plugin files `0002_*`/`0003_*`, those are gone (see next section).
 
+## Cases: the loop outside a turn (since 2026-10-22, `docs/PLAN-case-loop.md` steps A and B done)
+
+- **What exists:** `agentcore.cases` (shape and pure rules: goal, triggers, state, stop rules, verify, a graph of
+  code nodes and model turns; an edge back needs a counter with a cap), the engine `agent_app/cases` (store, wakes on
+  clock, customer message and plugin event, blocks before every node, log `agent_case_event`), migration
+  `0004_cases`, settings `cases_enabled` (off by default) and `proactive_per_person_per_day`, plugin contract
+  `ctx.register_case` / `ctx.cases`, read-only `/v1/admin/cases`. The tools `case_done`, `case_wait_until`
+  (owner approved 2026-10-22, T9) are given to the agent only while an enabled plugin declares a case.
+- **Not done:** no plugin declares a case yet, so nothing runs; `case_need_human` with resume/close; follow-up as a
+  plugin on the engine (its route and settings are used by the frontend, owned by the other session); reminders of
+  `crm` on the engine; the per-session/day token budget; the frontend page for cases.
+- **Known limits:** a decision of a steering tool is kept in the engine's memory while the case's turn runs: a turn
+  picked up by another process (the sweeper) loses it and the case falls back to waiting for the customer. Cases run
+  one after another in a pass. A case's message carries the customer's `user_id`, so the queue may answer it in one
+  turn with a customer message that arrived at the same moment (true of follow-ups and reminders today too).
+
 ## CRM plugin (since 2026-10-21, `docs/PLAN-crm-plugin.md` steps 0–7, 9 and part of 10 done)
 
 - **The rules changed:** L2–L4 were opened by the owner in a narrow way and L6, L7 added; the text in force is

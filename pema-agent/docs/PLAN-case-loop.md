@@ -2,7 +2,10 @@
 
 Ghi 2026-10-22. Thiết kế gốc: `DESIGN-case-loop.md`. Chủ duyệt 2026-10-22: làm `case_done` và `case_wait_until`
 trước; `case_need_human` để sau. Lời duyệt đó cũng là duyệt L7 cho hai tool mới trong profile `clinic`.
-**Trạng thái: kế hoạch, chờ "go".** Mỗi bước một commit, chỉ stage file của mình.
+**Trạng thái (2026-10-22): bước A và B đã làm.** Khác kế hoạch khi làm: `TurnNode` bỏ `sends` (một câu trả lời
+khách không nhận không được vào lịch sử chat; bước chỉ phán đoán là `CodeNode` tự gọi model); hai tool chỉ có khi
+một plugin đang bật khai báo ca (agent không dùng ca giữ nguyên prompt và cache); động cơ nghe tin khách ở
+`ChannelHub` (mọi kênh đi qua đó), không qua `on_message` của plugin; `Proactive.send_to` giữ nguyên.
 
 ## 0. Năm điều chốt lại sau khi đọc code (khác với DESIGN)
 

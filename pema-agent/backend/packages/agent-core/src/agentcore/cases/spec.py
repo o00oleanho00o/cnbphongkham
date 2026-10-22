@@ -117,13 +117,13 @@ class CodeNode:
 @dataclass(frozen=True, slots=True)
 class TurnNode:
     """The model takes one turn of the customer's chat with the case's goal in front of it, and may call
-    ``case_done`` or ``case_wait_until``. With ``sends`` its answer goes to the customer (unless it is the
-    channel's skip word)."""
+    ``case_done`` or ``case_wait_until``. Its answer goes to the customer, unless it is the channel's skip
+    word. (A step where the model only judges is a ``CodeNode`` that calls the model itself: an answer the
+    customer never got must not enter the chat's history.)"""
 
     id: str
     instruction: Callable[[Any, datetime], str]
     """``(state, now) -> text``: what to do at this step, in the plugin's words."""
-    sends: bool = True
 
 
 Node = CodeNode | TurnNode
