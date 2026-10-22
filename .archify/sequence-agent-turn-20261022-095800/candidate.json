@@ -1,0 +1,436 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "Một lượt của agent: từ tin đến trả lời",
+    "locale": "vi",
+    "output": ".archify/sequence-agent-turn-20261022-095800/agent-turn.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "git@github-personal20:o00oleanho00o/cnbphongkham.git",
+      "link_mode": "local-only",
+      "revision": "7d86533840b79a213b046bf19e0de37db65f3b14"
+    }
+  },
+  "participants": [
+    {
+      "id": "channel",
+      "type": "external",
+      "label": "Kênh",
+      "sublabel": "plugin zalo",
+      "sources": [
+        {
+          "path": "pema-agent/backend/packages/agent-core/src/agentcore/channels.py",
+          "line": 111,
+          "end_line": 129,
+          "label": "ChannelAdapter"
+        }
+      ]
+    },
+    {
+      "id": "hub",
+      "type": "backend",
+      "label": "ChannelHub",
+      "sublabel": "nhận, gửi",
+      "sources": [
+        {
+          "path": "pema-agent/backend/apps/agent/agent_app/channel_hub.py",
+          "line": 301,
+          "end_line": 314,
+          "label": "receive"
+        },
+        {
+          "path": "pema-agent/backend/apps/agent/agent_app/channel_hub.py",
+          "line": 205,
+          "end_line": 237,
+          "label": "deliver"
+        }
+      ]
+    },
+    {
+      "id": "dispatcher",
+      "type": "backend",
+      "label": "Dispatcher",
+      "sublabel": "hàng đợi, khóa phiên",
+      "sources": [
+        {
+          "path": "pema-agent/backend/apps/agent/agent_app/dispatcher.py",
+          "line": 179,
+          "end_line": 193,
+          "label": "accept"
+        },
+        {
+          "path": "pema-agent/backend/apps/agent/agent_app/dispatcher.py",
+          "line": 224,
+          "end_line": 238,
+          "label": "_drain"
+        },
+        {
+          "path": "pema-agent/backend/apps/agent/agent_app/dispatcher.py",
+          "line": 283,
+          "end_line": 326,
+          "label": "_process"
+        }
+      ]
+    },
+    {
+      "id": "turn",
+      "type": "backend",
+      "label": "run_turn",
+      "sublabel": "vòng lặp",
+      "sources": [
+        {
+          "path": "pema-agent/backend/packages/agent-core/src/agentcore/loop/run_turn.py",
+          "line": 369,
+          "end_line": 423,
+          "label": "turn()"
+        },
+        {
+          "path": "pema-agent/backend/packages/agent-core/src/agentcore/loop/run_turn.py",
+          "line": 275,
+          "end_line": 300,
+          "label": "call_model"
+        }
+      ]
+    },
+    {
+      "id": "store",
+      "type": "database",
+      "label": "Postgres agent_rt",
+      "sublabel": "ingress, session, turn",
+      "sources": [
+        {
+          "path": "pema-agent/backend/apps/agent/alembic/versions/0001_baseline.sql",
+          "line": 18,
+          "end_line": 59,
+          "label": "agent_ingress"
+        },
+        {
+          "path": "pema-agent/backend/apps/agent/alembic/versions/0001_baseline.sql",
+          "line": 74,
+          "end_line": 83,
+          "label": "agent_message"
+        }
+      ]
+    },
+    {
+      "id": "model",
+      "type": "external",
+      "label": "Model",
+      "sublabel": "qua ModelClient",
+      "sources": [
+        {
+          "path": "pema-agent/backend/apps/agent/agent_app/model_settings.py",
+          "line": 219,
+          "end_line": 277,
+          "label": "DynamicModel"
+        }
+      ]
+    },
+    {
+      "id": "executor",
+      "type": "security",
+      "label": "ToolExecutor",
+      "sublabel": "+ hooks",
+      "sources": [
+        {
+          "path": "pema-agent/backend/packages/agent-core/src/agentcore/harness/tools/executor.py",
+          "line": 75,
+          "end_line": 115,
+          "label": "execute"
+        },
+        {
+          "path": "pema-agent/backend/packages/agent-core/src/agentcore/harness/tools/executor.py",
+          "line": 140,
+          "end_line": 173,
+          "label": "_checked"
+        }
+      ]
+    },
+    {
+      "id": "tool",
+      "type": "backend",
+      "label": "Tool của plugin",
+      "sublabel": "vd crm_free_slots",
+      "sources": [
+        {
+          "path": "pema-agent/backend/packages/agent-core/src/agentcore/harness/tools/spec.py",
+          "line": 46,
+          "end_line": 57,
+          "label": "ToolSpec"
+        },
+        {
+          "path": "pema-agent/backend/apps/agent/plugins/crm/__init__.py",
+          "line": 137,
+          "end_line": 140,
+          "label": "từ chối trong nhóm"
+        }
+      ]
+    }
+  ],
+  "segments": [
+    {
+      "from": 150,
+      "to": 310,
+      "label": "Nhận và xếp hàng"
+    },
+    {
+      "from": 315,
+      "to": 700,
+      "label": "Bước 1: model xin gọi tool"
+    },
+    {
+      "from": 705,
+      "to": 790,
+      "label": "Bước 2: trả lời"
+    },
+    {
+      "from": 795,
+      "to": 880,
+      "label": "Gửi về kênh"
+    }
+  ],
+  "messages": [
+    {
+      "id": "inbound",
+      "from": "channel",
+      "to": "hub",
+      "y": 160,
+      "label": "tin của khách (message_id, conversation, user)",
+      "variant": "emphasis"
+    },
+    {
+      "id": "accept",
+      "from": "hub",
+      "to": "dispatcher",
+      "y": 188,
+      "label": "accept(deliver=True)",
+      "variant": "default"
+    },
+    {
+      "id": "ingress",
+      "from": "dispatcher",
+      "to": "store",
+      "y": 216,
+      "label": "agent_ingress: queued (một lần mỗi message_id)",
+      "variant": "default"
+    },
+    {
+      "id": "drain",
+      "from": "dispatcher",
+      "to": "turn",
+      "y": 250,
+      "label": "run_turn(session, user_id, channel, is_group)",
+      "variant": "emphasis",
+      "note": "Giữ khóa phiên; gộp tin, chờ khách Zalo gõ xong; làm mới plugin trước"
+    },
+    {
+      "id": "load",
+      "from": "turn",
+      "to": "store",
+      "y": 330,
+      "label": "system prompt đóng băng + lịch sử",
+      "variant": "default"
+    },
+    {
+      "id": "loaded",
+      "from": "store",
+      "to": "turn",
+      "y": 358,
+      "label": "messages (sau tóm tắt nếu có)",
+      "variant": "return"
+    },
+    {
+      "id": "call1",
+      "from": "turn",
+      "to": "model",
+      "y": 386,
+      "label": "complete(system, lịch sử, <agent-context>, tools)",
+      "variant": "emphasis",
+      "note": "before_model hook; thử lại khi rate limit; tràn ngữ cảnh thì nén rồi gọi lại"
+    },
+    {
+      "id": "tooluse",
+      "from": "model",
+      "to": "turn",
+      "y": 466,
+      "label": "tool_use: crm_free_slots(...)",
+      "variant": "return"
+    },
+    {
+      "id": "rec1",
+      "from": "turn",
+      "to": "store",
+      "y": 494,
+      "label": "ghi tin assistant trước khi tool chạy",
+      "variant": "default"
+    },
+    {
+      "id": "exec",
+      "from": "turn",
+      "to": "executor",
+      "y": 522,
+      "label": "execute(tool_uses)",
+      "variant": "default"
+    },
+    {
+      "id": "handler",
+      "from": "executor",
+      "to": "tool",
+      "y": 550,
+      "label": "pre_tool hooks → handler(args, ctx)",
+      "variant": "security",
+      "note": "ctx do mã đặt (user, kênh, nhóm); read-only chạy song song; timeout riêng"
+    },
+    {
+      "id": "output",
+      "from": "tool",
+      "to": "executor",
+      "y": 630,
+      "label": "ToolOutput",
+      "variant": "return"
+    },
+    {
+      "id": "result",
+      "from": "executor",
+      "to": "turn",
+      "y": 658,
+      "label": "ToolResult (post_tool: che bí mật, cảnh báo)",
+      "variant": "return"
+    },
+    {
+      "id": "rec2",
+      "from": "turn",
+      "to": "store",
+      "y": 686,
+      "label": "ghi tin tool; loop guard xem lặp",
+      "variant": "default"
+    },
+    {
+      "id": "call2",
+      "from": "turn",
+      "to": "model",
+      "y": 720,
+      "label": "complete(...) bước 2",
+      "variant": "emphasis"
+    },
+    {
+      "id": "text",
+      "from": "model",
+      "to": "turn",
+      "y": 748,
+      "label": "văn bản, không gọi tool",
+      "variant": "return"
+    },
+    {
+      "id": "done",
+      "from": "turn",
+      "to": "dispatcher",
+      "y": 776,
+      "label": "TurnResult + trace",
+      "variant": "return"
+    },
+    {
+      "id": "finish",
+      "from": "dispatcher",
+      "to": "store",
+      "y": 810,
+      "label": "ingress done + reply; agent_turn",
+      "variant": "default"
+    },
+    {
+      "id": "notify",
+      "from": "dispatcher",
+      "to": "hub",
+      "y": 838,
+      "label": "on_finished → deliver",
+      "variant": "dashed"
+    },
+    {
+      "id": "send",
+      "from": "hub",
+      "to": "channel",
+      "y": 866,
+      "label": "gửi trả lời theo phần; retry nếu lỗi",
+      "variant": "emphasis"
+    }
+  ],
+  "activations": [
+    {
+      "participant": "hub",
+      "from": 183,
+      "to": 195,
+      "type": "backend"
+    },
+    {
+      "participant": "dispatcher",
+      "from": 211,
+      "to": 260,
+      "type": "backend"
+    },
+    {
+      "participant": "turn",
+      "from": 325,
+      "to": 782,
+      "type": "backend"
+    },
+    {
+      "participant": "model",
+      "from": 381,
+      "to": 472,
+      "type": "external"
+    },
+    {
+      "participant": "executor",
+      "from": 517,
+      "to": 664,
+      "type": "security"
+    },
+    {
+      "participant": "tool",
+      "from": 545,
+      "to": 636,
+      "type": "backend"
+    },
+    {
+      "participant": "model",
+      "from": 715,
+      "to": 754,
+      "type": "external"
+    },
+    {
+      "participant": "hub",
+      "from": 805,
+      "to": 872,
+      "type": "backend"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Lưu trước, chạy sau",
+      "items": [
+        "Tin đến được ghi vào agent_ingress trước khi xử lý; tiến trình chết thì sweeper nhặt lại",
+        "Mỗi tin assistant ghi trước khi tool chạy, nên lịch sử gửi lại nhà cung cấp luôn hợp lệ"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Cái gì chặn, cái gì chỉ nhắc",
+      "items": [
+        "pre_tool: hook lỗi hay quá giờ là chặn tool (fail closed)",
+        "post_tool, before_model: hook lỗi thì bỏ qua và ghi log (fail open)",
+        "Lõi có 3 hook: quét prompt injection, che bí mật, cảnh báo kết quả tool"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Kết thúc lượt",
+      "items": [
+        "Model trả lời không gọi tool, hoặc hết max_steps (10), hết 300 s, hết token, hay loop guard dừng",
+        "Khi đó một lời gọi cuối không có tool ép ra câu trả lời",
+        "Lượt lỗi: kênh vẫn nhận failure_reply của profile"
+      ]
+    }
+  ]
+}

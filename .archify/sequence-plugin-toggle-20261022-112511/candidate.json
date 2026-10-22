@@ -1,0 +1,112 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "Bật một plugin lúc đang chạy: từ trang quản trị tới lượt kế tiếp ở mọi tiến trình",
+    "locale": "vi",
+    "output": ".archify/sequence-plugin-toggle-20261022-112511/plugin-toggle.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "git@github-personal20:o00oleanho00o/cnbphongkham.git",
+      "link_mode": "local-only",
+      "revision": "7d86533840b79a213b046bf19e0de37db65f3b14"
+    }
+  },
+  "participants": [
+    {
+      "id": "admin", "type": "external", "label": "Admin", "sublabel": "web nhân viên",
+      "sources": [{ "path": "pema-agent/backend/apps/agent/agent_app/gateway.py", "line": 740, "end_line": 783, "label": "route plugin" }]
+    },
+    {
+      "id": "manager", "type": "backend", "label": "PluginManager", "sublabel": "mỗi tiến trình một",
+      "sources": [
+        { "path": "pema-agent/backend/apps/agent/agent_app/plugins/manager.py", "line": 1, "end_line": 9, "label": "vai trò" },
+        { "path": "pema-agent/backend/apps/agent/agent_app/plugins/manager.py", "line": 164, "end_line": 181, "label": "_change" },
+        { "path": "pema-agent/backend/apps/agent/agent_app/plugins/manager.py", "line": 221, "end_line": 241, "label": "_apply" }
+      ]
+    },
+    {
+      "id": "state", "type": "database", "label": "agent_plugin", "sublabel": "agent_rt, chung mọi tiến trình",
+      "sources": [
+        { "path": "pema-agent/backend/apps/agent/agent_app/plugins/state.py", "line": 75, "end_line": 133, "label": "PostgresPluginStateStore" },
+        { "path": "pema-agent/backend/apps/agent/alembic/versions/0001_baseline.sql", "line": 126, "end_line": 140, "label": "agent_plugin" }
+      ]
+    },
+    {
+      "id": "live", "type": "backend", "label": "LiveAgent", "sublabel": "lắp lại khi version đổi",
+      "sources": [
+        { "path": "pema-agent/backend/apps/agent/agent_app/live.py", "line": 41, "end_line": 49, "label": "enable" },
+        { "path": "pema-agent/backend/apps/agent/agent_app/live.py", "line": 30, "end_line": 35, "label": "current" }
+      ]
+    },
+    {
+      "id": "host", "type": "backend", "label": "PluginHost", "sublabel": "import, register(ctx)",
+      "sources": [
+        { "path": "pema-agent/backend/apps/agent/agent_app/plugins/host.py", "line": 435, "end_line": 486, "label": "enable" },
+        { "path": "pema-agent/backend/apps/agent/agent_app/plugins/host.py", "line": 582, "end_line": 599, "label": "_check_unique, _bump" }
+      ]
+    },
+    {
+      "id": "dispatcher", "type": "backend", "label": "Dispatcher", "sublabel": "tiến trình bất kỳ",
+      "sources": [
+        { "path": "pema-agent/backend/apps/agent/agent_app/dispatcher.py", "line": 283, "end_line": 292, "label": "before_turn" },
+        { "path": "pema-agent/backend/apps/agent/agent_app/runtime.py", "line": 108, "end_line": 111, "label": "Runtime.refresh" }
+      ]
+    }
+  ],
+  "segments": [
+    { "from": 150, "to": 560, "label": "Admin bật plugin (POST /v1/admin/plugins/{name}/enable)" },
+    { "from": 585, "to": 870, "label": "Lượt kế tiếp, ở mọi tiến trình của agent" }
+  ],
+  "messages": [
+    { "id": "m1", "from": "admin", "to": "manager", "y": 160, "label": "enable(name, settings)", "variant": "emphasis", "note": "gateway: cần đăng nhập admin (plugin sso hay web); _refreshed() trước khi đọc" },
+    { "id": "m2", "from": "manager", "to": "state", "y": 240, "label": "save(row: enabled, config, secrets_enc)", "variant": "default", "note": "setting lạ hay sai kiểu → PluginError; bí mật mã hóa bằng khóa dịch vụ" },
+    { "id": "m3", "from": "manager", "to": "live", "y": 320, "label": "enable(name, config đã gộp profile + DB)", "variant": "emphasis" },
+    { "id": "m4", "from": "live", "to": "host", "y": 348, "label": "enable: import module, register(ctx)", "variant": "default", "note": "tên tool, section, kênh trùng → từ chối; register lỗi → gỡ hết những gì đã đăng ký" },
+    { "id": "m5", "from": "host", "to": "live", "y": 428, "label": "version += 1", "variant": "return" },
+    { "id": "m6", "from": "live", "to": "manager", "y": 456, "label": "current(): build_agent mới; hoặc PluginError", "variant": "return", "note": "lỗi: host.disable(name), hàng DB ghi enabled=false + last_error, lỗi trả về admin" },
+    { "id": "m7", "from": "manager", "to": "state", "y": 536, "label": "fingerprint() → nhớ là mình vừa đổi", "variant": "dashed" },
+    { "id": "m8", "from": "dispatcher", "to": "manager", "y": 600, "label": "before_turn: refresh()", "variant": "emphasis", "note": "tối đa 5 s một lần; ChannelHub cũng gọi mỗi tick 2 s" },
+    { "id": "m9", "from": "manager", "to": "state", "y": 680, "label": "fingerprint(tenant)", "variant": "default" },
+    { "id": "m10", "from": "state", "to": "manager", "y": 708, "label": "khác lần trước → list rows", "variant": "return" },
+    { "id": "m11", "from": "manager", "to": "live", "y": 736, "label": "_reconcile: enable/disable/reload theo rows", "variant": "default" },
+    { "id": "m12", "from": "dispatcher", "to": "live", "y": 790, "label": "current()", "variant": "default" },
+    { "id": "m13", "from": "live", "to": "dispatcher", "y": 818, "label": "Agent mới: tools, prompt, hooks lắp lại", "variant": "return", "note": "vân tay prompt đổi → phiên dựng lại system prompt ở lượt này (log cache break)" }
+  ],
+  "activations": [
+    { "participant": "manager", "from": 155, "to": 542, "type": "backend" },
+    { "participant": "live", "from": 315, "to": 462, "type": "backend" },
+    { "participant": "host", "from": 343, "to": 434, "type": "backend" },
+    { "participant": "manager", "from": 595, "to": 742, "type": "backend" },
+    { "participant": "live", "from": 785, "to": 824, "type": "backend" }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Ai quyết plugin nào chạy",
+      "items": [
+        "Có hàng trong agent_plugin thì hàng quyết; không có thì [plugins].enabled của profile",
+        "Profile clinic bật sso, knowledge, skills, conversations, jev, crm; admin bật thêm zalo, web khi cần",
+        "Plugin tìm ở 3 nơi: bundled (apps/agent/plugins), thư mục của agent, thư mục installed (cài zip/git/thư mục)"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Cái gì được lắp lại, cái gì giữ",
+      "items": [
+        "Lắp lại: ToolRegistry, PromptBuilder (vân tay mới), HookSet, LoopPolicy; ChannelHub và JobRunner khớp kênh, job ở tick sau",
+        "Giữ nguyên: model (DynamicModel), MemoryService, ingress, phiên; ghi chú trong bộ nhớ không mất",
+        "Cùng cơ chế cho cài đặt agent (AgentSettings.refresh): đổi persona, biến, tool bật tắt → LiveAgent.rebuild()"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Khi hỏng",
+      "items": [
+        "enable() lỗi: plugin về trạng thái tắt, lỗi lưu last_error, dịch vụ vẫn chạy với các plugin còn lại",
+        "Lúc khởi động (agent serve): plugin của profile lỗi thì dừng khởi động và nêu tên; plugin do admin quản thì tắt và ghi lỗi",
+        "Bí mật đã lưu mà khóa dịch vụ đổi: không giải mã được → PluginError, không bật"
+      ]
+    }
+  ]
+}

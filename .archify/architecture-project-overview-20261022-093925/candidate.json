@@ -1,0 +1,186 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Pema Digital Clinic: tổng quan cả project",
+    "locale": "vi",
+    "output": ".archify/architecture-project-overview-20261022-093925/project-overview.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "git@github-personal20:o00oleanho00o/cnbphongkham.git",
+      "link_mode": "local-only",
+      "revision": "7d86533840b79a213b046bf19e0de37db65f3b14"
+    }
+  },
+  "components": [
+    {
+      "id": "docs",
+      "type": "external",
+      "label": "Tài liệu",
+      "sublabel": "docs/: scope, spec, kiến trúc",
+      "pos": [40, 40],
+      "size": [130, 60],
+      "sources": [
+        { "path": "docs/README.md", "line": 10, "end_line": 15, "label": "thứ tự đọc PB01" },
+        { "path": "research/sources.md", "line": 1, "end_line": 3, "label": "nguồn nghiên cứu" }
+      ]
+    },
+    {
+      "id": "design",
+      "type": "frontend",
+      "label": "Thiết kế",
+      "sublabel": "canvas + spec từng màn",
+      "pos": [290, 40],
+      "size": [130, 60],
+      "sources": [
+        { "path": "design-specs/README.md", "line": 3, "end_line": 12, "label": "spec A1…K3, web" },
+        { "path": "design-specs/README.md", "line": 23, "end_line": 23, "label": "spec 384 màn web" }
+      ]
+    },
+    {
+      "id": "kmp",
+      "type": "frontend",
+      "label": "App mobile",
+      "sublabel": "pema-kmp: Android, iOS",
+      "pos": [540, 40],
+      "size": [130, 60],
+      "sources": [
+        { "path": "pema-kmp/README.md", "line": 1, "end_line": 3, "label": "KMP + Compose" },
+        { "path": "pema-kmp/README.md", "line": 9, "end_line": 11, "label": "UI từ canvas, dữ liệu từ web cũ" },
+        { "path": "pema-kmp/README.md", "line": 27, "end_line": 27, "label": "API tài chính :4174" }
+      ]
+    },
+    {
+      "id": "proto",
+      "type": "frontend",
+      "label": "Web cũ (prototype)",
+      "sublabel": "localStorage, :4173",
+      "pos": [790, 40],
+      "size": [130, 60],
+      "tag": "đóng băng",
+      "sources": [
+        { "path": "prototype/README.md", "line": 5, "end_line": 14, "label": "Clinic Web, Patient Mobile" },
+        { "path": ".claude/rules/crm-ideas.md", "line": 7, "end_line": 7, "label": "không sửa" }
+      ]
+    },
+    {
+      "id": "ideas",
+      "type": "external",
+      "label": "Ý tưởng CRM",
+      "sublabel": "crm-ideas/, crm-lab/",
+      "pos": [1040, 40],
+      "size": [130, 60],
+      "sources": [
+        { "path": "crm-ideas/README.md", "line": 3, "end_line": 5, "label": "crm-lab trên nhánh crm/ideas" },
+        { "path": "crm-ideas/README.md", "line": 11, "end_line": 11, "label": "PORT-NOTES: chủ quyết" }
+      ]
+    },
+    { "id": "customer", "type": "external", "label": "Khách", "sublabel": "Zalo", "pos": [40, 190], "size": [130, 60] },
+    {
+      "id": "agent",
+      "type": "backend",
+      "label": "Agent clinic",
+      "sublabel": "backend/apps/agent",
+      "pos": [290, 190],
+      "size": [130, 60],
+      "sources": [
+        { "path": "pema-agent/README.md", "line": 3, "end_line": 10, "label": "hai app, agent tách CRM" },
+        { "path": "pema-agent/infra/docker-compose.yml", "line": 232, "end_line": 249, "label": "service agent" }
+      ]
+    },
+    {
+      "id": "signer",
+      "type": "security",
+      "label": "crm-signer",
+      "sublabel": "giữ khóa, ký lời gọi",
+      "pos": [540, 190],
+      "size": [130, 60],
+      "sources": [
+        { "path": "pema-agent/infra/docker-compose.yml", "line": 276, "end_line": 289, "label": "service crm-signer" }
+      ]
+    },
+    {
+      "id": "api",
+      "type": "backend",
+      "label": "API CRM",
+      "sublabel": "backend/apps/api, FastAPI",
+      "pos": [790, 190],
+      "size": [130, 60],
+      "sources": [
+        { "path": "pema-agent/README.md", "line": 3, "end_line": 5, "label": "CRM, database pema" },
+        { "path": "pema-agent/infra/docker-compose.yml", "line": 159, "end_line": 166, "label": "service api" }
+      ]
+    },
+    {
+      "id": "pg",
+      "type": "database",
+      "label": "Postgres",
+      "sublabel": "pema (CRM), pema_agent",
+      "pos": [1040, 190],
+      "size": [130, 60],
+      "sources": [
+        { "path": "pema-agent/README.md", "line": 4, "end_line": 6, "label": "hai database, hai role" },
+        { "path": "pema-agent/infra/docker-compose.yml", "line": 88, "end_line": 92, "label": "service postgres" }
+      ]
+    },
+    {
+      "id": "frontend",
+      "type": "frontend",
+      "label": "Web nhân viên",
+      "sublabel": "TanStack Start, bun, :3000",
+      "pos": [790, 340],
+      "size": [130, 60],
+      "sources": [
+        { "path": "pema-agent/frontend/README.md", "line": 3, "end_line": 3, "label": "TanStack Start" },
+        { "path": "pema-agent/infra/docker-compose.yml", "line": 336, "end_line": 346, "label": "chuyển tiếp tới api, agent" }
+      ]
+    },
+    { "id": "staff", "type": "external", "label": "Nhân viên", "sublabel": "trình duyệt", "pos": [790, 490], "size": [130, 60] }
+  ],
+  "boundaries": [
+    { "kind": "region", "label": "Ngoài stack Docker: tài liệu, thiết kế, app mobile, bản cũ", "wraps": ["docs", "design", "kmp", "proto", "ideas"] },
+    { "kind": "region", "label": "pema-agent: stack Docker (docker compose up)", "wraps": ["agent", "signer", "api", "pg", "frontend"] }
+  ],
+  "connections": [
+    { "id": "design-to-kmp", "from": "design", "to": "kmp", "label": "UI 1:1, spec từng màn" },
+    { "id": "proto-to-kmp", "from": "proto", "to": "kmp", "label": "dữ liệu mẫu", "variant": "dashed" },
+    { "id": "proto-to-ideas", "from": "proto", "to": "ideas", "label": "crm-lab", "variant": "dashed" },
+    { "id": "ideas-to-api", "from": "ideas", "to": "api", "label": "chủ port tay", "variant": "dashed" },
+    { "id": "customer-to-agent", "from": "customer", "to": "agent", "label": "Zalo", "variant": "emphasis" },
+    { "id": "agent-to-signer", "from": "agent", "to": "signer", "label": "không khóa" },
+    { "id": "signer-to-api", "from": "signer", "to": "api", "label": "JWT 60 giây", "variant": "security" },
+    { "id": "api-to-pg", "from": "api", "to": "pg", "label": "SQL" },
+    { "id": "staff-to-frontend", "from": "staff", "to": "frontend", "label": "HTTPS" },
+    { "id": "frontend-to-api", "from": "frontend", "to": "api", "label": "/api/v1" },
+    { "id": "frontend-to-agent", "from": "frontend", "to": "agent", "label": "/agent/v1: điều khiển agent", "variant": "dashed" }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Ba thế hệ giao diện",
+      "items": [
+        "Web cũ (prototype/): bản gốc đóng băng, dữ liệu giả trong localStorage, chỉ để tham chiếu",
+        "App mobile (pema-kmp/): dựng 1:1 từ canvas thiết kế; dữ liệu mẫu và API tài chính lấy từ web cũ",
+        "Web nhân viên (pema-agent/frontend): TanStack Start, chạy với API thật; spec của 384 màn web nằm ở design-specs/web/"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Quy tắc giữa các phần",
+      "items": [
+        "Ý tưởng CRM thử trên crm-lab (nhánh crm/ideas); chủ hệ thống mới đọc PORT-NOTES rồi tự port, không tự thành mã",
+        "Agent không vào được database CRM; mọi lời gọi đi qua crm-signer; luật L1–L7 trong .claude/rules/",
+        "Nhân viên đăng nhập một lần trên web; web xin token ngắn từ API rồi gọi agent qua /agent/..."
+      ]
+    },
+    {
+      "dot": "slate",
+      "title": "Không vẽ ở đây",
+      "items": [
+        "flutter-template/ (mã cũ, không phát triển), design-viewer/, data/, demo-assets/, research/raw",
+        "Dịch vụ phụ trong stack: Redis, egress, caddy, migrate, agent-migrate (xem Toàn cảnh stack)",
+        "pema-agent/README.md dòng 15 còn ghi FE Next.js; frontend đã chuyển sang TanStack Start"
+      ]
+    }
+  ]
+}

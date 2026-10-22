@@ -1,0 +1,288 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "Khởi động agent serve: cái gì được dựng, cái gì chạy nền",
+    "locale": "vi",
+    "output": ".archify/sequence-serve-boot-20261022-112511/serve-boot.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "git@github-personal20:o00oleanho00o/cnbphongkham.git",
+      "link_mode": "local-only",
+      "revision": "7d86533840b79a213b046bf19e0de37db65f3b14"
+    }
+  },
+  "participants": [
+    {
+      "id": "cli",
+      "type": "backend",
+      "label": "agent serve",
+      "sublabel": "cli._serve",
+      "sources": [
+        {
+          "path": "pema-agent/backend/apps/agent/agent_app/cli.py",
+          "line": 506,
+          "end_line": 553,
+          "label": "_serve"
+        }
+      ]
+    },
+    {
+      "id": "runtime",
+      "type": "backend",
+      "label": "build_runtime",
+      "sublabel": "runtime.py",
+      "sources": [
+        {
+          "path": "pema-agent/backend/apps/agent/agent_app/runtime.py",
+          "line": 206,
+          "end_line": 318,
+          "label": "build_runtime"
+        },
+        {
+          "path": "pema-agent/backend/apps/agent/agent_app/runtime.py",
+          "line": 85,
+          "end_line": 101,
+          "label": "Runtime"
+        }
+      ]
+    },
+    {
+      "id": "host",
+      "type": "backend",
+      "label": "PluginHost",
+      "sublabel": "start_plugins",
+      "sources": [
+        {
+          "path": "pema-agent/backend/apps/agent/agent_app/runtime.py",
+          "line": 167,
+          "end_line": 203,
+          "label": "plugin_roots, start_plugins"
+        }
+      ]
+    },
+    {
+      "id": "manager",
+      "type": "backend",
+      "label": "Manager, Settings",
+      "sublabel": "plugin, cài đặt theo DB",
+      "sources": [
+        {
+          "path": "pema-agent/backend/apps/agent/agent_app/runtime.py",
+          "line": 103,
+          "end_line": 111,
+          "label": "start, refresh"
+        },
+        {
+          "path": "pema-agent/backend/apps/agent/agent_app/agent_settings.py",
+          "line": 1,
+          "end_line": 8,
+          "label": "AgentSettings"
+        }
+      ]
+    },
+    {
+      "id": "app",
+      "type": "backend",
+      "label": "create_app",
+      "sublabel": "FastAPI + uvicorn",
+      "sources": [
+        {
+          "path": "pema-agent/backend/apps/agent/agent_app/gateway.py",
+          "line": 323,
+          "end_line": 357,
+          "label": "create_app, lifespan"
+        }
+      ]
+    },
+    {
+      "id": "tasks",
+      "type": "messagebus",
+      "label": "Tác vụ nền",
+      "sublabel": "4 vòng lặp",
+      "sources": [
+        {
+          "path": "pema-agent/backend/apps/agent/agent_app/gateway.py",
+          "line": 338,
+          "end_line": 345,
+          "label": "4 asyncio.Task"
+        }
+      ]
+    }
+  ],
+  "segments": [
+    {
+      "from": 150,
+      "to": 470,
+      "label": "Dựng"
+    },
+    {
+      "from": 495,
+      "to": 700,
+      "label": "Chạy"
+    },
+    {
+      "from": 725,
+      "to": 820,
+      "label": "Tắt (SIGTERM)"
+    }
+  ],
+  "messages": [
+    {
+      "id": "m1",
+      "from": "cli",
+      "to": "runtime",
+      "y": 160,
+      "label": "load_profile(agents/clinic) + build_runtime(db)",
+      "variant": "emphasis",
+      "note": "agent.toml + SOUL.md + AGENTS.md; {{biến}} thiếu → dừng; không DB → trong bộ nhớ"
+    },
+    {
+      "id": "m2",
+      "from": "runtime",
+      "to": "host",
+      "y": 240,
+      "label": "start_plugins: discover 3 nơi, enable [plugins].enabled",
+      "variant": "default",
+      "note": "một plugin của profile lỗi → dừng khởi động, nêu tên"
+    },
+    {
+      "id": "m3",
+      "from": "host",
+      "to": "runtime",
+      "y": 308,
+      "label": "contributions (tools, sections, hooks, channels, jobs, routes…)",
+      "variant": "return"
+    },
+    {
+      "id": "m4",
+      "from": "runtime",
+      "to": "cli",
+      "y": 336,
+      "label": "Runtime (LiveAgent, model, stores, locks, FollowUps)",
+      "variant": "return",
+      "note": "Postgres*: session, tracer, ingress, locks, memory, plugin state/records; InMemory* khi không có DB"
+    },
+    {
+      "id": "m5",
+      "from": "cli",
+      "to": "manager",
+      "y": 416,
+      "label": "runtime.start(): plugins refresh(force) + agent_settings.start()",
+      "variant": "default",
+      "note": "hàng agent_plugin, agent_settings trong DB thắng profile; plugin do admin quản lỗi thì tắt + ghi lỗi"
+    },
+    {
+      "id": "m6",
+      "from": "cli",
+      "to": "app",
+      "y": 505,
+      "label": "dispatcher(); DispatcherOutbox → plugins.use_proactive, follow_ups.send_through",
+      "variant": "default"
+    },
+    {
+      "id": "m7",
+      "from": "cli",
+      "to": "app",
+      "y": 533,
+      "label": "create_app(dispatcher, admin, plugins, channel_hub, job_runner, settings, follow_ups)",
+      "variant": "emphasis"
+    },
+    {
+      "id": "m8",
+      "from": "app",
+      "to": "tasks",
+      "y": 561,
+      "label": "lifespan: 4 task nền",
+      "variant": "dashed",
+      "note": "ingress sweeper, channel hub, plugin jobs, follow-ups; mỗi tick làm mới plugin trước"
+    },
+    {
+      "id": "m9",
+      "from": "cli",
+      "to": "app",
+      "y": 645,
+      "label": "uvicorn.Server.serve(host, port)",
+      "variant": "default",
+      "note": "routes: /v1/chat, /v1/admin/*, /v1/hooks/<plugin>/*, /v1/plugins/<name>/* (admin), /health, /ready"
+    },
+    {
+      "id": "m10",
+      "from": "app",
+      "to": "tasks",
+      "y": 735,
+      "label": "cancel 4 task; close (10 s / 5 s)",
+      "variant": "security",
+      "note": "lượt đang chạy được 10 s để xong; tin dở vẫn processing, sweeper của tiến trình sau nhặt lại"
+    },
+    {
+      "id": "m11",
+      "from": "app",
+      "to": "cli",
+      "y": 800,
+      "label": "runtime.close(); db.dispose()",
+      "variant": "return"
+    }
+  ],
+  "activations": [
+    {
+      "participant": "runtime",
+      "from": 155,
+      "to": 342,
+      "type": "backend"
+    },
+    {
+      "participant": "host",
+      "from": 235,
+      "to": 314,
+      "type": "backend"
+    },
+    {
+      "participant": "manager",
+      "from": 411,
+      "to": 440,
+      "type": "backend"
+    },
+    {
+      "participant": "app",
+      "from": 500,
+      "to": 806,
+      "type": "backend"
+    },
+    {
+      "participant": "tasks",
+      "from": 556,
+      "to": 741,
+      "type": "messagebus"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Một tiến trình, bốn vòng nền",
+      "items": [
+        "ingress sweeper (Dispatcher.run_sweeper): tin bị bỏ dở về hàng đợi, lần 3 thì dead",
+        "channel hub (ChannelHub.run): khởi động/dừng kênh theo plugin, gửi trả lời đến lượt, typing",
+        "plugin jobs (JobRunner.run): job nền của plugin, khởi động lại khi lỗi với pause tăng dần; follow-ups: xét hội thoại im rồi gửi"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Nhiều tiến trình cùng một DB",
+      "items": [
+        "Khóa phiên là advisory lock của Postgres: cùng phiên không bao giờ chạy hai lượt một lúc, kể cả ở hai tiến trình",
+        "Plugin, cài đặt agent, model: mỗi tiến trình làm mới trước lượt (≤ 5 s); kênh và job cũng khớp lại mỗi tick",
+        "Trả lời của kênh: claim_delivery có stale_s 120 s để tiến trình khác lấy lại việc gửi dở"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "agent chat khác gì",
+      "items": [
+        "Cùng build_runtime và runtime.start(), nhưng không có create_app: không sweeper, không ChannelHub, không JobRunner, không FollowUps",
+        "Gọi run_turn trực tiếp với CLI_USER và kênh cli, vẫn giữ khóa phiên; /compact, /prompt, /context, /memory, /trace để nhìn vào trong",
+        "--record ghi cassette mọi lời gọi model (RecordingModel); agent replay chạy lại không cần nhà cung cấp"
+      ]
+    }
+  ]
+}

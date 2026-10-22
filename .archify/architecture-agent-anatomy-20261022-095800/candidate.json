@@ -1,0 +1,819 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Giải phẫu agent: lõi harness, lớp lắp ráp và plugin",
+    "locale": "vi",
+    "output": ".archify/architecture-agent-anatomy-20261022-095800/agent-anatomy.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "git@github-personal20:o00oleanho00o/cnbphongkham.git",
+      "link_mode": "local-only",
+      "revision": "7d86533840b79a213b046bf19e0de37db65f3b14"
+    }
+  },
+  "components": [
+    {
+      "id": "zalo",
+      "type": "external",
+      "label": "Kênh chat (zalo)",
+      "sublabel": "Zalo Bot, Zalo cá nhân",
+      "pos": [
+        40,
+        40
+      ],
+      "size": [
+        130,
+        60
+      ],
+      "tag": "chỉ là UI",
+      "sources": [
+        {
+          "path": "pema-agent/backend/apps/agent/plugins/zalo/plugin.py",
+          "line": 200,
+          "end_line": 200,
+          "label": "register_channel"
+        },
+        {
+          "path": "pema-agent/backend/packages/agent-core/src/agentcore/channels.py",
+          "line": 111,
+          "end_line": 126,
+          "label": "ChannelAdapter"
+        }
+      ]
+    },
+    {
+      "id": "gateway",
+      "type": "backend",
+      "label": "HTTP gateway",
+      "sublabel": "/v1/chat, /v1/ingress",
+      "pos": [
+        290,
+        40
+      ],
+      "size": [
+        130,
+        60
+      ],
+      "tag": "chỉ là UI",
+      "sources": [
+        {
+          "path": "pema-agent/backend/apps/agent/agent_app/gateway.py",
+          "line": 392,
+          "end_line": 413,
+          "label": "chat, chat_stream, ingress"
+        }
+      ]
+    },
+    {
+      "id": "cli",
+      "type": "external",
+      "label": "agent chat (CLI)",
+      "sublabel": "gọi run_turn trực tiếp",
+      "pos": [
+        790,
+        40
+      ],
+      "size": [
+        130,
+        60
+      ],
+      "tag": "chỉ là UI",
+      "sources": [
+        {
+          "path": "pema-agent/backend/apps/agent/agent_app/cli.py",
+          "line": 640,
+          "end_line": 721,
+          "label": "_chat_loop"
+        },
+        {
+          "path": "pema-agent/backend/apps/agent/agent_app/cli.py",
+          "line": 699,
+          "end_line": 714,
+          "label": "khóa phiên + run_turn"
+        }
+      ]
+    },
+    {
+      "id": "admin",
+      "type": "external",
+      "label": "Trang quản trị",
+      "sublabel": "model, plugin, cài đặt",
+      "pos": [
+        540,
+        40
+      ],
+      "size": [
+        130,
+        60
+      ],
+      "sources": [
+        {
+          "path": "pema-agent/backend/apps/agent/agent_app/gateway.py",
+          "line": 740,
+          "end_line": 783,
+          "label": "route plugin"
+        },
+        {
+          "path": "pema-agent/backend/apps/agent/agent_app/gateway.py",
+          "line": 625,
+          "end_line": 657,
+          "label": "route model"
+        },
+        {
+          "path": "pema-agent/backend/apps/agent/agent_app/gateway.py",
+          "line": 660,
+          "end_line": 692,
+          "label": "route cài đặt, tool"
+        }
+      ]
+    },
+    {
+      "id": "hub",
+      "type": "backend",
+      "label": "ChannelHub",
+      "sublabel": "chạy kênh, gửi trả lời",
+      "pos": [
+        40,
+        175
+      ],
+      "size": [
+        130,
+        60
+      ],
+      "sources": [
+        {
+          "path": "pema-agent/backend/apps/agent/agent_app/channel_hub.py",
+          "line": 1,
+          "end_line": 10,
+          "label": "vai trò"
+        },
+        {
+          "path": "pema-agent/backend/apps/agent/agent_app/channel_hub.py",
+          "line": 301,
+          "end_line": 314,
+          "label": "nhận tin"
+        },
+        {
+          "path": "pema-agent/backend/apps/agent/agent_app/channel_hub.py",
+          "line": 205,
+          "end_line": 275,
+          "label": "deliver"
+        }
+      ]
+    },
+    {
+      "id": "dispatcher",
+      "type": "backend",
+      "label": "Dispatcher",
+      "sublabel": "hàng đợi; sweeper 30 s",
+      "pos": [
+        290,
+        175
+      ],
+      "size": [
+        130,
+        60
+      ],
+      "sources": [
+        {
+          "path": "pema-agent/backend/apps/agent/agent_app/dispatcher.py",
+          "line": 1,
+          "end_line": 7,
+          "label": "vai trò"
+        },
+        {
+          "path": "pema-agent/backend/apps/agent/agent_app/dispatcher.py",
+          "line": 224,
+          "end_line": 243,
+          "label": "_drain: khóa phiên"
+        },
+        {
+          "path": "pema-agent/backend/apps/agent/agent_app/dispatcher.py",
+          "line": 367,
+          "end_line": 389,
+          "label": "sweep, run_sweeper"
+        }
+      ]
+    },
+    {
+      "id": "live",
+      "type": "backend",
+      "label": "LiveAgent",
+      "sublabel": "lắp lại agent khi đổi",
+      "pos": [
+        540,
+        175
+      ],
+      "size": [
+        130,
+        60
+      ],
+      "sources": [
+        {
+          "path": "pema-agent/backend/apps/agent/agent_app/live.py",
+          "line": 1,
+          "end_line": 35,
+          "label": "LiveAgent"
+        },
+        {
+          "path": "pema-agent/backend/apps/agent/agent_app/plugins/manager.py",
+          "line": 1,
+          "end_line": 9,
+          "label": "PluginManager"
+        },
+        {
+          "path": "pema-agent/backend/apps/agent/agent_app/assembly.py",
+          "line": 37,
+          "end_line": 81,
+          "label": "build_agent"
+        }
+      ]
+    },
+    {
+      "id": "host",
+      "type": "backend",
+      "label": "PluginHost",
+      "sublabel": "register(ctx), gỡ được",
+      "pos": [
+        790,
+        175
+      ],
+      "size": [
+        130,
+        60
+      ],
+      "tag": "plugin-first",
+      "sources": [
+        {
+          "path": "pema-agent/backend/apps/agent/agent_app/plugins/host.py",
+          "line": 1,
+          "end_line": 9,
+          "label": "vai trò"
+        },
+        {
+          "path": "pema-agent/backend/apps/agent/agent_app/plugins/host.py",
+          "line": 435,
+          "end_line": 486,
+          "label": "enable"
+        },
+        {
+          "path": "pema-agent/backend/apps/agent/agent_app/plugins/host.py",
+          "line": 500,
+          "end_line": 510,
+          "label": "contributions"
+        }
+      ]
+    },
+    {
+      "id": "followup",
+      "type": "backend",
+      "label": "FollowUps",
+      "sublabel": "chăm sóc lại khi im",
+      "pos": [
+        40,
+        310
+      ],
+      "size": [
+        130,
+        60
+      ],
+      "tag": "chủ động",
+      "sources": [
+        {
+          "path": "pema-agent/backend/apps/agent/agent_app/follow_up.py",
+          "line": 1,
+          "end_line": 14,
+          "label": "vai trò"
+        },
+        {
+          "path": "pema-agent/backend/apps/agent/agent_app/follow_up.py",
+          "line": 711,
+          "end_line": 736,
+          "label": "review_pass"
+        },
+        {
+          "path": "pema-agent/backend/apps/agent/agent_app/follow_up.py",
+          "line": 788,
+          "end_line": 814,
+          "label": "_send qua hàng đợi"
+        }
+      ]
+    },
+    {
+      "id": "jobs",
+      "type": "messagebus",
+      "label": "JobRunner",
+      "sublabel": "job nền của plugin",
+      "pos": [
+        790,
+        310
+      ],
+      "size": [
+        130,
+        60
+      ],
+      "sources": [
+        {
+          "path": "pema-agent/backend/apps/agent/agent_app/plugins/jobs.py",
+          "line": 65,
+          "end_line": 88,
+          "label": "run, sync"
+        }
+      ]
+    },
+    {
+      "id": "prompt",
+      "type": "backend",
+      "label": "PromptBuilder",
+      "sublabel": "system đóng băng + context",
+      "pos": [
+        40,
+        445
+      ],
+      "size": [
+        130,
+        60
+      ],
+      "sources": [
+        {
+          "path": "pema-agent/backend/packages/agent-core/src/agentcore/prompt/builder.py",
+          "line": 1,
+          "end_line": 8,
+          "label": "vai trò"
+        },
+        {
+          "path": "pema-agent/backend/packages/agent-core/src/agentcore/prompt/builder.py",
+          "line": 97,
+          "end_line": 130,
+          "label": "system"
+        },
+        {
+          "path": "pema-agent/backend/packages/agent-core/src/agentcore/prompt/builder.py",
+          "line": 145,
+          "end_line": 160,
+          "label": "context"
+        }
+      ]
+    },
+    {
+      "id": "turn",
+      "type": "backend",
+      "label": "run_turn",
+      "sublabel": "vòng lặp model ↔ tool",
+      "pos": [
+        290,
+        445
+      ],
+      "size": [
+        130,
+        60
+      ],
+      "tag": "trái tim",
+      "sources": [
+        {
+          "path": "pema-agent/backend/packages/agent-core/src/agentcore/loop/run_turn.py",
+          "line": 1,
+          "end_line": 12,
+          "label": "vai trò"
+        },
+        {
+          "path": "pema-agent/backend/packages/agent-core/src/agentcore/loop/run_turn.py",
+          "line": 369,
+          "end_line": 423,
+          "label": "turn()"
+        },
+        {
+          "path": "pema-agent/backend/packages/agent-core/src/agentcore/loop/run_turn.py",
+          "line": 275,
+          "end_line": 314,
+          "label": "call_model"
+        }
+      ]
+    },
+    {
+      "id": "executor",
+      "type": "backend",
+      "label": "ToolExecutor",
+      "sublabel": "kiểm, song song, timeout",
+      "pos": [
+        540,
+        445
+      ],
+      "size": [
+        130,
+        60
+      ],
+      "sources": [
+        {
+          "path": "pema-agent/backend/packages/agent-core/src/agentcore/harness/tools/executor.py",
+          "line": 1,
+          "end_line": 7,
+          "label": "vai trò"
+        },
+        {
+          "path": "pema-agent/backend/packages/agent-core/src/agentcore/harness/tools/executor.py",
+          "line": 140,
+          "end_line": 173,
+          "label": "_checked, _execute"
+        },
+        {
+          "path": "pema-agent/backend/packages/agent-core/src/agentcore/harness/tools/spec.py",
+          "line": 21,
+          "end_line": 57,
+          "label": "ToolContext, ToolSpec"
+        }
+      ]
+    },
+    {
+      "id": "hooks",
+      "type": "security",
+      "label": "HookSet",
+      "sublabel": "pre_tool chặn; post_tool sửa",
+      "pos": [
+        790,
+        445
+      ],
+      "size": [
+        130,
+        60
+      ],
+      "sources": [
+        {
+          "path": "pema-agent/backend/packages/agent-core/src/agentcore/harness/hooks/base.py",
+          "line": 1,
+          "end_line": 6,
+          "label": "fail closed / open"
+        },
+        {
+          "path": "pema-agent/backend/packages/agent-core/src/agentcore/harness/hooks/builtin.py",
+          "line": 23,
+          "end_line": 63,
+          "label": "3 hook lõi"
+        }
+      ]
+    },
+    {
+      "id": "store",
+      "type": "database",
+      "label": "SessionStore, Tracer",
+      "sublabel": "agent_rt: session, turn",
+      "pos": [
+        40,
+        580
+      ],
+      "size": [
+        130,
+        60
+      ],
+      "sources": [
+        {
+          "path": "pema-agent/backend/packages/agent-core/src/agentcore/harness/store/base.py",
+          "line": 24,
+          "end_line": 35,
+          "label": "cổng SessionStore"
+        },
+        {
+          "path": "pema-agent/backend/apps/agent/agent_app/storage.py",
+          "line": 186,
+          "end_line": 287,
+          "label": "PostgresSessionStore"
+        },
+        {
+          "path": "pema-agent/backend/apps/agent/agent_app/storage.py",
+          "line": 344,
+          "end_line": 392,
+          "label": "PostgresTracer"
+        }
+      ]
+    },
+    {
+      "id": "memory",
+      "type": "backend",
+      "label": "MemoryService",
+      "sublabel": "ghi chú agent, user",
+      "pos": [
+        290,
+        580
+      ],
+      "size": [
+        130,
+        60
+      ],
+      "sources": [
+        {
+          "path": "pema-agent/backend/packages/agent-core/src/agentcore/memory/service.py",
+          "line": 1,
+          "end_line": 7,
+          "label": "vai trò"
+        },
+        {
+          "path": "pema-agent/backend/packages/agent-core/src/agentcore/memory/service.py",
+          "line": 96,
+          "end_line": 150,
+          "label": "MemoryService"
+        },
+        {
+          "path": "pema-agent/backend/packages/agent-core/src/agentcore/memory/tool.py",
+          "line": 32,
+          "end_line": 51,
+          "label": "tool memory"
+        }
+      ]
+    },
+    {
+      "id": "model",
+      "type": "backend",
+      "label": "ModelClient",
+      "sublabel": "cài đặt, khóa trong DB",
+      "pos": [
+        540,
+        580
+      ],
+      "size": [
+        130,
+        60
+      ],
+      "sources": [
+        {
+          "path": "pema-agent/backend/apps/agent/agent_app/model_settings.py",
+          "line": 1,
+          "end_line": 8,
+          "label": "cài đặt lúc chạy"
+        },
+        {
+          "path": "pema-agent/backend/apps/agent/agent_app/model_settings.py",
+          "line": 219,
+          "end_line": 277,
+          "label": "DynamicModel"
+        },
+        {
+          "path": "pema-agent/backend/packages/agent-core/src/agentcore/harness/model/types.py",
+          "line": 47,
+          "end_line": 48,
+          "label": "cổng"
+        }
+      ]
+    },
+    {
+      "id": "context",
+      "type": "backend",
+      "label": "ContextManager",
+      "sublabel": "nén lịch sử cũ",
+      "pos": [
+        790,
+        580
+      ],
+      "size": [
+        130,
+        60
+      ],
+      "sources": [
+        {
+          "path": "pema-agent/backend/packages/agent-core/src/agentcore/context/compaction.py",
+          "line": 1,
+          "end_line": 6,
+          "label": "vai trò"
+        },
+        {
+          "path": "pema-agent/backend/packages/agent-core/src/agentcore/context/compaction.py",
+          "line": 68,
+          "end_line": 105,
+          "label": "compact"
+        },
+        {
+          "path": "pema-agent/backend/packages/agent-core/src/agentcore/loop/run_turn.py",
+          "line": 453,
+          "end_line": 493,
+          "label": "flush_memory trước khi nén"
+        }
+      ]
+    },
+    {
+      "id": "provider",
+      "type": "external",
+      "label": "Nhà cung cấp model",
+      "sublabel": "OpenAI-compat, Anthropic",
+      "pos": [
+        540,
+        715
+      ],
+      "size": [
+        130,
+        60
+      ],
+      "tag": "qua egress",
+      "sources": [
+        {
+          "path": "pema-agent/backend/packages/agent-core/src/agentcore/harness/model/openai_compat.py",
+          "line": 76,
+          "end_line": 108,
+          "label": "OpenAICompatModel"
+        },
+        {
+          "path": "pema-agent/backend/packages/agent-core/src/agentcore/harness/model/anthropic.py",
+          "line": 64,
+          "end_line": 104,
+          "label": "AnthropicModel"
+        }
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "agent_app: lắp ráp, hàng đợi, lưu trữ, plugin, chủ động",
+      "wraps": [
+        "hub",
+        "dispatcher",
+        "live",
+        "host",
+        "followup",
+        "jobs"
+      ]
+    },
+    {
+      "kind": "region",
+      "label": "agentcore: lõi harness, không biết Zalo hay CRM là gì",
+      "wraps": [
+        "prompt",
+        "turn",
+        "executor",
+        "hooks",
+        "store",
+        "memory",
+        "model",
+        "context"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "zalo-to-hub",
+      "from": "zalo",
+      "to": "hub",
+      "label": "tin đến, trả lời đi",
+      "variant": "emphasis"
+    },
+    {
+      "id": "gateway-to-dispatcher",
+      "from": "gateway",
+      "to": "dispatcher",
+      "label": "accept, wait"
+    },
+    {
+      "id": "cli-to-turn",
+      "from": "cli",
+      "to": "turn",
+      "label": "run_turn, cùng khóa phiên",
+      "variant": "dashed"
+    },
+    {
+      "id": "admin-to-live",
+      "from": "admin",
+      "to": "live",
+      "label": "bật tắt plugin, đổi model",
+      "variant": "dashed"
+    },
+    {
+      "id": "hub-to-dispatcher",
+      "from": "hub",
+      "to": "dispatcher",
+      "label": "accept(deliver)"
+    },
+    {
+      "id": "live-to-dispatcher",
+      "from": "live",
+      "to": "dispatcher",
+      "label": "Agent hiện hành"
+    },
+    {
+      "id": "host-to-live",
+      "from": "host",
+      "to": "live",
+      "label": "góp gì, version"
+    },
+    {
+      "id": "host-to-jobs",
+      "from": "host",
+      "to": "jobs",
+      "label": "jobs"
+    },
+    {
+      "id": "followup-to-dispatcher",
+      "from": "followup",
+      "to": "dispatcher",
+      "label": "tin PROACTIVE vào hàng đợi",
+      "variant": "dashed"
+    },
+    {
+      "id": "dispatcher-to-turn",
+      "from": "dispatcher",
+      "to": "turn",
+      "label": "run_turn(...)",
+      "variant": "emphasis"
+    },
+    {
+      "id": "turn-to-prompt",
+      "from": "turn",
+      "to": "prompt",
+      "label": "system, context"
+    },
+    {
+      "id": "turn-to-executor",
+      "from": "turn",
+      "to": "executor",
+      "label": "tool calls"
+    },
+    {
+      "id": "executor-to-hooks",
+      "from": "executor",
+      "to": "hooks",
+      "label": "before, after",
+      "variant": "security"
+    },
+    {
+      "id": "prompt-to-store",
+      "from": "prompt",
+      "to": "store",
+      "label": "prompt đóng băng"
+    },
+    {
+      "id": "turn-to-store",
+      "from": "turn",
+      "to": "store",
+      "label": "tin, tóm tắt, trace"
+    },
+    {
+      "id": "turn-to-memory",
+      "from": "turn",
+      "to": "memory",
+      "label": "tool memory; flush trước khi nén"
+    },
+    {
+      "id": "turn-to-model",
+      "from": "turn",
+      "to": "model",
+      "label": "complete()",
+      "variant": "emphasis"
+    },
+    {
+      "id": "turn-to-context",
+      "from": "turn",
+      "to": "context",
+      "label": "nén khi quá ngưỡng",
+      "variant": "dashed"
+    },
+    {
+      "id": "context-to-model",
+      "from": "context",
+      "to": "model",
+      "label": "gọi tóm tắt",
+      "variant": "dashed"
+    },
+    {
+      "id": "model-to-provider",
+      "from": "model",
+      "to": "provider",
+      "label": "HTTPS, stream"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Một lượt là gì",
+      "items": [
+        "run_turn gọi model trong vòng lặp, chạy tool nó xin, tới khi model trả lời không gọi tool",
+        "Hết bước, hết giờ, hết token, hay loop guard thấy lặp: một lời gọi cuối không tool ép trả lời",
+        "Mỗi tin assistant được ghi trước khi tool chạy; mỗi tool call có đúng một kết quả"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Plugin-first",
+      "items": [
+        "Lõi chỉ có 4 tool (get_datetime, memory, web_search, web_fetch) và 7 section prompt; mọi thứ khác do plugin góp qua register(ctx)",
+        "Kênh chat (zalo), kho tri thức, skills, CRM đều là plugin; đổi plugin thì LiveAgent lắp lại tools, prompt, hooks",
+        "Plugin là mã tin cậy chạy trong cùng tiến trình; bật tắt qua trang quản trị, trạng thái lưu DB"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Ba thứ chạy nền trong tiến trình agent serve",
+      "items": [
+        "Sweeper của Dispatcher (30 s): tin bị bỏ dở (tiến trình chết) về lại hàng đợi, lần 3 thì dead",
+        "FollowUps (60 s): hội thoại im 2 h thì hỏi model khách ở trạng thái nào; giới hạn gửi nằm trong mã, model không đổi được",
+        "ChannelHub (2 s) và JobRunner: khớp kênh, job với plugin đang bật; agent chat trong terminal không có ba thứ này"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Ghi chú (MemoryService)",
+      "items": [
+        "Hai đích: agent (≤2200 ký tự) và user (≤1375), mỗi đích một văn bản, ghi có kiểm version",
+        "Model ghi qua tool memory (injection_guard chặn chữ giống lệnh); PromptBuilder đọc vào system prompt; trước khi nén lịch sử, model được 2 bước chỉ với tool memory",
+        "Xem thêm: Vòng lặp run_turn, Nén ngữ cảnh và ghi chú, Cổng và lớp cắm"
+      ]
+    }
+  ]
+}

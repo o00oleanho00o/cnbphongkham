@@ -1,0 +1,513 @@
+{
+  "schema_version": 1,
+  "diagram_type": "dataflow",
+  "meta": {
+    "title": "Kho tri thức: tài liệu vào, vector, và một lần kb_search của agent",
+    "locale": "vi",
+    "output": ".archify/dataflow-knowledge-store-20261022-112511/knowledge-store.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "git@github-personal20:o00oleanho00o/cnbphongkham.git",
+      "link_mode": "local-only",
+      "revision": "7d86533840b79a213b046bf19e0de37db65f3b14"
+    }
+  },
+  "stages": [
+    {
+      "label": "Vào"
+    },
+    {
+      "label": "Xử lý"
+    },
+    {
+      "label": "Kho (agent_rt)"
+    },
+    {
+      "label": "Tìm"
+    },
+    {
+      "label": "Ra"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "staff",
+      "type": "external",
+      "label": "Nhân viên",
+      "sublabel": "thêm tài liệu md, txt",
+      "stage": 0,
+      "row": 0,
+      "sources": [
+        {
+          "path": "pema-agent/backend/apps/agent/plugins/knowledge/ingest.py",
+          "line": 1,
+          "end_line": 7,
+          "label": "Ingest"
+        },
+        {
+          "path": "pema-agent/backend/apps/agent/plugins/knowledge/__init__.py",
+          "line": 25,
+          "end_line": 32,
+          "label": "routes, provide"
+        }
+      ]
+    },
+    {
+      "id": "question",
+      "type": "backend",
+      "label": "kb_search",
+      "sublabel": "query, ≤2 cách hỏi",
+      "stage": 0,
+      "row": 2,
+      "sources": [
+        {
+          "path": "pema-agent/backend/apps/agent/plugins/knowledge/plugin.py",
+          "line": 93,
+          "end_line": 113,
+          "label": "SearchArgs"
+        },
+        {
+          "path": "pema-agent/backend/apps/agent/plugins/knowledge/plugin.py",
+          "line": 331,
+          "end_line": 349,
+          "label": "_search_tool"
+        }
+      ]
+    },
+    {
+      "id": "ingest",
+      "type": "backend",
+      "label": "Ingest",
+      "sublabel": "cắt đoạn, BM25",
+      "stage": 1,
+      "row": 0,
+      "sources": [
+        {
+          "path": "pema-agent/backend/apps/agent/plugins/knowledge/ingest.py",
+          "line": 1,
+          "end_line": 7,
+          "label": "cắt ngay khi thêm"
+        },
+        {
+          "path": "pema-agent/backend/apps/agent/plugins/knowledge/migrations/0001_create_store.sql",
+          "line": 54,
+          "end_line": 61,
+          "label": "terms, term_counts"
+        }
+      ]
+    },
+    {
+      "id": "embedjob",
+      "type": "backend",
+      "label": "Job embed",
+      "sublabel": "theo lô; lùi 5→300 s",
+      "stage": 1,
+      "row": 1,
+      "tag": "job nền",
+      "sources": [
+        {
+          "path": "pema-agent/backend/apps/agent/plugins/knowledge/embedder.py",
+          "line": 1,
+          "end_line": 8,
+          "label": "vai trò"
+        },
+        {
+          "path": "pema-agent/backend/apps/agent/plugins/knowledge/embedder.py",
+          "line": 25,
+          "end_line": 32,
+          "label": "BACKOFF_S"
+        },
+        {
+          "path": "pema-agent/backend/apps/agent/plugins/knowledge/plugin.py",
+          "line": 197,
+          "end_line": 198,
+          "label": "register_job"
+        }
+      ]
+    },
+    {
+      "id": "qembed",
+      "type": "backend",
+      "label": "Nhúng câu hỏi",
+      "sublabel": "gọi dịch vụ; ≤10 s",
+      "stage": 1,
+      "row": 2,
+      "sources": [
+        {
+          "path": "pema-agent/backend/apps/agent/plugins/knowledge/embedder.py",
+          "line": 135,
+          "end_line": 135,
+          "label": "query_vector"
+        },
+        {
+          "path": "pema-agent/backend/apps/agent/plugins/knowledge/search.py",
+          "line": 208,
+          "end_line": 230,
+          "label": "_vector: không bao giờ ném"
+        }
+      ]
+    },
+    {
+      "id": "embedsvc",
+      "type": "external",
+      "label": "Dịch vụ embedding",
+      "sublabel": "qwen3-8b, 1024 chiều",
+      "stage": 1,
+      "row": 3,
+      "sources": [
+        {
+          "path": "pema-agent/backend/apps/agent/plugins/knowledge/plugin.py",
+          "line": 67,
+          "end_line": 78,
+          "label": "default_settings embedding"
+        },
+        {
+          "path": "pema-agent/backend/apps/agent/plugins/knowledge/embedding.py",
+          "line": 87,
+          "end_line": 87,
+          "label": "EmbeddingClient"
+        }
+      ]
+    },
+    {
+      "id": "kbsource",
+      "type": "database",
+      "label": "kb_source, kb_chunk",
+      "sublabel": "hiệu lực theo ngày",
+      "stage": 2,
+      "row": 0,
+      "sources": [
+        {
+          "path": "pema-agent/backend/apps/agent/plugins/knowledge/migrations/0001_create_store.sql",
+          "line": 8,
+          "end_line": 38,
+          "label": "kb_source"
+        },
+        {
+          "path": "pema-agent/backend/apps/agent/plugins/knowledge/migrations/0001_create_store.sql",
+          "line": 43,
+          "end_line": 68,
+          "label": "kb_chunk"
+        }
+      ]
+    },
+    {
+      "id": "kbemb",
+      "type": "database",
+      "label": "kb_embedding",
+      "sublabel": "text_hash → vector",
+      "stage": 2,
+      "row": 1,
+      "sources": [
+        {
+          "path": "pema-agent/backend/apps/agent/plugins/knowledge/migrations/0001_create_store.sql",
+          "line": 112,
+          "end_line": 123,
+          "label": "kb_embedding"
+        }
+      ]
+    },
+    {
+      "id": "kbgap",
+      "type": "database",
+      "label": "kb_gap",
+      "sublabel": "câu hỏi không có đáp",
+      "stage": 2,
+      "row": 3,
+      "sources": [
+        {
+          "path": "pema-agent/backend/apps/agent/plugins/knowledge/migrations/0001_create_store.sql",
+          "line": 98,
+          "end_line": 110,
+          "label": "kb_gap"
+        },
+        {
+          "path": "pema-agent/backend/apps/agent/plugins/knowledge/plugin.py",
+          "line": 323,
+          "end_line": 329,
+          "label": "record_gap"
+        }
+      ]
+    },
+    {
+      "id": "keyword",
+      "type": "backend",
+      "label": "Nhánh từ khóa",
+      "sublabel": "BM25, 40 ứng viên",
+      "stage": 3,
+      "row": 0,
+      "sources": [
+        {
+          "path": "pema-agent/backend/apps/agent/plugins/knowledge/search.py",
+          "line": 203,
+          "end_line": 206,
+          "label": "_keyword"
+        },
+        {
+          "path": "pema-agent/backend/apps/agent/plugins/knowledge/search.py",
+          "line": 34,
+          "end_line": 41,
+          "label": "CANDIDATES"
+        }
+      ]
+    },
+    {
+      "id": "vector",
+      "type": "backend",
+      "label": "Nhánh vector",
+      "sublabel": "cosine ≥ 0,35, song song",
+      "stage": 3,
+      "row": 1,
+      "sources": [
+        {
+          "path": "pema-agent/backend/apps/agent/plugins/knowledge/search.py",
+          "line": 196,
+          "end_line": 201,
+          "label": "_branch: hai nhánh cùng lúc"
+        },
+        {
+          "path": "pema-agent/backend/apps/agent/plugins/knowledge/store.py",
+          "line": 83,
+          "end_line": 89,
+          "label": "vector_search"
+        }
+      ]
+    },
+    {
+      "id": "fuse",
+      "type": "backend",
+      "label": "Xếp hạng",
+      "sublabel": "fusion; ×1,25; ≤3/tài liệu",
+      "stage": 3,
+      "row": 2,
+      "sources": [
+        {
+          "path": "pema-agent/backend/apps/agent/plugins/knowledge/search.py",
+          "line": 139,
+          "end_line": 149,
+          "label": "fusion, boost, spread, pack"
+        },
+        {
+          "path": "pema-agent/backend/apps/agent/plugins/knowledge/fusion.py",
+          "line": 22,
+          "end_line": 38,
+          "label": "vector_first, rank_fusion"
+        }
+      ]
+    },
+    {
+      "id": "judge",
+      "type": "external",
+      "label": "Bộ chấm jev",
+      "sublabel": "tùy chọn; TypeSafe; 4 s",
+      "stage": 4,
+      "row": 1,
+      "sources": [
+        {
+          "path": "pema-agent/backend/apps/agent/plugins/knowledge/plugin.py",
+          "line": 276,
+          "end_line": 282,
+          "label": "judge_plan: ctx.use(JUDGE)"
+        },
+        {
+          "path": "pema-agent/backend/apps/agent/plugins/jev/__init__.py",
+          "line": 1,
+          "end_line": 6,
+          "label": "plugin jev"
+        }
+      ]
+    },
+    {
+      "id": "result",
+      "type": "backend",
+      "label": "Gói cho agent",
+      "sublabel": "≤6 đoạn, ≤6000 ký tự",
+      "stage": 4,
+      "row": 2,
+      "sources": [
+        {
+          "path": "pema-agent/backend/apps/agent/plugins/knowledge/search.py",
+          "line": 264,
+          "end_line": 297,
+          "label": "_packed, tool_text"
+        },
+        {
+          "path": "pema-agent/backend/apps/agent/plugins/knowledge/plugin.py",
+          "line": 82,
+          "end_line": 89,
+          "label": "search settings"
+        }
+      ]
+    }
+  ],
+  "flows": [
+    {
+      "id": "staff-ingest",
+      "from": "staff",
+      "to": "ingest",
+      "label": "tài liệu",
+      "classification": "md, txt",
+      "variant": "emphasis"
+    },
+    {
+      "id": "ingest-kbsource",
+      "from": "ingest",
+      "to": "kbsource",
+      "label": "source + chunks",
+      "classification": "ngay lập tức",
+      "variant": "emphasis"
+    },
+    {
+      "id": "kbsource-embedjob",
+      "from": "kbsource",
+      "to": "embedjob",
+      "label": "đoạn thiếu vector",
+      "classification": "theo lô",
+      "variant": "dashed"
+    },
+    {
+      "id": "embedjob-embedsvc",
+      "from": "embedjob",
+      "to": "embedsvc",
+      "label": "văn bản",
+      "classification": "HTTPS",
+      "variant": "dashed"
+    },
+    {
+      "id": "embedsvc-kbemb",
+      "from": "embedsvc",
+      "to": "kbemb",
+      "label": "vector",
+      "classification": "theo text_hash",
+      "variant": "dashed"
+    },
+    {
+      "id": "question-qembed",
+      "from": "question",
+      "to": "qembed",
+      "label": "câu hỏi",
+      "classification": "mỗi cách hỏi",
+      "variant": "default"
+    },
+    {
+      "id": "question-keyword",
+      "from": "question",
+      "to": "keyword",
+      "label": "từ khóa đã gập dấu",
+      "classification": "mỗi cách hỏi",
+      "variant": "emphasis"
+    },
+    {
+      "id": "kbsource-keyword",
+      "from": "kbsource",
+      "to": "keyword",
+      "label": "ứng viên",
+      "classification": "tsvector",
+      "variant": "default"
+    },
+    {
+      "id": "qembed-vector",
+      "from": "qembed",
+      "to": "vector",
+      "label": "vector câu hỏi",
+      "classification": "hoặc bỏ nhánh",
+      "variant": "default"
+    },
+    {
+      "id": "kbemb-vector",
+      "from": "kbemb",
+      "to": "vector",
+      "label": "cosine",
+      "classification": "cùng space",
+      "variant": "default"
+    },
+    {
+      "id": "keyword-fuse",
+      "from": "keyword",
+      "to": "fuse",
+      "label": "danh sách",
+      "classification": "luôn có",
+      "variant": "emphasis"
+    },
+    {
+      "id": "vector-fuse",
+      "from": "vector",
+      "to": "fuse",
+      "label": "danh sách",
+      "classification": "nếu có",
+      "variant": "default"
+    },
+    {
+      "id": "fuse-judge",
+      "from": "fuse",
+      "to": "judge",
+      "label": "đoạn đầu bảng",
+      "classification": "nếu bật",
+      "variant": "dashed"
+    },
+    {
+      "id": "judge-result",
+      "from": "judge",
+      "to": "result",
+      "label": "đoạn giữ lại",
+      "classification": "có căn cứ",
+      "variant": "dashed"
+    },
+    {
+      "id": "fuse-result",
+      "from": "fuse",
+      "to": "result",
+      "label": "đoạn + ngân sách",
+      "classification": "mặc định",
+      "variant": "emphasis"
+    },
+    {
+      "id": "result-kbgap",
+      "from": "result",
+      "to": "kbgap",
+      "label": "không có đoạn nào",
+      "classification": "ghi lỗ hổng",
+      "variant": "dashed"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Vì sao tìm được ngay cả khi không có vector",
+      "items": [
+        "Tài liệu thêm xong là tìm được bằng từ khóa (tsvector + BM25 trong Postgres); vector có sau, do job embed làm theo lô",
+        "Nhánh vector không bao giờ làm tìm kiếm thất bại hay chờ lâu: tắt, lỗi hay quá 10 s thì kết quả đúng bằng kết quả từ khóa",
+        "Vector thuộc về văn bản (text_hash), không thuộc hàng chunk: cắt lại tài liệu không phải nhúng lại"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Agent thấy gì",
+      "items": [
+        "Prompt: section 'Kho tri thức' (đóng băng) dạy cách hỏi; section 'Mục lục kho' (mỗi lượt) liệt kê ≤ 40 tài liệu đang hiệu lực",
+        "Tool trả từng đoạn kèm [i] mã tài liệu · tiêu đề · đường dẫn mục; kb_read đọc trọn tài liệu theo mã (≤ 8000 ký tự)",
+        "Không có đoạn nào: tool bảo đừng đoán, tìm lại bằng từ khác hoặc nói chưa có thông tin; câu hỏi được ghi vào kb_gap"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Ranh giới",
+      "items": [
+        "Mọi kênh thấy cùng một kho (chưa tách patient/staff); tài liệu có audience, lifecycle, effective_from/to, approved",
+        "Khóa của dịch vụ embedding niêm phong bằng khóa dịch vụ, lưu riêng trong agent_plugin_record; gọi ra ngoài qua egress",
+        "Bộ chấm jev là plugin khác, dùng qua ctx.use('judge'): tắt jev thì tìm kiếm vẫn chạy, chỉ bỏ bước chấm"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Từng ô, đầy đủ",
+      "items": [
+        "Vào: nhân viên thêm md, txt (pdf, docx, xlsx bị từ chối cho tới khi có Docling); kb_search nhận query + tối đa 2 cách hỏi khác + số đoạn",
+        "Ingest: cắt đoạn ngay khi thêm, tsvector + term_counts cho BM25, nhận diện dịch vụ được nhắc tới; job embed nhúng theo lô EMBED_BATCH, lùi 5/15/60/300 s khi dịch vụ lỗi, nhúng câu hỏi có cache 512",
+        "Dịch vụ embedding mặc định qwen/qwen3-embedding-8b 1024 chiều, gọi qua egress, khóa niêm phong; kb_source/kb_chunk chỉ tính nguồn đang hiệu lực (effective_from/to, lifecycle), GIN trên terms",
+        "Tìm: hai nhánh chạy song song cho mỗi cách hỏi; vector cosine ≥ 0,35; xếp vector trước, rank fusion giữa các cách hỏi, ×1,25 cho đoạn gắn dịch vụ được hỏi, ≤3 đoạn mỗi tài liệu",
+        "Ra: jev chấm (nếu bật) rồi gói ≤6 đoạn, ≤6000 ký tự (tối đa 8000), mỗi đoạn kèm mã tài liệu, tiêu đề, đường dẫn mục; không có đoạn thì ghi kb_gap"
+      ]
+    }
+  ]
+}

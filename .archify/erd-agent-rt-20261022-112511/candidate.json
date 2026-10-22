@@ -1,0 +1,1079 @@
+{
+  "schema_version": 1,
+  "diagram_type": "erd",
+  "meta": {
+    "title": "Schema agent_rt: mọi bảng của lõi agent (không tính bảng của plugin)",
+    "locale": "vi",
+    "output": ".archify/erd-agent-rt-20261022-112511/agent-rt.html",
+    "quality_profile": "standard",
+    "repository": {
+      "url": "git@github-personal20:o00oleanho00o/cnbphongkham.git",
+      "link_mode": "local-only",
+      "revision": "7d86533840b79a213b046bf19e0de37db65f3b14"
+    }
+  },
+  "layout": {
+    "mode": "grid"
+  },
+  "entities": [
+    {
+      "id": "agent_session",
+      "label": "agent_session",
+      "tag": "phiên",
+      "row": 0,
+      "col": 0,
+      "sources": [
+        {
+          "path": "pema-agent/backend/apps/agent/alembic/versions/0001_baseline.sql",
+          "line": 165,
+          "end_line": 182,
+          "label": "agent_session"
+        }
+      ],
+      "attributes": [
+        {
+          "name": "tenant_id",
+          "type": "text",
+          "key": "pk"
+        },
+        {
+          "name": "session_id",
+          "type": "text",
+          "key": "pk"
+        },
+        {
+          "name": "agent",
+          "type": "text"
+        },
+        {
+          "name": "channel",
+          "type": "text"
+        },
+        {
+          "name": "user_id",
+          "type": "text"
+        },
+        {
+          "name": "message_count",
+          "type": "integer"
+        },
+        {
+          "name": "prompt_text",
+          "type": "text"
+        },
+        {
+          "name": "prompt_fingerprint",
+          "type": "text"
+        },
+        {
+          "name": "summary",
+          "type": "text"
+        },
+        {
+          "name": "first_kept",
+          "type": "integer"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamptz"
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamptz"
+        }
+      ]
+    },
+    {
+      "id": "agent_message",
+      "label": "agent_message",
+      "tag": "phiên",
+      "row": 1,
+      "col": 0,
+      "sources": [
+        {
+          "path": "pema-agent/backend/apps/agent/alembic/versions/0001_baseline.sql",
+          "line": 74,
+          "end_line": 82,
+          "label": "agent_message"
+        },
+        {
+          "path": "pema-agent/backend/apps/agent/alembic/versions/0001_baseline.sql",
+          "line": 271,
+          "end_line": 272,
+          "label": "FK → agent_session"
+        }
+      ],
+      "attributes": [
+        {
+          "name": "tenant_id",
+          "type": "text",
+          "key": [
+            "pk",
+            "fk"
+          ],
+          "references": "agent_session.tenant_id"
+        },
+        {
+          "name": "session_id",
+          "type": "text",
+          "key": [
+            "pk",
+            "fk"
+          ],
+          "references": "agent_session.session_id"
+        },
+        {
+          "name": "seq",
+          "type": "integer",
+          "key": "pk"
+        },
+        {
+          "name": "uid",
+          "type": "uuid",
+          "key": "uk"
+        },
+        {
+          "name": "message",
+          "type": "jsonb"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamptz"
+        }
+      ]
+    },
+    {
+      "id": "agent_conversation",
+      "label": "agent_conversation",
+      "tag": "phiên",
+      "row": 2,
+      "col": 0,
+      "sources": [
+        {
+          "path": "pema-agent/backend/apps/agent/alembic/versions/0001_baseline.sql",
+          "line": 7,
+          "end_line": 16,
+          "label": "agent_conversation"
+        },
+        {
+          "path": "pema-agent/backend/packages/agent-core/src/agentcore/channels.py",
+          "line": 184,
+          "end_line": 195,
+          "label": "session_id_for(epoch)"
+        }
+      ],
+      "attributes": [
+        {
+          "name": "tenant_id",
+          "type": "text",
+          "key": "pk"
+        },
+        {
+          "name": "agent",
+          "type": "text",
+          "key": "pk"
+        },
+        {
+          "name": "channel",
+          "type": "text",
+          "key": "pk"
+        },
+        {
+          "name": "conversation_id",
+          "type": "text",
+          "key": "pk"
+        },
+        {
+          "name": "epoch",
+          "type": "integer"
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamptz"
+        }
+      ]
+    },
+    {
+      "id": "agent_ingress",
+      "label": "agent_ingress",
+      "tag": "hàng đợi",
+      "row": 0,
+      "col": 1,
+      "sources": [
+        {
+          "path": "pema-agent/backend/apps/agent/alembic/versions/0001_baseline.sql",
+          "line": 18,
+          "end_line": 49,
+          "label": "agent_ingress"
+        },
+        {
+          "path": "pema-agent/backend/apps/agent/alembic/versions/0001_baseline.sql",
+          "line": 261,
+          "end_line": 265,
+          "label": "3 index một phần"
+        }
+      ],
+      "attributes": [
+        {
+          "name": "id",
+          "type": "bigint identity",
+          "key": "pk"
+        },
+        {
+          "name": "tenant_id",
+          "type": "text",
+          "key": "uk"
+        },
+        {
+          "name": "agent",
+          "type": "text",
+          "key": "uk"
+        },
+        {
+          "name": "channel",
+          "type": "text",
+          "key": "uk"
+        },
+        {
+          "name": "external_id",
+          "type": "text",
+          "key": "uk"
+        },
+        {
+          "name": "conversation_id",
+          "type": "text"
+        },
+        {
+          "name": "user_id",
+          "type": "text"
+        },
+        {
+          "name": "session_id",
+          "type": "text"
+        },
+        {
+          "name": "text",
+          "type": "text (≤20000)"
+        },
+        {
+          "name": "metadata",
+          "type": "jsonb"
+        },
+        {
+          "name": "status",
+          "type": "text (5 giá trị)"
+        },
+        {
+          "name": "attempts",
+          "type": "integer"
+        },
+        {
+          "name": "error_kind",
+          "type": "text"
+        },
+        {
+          "name": "reply",
+          "type": "jsonb"
+        },
+        {
+          "name": "received_at",
+          "type": "timestamptz"
+        },
+        {
+          "name": "started_at",
+          "type": "timestamptz"
+        },
+        {
+          "name": "finished_at",
+          "type": "timestamptz"
+        },
+        {
+          "name": "delivery",
+          "type": "text (5 giá trị)"
+        },
+        {
+          "name": "delivery_attempts",
+          "type": "integer"
+        },
+        {
+          "name": "delivered_parts",
+          "type": "integer"
+        },
+        {
+          "name": "delivery_error",
+          "type": "text (≤1000)"
+        },
+        {
+          "name": "delivery_at",
+          "type": "timestamptz"
+        },
+        {
+          "name": "delivery_after",
+          "type": "timestamptz"
+        }
+      ]
+    },
+    {
+      "id": "agent_follow_up",
+      "label": "agent_follow_up",
+      "tag": "hàng đợi",
+      "row": 1,
+      "col": 1,
+      "sources": [
+        {
+          "path": "pema-agent/backend/apps/agent/alembic/versions/0003_follow_up.sql",
+          "line": 8,
+          "end_line": 29,
+          "label": "agent_follow_up"
+        }
+      ],
+      "attributes": [
+        {
+          "name": "tenant_id",
+          "type": "text",
+          "key": "pk"
+        },
+        {
+          "name": "agent",
+          "type": "text",
+          "key": "pk"
+        },
+        {
+          "name": "channel",
+          "type": "text",
+          "key": "pk"
+        },
+        {
+          "name": "conversation_id",
+          "type": "text",
+          "key": "pk"
+        },
+        {
+          "name": "user_id",
+          "type": "text"
+        },
+        {
+          "name": "session_id",
+          "type": "text"
+        },
+        {
+          "name": "state",
+          "type": "text (6 giá trị)"
+        },
+        {
+          "name": "reason",
+          "type": "text (≤500)"
+        },
+        {
+          "name": "next_at",
+          "type": "timestamptz"
+        },
+        {
+          "name": "paused_until",
+          "type": "timestamptz"
+        },
+        {
+          "name": "stopped",
+          "type": "boolean"
+        },
+        {
+          "name": "unanswered",
+          "type": "integer"
+        },
+        {
+          "name": "last_sent_at",
+          "type": "timestamptz"
+        },
+        {
+          "name": "reviewed_through",
+          "type": "bigint"
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamptz"
+        }
+      ]
+    },
+    {
+      "id": "agent_turn",
+      "label": "agent_turn",
+      "tag": "trace",
+      "row": 0,
+      "col": 2,
+      "sources": [
+        {
+          "path": "pema-agent/backend/apps/agent/alembic/versions/0001_baseline.sql",
+          "line": 184,
+          "end_line": 205,
+          "label": "agent_turn"
+        }
+      ],
+      "attributes": [
+        {
+          "name": "turn_id",
+          "type": "uuid",
+          "key": "pk"
+        },
+        {
+          "name": "tenant_id",
+          "type": "text"
+        },
+        {
+          "name": "session_id",
+          "type": "text"
+        },
+        {
+          "name": "agent",
+          "type": "text"
+        },
+        {
+          "name": "model",
+          "type": "text"
+        },
+        {
+          "name": "channel",
+          "type": "text"
+        },
+        {
+          "name": "user_id",
+          "type": "text"
+        },
+        {
+          "name": "started_at",
+          "type": "timestamptz"
+        },
+        {
+          "name": "duration_ms",
+          "type": "integer"
+        },
+        {
+          "name": "stop",
+          "type": "text (6 giá trị)"
+        },
+        {
+          "name": "steps",
+          "type": "integer"
+        },
+        {
+          "name": "error_kind",
+          "type": "text"
+        },
+        {
+          "name": "compactions",
+          "type": "integer"
+        },
+        {
+          "name": "input_tokens",
+          "type": "integer"
+        },
+        {
+          "name": "output_tokens",
+          "type": "integer"
+        },
+        {
+          "name": "cache_read_tokens",
+          "type": "integer"
+        },
+        {
+          "name": "cache_write_tokens",
+          "type": "integer"
+        },
+        {
+          "name": "reasoning_tokens",
+          "type": "integer"
+        }
+      ]
+    },
+    {
+      "id": "agent_turn_event",
+      "label": "agent_turn_event",
+      "tag": "trace",
+      "row": 1,
+      "col": 2,
+      "sources": [
+        {
+          "path": "pema-agent/backend/apps/agent/alembic/versions/0001_baseline.sql",
+          "line": 207,
+          "end_line": 217,
+          "label": "agent_turn_event"
+        },
+        {
+          "path": "pema-agent/backend/apps/agent/alembic/versions/0001_baseline.sql",
+          "line": 274,
+          "end_line": 275,
+          "label": "FK → agent_turn"
+        }
+      ],
+      "attributes": [
+        {
+          "name": "turn_id",
+          "type": "uuid",
+          "key": [
+            "pk",
+            "fk"
+          ],
+          "references": "agent_turn.turn_id"
+        },
+        {
+          "name": "seq",
+          "type": "integer",
+          "key": "pk"
+        },
+        {
+          "name": "kind",
+          "type": "text (8 loại)"
+        },
+        {
+          "name": "step",
+          "type": "integer"
+        },
+        {
+          "name": "name",
+          "type": "text"
+        },
+        {
+          "name": "duration_ms",
+          "type": "integer"
+        },
+        {
+          "name": "is_error",
+          "type": "boolean"
+        },
+        {
+          "name": "detail",
+          "type": "jsonb"
+        }
+      ]
+    },
+    {
+      "id": "agent_settings",
+      "label": "agent_settings",
+      "tag": "cài đặt",
+      "row": 0,
+      "col": 3,
+      "sources": [
+        {
+          "path": "pema-agent/backend/apps/agent/alembic/versions/0002_agent_settings.sql",
+          "line": 4,
+          "end_line": 28,
+          "label": "agent_settings"
+        },
+        {
+          "path": "pema-agent/backend/apps/agent/alembic/versions/0003_follow_up.sql",
+          "line": 3,
+          "end_line": 6,
+          "label": "+ follow_up_*"
+        }
+      ],
+      "attributes": [
+        {
+          "name": "tenant_id",
+          "type": "text",
+          "key": "pk"
+        },
+        {
+          "name": "agent",
+          "type": "text",
+          "key": "pk"
+        },
+        {
+          "name": "timezone",
+          "type": "text"
+        },
+        {
+          "name": "failure_reply",
+          "type": "text (≤1000)"
+        },
+        {
+          "name": "variables",
+          "type": "jsonb"
+        },
+        {
+          "name": "persona",
+          "type": "text (≤20000)"
+        },
+        {
+          "name": "rules",
+          "type": "text (≤20000)"
+        },
+        {
+          "name": "memory_enabled",
+          "type": "boolean"
+        },
+        {
+          "name": "memory_agent_chars",
+          "type": "integer"
+        },
+        {
+          "name": "memory_user_chars",
+          "type": "integer"
+        },
+        {
+          "name": "tools",
+          "type": "jsonb"
+        },
+        {
+          "name": "follow_up_enabled",
+          "type": "boolean"
+        },
+        {
+          "name": "follow_up_channels",
+          "type": "jsonb"
+        },
+        {
+          "name": "version",
+          "type": "integer"
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamptz"
+        },
+        {
+          "name": "updated_by",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "id": "agent_model_settings",
+      "label": "agent_model_settings",
+      "tag": "cài đặt",
+      "row": 1,
+      "col": 3,
+      "sources": [
+        {
+          "path": "pema-agent/backend/apps/agent/alembic/versions/0001_baseline.sql",
+          "line": 106,
+          "end_line": 124,
+          "label": "agent_model_settings"
+        }
+      ],
+      "attributes": [
+        {
+          "name": "tenant_id",
+          "type": "text",
+          "key": "pk"
+        },
+        {
+          "name": "agent",
+          "type": "text",
+          "key": "pk"
+        },
+        {
+          "name": "provider",
+          "type": "text"
+        },
+        {
+          "name": "model",
+          "type": "text"
+        },
+        {
+          "name": "base_url",
+          "type": "text"
+        },
+        {
+          "name": "reasoning",
+          "type": "text"
+        },
+        {
+          "name": "dialect",
+          "type": "text"
+        },
+        {
+          "name": "api_key_enc",
+          "type": "text"
+        },
+        {
+          "name": "version",
+          "type": "integer"
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamptz"
+        },
+        {
+          "name": "entry_id",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "id": "agent_model_entry",
+      "label": "agent_model_entry",
+      "tag": "cài đặt",
+      "row": 2,
+      "col": 3,
+      "sources": [
+        {
+          "path": "pema-agent/backend/apps/agent/alembic/versions/0001_baseline.sql",
+          "line": 84,
+          "end_line": 104,
+          "label": "agent_model_entry"
+        }
+      ],
+      "attributes": [
+        {
+          "name": "tenant_id",
+          "type": "text",
+          "key": "pk"
+        },
+        {
+          "name": "agent",
+          "type": "text",
+          "key": "pk"
+        },
+        {
+          "name": "id",
+          "type": "text (32 hex)",
+          "key": "pk"
+        },
+        {
+          "name": "label",
+          "type": "text"
+        },
+        {
+          "name": "provider",
+          "type": "text"
+        },
+        {
+          "name": "model",
+          "type": "text"
+        },
+        {
+          "name": "base_url",
+          "type": "text"
+        },
+        {
+          "name": "reasoning",
+          "type": "text"
+        },
+        {
+          "name": "dialect",
+          "type": "text"
+        },
+        {
+          "name": "api_key_enc",
+          "type": "text"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamptz"
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamptz"
+        }
+      ]
+    },
+    {
+      "id": "agent_memory",
+      "label": "agent_memory",
+      "tag": "cài đặt",
+      "row": 3,
+      "col": 3,
+      "sources": [
+        {
+          "path": "pema-agent/backend/apps/agent/alembic/versions/0001_baseline.sql",
+          "line": 60,
+          "end_line": 72,
+          "label": "agent_memory"
+        }
+      ],
+      "attributes": [
+        {
+          "name": "tenant_id",
+          "type": "text",
+          "key": "pk"
+        },
+        {
+          "name": "agent",
+          "type": "text",
+          "key": "pk"
+        },
+        {
+          "name": "target",
+          "type": "text (agent|user)",
+          "key": "pk"
+        },
+        {
+          "name": "user_id",
+          "type": "text ('' cho agent)",
+          "key": "pk"
+        },
+        {
+          "name": "content",
+          "type": "text (≤20000)"
+        },
+        {
+          "name": "version",
+          "type": "integer"
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamptz"
+        }
+      ]
+    },
+    {
+      "id": "agent_plugin",
+      "label": "agent_plugin",
+      "tag": "plugin",
+      "row": 0,
+      "col": 4,
+      "sources": [
+        {
+          "path": "pema-agent/backend/apps/agent/alembic/versions/0001_baseline.sql",
+          "line": 126,
+          "end_line": 140,
+          "label": "agent_plugin"
+        }
+      ],
+      "attributes": [
+        {
+          "name": "tenant_id",
+          "type": "text",
+          "key": "pk"
+        },
+        {
+          "name": "agent",
+          "type": "text",
+          "key": "pk"
+        },
+        {
+          "name": "name",
+          "type": "text",
+          "key": "pk"
+        },
+        {
+          "name": "enabled",
+          "type": "boolean"
+        },
+        {
+          "name": "config",
+          "type": "jsonb (≤64 KB)"
+        },
+        {
+          "name": "secrets_enc",
+          "type": "text"
+        },
+        {
+          "name": "install",
+          "type": "jsonb"
+        },
+        {
+          "name": "last_error",
+          "type": "text (≤4000)"
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamptz"
+        }
+      ]
+    },
+    {
+      "id": "agent_plugin_record",
+      "label": "agent_plugin_record",
+      "tag": "plugin",
+      "row": 1,
+      "col": 4,
+      "sources": [
+        {
+          "path": "pema-agent/backend/apps/agent/alembic/versions/0001_baseline.sql",
+          "line": 153,
+          "end_line": 163,
+          "label": "agent_plugin_record"
+        },
+        {
+          "path": "pema-agent/backend/apps/agent/agent_app/plugins/records.py",
+          "line": 1,
+          "end_line": 3,
+          "label": "ctx.storage"
+        }
+      ],
+      "attributes": [
+        {
+          "name": "tenant_id",
+          "type": "text",
+          "key": "pk"
+        },
+        {
+          "name": "agent",
+          "type": "text",
+          "key": "pk"
+        },
+        {
+          "name": "plugin",
+          "type": "text",
+          "key": "pk"
+        },
+        {
+          "name": "key",
+          "type": "text (≤300)",
+          "key": "pk"
+        },
+        {
+          "name": "value",
+          "type": "jsonb (≤256 KB)"
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamptz"
+        }
+      ]
+    },
+    {
+      "id": "agent_plugin_migration",
+      "label": "agent_plugin_migration",
+      "tag": "plugin",
+      "row": 2,
+      "col": 4,
+      "sources": [
+        {
+          "path": "pema-agent/backend/apps/agent/alembic/versions/0001_baseline.sql",
+          "line": 142,
+          "end_line": 151,
+          "label": "agent_plugin_migration"
+        }
+      ],
+      "attributes": [
+        {
+          "name": "plugin",
+          "type": "text",
+          "key": "pk"
+        },
+        {
+          "name": "version",
+          "type": "integer",
+          "key": "pk"
+        },
+        {
+          "name": "name",
+          "type": "text"
+        },
+        {
+          "name": "checksum",
+          "type": "text"
+        },
+        {
+          "name": "table_prefix",
+          "type": "text (kb_, sk_, cv_…)"
+        },
+        {
+          "name": "applied_at",
+          "type": "timestamptz"
+        }
+      ],
+      "width": 280
+    }
+  ],
+  "relationships": [
+    {
+      "id": "message-session",
+      "from": "agent_message",
+      "to": "agent_session",
+      "label": "FK, xóa theo",
+      "fromCardinality": "many",
+      "toCardinality": "one"
+    },
+    {
+      "id": "event-turn",
+      "from": "agent_turn_event",
+      "to": "agent_turn",
+      "label": "FK, xóa theo",
+      "fromCardinality": "many",
+      "toCardinality": "one"
+    },
+    {
+      "id": "ingress-session",
+      "from": "agent_ingress",
+      "to": "agent_session",
+      "label": "session_id (không FK)",
+      "fromCardinality": "many",
+      "toCardinality": "one",
+      "identifying": false,
+      "variant": "dashed"
+    },
+    {
+      "id": "turn-session",
+      "from": "agent_turn",
+      "to": "agent_session",
+      "label": "session_id (không FK)",
+      "fromCardinality": "many",
+      "toCardinality": "one",
+      "identifying": false,
+      "variant": "dashed"
+    },
+    {
+      "id": "conversation-session",
+      "from": "agent_conversation",
+      "to": "agent_session",
+      "label": "epoch nằm trong session_id",
+      "fromCardinality": "one",
+      "toCardinality": "many",
+      "identifying": false,
+      "variant": "dashed"
+    },
+    {
+      "id": "followup-ingress",
+      "from": "agent_follow_up",
+      "to": "agent_ingress",
+      "label": "reviewed_through = id",
+      "fromCardinality": "one",
+      "toCardinality": "one",
+      "identifying": false,
+      "variant": "dashed"
+    },
+    {
+      "id": "settings-entry",
+      "from": "agent_model_settings",
+      "to": "agent_model_entry",
+      "label": "entry_id đang dùng",
+      "fromCardinality": "one",
+      "toCardinality": "one",
+      "fromOptional": true,
+      "toOptional": true,
+      "identifying": false,
+      "variant": "dashed"
+    },
+    {
+      "id": "record-plugin",
+      "from": "agent_plugin_record",
+      "to": "agent_plugin",
+      "label": "cùng tên plugin (không FK)",
+      "fromCardinality": "many",
+      "toCardinality": "one",
+      "toOptional": true,
+      "identifying": false,
+      "variant": "dashed"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Chỉ hai FK thật",
+      "items": [
+        "agent_message → agent_session và agent_turn_event → agent_turn (ON DELETE CASCADE): xóa phiên là xóa lịch sử; xóa turn là xóa sự kiện",
+        "Mọi liên kết khác là theo giá trị (session_id, conversation_id, tên plugin): các bảng có thể sống độc lập, kể cả dữ liệu plugin khi plugin tắt",
+        "Mọi bảng khóa theo (tenant_id, agent): một database phục vụ nhiều agent, phiên của agent này không đọc được từ agent khác (SessionOwnerError)"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Ai ghi bảng nào",
+      "items": [
+        "run_turn: agent_message (append có seq), agent_session (prompt_text, summary), agent_turn + agent_turn_event (một giao dịch, cuối lượt)",
+        "Dispatcher / ChannelHub: agent_ingress (status, delivery); FollowUps: agent_follow_up",
+        "Trang quản trị: agent_settings, agent_model_settings, agent_model_entry, agent_plugin; tool memory: agent_memory; plugin: agent_plugin_record"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Bí mật và quyền",
+      "items": [
+        "api_key_enc, secrets_enc: mã hóa bằng khóa dịch vụ (AGENT_SECRET_KEY) trước khi vào DB; model không bao giờ thấy",
+        "Role agent_rt_app: chỉ SELECT/INSERT trên agent_turn và agent_turn_event (trace không sửa được), chỉ SELECT trên agent_plugin_migration",
+        "Bảng của plugin (kb_*, sk_*, cv_*, crm_*) cũng ở schema agent_rt nhưng do migration của từng plugin tạo; xem sơ đồ kho tri thức"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,506 @@
+{
+  "schema_version": 1,
+  "diagram_type": "class",
+  "meta": {
+    "title": "Cổng và lớp cắm của lõi: muốn thay model, kho, kênh thì cắm vào đâu",
+    "locale": "vi",
+    "output": ".archify/class-core-ports-20261022-112511/core-ports.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "git@github-personal20:o00oleanho00o/cnbphongkham.git",
+      "link_mode": "local-only",
+      "revision": "7d86533840b79a213b046bf19e0de37db65f3b14"
+    }
+  },
+  "layout": {
+    "mode": "grid"
+  },
+  "types": [
+    {
+      "id": "model_client",
+      "label": "ModelClient",
+      "kind": "interface",
+      "sublabel": "agentcore.harness.model.types: một lời gọi model",
+      "row": 0,
+      "col": 0,
+      "methods": [
+        {
+          "name": "complete",
+          "parameters": "request: LlmRequest, sink?",
+          "returns": "AssistantResult",
+          "visibility": "public",
+          "abstract": true
+        }
+      ],
+      "sources": [
+        {
+          "path": "pema-agent/backend/packages/agent-core/src/agentcore/harness/model/types.py",
+          "line": 22,
+          "end_line": 48,
+          "label": "LlmRequest, ModelClient"
+        }
+      ]
+    },
+    {
+      "id": "session_store",
+      "label": "SessionStore",
+      "kind": "interface",
+      "sublabel": "agentcore.harness.store.base: lịch sử, prompt, tóm tắt",
+      "row": 0,
+      "col": 1,
+      "methods": [
+        {
+          "name": "load / append",
+          "parameters": "tenant, session, message",
+          "returns": "list[Message]",
+          "visibility": "public",
+          "abstract": true
+        },
+        {
+          "name": "load_prompt / save_prompt",
+          "parameters": "StoredPrompt",
+          "returns": "StoredPrompt | None",
+          "visibility": "public",
+          "abstract": true
+        },
+        {
+          "name": "load_compaction / save_compaction",
+          "parameters": "CompactionRecord",
+          "returns": "CompactionRecord | None",
+          "visibility": "public",
+          "abstract": true
+        }
+      ],
+      "sources": [
+        {
+          "path": "pema-agent/backend/packages/agent-core/src/agentcore/harness/store/base.py",
+          "line": 24,
+          "end_line": 35,
+          "label": "SessionStore"
+        }
+      ]
+    },
+    {
+      "id": "channel_adapter",
+      "label": "ChannelAdapter",
+      "kind": "interface",
+      "sublabel": "agentcore.channels: một nền tảng chat",
+      "row": 0,
+      "col": 2,
+      "attributes": [
+        {
+          "name": "name",
+          "type": "str",
+          "visibility": "public"
+        },
+        {
+          "name": "capabilities",
+          "type": "ChannelCapabilities",
+          "visibility": "public"
+        }
+      ],
+      "methods": [
+        {
+          "name": "start",
+          "parameters": "receive: Receive",
+          "returns": "None",
+          "visibility": "public",
+          "abstract": true
+        },
+        {
+          "name": "stop",
+          "returns": "None",
+          "visibility": "public",
+          "abstract": true
+        },
+        {
+          "name": "send",
+          "parameters": "message: OutboundMessage",
+          "returns": "None",
+          "visibility": "public",
+          "abstract": true
+        }
+      ],
+      "sources": [
+        {
+          "path": "pema-agent/backend/packages/agent-core/src/agentcore/channels.py",
+          "line": 111,
+          "end_line": 126,
+          "label": "ChannelAdapter"
+        },
+        {
+          "path": "pema-agent/backend/packages/agent-core/src/agentcore/channels.py",
+          "line": 129,
+          "end_line": 160,
+          "label": "4 protocol tùy chọn của kênh"
+        }
+      ]
+    },
+    {
+      "id": "dynamic_model",
+      "label": "DynamicModel",
+      "kind": "class",
+      "sublabel": "agent_app: đọc cài đặt và khóa từ DB, dựng OpenAICompatModel hay AnthropicModel",
+      "row": 1,
+      "col": 0,
+      "attributes": [
+        {
+          "name": "model_name",
+          "type": "str",
+          "visibility": "public"
+        }
+      ],
+      "methods": [
+        {
+          "name": "current",
+          "returns": "ResolvedModel",
+          "visibility": "public"
+        },
+        {
+          "name": "invalidate",
+          "returns": "None",
+          "visibility": "public"
+        },
+        {
+          "name": "complete",
+          "parameters": "request, sink?",
+          "returns": "AssistantResult",
+          "visibility": "public"
+        }
+      ],
+      "sources": [
+        {
+          "path": "pema-agent/backend/apps/agent/agent_app/model_settings.py",
+          "line": 219,
+          "end_line": 277,
+          "label": "DynamicModel"
+        },
+        {
+          "path": "pema-agent/backend/packages/agent-core/src/agentcore/harness/model/openai_compat.py",
+          "line": 76,
+          "end_line": 108,
+          "label": "OpenAICompatModel"
+        },
+        {
+          "path": "pema-agent/backend/packages/agent-core/src/agentcore/harness/model/anthropic.py",
+          "line": 64,
+          "end_line": 104,
+          "label": "AnthropicModel"
+        }
+      ]
+    },
+    {
+      "id": "postgres_store",
+      "label": "PostgresSessionStore",
+      "kind": "class",
+      "sublabel": "agent_app.storage: agent_session + agent_message; InMemorySessionStore cho CLI, test",
+      "row": 1,
+      "col": 1,
+      "methods": [
+        {
+          "name": "open_session",
+          "parameters": "channel, user_id",
+          "returns": "SessionInfo",
+          "visibility": "public"
+        },
+        {
+          "name": "append",
+          "parameters": "message",
+          "returns": "None (seq khóa theo hàng phiên)",
+          "visibility": "public"
+        }
+      ],
+      "sources": [
+        {
+          "path": "pema-agent/backend/apps/agent/agent_app/storage.py",
+          "line": 186,
+          "end_line": 243,
+          "label": "PostgresSessionStore"
+        },
+        {
+          "path": "pema-agent/backend/packages/agent-core/src/agentcore/harness/store/memory.py",
+          "line": 9,
+          "end_line": 34,
+          "label": "InMemorySessionStore"
+        }
+      ]
+    },
+    {
+      "id": "zalo_channel",
+      "label": "ZaloBotChannel",
+      "kind": "class",
+      "sublabel": "plugin zalo (cũng ZaloPersonalChannel): đăng ký qua ctx.register_channel",
+      "row": 1,
+      "col": 2,
+      "sources": [
+        {
+          "path": "pema-agent/backend/apps/agent/plugins/zalo/bot/channel.py",
+          "line": 42,
+          "end_line": 42,
+          "label": "ZaloBotChannel"
+        },
+        {
+          "path": "pema-agent/backend/apps/agent/plugins/zalo/personal/channel.py",
+          "line": 59,
+          "end_line": 59,
+          "label": "ZaloPersonalChannel"
+        },
+        {
+          "path": "pema-agent/backend/apps/agent/plugins/zalo/plugin.py",
+          "line": 200,
+          "end_line": 200,
+          "label": "register_channel"
+        }
+      ]
+    },
+    {
+      "id": "memory_backend",
+      "label": "MemoryBackend",
+      "kind": "interface",
+      "sublabel": "agentcore.memory: một văn bản ghi chú mỗi khóa, ghi có kiểm version",
+      "row": 2,
+      "col": 0,
+      "methods": [
+        {
+          "name": "load",
+          "parameters": "key: MemoryKey",
+          "returns": "StoredNotes",
+          "visibility": "public",
+          "abstract": true
+        },
+        {
+          "name": "save",
+          "parameters": "key, text, expected_version",
+          "returns": "bool",
+          "visibility": "public",
+          "abstract": true
+        }
+      ],
+      "sources": [
+        {
+          "path": "pema-agent/backend/packages/agent-core/src/agentcore/memory/service.py",
+          "line": 44,
+          "end_line": 51,
+          "label": "MemoryBackend"
+        }
+      ]
+    },
+    {
+      "id": "tracer",
+      "label": "Tracer",
+      "kind": "interface",
+      "sublabel": "agentcore.trace: một trace mỗi lượt, chỉ số liệu",
+      "row": 2,
+      "col": 1,
+      "methods": [
+        {
+          "name": "record",
+          "parameters": "trace: TurnTrace",
+          "returns": "None",
+          "visibility": "public",
+          "abstract": true
+        }
+      ],
+      "sources": [
+        {
+          "path": "pema-agent/backend/packages/agent-core/src/agentcore/trace.py",
+          "line": 34,
+          "end_line": 51,
+          "label": "TurnTrace, Tracer"
+        }
+      ]
+    },
+    {
+      "id": "tool_spec",
+      "label": "ToolSpec",
+      "kind": "record",
+      "sublabel": "agentcore.harness.tools.spec: một tool, của lõi hay plugin đều cùng dạng",
+      "row": 2,
+      "col": 2,
+      "attributes": [
+        {
+          "name": "name",
+          "type": "str",
+          "visibility": "public"
+        },
+        {
+          "name": "args_model",
+          "type": "type[BaseModel]",
+          "visibility": "public"
+        },
+        {
+          "name": "handler",
+          "type": "(args, ToolContext) → ToolOutput",
+          "visibility": "public"
+        },
+        {
+          "name": "timeout_s",
+          "type": "float = 30",
+          "visibility": "public"
+        },
+        {
+          "name": "read_only",
+          "type": "bool (chạy song song)",
+          "visibility": "public"
+        },
+        {
+          "name": "max_result_chars",
+          "type": "int",
+          "visibility": "public"
+        },
+        {
+          "name": "prompt_args",
+          "type": "tuple[str] (injection_guard quét)",
+          "visibility": "public"
+        }
+      ],
+      "sources": [
+        {
+          "path": "pema-agent/backend/packages/agent-core/src/agentcore/harness/tools/spec.py",
+          "line": 21,
+          "end_line": 73,
+          "label": "ToolContext, ToolOutput, ToolSpec"
+        }
+      ]
+    },
+    {
+      "id": "postgres_memory",
+      "label": "PostgresMemoryBackend",
+      "kind": "class",
+      "sublabel": "agent_app.storage: agent_memory, INSERT lần đầu, UPDATE … WHERE version = :version",
+      "row": 3,
+      "col": 0,
+      "sources": [
+        {
+          "path": "pema-agent/backend/apps/agent/agent_app/storage.py",
+          "line": 89,
+          "end_line": 116,
+          "label": "PostgresMemoryBackend"
+        }
+      ]
+    },
+    {
+      "id": "postgres_tracer",
+      "label": "PostgresTracer",
+      "kind": "class",
+      "sublabel": "agent_app.storage: agent_turn + agent_turn_event trong một giao dịch",
+      "row": 3,
+      "col": 1,
+      "sources": [
+        {
+          "path": "pema-agent/backend/apps/agent/agent_app/storage.py",
+          "line": 344,
+          "end_line": 392,
+          "label": "PostgresTracer"
+        }
+      ]
+    },
+    {
+      "id": "hooks",
+      "label": "Hook (4 loại)",
+      "kind": "record",
+      "sublabel": "agentcore.harness.hooks.base: PreModelHook, PostModelHook, PreToolHook (chặn), PostToolHook",
+      "row": 3,
+      "col": 2,
+      "attributes": [
+        {
+          "name": "name",
+          "type": "str",
+          "visibility": "public"
+        },
+        {
+          "name": "run",
+          "type": "coroutine; PreToolHook → Allow | Deny | Rewrite",
+          "visibility": "public"
+        },
+        {
+          "name": "timeout_s",
+          "type": "float = 5",
+          "visibility": "public"
+        }
+      ],
+      "sources": [
+        {
+          "path": "pema-agent/backend/packages/agent-core/src/agentcore/harness/hooks/base.py",
+          "line": 55,
+          "end_line": 85,
+          "label": "4 loại hook"
+        },
+        {
+          "path": "pema-agent/backend/packages/agent-core/src/agentcore/harness/hooks/base.py",
+          "line": 122,
+          "end_line": 145,
+          "label": "before_tool fail closed"
+        }
+      ]
+    }
+  ],
+  "relationships": [
+    {
+      "id": "dynamic-realizes",
+      "from": "dynamic_model",
+      "to": "model_client",
+      "kind": "realization"
+    },
+    {
+      "id": "store-realizes",
+      "from": "postgres_store",
+      "to": "session_store",
+      "kind": "realization"
+    },
+    {
+      "id": "zalo-realizes",
+      "from": "zalo_channel",
+      "to": "channel_adapter",
+      "kind": "realization"
+    },
+    {
+      "id": "memory-realizes",
+      "from": "postgres_memory",
+      "to": "memory_backend",
+      "kind": "realization"
+    },
+    {
+      "id": "tracer-realizes",
+      "from": "postgres_tracer",
+      "to": "tracer",
+      "kind": "realization"
+    },
+    {
+      "id": "hooks-use-spec",
+      "from": "hooks",
+      "to": "tool_spec",
+      "kind": "dependency",
+      "label": "pre_tool nhận spec"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Lõi chỉ biết cổng",
+      "items": [
+        "run_turn nhận ModelClient, SessionStore, ToolRegistry (các ToolSpec), HookSet, Tracer, ContextManager: toàn là cổng hay dữ liệu",
+        "build_runtime chọn lớp cắm: có AGENT_DATABASE_URL thì Postgres*, không thì InMemory* (agent chat, test)",
+        "Test dùng ScriptedModel, ReplayModel (cassette) thay nhà cung cấp thật; cùng cổng ModelClient"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Thêm một thứ mới",
+      "items": [
+        "Nhà cung cấp model mới: một lớp complete() chuyển LlmRequest sang API của họ và phân loại lỗi thành ModelErrorKind; đăng ký trong model_factory",
+        "Kênh chat mới: một plugin với ChannelAdapter (+ ShowsTyping, ReportsTyping, PreparesText tùy chọn), ctx.register_channel; ChannelHub lo phần còn lại",
+        "Tool mới: một ToolSpec với pydantic args; T9 giữ danh sách đỏ cho tới khi chủ duyệt"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Hợp đồng ngầm phải giữ",
+      "items": [
+        "SessionStore.append: seq liên tục, tin ghi một lần dù kết nối rớt (uid); phiên của agent khác → SessionOwnerError",
+        "MemoryBackend.save trả False khi version khác: MemoryService đọc lại và thử lại 3 lần",
+        "ChannelAdapter.send ném ChannelSendError(retryable=False) cho lỗi vĩnh viễn, nếu không ChannelHub sẽ thử lại 4 lần"
+      ]
+    }
+  ]
+}

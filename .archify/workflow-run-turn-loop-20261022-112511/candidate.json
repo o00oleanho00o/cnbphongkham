@@ -1,0 +1,544 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Vòng lặp run_turn: mỗi bước, mỗi giới hạn, mỗi đường khôi phục",
+    "locale": "vi",
+    "output": ".archify/workflow-run-turn-loop-20261022-112511/run-turn-loop.html",
+    "quality_profile": "standard",
+    "repository": {
+      "url": "git@github-personal20:o00oleanho00o/cnbphongkham.git",
+      "link_mode": "local-only",
+      "revision": "7d86533840b79a213b046bf19e0de37db65f3b14"
+    }
+  },
+  "lanes": [
+    {
+      "id": "prep",
+      "label": "Mở lượt"
+    },
+    {
+      "id": "loop",
+      "label": "Mỗi bước (tối đa max_steps)"
+    },
+    {
+      "id": "tools",
+      "label": "Chạy tool"
+    },
+    {
+      "id": "guard",
+      "label": "Bảo vệ và khôi phục",
+      "variant": "exception"
+    },
+    {
+      "id": "end",
+      "label": "Kết thúc lượt"
+    }
+  ],
+  "phases": [
+    {
+      "id": "p-open",
+      "label": "Chuẩn bị",
+      "fromCol": 0,
+      "toCol": 1
+    },
+    {
+      "id": "p-loop",
+      "label": "Vòng lặp model ↔ tool",
+      "fromCol": 2,
+      "toCol": 4,
+      "variant": "emphasis"
+    },
+    {
+      "id": "p-end",
+      "label": "Trả lời",
+      "fromCol": 5,
+      "toCol": 5
+    }
+  ],
+  "mainPath": [
+    "open",
+    "repair",
+    "user",
+    "request",
+    "model",
+    "assistant",
+    "decide",
+    "trace"
+  ],
+  "nodes": [
+    {
+      "id": "open",
+      "lane": "prep",
+      "col": 0,
+      "type": "backend",
+      "label": "Mở lượt",
+      "sublabel": "prompt đóng băng, lịch sử",
+      "sources": [
+        {
+          "path": "pema-agent/backend/packages/agent-core/src/agentcore/loop/run_turn.py",
+          "line": 369,
+          "end_line": 372,
+          "label": "turn(): system, history"
+        },
+        {
+          "path": "pema-agent/backend/packages/agent-core/src/agentcore/prompt/builder.py",
+          "line": 97,
+          "end_line": 130,
+          "label": "system()"
+        }
+      ]
+    },
+    {
+      "id": "repair",
+      "lane": "prep",
+      "col": 1,
+      "type": "backend",
+      "label": "Vá lịch sử",
+      "sublabel": "tool call thiếu kết quả",
+      "sources": [
+        {
+          "path": "pema-agent/backend/packages/agent-core/src/agentcore/loop/run_turn.py",
+          "line": 373,
+          "end_line": 381,
+          "label": "missing_tool_results"
+        },
+        {
+          "path": "pema-agent/backend/packages/agent-core/src/agentcore/loop/repair.py",
+          "line": 1,
+          "end_line": 39,
+          "label": "repair"
+        }
+      ]
+    },
+    {
+      "id": "user",
+      "lane": "prep",
+      "col": 2,
+      "type": "database",
+      "label": "Ghi tin của khách",
+      "sublabel": "N tin gộp làm một",
+      "sources": [
+        {
+          "path": "pema-agent/backend/packages/agent-core/src/agentcore/loop/run_turn.py",
+          "line": 382,
+          "end_line": 384,
+          "label": "record user"
+        },
+        {
+          "path": "pema-agent/backend/apps/agent/agent_app/dispatcher.py",
+          "line": 293,
+          "end_line": 298,
+          "label": "texts gộp, steer_in"
+        }
+      ]
+    },
+    {
+      "id": "request",
+      "lane": "loop",
+      "col": 2,
+      "type": "backend",
+      "label": "Dựng yêu cầu",
+      "sublabel": "first_kept + context",
+      "tag": "LlmRequest",
+      "sources": [
+        {
+          "path": "pema-agent/backend/packages/agent-core/src/agentcore/loop/run_turn.py",
+          "line": 206,
+          "end_line": 224,
+          "label": "build, request_for"
+        },
+        {
+          "path": "pema-agent/backend/packages/agent-core/src/agentcore/prompt/builder.py",
+          "line": 145,
+          "end_line": 172,
+          "label": "context, with_context"
+        }
+      ]
+    },
+    {
+      "id": "model",
+      "lane": "loop",
+      "col": 3,
+      "type": "external",
+      "label": "Gọi model",
+      "sublabel": "hook → complete → hook",
+      "sources": [
+        {
+          "path": "pema-agent/backend/packages/agent-core/src/agentcore/loop/run_turn.py",
+          "line": 275,
+          "end_line": 314,
+          "label": "call_model"
+        }
+      ]
+    },
+    {
+      "id": "assistant",
+      "lane": "loop",
+      "col": 4,
+      "type": "database",
+      "label": "Ghi tin assistant",
+      "sublabel": "ghi trước khi tool chạy",
+      "sources": [
+        {
+          "path": "pema-agent/backend/packages/agent-core/src/agentcore/loop/run_turn.py",
+          "line": 396,
+          "end_line": 399,
+          "label": "record(result.message)"
+        }
+      ]
+    },
+    {
+      "id": "decide",
+      "lane": "loop",
+      "col": 5,
+      "type": "backend",
+      "label": "Có tool_use?",
+      "sublabel": "không: xong",
+      "tag": "rẽ nhánh",
+      "sources": [
+        {
+          "path": "pema-agent/backend/packages/agent-core/src/agentcore/loop/run_turn.py",
+          "line": 401,
+          "end_line": 407,
+          "label": "không tool → completed"
+        },
+        {
+          "path": "pema-agent/backend/packages/agent-core/src/agentcore/loop/run_turn.py",
+          "line": 352,
+          "end_line": 367,
+          "label": "take_steered"
+        }
+      ]
+    },
+    {
+      "id": "exec",
+      "lane": "tools",
+      "col": 5,
+      "type": "security",
+      "label": "ToolExecutor",
+      "sublabel": "pre_tool chặn; song song",
+      "sources": [
+        {
+          "path": "pema-agent/backend/packages/agent-core/src/agentcore/harness/tools/executor.py",
+          "line": 75,
+          "end_line": 127,
+          "label": "execute, _batches"
+        },
+        {
+          "path": "pema-agent/backend/packages/agent-core/src/agentcore/harness/tools/executor.py",
+          "line": 140,
+          "end_line": 173,
+          "label": "_checked, timeout"
+        }
+      ]
+    },
+    {
+      "id": "results",
+      "lane": "tools",
+      "col": 4,
+      "type": "database",
+      "label": "Ghi kết quả tool",
+      "sublabel": "loop guard; tin steer",
+      "sources": [
+        {
+          "path": "pema-agent/backend/packages/agent-core/src/agentcore/loop/run_turn.py",
+          "line": 408,
+          "end_line": 416,
+          "label": "record tool, watch, steer"
+        },
+        {
+          "path": "pema-agent/backend/packages/agent-core/src/agentcore/loop/guard.py",
+          "line": 79,
+          "end_line": 104,
+          "label": "LoopGuard.observe"
+        }
+      ]
+    },
+    {
+      "id": "compact",
+      "lane": "guard",
+      "col": 2,
+      "type": "backend",
+      "label": "Nén khi quá ngưỡng",
+      "sublabel": "flush memory rồi tóm tắt",
+      "sources": [
+        {
+          "path": "pema-agent/backend/packages/agent-core/src/agentcore/loop/run_turn.py",
+          "line": 226,
+          "end_line": 273,
+          "label": "compact"
+        },
+        {
+          "path": "pema-agent/backend/packages/agent-core/src/agentcore/context/policy.py",
+          "line": 30,
+          "end_line": 34,
+          "label": "threshold, keep_budget"
+        }
+      ]
+    },
+    {
+      "id": "retry",
+      "lane": "guard",
+      "col": 3,
+      "type": "backend",
+      "label": "Thử lại / nén mạnh",
+      "sublabel": "≤4 lần; overflow nén mạnh",
+      "sources": [
+        {
+          "path": "pema-agent/backend/packages/agent-core/src/agentcore/loop/run_turn.py",
+          "line": 287,
+          "end_line": 309,
+          "label": "ModelError"
+        },
+        {
+          "path": "pema-agent/backend/packages/agent-core/src/agentcore/loop/retry.py",
+          "line": 12,
+          "end_line": 38,
+          "label": "RetryPolicy"
+        }
+      ]
+    },
+    {
+      "id": "limits",
+      "lane": "guard",
+      "col": 4,
+      "type": "security",
+      "label": "Giới hạn lượt",
+      "sublabel": "bước, giờ, token, guard",
+      "sources": [
+        {
+          "path": "pema-agent/backend/packages/agent-core/src/agentcore/loop/run_turn.py",
+          "line": 386,
+          "end_line": 395,
+          "label": "deadline, budget"
+        },
+        {
+          "path": "pema-agent/backend/packages/agent-core/src/agentcore/loop/guard.py",
+          "line": 32,
+          "end_line": 41,
+          "label": "LoopGuardPolicy"
+        },
+        {
+          "path": "pema-agent/backend/apps/agent/agents/clinic/agent.toml",
+          "line": 44,
+          "end_line": 52,
+          "label": "[loop] của clinic"
+        }
+      ]
+    },
+    {
+      "id": "final",
+      "lane": "end",
+      "col": 3,
+      "type": "backend",
+      "label": "Lời gọi cuối",
+      "sublabel": "không tool, ép trả lời",
+      "sources": [
+        {
+          "path": "pema-agent/backend/packages/agent-core/src/agentcore/loop/run_turn.py",
+          "line": 418,
+          "end_line": 423,
+          "label": "final_step"
+        },
+        {
+          "path": "pema-agent/backend/packages/agent-core/src/agentcore/loop/run_turn.py",
+          "line": 534,
+          "end_line": 537,
+          "label": "_without_tool_calls"
+        }
+      ]
+    },
+    {
+      "id": "trace",
+      "lane": "end",
+      "col": 5,
+      "type": "database",
+      "label": "Trace + TurnResult",
+      "sublabel": "agent_turn + event",
+      "sources": [
+        {
+          "path": "pema-agent/backend/packages/agent-core/src/agentcore/loop/run_turn.py",
+          "line": 442,
+          "end_line": 450,
+          "label": "trace cả khi lỗi"
+        },
+        {
+          "path": "pema-agent/backend/packages/agent-core/src/agentcore/loop/run_turn.py",
+          "line": 525,
+          "end_line": 531,
+          "label": "_write_trace 10 s"
+        },
+        {
+          "path": "pema-agent/backend/packages/agent-core/src/agentcore/trace.py",
+          "line": 15,
+          "end_line": 17,
+          "label": "stop, event kinds"
+        }
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "id": "open-repair",
+      "from": "open",
+      "to": "repair"
+    },
+    {
+      "id": "repair-user",
+      "from": "repair",
+      "to": "user"
+    },
+    {
+      "id": "user-request",
+      "from": "user",
+      "to": "request",
+      "label": "bước 1",
+      "variant": "emphasis"
+    },
+    {
+      "id": "request-model",
+      "from": "request",
+      "to": "model",
+      "variant": "emphasis"
+    },
+    {
+      "id": "model-assistant",
+      "from": "model",
+      "to": "assistant",
+      "label": "AssistantResult"
+    },
+    {
+      "id": "assistant-decide",
+      "from": "assistant",
+      "to": "decide"
+    },
+    {
+      "id": "decide-trace",
+      "from": "decide",
+      "to": "trace",
+      "label": "không tool: completed",
+      "variant": "emphasis"
+    },
+    {
+      "id": "decide-exec",
+      "from": "decide",
+      "to": "exec",
+      "label": "có tool",
+      "role": "branch"
+    },
+    {
+      "id": "exec-results",
+      "from": "exec",
+      "to": "results",
+      "label": "một ToolResult mỗi call"
+    },
+    {
+      "id": "results-request",
+      "from": "results",
+      "to": "request",
+      "role": "return",
+      "variant": "emphasis",
+      "label": "bước tiếp"
+    },
+    {
+      "id": "request-compact",
+      "from": "request",
+      "to": "compact",
+      "label": "quá 75% cửa sổ",
+      "role": "branch",
+      "variant": "dashed",
+      "labelDy": 14
+    },
+    {
+      "id": "compact-request",
+      "from": "compact",
+      "to": "request",
+      "label": "dựng lại",
+      "role": "return",
+      "variant": "dashed",
+      "labelDy": -14
+    },
+    {
+      "id": "model-retry",
+      "from": "model",
+      "to": "retry",
+      "label": "ModelError",
+      "role": "error",
+      "variant": "security"
+    },
+    {
+      "id": "retry-model",
+      "from": "retry",
+      "to": "model",
+      "label": "gọi lại",
+      "role": "return",
+      "variant": "dashed"
+    },
+    {
+      "id": "results-limits",
+      "from": "results",
+      "to": "limits",
+      "label": "guard dừng, hết bước/giờ/token",
+      "role": "error",
+      "variant": "security"
+    },
+    {
+      "id": "limits-final",
+      "from": "limits",
+      "to": "final",
+      "label": "stop = loop | max_steps | deadline | budget"
+    },
+    {
+      "id": "final-trace",
+      "from": "final",
+      "to": "trace",
+      "label": "ghi tin cuối"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Bất biến của lịch sử",
+      "items": [
+        "Tin assistant ghi trước khi tool chạy; mỗi tool call đúng một kết quả; lượt bị cắt ngang được vá ở lượt sau",
+        "Khối <agent-context> và lời nhắc của loop guard chỉ nằm trong yêu cầu, không bao giờ lưu",
+        "Lượt lỗi (ModelError hết retry, lỗi khác): trace vẫn ghi với stop = error; Dispatcher đánh dấu tin failed",
+        "Khách nhắn thêm trong lúc trả lời đang được viết (steer): trả lời đó không gửi, ghi [System] vào lịch sử và model trả lời lại trong một bước nữa"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Thứ tự ưu tiên khi dừng",
+      "items": [
+        "Mũi tên quay về từ 'Ghi kết quả tool' tới 'Dựng yêu cầu' là bước tiếp theo của cùng lượt (results → request)",
+        "Trước mỗi bước (từ bước 2): hết giờ → deadline; hết token → budget",
+        "Sau tool: loop guard thấy 10 lần lặp y hệt hay 5 lỗi liền → loop; ngưỡng 3, 5, 8 lần chỉ nhắc",
+        "Hết max_steps mà còn gọi tool → max_steps; mọi trường hợp đều có một lời gọi cuối không tool",
+        "Lỗi model thử lại: rate_limit, transient, empty_response (Retry-After thắng nếu có); context_overflow → nén mạnh đúng một lần rồi gọi lại; lỗi khác: lượt lỗi ngay"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Mode hàng đợi (profile clinic: steer)",
+      "items": [
+        "followup: mỗi tin một lượt; collect: tin dồn của một người thành một lượt sau 0,8 s im (zalo-: 5 s, tối đa 20 s, lâu hơn khi khách đang gõ)",
+        "steer: như collect, và tin đến khi lượt đang chạy tool được ghi vào lịch sử trước lời gọi tiếp; trả lời đã làm xong mà khách vừa nhắn thì không gửi, model trả lời lại",
+        "Cùng phiên chỉ một lượt một lúc, khóa advisory Postgres xuyên tiến trình"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Từng ô, đầy đủ",
+      "items": [
+        "Mở lượt: system prompt đóng băng (dựng lại nếu vân tay đổi) + lịch sử; vá tool call thiếu kết quả thành 'interrupted'; ghi tin khách (collect gộp N tin)",
+        "Dựng yêu cầu: tin từ first_kept + khối <agent-context> (environment, status, catalog, skills, luật kênh, nhắc của guard); nén trước nếu quá 75% cửa sổ",
+        "Gọi model: before_model hooks (vd scenario_examples) → complete (stream) → after_model; ghi tin assistant trước khi tool chạy",
+        "ToolExecutor: tool lạ, JSON hỏng, pre_tool Deny, args sai schema → kết quả lỗi; ≤8 call/bước; read-only liền nhau chạy song song ≤4; timeout riêng từng tool; post_tool che bí mật, cảnh báo",
+        "Thử lại: rate_limit, transient, empty_response ≤4 lần, lùi 0,5→10 s (+jitter, Retry-After thắng); context_overflow: nén mạnh 1 lần; lỗi khác: lượt lỗi",
+        "Giới hạn clinic: 10 bước, 300 s, max_turn_tokens (chưa đặt); guard: nhắc ở 3/5/8 lần lặp y hệt, dừng ở 10; nhắc ở 3 lỗi liền, dừng ở 5",
+        "Lời gọi cuối: không tool, FINAL_TURN_NOTE; tool_use thừa bị bỏ; trace ghi agent_turn + agent_turn_event trong 10 s, lỗi cũng ghi"
+      ]
+    }
+  ]
+}

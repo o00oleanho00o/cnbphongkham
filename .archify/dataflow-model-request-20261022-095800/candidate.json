@@ -1,0 +1,180 @@
+{
+  "schema_version": 1,
+  "diagram_type": "dataflow",
+  "meta": {
+    "title": "Model thấy gì mỗi lần gọi: bốn lớp của một yêu cầu",
+    "locale": "vi",
+    "output": ".archify/dataflow-model-request-20261022-095800/model-request.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "git@github-personal20:o00oleanho00o/cnbphongkham.git",
+      "link_mode": "local-only",
+      "revision": "7d86533840b79a213b046bf19e0de37db65f3b14"
+    }
+  },
+  "stages": [
+    { "label": "Nguồn" },
+    { "label": "Lớp" },
+    { "label": "Gửi model" }
+  ],
+  "nodes": [
+    {
+      "id": "profile",
+      "type": "external",
+      "label": "Profile",
+      "sublabel": "SOUL.md, AGENTS.md, {{biến}}",
+      "stage": 0,
+      "row": 0,
+      "sources": [
+        { "path": "pema-agent/backend/apps/agent/agent_app/profile.py", "line": 3, "end_line": 4, "label": "SOUL, AGENTS" },
+        { "path": "pema-agent/backend/apps/agent/agents/clinic/agent.toml", "line": 12, "end_line": 18, "label": "biến, sections" }
+      ]
+    },
+    {
+      "id": "sessions",
+      "type": "backend",
+      "label": "Section phiên",
+      "sublabel": "lõi + plugin; ghi chú memory",
+      "stage": 0,
+      "row": 1,
+      "tag": "ổn định",
+      "sources": [
+        { "path": "pema-agent/backend/packages/agent-core/src/agentcore/prompt/builtin.py", "line": 1, "end_line": 6, "label": "thứ tự lõi" },
+        { "path": "pema-agent/backend/apps/agent/plugins/knowledge/plugin.py", "line": 194, "end_line": 194, "label": "knowledge (session)" },
+        { "path": "pema-agent/backend/packages/agent-core/src/agentcore/memory/service.py", "line": 1, "end_line": 7, "label": "ghi chú agent, user" }
+      ]
+    },
+    {
+      "id": "history",
+      "type": "database",
+      "label": "Lịch sử phiên",
+      "sublabel": "agent_message + bản tóm tắt",
+      "stage": 0,
+      "row": 2,
+      "sources": [
+        { "path": "pema-agent/backend/packages/agent-core/src/agentcore/harness/store/base.py", "line": 19, "end_line": 37, "label": "CompactionRecord, SessionStore" }
+      ]
+    },
+    {
+      "id": "turnsections",
+      "type": "backend",
+      "label": "Section lượt, bước",
+      "sublabel": "environment, status, catalog, skills",
+      "stage": 0,
+      "row": 3,
+      "tag": "thay đổi",
+      "sources": [
+        { "path": "pema-agent/backend/packages/agent-core/src/agentcore/prompt/builtin.py", "line": 103, "end_line": 114, "label": "environment, status" },
+        { "path": "pema-agent/backend/apps/agent/plugins/knowledge/plugin.py", "line": 196, "end_line": 196, "label": "knowledge_catalog" },
+        { "path": "pema-agent/backend/apps/agent/plugins/zalo/plugin.py", "line": 110, "end_line": 110, "label": "zalo_channel" }
+      ]
+    },
+    {
+      "id": "registry",
+      "type": "backend",
+      "label": "ToolRegistry",
+      "sublabel": "tool lõi + tool plugin",
+      "stage": 0,
+      "row": 4,
+      "sources": [
+        { "path": "pema-agent/backend/apps/agent/agent_app/assembly.py", "line": 54, "end_line": 61, "label": "lắp registry" },
+        { "path": "pema-agent/backend/packages/agent-core/src/agentcore/harness/tools/spec.py", "line": 70, "end_line": 73, "label": "schema()" }
+      ]
+    },
+    {
+      "id": "system",
+      "type": "security",
+      "label": "System prompt",
+      "sublabel": "đóng băng mỗi phiên",
+      "stage": 1,
+      "row": 0,
+      "tag": "cache của nhà cung cấp",
+      "sources": [
+        { "path": "pema-agent/backend/packages/agent-core/src/agentcore/prompt/builder.py", "line": 97, "end_line": 130, "label": "system()" }
+      ]
+    },
+    {
+      "id": "kept",
+      "type": "backend",
+      "label": "Tin còn giữ",
+      "sublabel": "từ first_kept trở đi",
+      "stage": 1,
+      "row": 2,
+      "sources": [
+        { "path": "pema-agent/backend/packages/agent-core/src/agentcore/context/compaction.py", "line": 1, "end_line": 6, "label": "nén" }
+      ]
+    },
+    {
+      "id": "context",
+      "type": "backend",
+      "label": "<agent-context>",
+      "sublabel": "mỗi lần gọi, không lưu",
+      "stage": 1,
+      "row": 3,
+      "sources": [
+        { "path": "pema-agent/backend/packages/agent-core/src/agentcore/prompt/builder.py", "line": 145, "end_line": 160, "label": "context()" }
+      ]
+    },
+    {
+      "id": "schemas",
+      "type": "backend",
+      "label": "Tool schemas",
+      "sublabel": "JSON Schema từ pydantic",
+      "stage": 1,
+      "row": 4,
+      "sources": [
+        { "path": "pema-agent/backend/packages/agent-core/src/agentcore/loop/run_turn.py", "line": 190, "end_line": 190, "label": "tools.schemas()" }
+      ]
+    },
+    {
+      "id": "request",
+      "type": "external",
+      "label": "LlmRequest",
+      "sublabel": "ModelClient.complete()",
+      "stage": 2,
+      "row": 2,
+      "sources": [
+        { "path": "pema-agent/backend/packages/agent-core/src/agentcore/loop/run_turn.py", "line": 206, "end_line": 225, "label": "build, request_for" },
+        { "path": "pema-agent/backend/packages/agent-core/src/agentcore/harness/model/types.py", "line": 22, "end_line": 40, "label": "LlmRequest" }
+      ]
+    }
+  ],
+  "flows": [
+    { "id": "profile-system", "from": "profile", "to": "system", "label": "identity, rules", "classification": "văn bản", "variant": "emphasis" },
+    { "id": "sessions-system", "from": "sessions", "to": "system", "label": "section + ghi chú", "classification": "văn bản", "variant": "default" },
+    { "id": "history-system", "from": "history", "to": "system", "label": "bản tóm tắt", "classification": "khi đã nén", "variant": "dashed" },
+    { "id": "history-kept", "from": "history", "to": "kept", "label": "tin mới", "classification": "theo thứ tự", "variant": "emphasis" },
+    { "id": "turn-context", "from": "turnsections", "to": "context", "label": "render mỗi bước", "classification": "văn bản", "variant": "default" },
+    { "id": "registry-schemas", "from": "registry", "to": "schemas", "label": "schema()", "classification": "JSON", "variant": "default" },
+    { "id": "system-request", "from": "system", "to": "request", "label": "system", "classification": "ổn định nhất", "variant": "emphasis" },
+    { "id": "kept-request", "from": "kept", "to": "request", "label": "messages", "classification": "lịch sử", "variant": "emphasis" },
+    { "id": "context-request", "from": "context", "to": "request", "label": "cuối yêu cầu", "classification": "tạm thời", "variant": "default" },
+    { "id": "schemas-request", "from": "schemas", "to": "request", "label": "tools (trống ở bước cuối)", "classification": "JSON", "variant": "default" }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Vì sao chia lớp",
+      "items": [
+        "Ổn định nhất đi trước: system prompt đóng băng theo phiên, lưu kèm vân tay cấu hình, nên cache của nhà cung cấp dùng được",
+        "Thứ hay đổi (giờ, trạng thái bước, catalog, luật kênh) nằm ở <agent-context> cuối yêu cầu và không bao giờ lưu"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Khi nào prompt đổi",
+      "items": [
+        "Đổi persona, luật, bật tắt plugin hay tool: vân tay khác, phiên dựng lại system prompt (có ghi log cache break)",
+        "Nén lịch sử: tóm tắt mới nối vào system prompt; trước khi nén, model được 2 bước chỉ với tool memory để cất điều đáng nhớ"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Model không bao giờ thấy",
+      "items": [
+        "Khóa API (DynamicModel đọc từ DB, giải mã trong tiến trình), bí mật của plugin, detail của tool (chỉ vào trace)",
+        "user_id, channel, is_group: do mã đặt vào ToolContext, model không chọn được người"
+      ]
+    }
+  ]
+}

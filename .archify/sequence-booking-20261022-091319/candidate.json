@@ -1,0 +1,116 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "Một lượt đặt lịch: khách nhắn Zalo, lịch vào CRM",
+    "locale": "vi",
+    "output": ".archify/sequence-booking-20261022-091319/booking.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "git@github-personal20:o00oleanho00o/cnbphongkham.git",
+      "link_mode": "local-only",
+      "revision": "defd31b0dea3ff3835e209a3d7125eb9fbec6636"
+    }
+  },
+  "participants": [
+    { "id": "customer", "type": "external", "label": "Khách", "sublabel": "chat Zalo riêng" },
+    {
+      "id": "agent",
+      "type": "backend",
+      "label": "Agent clinic",
+      "sublabel": "plugin crm",
+      "sources": [
+        { "path": "pema-agent/backend/apps/agent/plugins/crm/__init__.py", "line": 154, "end_line": 182, "label": "tool lịch" }
+      ]
+    },
+    {
+      "id": "signer",
+      "type": "security",
+      "label": "crm-signer",
+      "sublabel": "ký từng lời gọi",
+      "sources": [
+        { "path": "pema-agent/backend/apps/crm-signer/crm_signer/app.py", "line": 104, "end_line": 125, "label": "forward" },
+        { "path": "pema-agent/backend/apps/crm-signer/crm_signer/routes.py", "line": 35, "end_line": 44, "label": "ROUTES" }
+      ]
+    },
+    {
+      "id": "api",
+      "type": "backend",
+      "label": "API CRM",
+      "sublabel": "/agent-gateway",
+      "sources": [
+        { "path": "pema-agent/backend/apps/api/pema/api/routers/agent_gateway.py", "line": 54, "end_line": 100, "label": "route" },
+        { "path": "pema-agent/backend/apps/api/pema/clinic/actions/agent_gateway.py", "line": 356, "end_line": 386, "label": "book" }
+      ]
+    },
+    {
+      "id": "db",
+      "type": "database",
+      "label": "pema (CRM)",
+      "sublabel": "lịch, kênh chat",
+      "sources": [
+        { "path": "pema-agent/backend/apps/api/pema/clinic/models/scheduling.py", "line": 14, "end_line": 34, "label": "Appointment" },
+        { "path": "pema-agent/backend/apps/api/pema/clinic/models/care.py", "line": 45, "end_line": 60, "label": "PatientChannel" }
+      ]
+    },
+    {
+      "id": "worker",
+      "type": "messagebus",
+      "label": "Worker sự kiện",
+      "sublabel": "outbox agent_event",
+      "sources": [
+        { "path": "pema-agent/backend/apps/api/pema/composition/agent_events_worker.py", "line": 88, "end_line": 102, "label": "ký token" }
+      ]
+    }
+  ],
+  "segments": [
+    { "from": 150, "to": 285, "label": "Xem giờ trống" },
+    { "from": 290, "to": 372, "label": "Lưu liên hệ (một lần)" },
+    { "from": 376, "to": 570, "label": "Đặt lịch" },
+    { "from": 574, "to": 620, "label": "Sự kiện về" }
+  ],
+  "messages": [
+    { "id": "ask", "from": "customer", "to": "agent", "y": 160, "label": "xin đặt lịch 17h hôm nay", "variant": "emphasis" },
+    { "id": "slots-call", "from": "agent", "to": "signer", "y": 190, "label": "GET /free-slots", "variant": "default" },
+    { "id": "slots-sign", "from": "signer", "to": "api", "y": 218, "label": "JWT agent.slots.read", "variant": "security" },
+    { "id": "slots-back", "from": "api", "to": "signer", "y": 246, "label": "giờ trống, không tên", "variant": "return" },
+    { "id": "slots-agent", "from": "signer", "to": "agent", "y": 272, "label": "giờ trống", "variant": "return" },
+    { "id": "contact-call", "from": "agent", "to": "signer", "y": 300, "label": "PUT liên hệ", "variant": "default" },
+    { "id": "contact-sign", "from": "signer", "to": "api", "y": 328, "label": "JWT agent.contact.write", "variant": "security" },
+    { "id": "contact-write", "from": "api", "to": "db", "y": 356, "label": "lưu tên, số; nối kênh chat", "variant": "default" },
+    { "id": "book-call", "from": "agent", "to": "signer", "y": 388, "label": "POST đặt lịch + Idempotency-Key", "variant": "emphasis" },
+    { "id": "book-sign", "from": "signer", "to": "api", "y": 416, "label": "JWT agent.booking.write", "variant": "security" },
+    { "id": "book-write", "from": "api", "to": "db", "y": 444, "label": "kiểm chỗ, tạo lịch", "variant": "default" },
+    { "id": "outbox", "from": "api", "to": "worker", "y": 472, "label": "ghi outbox sự kiện", "variant": "dashed" },
+    { "id": "book-back", "from": "api", "to": "signer", "y": 500, "label": "lịch đã tạo", "variant": "return" },
+    { "id": "book-agent", "from": "signer", "to": "agent", "y": 528, "label": "lịch đã tạo", "variant": "return" },
+    { "id": "book-reply", "from": "agent", "to": "customer", "y": 556, "label": "đã đặt 17:00", "variant": "return" },
+    { "id": "event", "from": "worker", "to": "agent", "y": 596, "label": "sự kiện lịch (JWT của CRM)", "variant": "security" }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Người do mã gắn",
+      "items": [
+        "Kênh + ID của cuộc chat đi vào đường dẫn; model không chọn được người",
+        "Trong nhóm chat các tool lịch từ chối"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Chống đặt hai lần",
+      "items": [
+        "Idempotency-Key = băm(phiên, lượt, tool, tham số)",
+        "Gọi lại cùng khóa trả về đúng lịch đã tạo"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Giới hạn",
+      "items": [
+        "Tối đa 2 lịch sắp tới mỗi người",
+        "Giới hạn số lần ghi mỗi giờ cho mỗi người"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,153 @@
+{
+  "schema_version": 1,
+  "diagram_type": "tree",
+  "meta": {
+    "title": "Bản đồ mã của agent: file nào làm gì (agentcore, agent_app, plugins)",
+    "locale": "vi",
+    "output": ".archify/tree-code-map-20261022-112511/code-map.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "git@github-personal20:o00oleanho00o/cnbphongkham.git",
+      "link_mode": "local-only",
+      "revision": "7d86533840b79a213b046bf19e0de37db65f3b14"
+    }
+  },
+  "layout": { "direction": "right" },
+  "nodes": [
+    { "id": "root", "label": "pema-agent/backend", "sublabel": "uv workspace: một package lõi, ba app" },
+
+    { "id": "core", "label": "packages/agent-core/src/agentcore", "parent": "root", "sublabel": "lõi harness, không phụ thuộc app hay plugin", "sources": [
+      { "path": "pema-agent/backend/packages/agent-core/src/agentcore/__init__.py", "line": 1, "end_line": 97, "label": "API công khai" }
+    ] },
+    { "id": "core-loop", "label": "loop/", "parent": "core", "sublabel": "run_turn (một lượt), guard (lặp, lỗi liền), retry (lùi), repair (vá lịch sử)", "sources": [
+      { "path": "pema-agent/backend/packages/agent-core/src/agentcore/loop/run_turn.py", "line": 1, "end_line": 12, "label": "run_turn" },
+      { "path": "pema-agent/backend/packages/agent-core/src/agentcore/loop/guard.py", "line": 1, "end_line": 9, "label": "guard" }
+    ] },
+    { "id": "core-prompt", "label": "prompt/", "parent": "core", "sublabel": "builder (system đóng băng + context), sections (3 phạm vi), builtin (7 section), data (ghi chú)", "sources": [
+      { "path": "pema-agent/backend/packages/agent-core/src/agentcore/prompt/builder.py", "line": 1, "end_line": 8, "label": "builder" },
+      { "path": "pema-agent/backend/packages/agent-core/src/agentcore/prompt/sections.py", "line": 1, "end_line": 12, "label": "sections" }
+    ] },
+    { "id": "core-harness", "label": "harness/", "parent": "core", "sublabel": "những gì run_turn cắm vào" },
+    { "id": "core-model", "label": "harness/model/", "parent": "core-harness", "sublabel": "types (cổng), openai_compat, anthropic, errors (phân loại), reasoning, scripted, replay (cassette)", "sources": [
+      { "path": "pema-agent/backend/packages/agent-core/src/agentcore/harness/model/types.py", "line": 22, "end_line": 48, "label": "cổng" },
+      { "path": "pema-agent/backend/packages/agent-core/src/agentcore/harness/model/errors.py", "line": 1, "end_line": 20, "label": "ModelErrorKind" }
+    ] },
+    { "id": "core-tools", "label": "harness/tools/", "parent": "core-harness", "sublabel": "spec (ToolSpec, ToolContext), registry, executor; builtin: get_datetime, web (qua netguard), html_text, untrusted", "sources": [
+      { "path": "pema-agent/backend/packages/agent-core/src/agentcore/harness/tools/executor.py", "line": 1, "end_line": 7, "label": "executor" },
+      { "path": "pema-agent/backend/packages/agent-core/src/agentcore/harness/tools/builtin/netguard.py", "line": 1, "end_line": 20, "label": "netguard (L6)" }
+    ] },
+    { "id": "core-hooks", "label": "harness/hooks/", "parent": "core-harness", "sublabel": "base (4 loại, fail closed/open), builtin (injection_guard, secret_redactor, result_warning)", "sources": [
+      { "path": "pema-agent/backend/packages/agent-core/src/agentcore/harness/hooks/base.py", "line": 1, "end_line": 6, "label": "base" }
+    ] },
+    { "id": "core-guards", "label": "harness/guards/", "parent": "core-harness", "sublabel": "threats (quét prompt injection), secrets (che khóa)", "sources": [
+      { "path": "pema-agent/backend/packages/agent-core/src/agentcore/harness/guards/threats.py", "line": 1, "end_line": 15, "label": "scan_for_threats" }
+    ] },
+    { "id": "core-store", "label": "harness/store/", "parent": "core-harness", "sublabel": "base (cổng SessionStore, StoredPrompt, CompactionRecord), memory (trong tiến trình)", "sources": [
+      { "path": "pema-agent/backend/packages/agent-core/src/agentcore/harness/store/base.py", "line": 24, "end_line": 35, "label": "SessionStore" }
+    ] },
+    { "id": "core-context", "label": "context/", "parent": "core", "sublabel": "compaction (ContextManager, choose_cut, tóm tắt), policy (ngưỡng), tokens (ước lượng)", "sources": [
+      { "path": "pema-agent/backend/packages/agent-core/src/agentcore/context/compaction.py", "line": 1, "end_line": 6, "label": "compaction" }
+    ] },
+    { "id": "core-memory", "label": "memory/", "parent": "core", "sublabel": "service (MemoryService, cap, version), tool (memory: add/replace/remove)", "sources": [
+      { "path": "pema-agent/backend/packages/agent-core/src/agentcore/memory/service.py", "line": 1, "end_line": 7, "label": "service" }
+    ] },
+    { "id": "core-files", "label": "channels.py, messages.py, trace.py, clock.py, tenancy.py", "parent": "core", "sublabel": "kênh (ChannelAdapter, InboundMessage, session_id_for), tin và khối, trace, giờ, tenant mặc định", "sources": [
+      { "path": "pema-agent/backend/packages/agent-core/src/agentcore/channels.py", "line": 1, "end_line": 7, "label": "channels" },
+      { "path": "pema-agent/backend/packages/agent-core/src/agentcore/messages.py", "line": 1, "end_line": 20, "label": "messages" }
+    ] },
+
+    { "id": "app", "label": "apps/agent/agent_app", "parent": "root", "sublabel": "dịch vụ: lắp ráp lõi, hàng đợi, lưu trữ, plugin, gateway, CLI" },
+    { "id": "app-assembly", "label": "runtime.py, assembly.py, live.py", "parent": "app", "sublabel": "build_runtime (chọn Postgres/InMemory, LiveAgent, PluginManager), build_agent (tools, prompt, hooks), LiveAgent (lắp lại theo version)", "sources": [
+      { "path": "pema-agent/backend/apps/agent/agent_app/runtime.py", "line": 206, "end_line": 220, "label": "build_runtime" },
+      { "path": "pema-agent/backend/apps/agent/agent_app/assembly.py", "line": 37, "end_line": 50, "label": "build_agent" }
+    ] },
+    { "id": "app-queue", "label": "dispatcher.py, ingress.py, ingress_store.py", "parent": "app", "sublabel": "một lượt mỗi phiên, collect/steer, sweeper; hàng đợi và khóa (bộ nhớ / Postgres advisory lock)", "sources": [
+      { "path": "pema-agent/backend/apps/agent/agent_app/dispatcher.py", "line": 1, "end_line": 7, "label": "dispatcher" },
+      { "path": "pema-agent/backend/apps/agent/agent_app/ingress_store.py", "line": 1, "end_line": 6, "label": "khóa advisory" }
+    ] },
+    { "id": "app-hub", "label": "channel_hub.py", "parent": "app", "sublabel": "chạy kênh của plugin, gửi trả lời từng phần, retry, typing, SKIP", "sources": [
+      { "path": "pema-agent/backend/apps/agent/agent_app/channel_hub.py", "line": 1, "end_line": 10, "label": "ChannelHub" }
+    ] },
+    { "id": "app-followup", "label": "follow_up.py", "parent": "app", "sublabel": "FollowUps: xét hội thoại im, giới hạn trong mã, gửi qua DispatcherOutbox", "sources": [
+      { "path": "pema-agent/backend/apps/agent/agent_app/follow_up.py", "line": 1, "end_line": 14, "label": "FollowUps" }
+    ] },
+    { "id": "app-gateway", "label": "gateway.py, activity.py, auth.py, home.py, plugin_ui.py", "parent": "app", "sublabel": "FastAPI: /v1/chat, /v1/admin/*, route và UI của plugin; Gate đăng nhập qua authenticator của plugin; phiên, trace, usage cho dashboard", "sources": [
+      { "path": "pema-agent/backend/apps/agent/agent_app/gateway.py", "line": 323, "end_line": 357, "label": "create_app" },
+      { "path": "pema-agent/backend/apps/agent/agent_app/activity.py", "line": 1, "end_line": 8, "label": "Activity" }
+    ] },
+    { "id": "app-cli", "label": "cli.py, replay.py", "parent": "app", "sublabel": "agent serve | chat | replay | model | settings | plugins | db (bootstrap-role, migrate-plugins)", "sources": [
+      { "path": "pema-agent/backend/apps/agent/agent_app/cli.py", "line": 91, "end_line": 120, "label": "main" }
+    ] },
+    { "id": "app-plugins", "label": "plugins/", "parent": "app", "sublabel": "host (PluginContext, PluginHost), manager (admin bật tắt, DB), manifest (plugin.toml, discover), jobs, state, records, install, migrations, services", "sources": [
+      { "path": "pema-agent/backend/apps/agent/agent_app/plugins/host.py", "line": 1, "end_line": 9, "label": "host" },
+      { "path": "pema-agent/backend/apps/agent/agent_app/plugins/manager.py", "line": 1, "end_line": 9, "label": "manager" }
+    ] },
+    { "id": "app-model", "label": "model_settings.py, model_factory.py, model_entries.py, model_catalog.py", "parent": "app", "sublabel": "DynamicModel (cài đặt + khóa mã hóa trong DB), build_model, danh sách model đã lưu, catalog nhà cung cấp", "sources": [
+      { "path": "pema-agent/backend/apps/agent/agent_app/model_settings.py", "line": 1, "end_line": 8, "label": "model_settings" }
+    ] },
+    { "id": "app-settings", "label": "agent_settings.py, profile.py", "parent": "app", "sublabel": "cài đặt admin đè lên profile (persona, biến, tool, memory, follow-up); profile = agent.toml + SOUL.md + AGENTS.md", "sources": [
+      { "path": "pema-agent/backend/apps/agent/agent_app/agent_settings.py", "line": 1, "end_line": 8, "label": "agent_settings" },
+      { "path": "pema-agent/backend/apps/agent/agent_app/profile.py", "line": 1, "end_line": 7, "label": "profile" }
+    ] },
+    { "id": "app-storage", "label": "storage.py, db_roles.py", "parent": "app", "sublabel": "Postgres: session, message, memory, trace (retry một lần khi rớt kết nối); role agent_rt_app", "sources": [
+      { "path": "pema-agent/backend/apps/agent/agent_app/storage.py", "line": 1, "end_line": 8, "label": "storage" }
+    ] },
+
+    { "id": "plugins", "label": "apps/agent/plugins", "parent": "root", "sublabel": "plugin đi kèm; mỗi thư mục: plugin.toml + register(ctx)" },
+    { "id": "pl-knowledge", "label": "knowledge/", "parent": "plugins", "sublabel": "kho tri thức: ingest, text, store (tsvector, pgvector), search, fusion, judging, embedder, routes, ui", "sources": [
+      { "path": "pema-agent/backend/apps/agent/plugins/knowledge/plugin.py", "line": 1, "end_line": 3, "label": "knowledge" }
+    ] },
+    { "id": "pl-skills", "label": "skills/", "parent": "plugins", "sublabel": "kỹ năng, quy tắc, giọng điệu theo phạm vi; studio (chat soạn cho nhân viên); check (kiểm nội dung)", "sources": [
+      { "path": "pema-agent/backend/apps/agent/plugins/skills/plugin.py", "line": 1, "end_line": 11, "label": "skills" }
+    ] },
+    { "id": "pl-conversations", "label": "conversations/", "parent": "plugins", "sublabel": "giữ hội thoại hai chiều (cv_*), kịch bản mẫu (scenario_search + hook trước model), retention", "sources": [
+      { "path": "pema-agent/backend/apps/agent/plugins/conversations/plugin.py", "line": 77, "end_line": 84, "label": "register" }
+    ] },
+    { "id": "pl-jev", "label": "jev/", "parent": "plugins", "sublabel": "bộ chấm TypeSafe cho plugin khác (dịch vụ judge); không tool, không hook", "sources": [
+      { "path": "pema-agent/backend/apps/agent/plugins/jev/__init__.py", "line": 1, "end_line": 6, "label": "jev" }
+    ] },
+    { "id": "pl-crm", "label": "crm/", "parent": "plugins", "sublabel": "7 tool lịch cho người đang chat qua crm-signer, nhận sự kiện CRM, vòng nhắc lịch", "sources": [
+      { "path": "pema-agent/backend/apps/agent/plugins/crm/__init__.py", "line": 279, "end_line": 310, "label": "register" }
+    ] },
+    { "id": "pl-sso", "label": "sso/", "parent": "plugins", "sublabel": "nhận JWT ngắn của web nhân viên (JWKS của CRM) để vào gateway", "sources": [
+      { "path": "pema-agent/backend/apps/agent/plugins/sso/__init__.py", "line": 46, "end_line": 49, "label": "register" }
+    ] },
+    { "id": "pl-web", "label": "web/", "parent": "plugins", "sublabel": "đăng nhập riêng của dashboard (khi không có web nhân viên)", "sources": [
+      { "path": "pema-agent/backend/apps/agent/plugins/web/__init__.py", "line": 22, "end_line": 27, "label": "register" }
+    ] },
+    { "id": "pl-zalo", "label": "zalo/", "parent": "plugins", "sublabel": "kênh chat: bot/ và personal/ (cầu Node), tài khoản trong records, hook tắt tool theo tài khoản", "sources": [
+      { "path": "pema-agent/backend/apps/agent/plugins/zalo/plugin.py", "line": 110, "end_line": 114, "label": "register" }
+    ] },
+
+    { "id": "agents", "label": "apps/agent/agents/clinic", "parent": "root", "sublabel": "profile của agent: agent.toml (tools, loop, context, memory, guards, plugins), SOUL.md, AGENTS.md", "sources": [
+      { "path": "pema-agent/backend/apps/agent/agents/clinic/agent.toml", "line": 6, "end_line": 10, "label": "[agent]" },
+      { "path": "pema-agent/backend/apps/agent/agents/clinic/agent.toml", "line": 62, "end_line": 69, "label": "[plugins]" }
+    ] },
+    { "id": "alembic", "label": "apps/agent/alembic", "parent": "root", "sublabel": "schema agent_rt: 0001 baseline, 0002 agent_settings, 0003 follow_up; bảng plugin do migration của plugin", "sources": [
+      { "path": "pema-agent/backend/apps/agent/alembic/versions/0001_baseline.sql", "line": 1, "end_line": 3, "label": "baseline" }
+    ] },
+    { "id": "tests", "label": "apps/agent/tests, packages/agent-core/tests", "parent": "root", "sublabel": "test của lõi và app; test_tool_allowlist (T9), test_crm_boundary (T1, T4, T5), crm/", "sources": [
+      { "path": "pema-agent/backend/apps/agent/tests/test_tool_allowlist.py", "line": 1, "end_line": 7, "label": "T9" }
+    ] }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Hướng phụ thuộc",
+      "items": [
+        "agentcore không import agent_app hay plugin; agent_app import agentcore; plugin import agent_app.plugins (PluginContext) và agentcore",
+        "Plugin không import nhau: dùng ctx.provide / ctx.use (embeddings, judge)",
+        "lint-imports giữ hướng này (đang hỏng, chưa sửa)"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Đọc từ đâu",
+      "items": [
+        "Hiểu một lượt: loop/run_turn.py rồi harness/tools/executor.py và prompt/builder.py",
+        "Hiểu dịch vụ: agent_app/runtime.py (dựng) rồi dispatcher.py, channel_hub.py, gateway.py",
+        "Hiểu plugin: agent_app/plugins/host.py (hợp đồng) rồi một plugin nhỏ như sso/ hay web/, rồi knowledge/"
+      ]
+    }
+  ]
+}

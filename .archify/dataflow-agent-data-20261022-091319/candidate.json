@@ -1,0 +1,128 @@
+{
+  "schema_version": 1,
+  "diagram_type": "dataflow",
+  "meta": {
+    "title": "Dữ liệu CRM nào đi vào agent (luật L4)",
+    "locale": "vi",
+    "output": ".archify/dataflow-agent-data-20261022-091319/agent-data.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "git@github-personal20:o00oleanho00o/cnbphongkham.git",
+      "link_mode": "local-only",
+      "revision": "defd31b0dea3ff3835e209a3d7125eb9fbec6636"
+    }
+  },
+  "stages": [
+    { "label": "Dữ liệu trong CRM" },
+    { "label": "Cổng lọc, chỉ ra những trường này" },
+    { "label": "Agent" }
+  ],
+  "nodes": [
+    {
+      "id": "person",
+      "type": "database",
+      "label": "Hồ sơ liên hệ",
+      "sublabel": "kênh chat nối bệnh nhân",
+      "stage": 0,
+      "row": 0,
+      "sources": [
+        { "path": "pema-agent/backend/apps/api/pema/clinic/models/care.py", "line": 45, "end_line": 60, "label": "PatientChannel" }
+      ]
+    },
+    {
+      "id": "appt",
+      "type": "database",
+      "label": "Lịch hẹn",
+      "sublabel": "kèm giờ làm việc",
+      "stage": 0,
+      "row": 1,
+      "sources": [
+        { "path": "pema-agent/backend/apps/api/pema/clinic/models/scheduling.py", "line": 14, "end_line": 34, "label": "Appointment" }
+      ]
+    },
+    {
+      "id": "mine",
+      "type": "security",
+      "label": "Lịch của người chat",
+      "sublabel": "sắp tới + 3 lịch đổi 7 ngày",
+      "stage": 1,
+      "row": 0,
+      "tag": "không ghi chú",
+      "sources": [
+        { "path": "pema-agent/backend/packages/contracts/src/pema_contracts/agent_gateway.py", "line": 57, "end_line": 63, "label": "AgentAppointmentOut" },
+        { "path": "pema-agent/backend/apps/api/pema/clinic/actions/agent_gateway.py", "line": 335, "end_line": 377, "label": "_recent_others" }
+      ]
+    },
+    {
+      "id": "slots",
+      "type": "security",
+      "label": "Giờ trống",
+      "sublabel": "chỉ các giờ bắt đầu",
+      "stage": 1,
+      "row": 1,
+      "tag": "không tên",
+      "sources": [
+        { "path": "pema-agent/backend/apps/api/pema/clinic/actions/agent_gateway.py", "line": 204, "end_line": 235, "label": "free_slots" }
+      ]
+    },
+    {
+      "id": "events",
+      "type": "messagebus",
+      "label": "Sự kiện lịch",
+      "sublabel": "mã, kênh, giờ, trạng thái",
+      "stage": 1,
+      "row": 2,
+      "tag": "không tên, số",
+      "sources": [
+        { "path": "pema-agent/backend/apps/api/pema/clinic/actions/agent_events.py", "line": 87, "end_line": 110, "label": "record_appointment_changed" }
+      ]
+    },
+    {
+      "id": "agent",
+      "type": "backend",
+      "label": "Agent clinic",
+      "sublabel": "tool crm_*, vòng nhắc",
+      "stage": 2,
+      "row": 1,
+      "tag": "người do mã gắn",
+      "sources": [
+        { "path": "pema-agent/backend/apps/agent/plugins/crm/__init__.py", "line": 101, "end_line": 120, "label": "CrmTools" }
+      ]
+    }
+  ],
+  "flows": [
+    { "id": "person-mine", "from": "person", "to": "mine", "label": "kênh + ID thành người", "classification": "khóa tra cứu", "variant": "security" },
+    { "id": "appt-mine", "from": "appt", "to": "mine", "label": "lịch của người đó", "classification": "mã, giờ, trạng thái", "variant": "emphasis" },
+    { "id": "appt-slots", "from": "appt", "to": "slots", "label": "chỗ còn trống", "classification": "không tên", "variant": "default" },
+    { "id": "appt-events", "from": "appt", "to": "events", "label": "lịch đổi", "classification": "trạng thái", "variant": "dashed" },
+    { "id": "person-events", "from": "person", "to": "events", "label": "đồng ý nhận nhắc", "classification": "có hoặc không", "variant": "security" },
+    { "id": "mine-agent", "from": "mine", "to": "agent", "label": "GET lịch", "classification": "đọc", "variant": "emphasis" },
+    { "id": "slots-agent", "from": "slots", "to": "agent", "label": "GET giờ trống", "classification": "đọc", "variant": "default" },
+    { "id": "events-agent", "from": "events", "to": "agent", "label": "POST ký bằng khóa CRM", "classification": "đẩy", "variant": "security" }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Bốn đường vào, không hơn",
+      "items": [
+        "Giờ trống, lịch của chính người chat, sự kiện lịch của người đã nối",
+        "Tài liệu nhân viên đã duyệt đi đường riêng của kho tri thức, không qua CRM"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Không có đường",
+      "items": [
+        "Bệnh nhân khác, đơn thuốc, tài chính, ghi chú nhân viên, lý do hủy",
+        "Agent không vào được database pema (role không có CONNECT)"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Chiều ghi (không vẽ)",
+      "items": [
+        "Agent chỉ ghi ba thứ: hồ sơ liên hệ, lịch mới, đổi trạng thái hoặc giờ lịch của chính người chat"
+      ]
+    }
+  ]
+}

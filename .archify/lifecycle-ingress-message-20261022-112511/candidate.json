@@ -1,0 +1,377 @@
+{
+  "schema_version": 3,
+  "diagram_type": "lifecycle",
+  "meta": {
+    "title": "Vòng đời một tin đến: hàng đợi agent_ingress và việc gửi trả lời",
+    "locale": "vi",
+    "output": ".archify/lifecycle-ingress-message-20261022-112511/ingress-message.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "git@github-personal20:o00oleanho00o/cnbphongkham.git",
+      "link_mode": "local-only",
+      "revision": "7d86533840b79a213b046bf19e0de37db65f3b14"
+    }
+  },
+  "mainPath": [
+    "queued",
+    "processing",
+    "done"
+  ],
+  "states": [
+    {
+      "id": "queued",
+      "type": "start",
+      "label": "queued",
+      "sublabel": "ghi trước khi chạy",
+      "tag": "status",
+      "step": "01",
+      "sources": [
+        {
+          "path": "pema-agent/backend/apps/agent/agent_app/ingress_store.py",
+          "line": 33,
+          "end_line": 38,
+          "label": "INSERT ON CONFLICT DO NOTHING"
+        },
+        {
+          "path": "pema-agent/backend/apps/agent/alembic/versions/0001_baseline.sql",
+          "line": 222,
+          "end_line": 223,
+          "label": "UNIQUE external_id"
+        }
+      ]
+    },
+    {
+      "id": "processing",
+      "type": "active",
+      "label": "processing",
+      "sublabel": "claim, giữ khóa phiên",
+      "tag": "status",
+      "step": "02",
+      "sources": [
+        {
+          "path": "pema-agent/backend/apps/agent/agent_app/ingress_store.py",
+          "line": 56,
+          "end_line": 59,
+          "label": "_CLAIM"
+        },
+        {
+          "path": "pema-agent/backend/apps/agent/agent_app/dispatcher.py",
+          "line": 224,
+          "end_line": 243,
+          "label": "_drain"
+        }
+      ]
+    },
+    {
+      "id": "done",
+      "type": "success",
+      "label": "done",
+      "sublabel": "reply JSON đã lưu",
+      "tag": "status",
+      "step": "03",
+      "sources": [
+        {
+          "path": "pema-agent/backend/apps/agent/agent_app/ingress_store.py",
+          "line": 60,
+          "end_line": 63,
+          "label": "_FINISH"
+        },
+        {
+          "path": "pema-agent/backend/apps/agent/alembic/versions/0001_baseline.sql",
+          "line": 46,
+          "end_line": 46,
+          "label": "done ⇔ reply"
+        }
+      ]
+    },
+    {
+      "id": "pending",
+      "type": "waiting",
+      "label": "pending",
+      "sublabel": "đợi tới lượt trong phiên",
+      "tag": "delivery",
+      "sources": [
+        {
+          "path": "pema-agent/backend/apps/agent/agent_app/ingress_store.py",
+          "line": 82,
+          "end_line": 92,
+          "label": "_DUE_DELIVERIES"
+        }
+      ]
+    },
+    {
+      "id": "sending",
+      "type": "active",
+      "label": "sending",
+      "sublabel": "từng phần, nghỉ 10–20 s",
+      "tag": "delivery",
+      "sources": [
+        {
+          "path": "pema-agent/backend/apps/agent/agent_app/channel_hub.py",
+          "line": 205,
+          "end_line": 275,
+          "label": "deliver"
+        },
+        {
+          "path": "pema-agent/backend/apps/agent/agent_app/channel_hub.py",
+          "line": 79,
+          "end_line": 81,
+          "label": "PACED_DELIVERY"
+        }
+      ]
+    },
+    {
+      "id": "sent",
+      "type": "success",
+      "label": "sent",
+      "sublabel": "plugin nghe được trả lời",
+      "tag": "delivery",
+      "sources": [
+        {
+          "path": "pema-agent/backend/apps/agent/agent_app/channel_hub.py",
+          "line": 273,
+          "end_line": 299,
+          "label": "finish sent, _tell_of_reply"
+        }
+      ]
+    },
+    {
+      "id": "failed",
+      "type": "failure",
+      "label": "failed",
+      "sublabel": "lỗi model hay lỗi khác",
+      "tag": "status",
+      "sources": [
+        {
+          "path": "pema-agent/backend/apps/agent/agent_app/dispatcher.py",
+          "line": 328,
+          "end_line": 332,
+          "label": "error_kind"
+        },
+        {
+          "path": "pema-agent/backend/apps/agent/agent_app/ingress_store.py",
+          "line": 64,
+          "end_line": 67,
+          "label": "_FAIL"
+        }
+      ]
+    },
+    {
+      "id": "dead",
+      "type": "failure",
+      "label": "dead",
+      "sublabel": "bỏ dở 3 lần",
+      "tag": "status",
+      "sources": [
+        {
+          "path": "pema-agent/backend/apps/agent/agent_app/ingress_store.py",
+          "line": 71,
+          "end_line": 77,
+          "label": "_REQUEUE"
+        },
+        {
+          "path": "pema-agent/backend/apps/agent/agent_app/dispatcher.py",
+          "line": 48,
+          "end_line": 54,
+          "label": "max_attempts = 3"
+        }
+      ]
+    },
+    {
+      "id": "http",
+      "type": "neutral",
+      "label": "trả qua HTTP",
+      "sublabel": "delivery NULL, gateway đọc",
+      "tag": "delivery",
+      "sources": [
+        {
+          "path": "pema-agent/backend/apps/agent/agent_app/ingress.py",
+          "line": 81,
+          "end_line": 82,
+          "label": "delivery None"
+        },
+        {
+          "path": "pema-agent/backend/apps/agent/agent_app/gateway.py",
+          "line": 392,
+          "end_line": 413,
+          "label": "chat, ingress"
+        }
+      ]
+    },
+    {
+      "id": "skipped",
+      "type": "neutral",
+      "label": "skipped",
+      "sublabel": "gộp tin, SKIP, rỗng, từ chối",
+      "tag": "delivery",
+      "sources": [
+        {
+          "path": "pema-agent/backend/apps/agent/agent_app/dispatcher.py",
+          "line": 334,
+          "end_line": 338,
+          "label": "answered together with"
+        },
+        {
+          "path": "pema-agent/backend/apps/agent/agent_app/channel_hub.py",
+          "line": 220,
+          "end_line": 247,
+          "label": "SKIP, rỗng, từ chối"
+        }
+      ]
+    },
+    {
+      "id": "undelivered",
+      "type": "failure",
+      "label": "delivery failed",
+      "sublabel": "4 lần hay lỗi vĩnh viễn",
+      "tag": "delivery",
+      "sources": [
+        {
+          "path": "pema-agent/backend/apps/agent/agent_app/channel_hub.py",
+          "line": 374,
+          "end_line": 389,
+          "label": "_failed"
+        },
+        {
+          "path": "pema-agent/backend/packages/agent-core/src/agentcore/channels.py",
+          "line": 72,
+          "end_line": 78,
+          "label": "ChannelSendError.retryable"
+        }
+      ]
+    }
+  ],
+  "transitions": [
+    {
+      "id": "queued-processing",
+      "from": "queued",
+      "to": "processing",
+      "label": "claim"
+    },
+    {
+      "id": "processing-done",
+      "from": "processing",
+      "to": "done",
+      "label": "xong",
+      "variant": "emphasis"
+    },
+    {
+      "id": "processing-failed",
+      "from": "processing",
+      "to": "failed",
+      "label": "lỗi",
+      "variant": "security"
+    },
+    {
+      "id": "processing-queued",
+      "from": "processing",
+      "to": "queued",
+      "label": "sweeper, < 3 lần",
+      "variant": "dashed"
+    },
+    {
+      "id": "processing-dead",
+      "from": "processing",
+      "to": "dead",
+      "label": "sweeper, lần 3",
+      "variant": "security"
+    },
+    {
+      "id": "done-pending",
+      "from": "done",
+      "to": "pending",
+      "label": "deliver",
+      "variant": "emphasis"
+    },
+    {
+      "id": "done-http",
+      "from": "done",
+      "to": "http",
+      "label": "deliver NULL"
+    },
+    {
+      "id": "failed-pending",
+      "from": "failed",
+      "to": "pending",
+      "label": "failure_reply",
+      "variant": "dashed"
+    },
+    {
+      "id": "pending-sending",
+      "from": "pending",
+      "to": "sending",
+      "label": "tới lượt",
+      "variant": "emphasis"
+    },
+    {
+      "id": "pending-skipped",
+      "from": "pending",
+      "to": "skipped",
+      "label": "không gì để gửi"
+    },
+    {
+      "id": "sending-sent",
+      "from": "sending",
+      "to": "sent",
+      "label": "đã đi hết",
+      "variant": "emphasis"
+    },
+    {
+      "id": "sending-pending",
+      "from": "sending",
+      "to": "pending",
+      "label": "lỗi tạm, bỏ dở",
+      "variant": "dashed"
+    },
+    {
+      "id": "sending-undelivered",
+      "from": "sending",
+      "to": "undelivered",
+      "label": "4 lần, vĩnh viễn",
+      "variant": "security"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Hai cột trạng thái trên một hàng",
+      "items": [
+        "status (queued → processing → done | failed | dead): lượt của agent có chạy được không",
+        "delivery (pending → sending → sent | failed | skipped, hoặc NULL): trả lời có tới kênh không",
+        "Cả hai nằm trong agent_rt.agent_ingress; mọi tiến trình của agent đọc cùng bảng, nên tin không mất khi một tiến trình chết",
+        "Chi tiết trạng thái: queued ghi một lần mỗi message_id của kênh; done luôn kèm reply (text, stop, steps, usage); failed giữ error_kind; dead là bị bỏ dở 3 lần (interrupted); http: delivery NULL nên gateway tự đọc reply; skipped: gộp với tin khác, SKIP, trả lời rỗng, kênh từ chối hay không kịp; delivery failed: hết 4 lần hay lỗi không thử lại được (bị chặn, chat đã xóa)"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Ai làm gì",
+      "items": [
+        "Dispatcher: accept, drain (khóa advisory Postgres theo phiên), sweeper 30 s",
+        "ChannelHub: tick 2 s tìm trả lời đến lượt, gửi từng phần theo max_text_chars của kênh, 16 gửi song song",
+        "Gateway: tin HTTP không có delivery; client gọi /v1/ingress/{id} hay nhận SSE"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Không bao giờ",
+      "items": [
+        "Một trả lời của phiên không vượt qua trả lời trước nó (NOT EXISTS earlier pending/sending)",
+        "Một message_id của kênh không chạy hai lần (UNIQUE tenant, agent, channel, external_id)",
+        "Một tin của người khác trong nhóm không bị gộp vào lượt của người đang nói"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Điều kiện trên từng mũi tên",
+      "items": [
+        "claim: cùng phiên một lượt một lúc; collect/steer gom thêm tin của cùng người trước khi claim",
+        "sweeper (30 s): tin processing mà khóa phiên đang rảnh (tiến trình chạy nó đã chết) về queued; lần thứ 3 thành dead (error_kind interrupted)",
+        "deliver: kênh chat đặt deliver=True; HTTP để NULL nên gateway tự đọc reply",
+        "failure_reply: lượt lỗi vẫn gửi câu xin lỗi của profile; tin PROACTIVE lỗi thì skipped, không xin lỗi",
+        "tới lượt: claim_delivery chỉ khi không còn trả lời trước đó của cùng phiên đang pending/sending",
+        "lỗi tạm, bỏ dở: lùi 2 / 10 / 60 s; sending quá 120 s coi là tiến trình chết, tiến trình khác lấy lại (gửi ít nhất một lần)",
+        "4 lần, vĩnh viễn: hết delivery_attempts hay ChannelSendError(retryable=False)"
+      ]
+    }
+  ]
+}

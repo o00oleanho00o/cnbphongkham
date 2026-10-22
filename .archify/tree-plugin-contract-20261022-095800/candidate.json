@@ -1,0 +1,210 @@
+{
+  "schema_version": 1,
+  "diagram_type": "tree",
+  "meta": {
+    "title": "Plugin góp gì vào agent: hợp đồng register(ctx)",
+    "locale": "vi",
+    "output": ".archify/tree-plugin-contract-20261022-095800/plugin-contract.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "git@github-personal20:o00oleanho00o/cnbphongkham.git",
+      "link_mode": "local-only",
+      "revision": "7d86533840b79a213b046bf19e0de37db65f3b14"
+    }
+  },
+  "layout": { "direction": "right" },
+  "nodes": [
+    {
+      "id": "plugin",
+      "label": "Một plugin",
+      "sublabel": "thư mục: plugin.toml + register(ctx); mỗi đăng ký trả về hàm gỡ",
+      "sources": [
+        { "path": "pema-agent/backend/apps/agent/agent_app/plugins/host.py", "line": 1, "end_line": 9, "label": "hợp đồng" },
+        { "path": "pema-agent/backend/apps/agent/agent_app/plugins/manifest.py", "line": 1, "end_line": 6, "label": "manifest" }
+      ]
+    },
+    {
+      "id": "tool",
+      "label": "Tool",
+      "parent": "plugin",
+      "sublabel": "register_tool: tên, pydantic args, handler, timeout, read_only",
+      "sources": [
+        { "path": "pema-agent/backend/apps/agent/agent_app/plugins/host.py", "line": 260, "end_line": 263, "label": "register_tool" },
+        { "path": "pema-agent/backend/packages/agent-core/src/agentcore/harness/tools/spec.py", "line": 46, "end_line": 57, "label": "ToolSpec" }
+      ]
+    },
+    { "id": "tool-core", "label": "lõi: get_datetime, web_search, web_fetch; memory khi [memory] enabled", "parent": "tool", "sublabel": "profile clinic: get_datetime và memory", "sources": [
+        { "path": "pema-agent/backend/packages/agent-core/src/agentcore/harness/tools/builtin/__init__.py", "line": 11, "end_line": 14, "label": "builtin_tools" },
+        { "path": "pema-agent/backend/apps/agent/agent_app/assembly.py", "line": 54, "end_line": 61, "label": "subset + memory + plugin" }
+      ] },
+    { "id": "tool-knowledge", "label": "knowledge: kb_search, kb_read", "parent": "tool", "sources": [
+        { "path": "pema-agent/backend/apps/agent/plugins/knowledge/plugin.py", "line": 165, "end_line": 193, "label": "register_tool" }
+      ] },
+    { "id": "tool-skills", "label": "skills: skill_list, skill_view, skill_search", "parent": "tool", "sublabel": "+ skill_write, skill_patch chỉ khi agent_writes (clinic: không)", "sources": [
+        { "path": "pema-agent/backend/apps/agent/plugins/skills/plugin.py", "line": 108, "end_line": 144, "label": "register" },
+        { "path": "pema-agent/backend/apps/agent/plugins/skills/plugin.py", "line": 146, "end_line": 172, "label": "_register_writes" }
+      ] },
+    { "id": "tool-studio", "label": "studio_list, studio_view, studio_save: KHÔNG phải tool của agent", "parent": "tool-skills", "sublabel": "chat soạn kỹ năng cho nhân viên, cùng model nhưng registry riêng", "sources": [
+        { "path": "pema-agent/backend/apps/agent/plugins/skills/studio.py", "line": 1, "end_line": 8, "label": "Studio" },
+        { "path": "pema-agent/backend/apps/agent/plugins/skills/studio.py", "line": 211, "end_line": 237, "label": "3 ToolSpec riêng" }
+      ] },
+    { "id": "tool-conv", "label": "conversations: scenario_search", "parent": "tool", "sources": [
+        { "path": "pema-agent/backend/apps/agent/plugins/conversations/scenarios.py", "line": 236, "end_line": 238, "label": "tool()" }
+      ] },
+    { "id": "tool-crm", "label": "crm: 7 tool crm_* (người do mã gắn)", "parent": "tool", "sources": [
+        { "path": "pema-agent/backend/apps/agent/plugins/crm/__init__.py", "line": 279, "end_line": 310, "label": "register" }
+      ] },
+    {
+      "id": "section",
+      "label": "Prompt section",
+      "parent": "plugin",
+      "sublabel": "register_prompt_section: Session (đóng băng), Turn, Step",
+      "sources": [
+        { "path": "pema-agent/backend/apps/agent/agent_app/plugins/host.py", "line": 264, "end_line": 266, "label": "register_prompt_section" },
+        { "path": "pema-agent/backend/packages/agent-core/src/agentcore/prompt/sections.py", "line": 64, "end_line": 94, "label": "3 phạm vi" }
+      ]
+    },
+    { "id": "section-core", "label": "lõi: identity, rules, tool_usage, memory, user_memory | environment | status", "parent": "section" },
+    { "id": "section-knowledge", "label": "knowledge: hướng dẫn (session), catalog (turn)", "parent": "section" },
+    { "id": "section-skills", "label": "skills: skills, luật, persona (turn)", "parent": "section" },
+    { "id": "section-zalo", "label": "zalo: luật của kênh (turn)", "parent": "section" },
+    {
+      "id": "hook",
+      "label": "Hook",
+      "parent": "plugin",
+      "sublabel": "register_hook: pre_tool chặn, post_tool / before_model sửa",
+      "sources": [
+        { "path": "pema-agent/backend/apps/agent/agent_app/plugins/host.py", "line": 267, "end_line": 269, "label": "register_hook" },
+        { "path": "pema-agent/backend/packages/agent-core/src/agentcore/harness/hooks/base.py", "line": 1, "end_line": 6, "label": "fail closed / open" }
+      ]
+    },
+    { "id": "hook-core", "label": "lõi: injection_guard, secret_redactor, result_warning", "parent": "hook" },
+    { "id": "hook-zalo", "label": "zalo: tắt tool theo từng tài khoản (pre_tool)", "parent": "hook" },
+    { "id": "hook-conv", "label": "conversations: scenario_examples (before_model, thêm ví dụ vào yêu cầu)", "parent": "hook", "sources": [
+        { "path": "pema-agent/backend/apps/agent/plugins/conversations/scenarios.py", "line": 233, "end_line": 234, "label": "PreModelHook" }
+      ] },
+    {
+      "id": "channel",
+      "label": "Kênh chat",
+      "parent": "plugin",
+      "sublabel": "register_channel: ChannelAdapter; ChannelHub chạy và gửi trả lời",
+      "sources": [
+        { "path": "pema-agent/backend/apps/agent/agent_app/plugins/host.py", "line": 270, "end_line": 281, "label": "register_channel" },
+        { "path": "pema-agent/backend/packages/agent-core/src/agentcore/channels.py", "line": 111, "end_line": 129, "label": "ChannelAdapter" }
+      ]
+    },
+    { "id": "channel-zalo", "label": "zalo: mỗi tài khoản một kênh (bot, cá nhân)", "parent": "channel" },
+    { "id": "channel-http", "label": "http, cli: của lõi, không phải plugin", "parent": "channel" },
+    {
+      "id": "routes",
+      "label": "Route HTTP",
+      "parent": "plugin",
+      "sublabel": "register_routes: admin (cần đăng nhập) hoặc hooks (webhook, sự kiện)",
+      "sources": [
+        { "path": "pema-agent/backend/apps/agent/agent_app/plugins/host.py", "line": 282, "end_line": 298, "label": "register_routes" }
+      ]
+    },
+    { "id": "routes-admin", "label": "admin: knowledge, skills, conversations, jev, zalo, web", "parent": "routes" },
+    { "id": "routes-hooks", "label": "hooks: zalo (webhook), crm (/events), web (đăng nhập)", "parent": "routes" },
+    {
+      "id": "job",
+      "label": "Job nền",
+      "parent": "plugin",
+      "sublabel": "register_job: coroutine chạy mãi; JobRunner khởi động lại khi lỗi",
+      "sources": [
+        { "path": "pema-agent/backend/apps/agent/agent_app/plugins/host.py", "line": 299, "end_line": 307, "label": "register_job" },
+        { "path": "pema-agent/backend/apps/agent/agent_app/plugins/jobs.py", "line": 65, "end_line": 88, "label": "JobRunner" }
+      ]
+    },
+    { "id": "job-knowledge", "label": "knowledge: embed, catalog", "parent": "job" },
+    { "id": "job-conv", "label": "conversations: retention, cut, embed", "parent": "job" },
+    { "id": "job-zalo", "label": "zalo: accounts, bridge, friend_auto_accept", "parent": "job" },
+    { "id": "job-crm", "label": "crm: reminders (vòng nhắc lịch)", "parent": "job" },
+    { "id": "job-skills", "label": "skills: refresh", "parent": "job" },
+    {
+      "id": "auth",
+      "label": "Đăng nhập",
+      "parent": "plugin",
+      "sublabel": "register_authenticator: ai được vào gateway",
+      "sources": [
+        { "path": "pema-agent/backend/apps/agent/agent_app/plugins/host.py", "line": 308, "end_line": 312, "label": "register_authenticator" }
+      ]
+    },
+    { "id": "auth-sso", "label": "sso: JWT ngắn của CRM (JWKS)", "parent": "auth" },
+    { "id": "auth-web", "label": "web: tài khoản admin của dashboard", "parent": "auth" },
+    {
+      "id": "service",
+      "label": "Dịch vụ cho plugin khác",
+      "parent": "plugin",
+      "sublabel": "provide(name) / use(name, kind): plugin không import nhau",
+      "sources": [
+        { "path": "pema-agent/backend/apps/agent/agent_app/plugins/host.py", "line": 325, "end_line": 346, "label": "provide, use" },
+        { "path": "pema-agent/backend/apps/agent/agent_app/plugins/services.py", "line": 30, "end_line": 50, "label": "EmbeddingService" }
+      ]
+    },
+    { "id": "service-emb", "label": "knowledge cung cấp embeddings; conversations dùng", "parent": "service" },
+    { "id": "service-judge", "label": "jev cung cấp judge (TypeSafe); knowledge dùng", "parent": "service" },
+    {
+      "id": "observe",
+      "label": "Nghe mọi tin",
+      "parent": "plugin",
+      "sublabel": "on_message: cả tin được và không được trả lời",
+      "sources": [
+        { "path": "pema-agent/backend/apps/agent/agent_app/plugins/host.py", "line": 313, "end_line": 324, "label": "on_message, observe" }
+      ]
+    },
+    { "id": "observe-conv", "label": "conversations: giữ hội thoại hai chiều (cv_*)", "parent": "observe" },
+    {
+      "id": "data",
+      "label": "Dữ liệu riêng",
+      "parent": "plugin",
+      "sublabel": "storage (agent_plugin_record), migrations với tiền tố, data_dir, encrypt/decrypt, model",
+      "sources": [
+        { "path": "pema-agent/backend/apps/agent/agent_app/plugins/host.py", "line": 219, "end_line": 258, "label": "storage, database, encrypt" },
+        { "path": "pema-agent/backend/apps/agent/alembic/versions/0001_baseline.sql", "line": 153, "end_line": 164, "label": "agent_plugin_record" }
+      ]
+    },
+    { "id": "data-tables", "label": "bảng riêng: kb_* (knowledge), sk_* (skills), cv_* (conversations), crm_*", "parent": "data" },
+    { "id": "data-records", "label": "bản ghi key→JSON: zalo (tài khoản, bí mật đã mã hóa)", "parent": "data" },
+    {
+      "id": "ui",
+      "label": "Giao diện",
+      "parent": "plugin",
+      "sublabel": "[ui] dir, entry: trang của plugin hiện trong web nhân viên",
+      "sources": [
+        { "path": "pema-agent/backend/apps/agent/agent_app/plugins/manifest.py", "line": 51, "end_line": 76, "label": "UiSpec" }
+      ]
+    },
+    { "id": "ui-pages", "label": "knowledge, skills, conversations, jev, zalo; web là trang chủ", "parent": "ui" }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Vòng đời",
+      "items": [
+        "Tìm plugin ở 3 nơi: bundled, thư mục agent, installed; manifest chỉ bắt buộc name",
+        "Trạng thái bật/tắt và cài đặt lưu DB; mỗi tiến trình làm mới trước lượt, nên đổi ở nơi khác áp dụng trong vài giây",
+        "enable() lỗi thì gỡ hết những gì vừa đăng ký; version của host tăng, LiveAgent lắp lại"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Ranh giới",
+      "items": [
+        "Plugin là mã tin cậy, chạy cùng tiến trình, không sandbox",
+        "Tên tool, section, kênh không được trùng (kể cả với lõi); trùng là từ chối bật",
+        "Profile clinic duyệt đúng 6 plugin: sso, knowledge, skills, conversations, jev, crm (T9)",
+        "jev không góp tool hay hook: chỉ route và dịch vụ judge; web chỉ đăng nhập và route"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Danh sách tool đã duyệt (T9, test_tool_allowlist.py)",
+      "items": [
+        "Mọi ToolSpec(name=...) trong mã phải nằm trong APPROVED_TOOLS, mỗi tên đúng một nơi; thêm tool là đỏ cho tới khi chủ duyệt",
+        "Trên agent clinic: get_datetime, memory, kb_search, kb_read, scenario_search, skill_list/view/search, 7 crm_*; web_* có trong lõi nhưng profile không bật",
+        "Không bao giờ có tool đọc file, chạy lệnh hay chạy mã; chỉ 2 chỗ trong mã khởi động tiến trình (cài plugin, cầu Zalo)"
+      ]
+    }
+  ]
+}

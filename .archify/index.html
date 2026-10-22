@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pema: bản đồ sơ đồ</title>
+<style>
+  :root { --bg: #f6f7f9; --card: #ffffff; --ink: #1c2230; --muted: #5b6577; --line: #d8dde6; --accent: #0e7490; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #0f131b; --card: #171c27; --ink: #e8ecf3; --muted: #9aa5b8; --line: #2a3242; --accent: #5cc8e0; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.55 system-ui, "Segoe UI", sans-serif; }
+  main { max-width: 900px; margin: 0 auto; padding: 32px 16px 56px; }
+  h1 { font-size: 1.6rem; margin: 0 0 4px; }
+  .lead { color: var(--muted); margin: 0 0 28px; }
+  h2 { font-size: .95rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 32px 0 10px; }
+  h3 { font-size: .9rem; color: var(--ink); margin: 18px 0 8px; }
+  a.card { display: block; background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; margin: 0 0 10px; color: inherit; text-decoration: none; }
+  a.card:hover, a.card:focus-visible { border-color: var(--accent); outline: none; }
+  a.card strong { display: block; color: var(--accent); margin-bottom: 2px; }
+  a.card span { display: block; color: var(--muted); font-size: .92rem; }
+  a.card small { display: block; color: var(--muted); font-size: .8rem; margin-top: 6px; }
+  a.top { border-width: 2px; border-color: var(--accent); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 0 12px; }
+  footer { margin-top: 36px; color: var(--muted); font-size: .85rem; border-top: 1px solid var(--line); padding-top: 14px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Pema Digital Clinic: bản đồ sơ đồ</h1>
+  <p class="lead">Đọc từ trên xuống: tổng quan cả project, rồi lõi agent (nó là gì, vận hành ra sao), rồi stack đang chạy, rồi từng luồng. Mỗi khối trong sơ đồ có trích file và dòng mã; bấm vào khối để xem.</p>
+
+  <h2>1. Tổng quan</h2>
+  <a class="card top" href="architecture-project-overview-20261022-093925/project-overview.html">
+    <strong>Tổng quan cả project</strong>
+    <span>Ba thế hệ giao diện (web cũ, app mobile, web nhân viên), tài liệu và thiết kế, ý tưởng CRM, và hệ thống mới pema-agent với luật giữa các phần.</span>
+    <small>Không vẽ: flutter-template, design-viewer, data, demo-assets, các dịch vụ phụ của stack.</small>
+  </a>
+
+  <h2>2. Lõi: agent vận hành thế nào (plugin-first)</h2>
+  <p class="lead">Đọc theo thứ tự: 2a nhìn toàn bộ, 2b một lượt chạy ra sao, 2c plugin cắm vào đâu, 2d vòng chủ động và dữ liệu.</p>
+
+  <h3>2a. Nhìn toàn bộ</h3>
+  <div class="grid">
+    <a class="card top" href="architecture-agent-anatomy-20261022-095800/agent-anatomy.html">
+      <strong>Giải phẫu agent</strong>
+      <span>Lõi harness (run_turn, prompt, tool, hook, model, nén, ghi chú), lớp lắp ráp (hàng đợi + sweeper, plugin host, lắp lại khi plugin đổi, chăm sóc lại) và bốn UI: Zalo, HTTP, agent chat, trang quản trị.</span>
+    </a>
+    <a class="card" href="sequence-serve-boot-20261022-112511/serve-boot.html">
+      <strong>Khởi động agent serve</strong>
+      <span>Dựng runtime, bật plugin của profile, áp cài đặt từ DB, tạo FastAPI với bốn vòng nền (sweeper, kênh, job, follow-up), và tắt thế nào.</span>
+    </a>
+    <a class="card" href="tree-code-map-20261022-112511/code-map.html">
+      <strong>Bản đồ mã</strong>
+      <span>File nào làm gì trong agentcore, agent_app, plugins, agents/clinic, alembic; hướng phụ thuộc và nên đọc từ đâu.</span>
+    </a>
+  </div>
+
+  <h3>2b. Một lượt chạy ra sao</h3>
+  <div class="grid">
+    <a class="card top" href="sequence-agent-turn-20261022-095800/agent-turn.html">
+      <strong>Một lượt của agent</strong>
+      <span>Từ tin đến trả lời, từng thông điệp: xếp hàng, nạp prompt, gọi model, chạy tool qua hook, ghi lịch sử, gửi về kênh.</span>
+    </a>
+    <a class="card" href="workflow-run-turn-loop-20261022-112511/run-turn-loop.html">
+      <strong>Vòng lặp run_turn</strong>
+      <span>Mỗi bước, mỗi giới hạn (bước, giờ, token, loop guard), mỗi đường khôi phục (thử lại, nén, lời gọi cuối không tool), và cái gì được ghi.</span>
+      <small>Vẽ ở mức standard (dày hơn) vì đường quay lại của vòng lặp cắt các nhánh lỗi.</small>
+    </a>
+    <a class="card" href="dataflow-model-request-20261022-095800/model-request.html">
+      <strong>Model thấy gì mỗi lần gọi</strong>
+      <span>Bốn lớp của một yêu cầu: system prompt đóng băng, lịch sử sau nén, khối context tạm, tool schemas; và thứ model không bao giờ thấy.</span>
+    </a>
+    <a class="card" href="dataflow-context-memory-20261022-112511/context-memory.html">
+      <strong>Nén ngữ cảnh và ghi chú</strong>
+      <span>Khi nào nén, cắt ở đâu, flush memory trước khi tóm tắt, tóm tắt lưu đâu, và ghi chú sống qua phiên thế nào.</span>
+    </a>
+    <a class="card" href="lifecycle-ingress-message-20261022-112511/ingress-message.html">
+      <strong>Vòng đời một tin đến</strong>
+      <span>Trạng thái của hàng đợi agent_ingress (queued, processing, done, failed, dead) và của việc gửi trả lời (pending, sending, sent, failed, skipped).</span>
+    </a>
+  </div>
+
+  <h3>2c. Plugin cắm vào đâu</h3>
+  <div class="grid">
+    <a class="card top" href="tree-plugin-contract-20261022-095800/plugin-contract.html">
+      <strong>Plugin góp gì vào agent</strong>
+      <span>Hợp đồng register(ctx): tool, prompt section, hook, kênh, route, job, đăng nhập, dịch vụ cho nhau, dữ liệu riêng, giao diện. Plugin nào dùng gì, danh sách tool đã duyệt.</span>
+    </a>
+    <a class="card" href="sequence-plugin-toggle-20261022-112511/plugin-toggle.html">
+      <strong>Bật plugin lúc đang chạy</strong>
+      <span>Từ trang quản trị tới DB, PluginHost, LiveAgent, và lượt kế tiếp ở mọi tiến trình.</span>
+    </a>
+    <a class="card" href="class-core-ports-20261022-112511/core-ports.html">
+      <strong>Cổng và lớp cắm của lõi</strong>
+      <span>ModelClient, SessionStore, ChannelAdapter, MemoryBackend, Tracer, ToolSpec, Hook: muốn thay model, kho, kênh thì cắm vào đâu.</span>
+    </a>
+    <a class="card" href="dataflow-knowledge-store-20261022-112511/knowledge-store.html">
+      <strong>Kho tri thức và vector</strong>
+      <span>Tài liệu vào, cắt đoạn, nhúng theo lô (pgvector), và một lần kb_search: từ khóa + vector song song, xếp hạng, bộ chấm, gói cho agent.</span>
+    </a>
+  </div>
+
+  <h3>2d. Vòng chủ động và dữ liệu</h3>
+  <div class="grid">
+    <a class="card" href="workflow-follow-up-loop-20261022-112511/follow-up-loop.html">
+      <strong>Vòng chăm sóc lại</strong>
+      <span>Hội thoại im thì model phán đoán, mã quyết có gửi không (giờ, khoảng cách, số lần), gửi qua hàng đợi như mọi trả lời.</span>
+    </a>
+    <a class="card" href="erd-agent-rt-20261022-112511/agent-rt.html">
+      <strong>Schema agent_rt</strong>
+      <span>14 bảng của lõi với mọi cột: phiên và lịch sử, hàng đợi, trace, cài đặt, plugin; chỉ hai FK thật, còn lại nối theo giá trị.</span>
+      <small>Vẽ ở mức standard (dày hơn) vì nhiều cột; bảng của plugin (kb_, sk_, cv_, crm_) không ở đây.</small>
+    </a>
+  </div>
+
+  <h2>3. Hệ thống mới pema-agent đang chạy</h2>
+  <div class="grid">
+    <a class="card" href="architecture-stack-overview-20261022-092501/stack-overview.html">
+      <strong>Toàn cảnh stack</strong>
+      <span>Mọi container của <code>docker compose up</code>, hai database trên một Postgres, egress ra internet, và hai chiều giữa CRM và agent.</span>
+      <small>Không vẽ: caddy, migrate, agent-migrate.</small>
+    </a>
+    <a class="card" href="architecture-agent-crm-20261022-085541/agent-crm.html">
+      <strong>Đường chính agent ↔ CRM</strong>
+      <span>Chỉ con đường đặt lịch: khách, agent, crm-signer, API, hai database, worker sự kiện. Đọc trước khi xem ba luồng bên dưới.</span>
+    </a>
+  </div>
+
+  <h2>4. Từng luồng của plugin crm</h2>
+  <div class="grid">
+    <a class="card" href="sequence-booking-20261022-091319/booking.html">
+      <strong>Một lượt đặt lịch</strong>
+      <span>Từng thông điệp từ tin nhắn Zalo đến lịch trong CRM: xem giờ trống, lưu liên hệ, đặt, rồi sự kiện đi ngược về.</span>
+    </a>
+    <a class="card" href="workflow-reminder-loop-20261022-091319/reminder-loop.html">
+      <strong>Vòng nhắc lịch</strong>
+      <span>Cái gì khởi động vòng (sự kiện, mốc giờ, đối chiếu), hàm quyết định với bảy lý do bỏ, và cái gì kết thúc vòng.</span>
+    </a>
+    <a class="card" href="dataflow-agent-data-20261022-091319/agent-data.html">
+      <strong>Dữ liệu CRM vào agent</strong>
+      <span>Bốn đường được phép theo luật L4, trường nào ra ngoài, và những gì không bao giờ có đường.</span>
+    </a>
+  </div>
+
+  <footer>
+    Vẽ bằng Archify từ mã tại commit <code>7d86533</code> (2026-10-22). Giao diện của trình xem bằng tiếng Anh; nội dung sơ đồ bằng tiếng Việt. Vẽ lại: sửa <code>candidate.json</code> trong thư mục của sơ đồ rồi chạy <code>archify finalize</code>.
+  </footer>
+</main>
+</body>
+</html>

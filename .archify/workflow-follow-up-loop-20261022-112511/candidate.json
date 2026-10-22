@@ -1,0 +1,389 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Vòng chăm sóc lại (FollowUps): model chỉ góp ý, giới hạn nằm trong mã",
+    "locale": "vi",
+    "output": ".archify/workflow-follow-up-loop-20261022-112511/follow-up-loop.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "git@github-personal20:o00oleanho00o/cnbphongkham.git",
+      "link_mode": "local-only",
+      "revision": "7d86533840b79a213b046bf19e0de37db65f3b14"
+    }
+  },
+  "lanes": [
+    {
+      "id": "loop",
+      "label": "Vòng 60 s (review_pass rồi send_pass)"
+    },
+    {
+      "id": "judge",
+      "label": "Phán đoán"
+    },
+    {
+      "id": "limits",
+      "label": "Giới hạn trong mã, model không đổi được",
+      "variant": "exception"
+    },
+    {
+      "id": "send",
+      "label": "Gửi qua hàng đợi như mọi trả lời"
+    }
+  ],
+  "phases": [
+    {
+      "id": "p-review",
+      "label": "Nửa đầu: xét hội thoại im",
+      "fromCol": 0,
+      "toCol": 3
+    },
+    {
+      "id": "p-send",
+      "label": "Nửa sau: tới hẹn thì nhắn",
+      "fromCol": 4,
+      "toCol": 5,
+      "variant": "emphasis"
+    }
+  ],
+  "mainPath": [
+    "tick",
+    "quiet",
+    "ask",
+    "decide",
+    "save"
+  ],
+  "nodes": [
+    {
+      "id": "tick",
+      "lane": "loop",
+      "col": 0,
+      "type": "backend",
+      "label": "Mỗi 60 s",
+      "sublabel": "khi admin bật, chọn kênh",
+      "sources": [
+        {
+          "path": "pema-agent/backend/apps/agent/agent_app/follow_up.py",
+          "line": 770,
+          "end_line": 779,
+          "label": "run"
+        },
+        {
+          "path": "pema-agent/backend/apps/agent/agent_app/follow_up.py",
+          "line": 54,
+          "end_line": 59,
+          "label": "FollowUpConfig"
+        }
+      ]
+    },
+    {
+      "id": "quiet",
+      "lane": "loop",
+      "col": 1,
+      "type": "database",
+      "label": "Hội thoại im",
+      "sublabel": "gửi 2 h–1 ngày; chưa xét",
+      "sources": [
+        {
+          "path": "pema-agent/backend/apps/agent/agent_app/follow_up.py",
+          "line": 711,
+          "end_line": 736,
+          "label": "review_pass"
+        },
+        {
+          "path": "pema-agent/backend/apps/agent/agent_app/follow_up.py",
+          "line": 450,
+          "end_line": 469,
+          "label": "_QUIET"
+        }
+      ]
+    },
+    {
+      "id": "due",
+      "lane": "loop",
+      "col": 4,
+      "type": "database",
+      "label": "Hẹn đến giờ",
+      "sublabel": "next_at ≤ now",
+      "sources": [
+        {
+          "path": "pema-agent/backend/apps/agent/agent_app/follow_up.py",
+          "line": 760,
+          "end_line": 768,
+          "label": "send_pass"
+        },
+        {
+          "path": "pema-agent/backend/apps/agent/agent_app/follow_up.py",
+          "line": 426,
+          "end_line": 431,
+          "label": "_DUE"
+        }
+      ]
+    },
+    {
+      "id": "ask",
+      "lane": "judge",
+      "col": 2,
+      "type": "external",
+      "label": "Hỏi model",
+      "sublabel": "từ khóa dừng → ngưng",
+      "sources": [
+        {
+          "path": "pema-agent/backend/apps/agent/agent_app/follow_up.py",
+          "line": 847,
+          "end_line": 863,
+          "label": "_ask"
+        },
+        {
+          "path": "pema-agent/backend/apps/agent/agent_app/follow_up.py",
+          "line": 248,
+          "end_line": 272,
+          "label": "SYSTEM_PROMPT: 6 trạng thái"
+        },
+        {
+          "path": "pema-agent/backend/apps/agent/agent_app/follow_up.py",
+          "line": 165,
+          "end_line": 195,
+          "label": "STOP_PHRASES, asks_to_stop"
+        }
+      ]
+    },
+    {
+      "id": "save",
+      "lane": "judge",
+      "col": 3,
+      "type": "database",
+      "label": "Lưu phán đoán",
+      "sublabel": "agent_follow_up",
+      "sources": [
+        {
+          "path": "pema-agent/backend/apps/agent/agent_app/follow_up.py",
+          "line": 821,
+          "end_line": 845,
+          "label": "_review → save"
+        },
+        {
+          "path": "pema-agent/backend/apps/agent/alembic/versions/0003_follow_up.sql",
+          "line": 8,
+          "end_line": 29,
+          "label": "agent_follow_up"
+        }
+      ]
+    },
+    {
+      "id": "decide",
+      "lane": "limits",
+      "col": 2,
+      "type": "security",
+      "label": "decide()",
+      "sublabel": "kẹp giờ; 2 lần im → ngưng",
+      "sources": [
+        {
+          "path": "pema-agent/backend/apps/agent/agent_app/follow_up.py",
+          "line": 208,
+          "end_line": 226,
+          "label": "decide"
+        },
+        {
+          "path": "pema-agent/backend/apps/agent/agent_app/follow_up.py",
+          "line": 62,
+          "end_line": 91,
+          "label": "FollowUpPolicy"
+        }
+      ]
+    },
+    {
+      "id": "newer",
+      "lane": "limits",
+      "col": 4,
+      "type": "security",
+      "label": "Khách nhắn lại?",
+      "sublabel": "có: hủy; quá 2 ngày: bỏ",
+      "sources": [
+        {
+          "path": "pema-agent/backend/apps/agent/agent_app/follow_up.py",
+          "line": 788,
+          "end_line": 802,
+          "label": "_send: max_late, has_newer"
+        }
+      ]
+    },
+    {
+      "id": "maysend",
+      "lane": "limits",
+      "col": 5,
+      "type": "security",
+      "label": "may_send()",
+      "sublabel": "8–20 h; cách ≥ 24 h",
+      "sources": [
+        {
+          "path": "pema-agent/backend/apps/agent/agent_app/follow_up.py",
+          "line": 229,
+          "end_line": 243,
+          "label": "may_send"
+        },
+        {
+          "path": "pema-agent/backend/apps/agent/agent_app/follow_up.py",
+          "line": 151,
+          "end_line": 162,
+          "label": "window_open, next_window"
+        }
+      ]
+    },
+    {
+      "id": "outbox",
+      "lane": "send",
+      "col": 4,
+      "type": "messagebus",
+      "label": "DispatcherOutbox",
+      "sublabel": "PROACTIVE vào hàng đợi",
+      "sources": [
+        {
+          "path": "pema-agent/backend/apps/agent/agent_app/follow_up.py",
+          "line": 619,
+          "end_line": 676,
+          "label": "DispatcherOutbox"
+        },
+        {
+          "path": "pema-agent/backend/apps/agent/agent_app/follow_up.py",
+          "line": 275,
+          "end_line": 283,
+          "label": "instruction_for"
+        }
+      ]
+    },
+    {
+      "id": "agent",
+      "lane": "send",
+      "col": 5,
+      "type": "backend",
+      "label": "Agent viết 1 tin hay SKIP",
+      "sublabel": "SKIP: không gửi",
+      "sources": [
+        {
+          "path": "pema-agent/backend/apps/agent/agent_app/channel_hub.py",
+          "line": 220,
+          "end_line": 230,
+          "label": "PROACTIVE + SKIP"
+        },
+        {
+          "path": "pema-agent/backend/apps/agent/agent_app/channel_hub.py",
+          "line": 400,
+          "end_line": 402,
+          "label": "is_skip"
+        },
+        {
+          "path": "pema-agent/backend/apps/agent/agent_app/follow_up.py",
+          "line": 806,
+          "end_line": 814,
+          "label": "sau khi gửi"
+        }
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "id": "tick-quiet",
+      "from": "tick",
+      "to": "quiet",
+      "label": "review_pass",
+      "variant": "emphasis"
+    },
+    {
+      "id": "quiet-ask",
+      "from": "quiet",
+      "to": "ask",
+      "label": "transcript ≤20 tin, 6000 ký tự"
+    },
+    {
+      "id": "ask-decide",
+      "from": "ask",
+      "to": "decide",
+      "label": "verdict JSON (không đọc được: done)",
+      "variant": "emphasis"
+    },
+    {
+      "id": "decide-save",
+      "from": "decide",
+      "to": "save",
+      "label": "Outcome",
+      "variant": "emphasis"
+    },
+    {
+      "id": "save-due",
+      "from": "save",
+      "to": "due",
+      "label": "send_pass: next_at đến giờ",
+      "variant": "dashed",
+      "role": "branch"
+    },
+    {
+      "id": "due-newer",
+      "from": "due",
+      "to": "newer"
+    },
+    {
+      "id": "newer-maysend",
+      "from": "newer",
+      "to": "maysend",
+      "label": "không"
+    },
+    {
+      "id": "maysend-outbox",
+      "from": "maysend",
+      "to": "outbox",
+      "label": "được",
+      "variant": "emphasis"
+    },
+    {
+      "id": "outbox-agent",
+      "from": "outbox",
+      "to": "agent",
+      "label": "lượt chạy như tin thường"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Sáu trạng thái model được chọn",
+      "items": [
+        "done: không nhắn; hesitant, call_back: nhắn lại sau after_h (mặc định 24 h)",
+        "soft_decline (từ chối khéo kiểu Việt): nghỉ pause_days (mặc định 14 ngày) rồi hẹn lại",
+        "hard_decline, negative: ngưng hẳn (stopped) cho tới khi khách tự nhắn",
+        "Từ khóa dừng (đừng nhắn, làm phiền, spam, chặn…, so sánh bỏ dấu) → hard_decline ngay, không hỏi model"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Thứ model không đổi được",
+      "items": [
+        "Giờ gửi 8–20 h, cách lần trước ≥ 24 h, tối đa 2 tin liên tiếp không được đáp, hẹn quá 2 ngày thì bỏ",
+        "Từ khóa dừng (bỏ dấu) là lưới an toàn bên cạnh phán đoán của model; nội dung hội thoại là dữ liệu, không phải lệnh",
+        "Chỉ đọc thứ agent tự giữ: agent_ingress và agent_message (luật L4), không đọc CRM",
+        "decide(): after_h kẹp 1 h–14 ngày (mặc định 24 h), pause_days kẹp 1–60 ngày (mặc định 14); DispatcherOutbox đợi lượt ≤ 180 s và việc gửi ≤ 300 s, quá thì đánh dấu skipped"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Gửi đi đường nào",
+      "items": [
+        "Lời nhắc vào hàng đợi như một tin của hội thoại, mang PROACTIVE; cùng khóa phiên, cùng ChannelHub, cùng retry",
+        "external_id = followup:conversation:reviewed_through:unanswered → gửi hai lần (crash, hai tiến trình) chỉ chạy một",
+        "Cùng cơ chế cho plugin (ctx.proactive): plugin crm dùng nó để nhắc lịch"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Từng ô, đầy đủ",
+      "items": [
+        "Mỗi 60 s: review_pass rồi send_pass; chỉ chạy khi admin bật follow_up và chọn kênh (agent_settings)",
+        "Hội thoại im: trả lời cuối đã gửi (delivery sent) từ 2 h tới 1 ngày trước, chat 1-1, chưa xét (reviewed_through), ≤ 10 hội thoại một lần; transcript ≤ 20 tin, 6000 ký tự, mỗi tin ≤ 600",
+        "Hỏi model: JSON {state, after_h, pause_days, reason}; không đọc được → done; có từ khóa dừng thì hard_decline không cần hỏi",
+        "decide(): after_h kẹp 1 h–14 ngày (mặc định 24 h), pause_days kẹp 1–60 ngày (mặc định 14); 2 tin liền không được đáp → stopped; lưu state, reason, next_at, paused_until, reviewed_through",
+        "Hẹn đến giờ: next_at ≤ now, chưa stopped; khách nhắn lại từ lần xét → hủy hẹn (xét lại khi im); hẹn quá 2 ngày → bỏ",
+        "may_send(): không stopped/paused, trong 8–20 h giờ Việt Nam, cách lần gửi trước ≥ 24 h, chưa quá 2 lần không đáp",
+        "DispatcherOutbox: tin PROACTIVE, external_id followup:conversation:reviewed_through:unanswered; đợi lượt ≤ 180 s, gửi ≤ 300 s; agent viết 1 tin hay SKIP (không gửi, không xin lỗi); đã gửi → unanswered + 1, last_sent_at, next_at = null"
+      ]
+    }
+  ]
+}
