@@ -345,6 +345,19 @@ async def test_a_skipped_message_does_not_count_but_the_case_still_waits() -> No
     assert "sent" not in await s.events(case.id)
 
 
+async def test_room_today_is_the_cap_blocked_checks_less_what_every_case_sent() -> None:
+    setup = Setup(_spec(Judge(), budget=Budget(per_person_per_day=3)), _spec(Judge(), kind="other"))
+    assert await setup.engine.room_today("demo", "follow_up", "zalo-a", "u1") == 2  # the setting lowers 3
+
+    await setup.open()
+    await setup.engine.pass_once()  # the follow-up writes once
+
+    assert await setup.engine.room_today("demo", "other", "zalo-a", "u1") == 1
+    assert await setup.engine.room_today("demo", "other", "zalo-a", "u2") == 2
+    setup.config = CasesConfig(enabled=True, per_person_per_day=1)
+    assert await setup.engine.room_today("demo", "follow_up", "zalo-a", "u1") == 0
+
+
 async def test_a_save_on_a_stale_version_is_dropped() -> None:
     s = Setup(_spec(Judge()))
     case = await s.open()

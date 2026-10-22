@@ -21,6 +21,7 @@ from agentcore.cases import (
     StopRules,
     Trigger,
     TurnNode,
+    after_error,
     apply,
     blocked,
     decision_from_json,
@@ -276,6 +277,64 @@ def test_the_edge_back_that_reaches_its_cap_stops_the_case() -> None:
         "unanswered reached 2",
         2,
     )
+
+
+def _failing(**kw: object) -> CaseSpec:
+    """A turn that fails goes back to the judge (and counts) before it is tried again."""
+    graph = Graph(
+        start="judge",
+        nodes=(CodeNode("judge", _judge), TurnNode("write", lambda s, now: "write")),
+        edges=(Edge("judge", "write"), Edge("write", "judge", counter="unanswered", on="error")),
+    )
+    return _spec(graph=graph, **kw)
+
+
+def test_an_error_edge_goes_back_only_with_a_counter_and_without_a_condition() -> None:
+    nodes = (CodeNode("judge", _judge), TurnNode("write", lambda s, now: "write"))
+    for edges, match in (
+        ((Edge("judge", "write"), Edge("write", "judge", on="error")), "goes back"),
+        (
+            (Edge("judge", "write"), Edge("write", "judge", counter="unanswered", on="error", when=bool)),
+            "no condition",
+        ),
+        (
+            (
+                Edge("judge", "write"),
+                Edge("write", "judge", counter="unanswered", on="error"),
+                Edge("write", "write", counter="unanswered", on="error"),
+            ),
+            "one error edge",
+        ),
+    ):
+        with pytest.raises(ValueError, match=match):
+            _spec(graph=Graph("judge", nodes, edges))
+
+
+def test_a_node_that_ran_never_takes_its_error_edge() -> None:
+    spec = _failing()
+    after = apply(spec, _record(spec, node="write"), Decision(), NOW)
+    assert (after.status, after.end_reason) == ("done", "end of the graph")
+
+
+def test_a_failed_node_waits_then_runs_the_end_of_its_error_edge() -> None:
+    spec = _failing()
+    later = NOW + timedelta(minutes=5)
+
+    after = after_error(spec, _record(spec, node="write"), later, NOW)
+
+    assert (after.node, after.status, after.wait_for, after.wake_at) == ("judge", "waiting", "clock", later)
+    assert after.state["unanswered"] == 1
+    stopped = after_error(spec, _record(spec, node="write", state={"unanswered": 1}), later, NOW)
+    assert (stopped.status, stopped.end_reason) == ("stopped", "unanswered reached 2")
+
+
+def test_a_failed_node_without_an_error_edge_is_tried_again_itself_by_the_deadline() -> None:
+    spec = _spec()
+    record = _record(spec, node="write", deadline=NOW + timedelta(minutes=1))
+
+    after = after_error(spec, record, NOW + timedelta(minutes=5), NOW)
+
+    assert (after.node, after.wake_at, after.state["unanswered"]) == ("write", NOW + timedelta(minutes=1), 0)
 
 
 def test_next_must_be_an_edge_and_still_counts() -> None:

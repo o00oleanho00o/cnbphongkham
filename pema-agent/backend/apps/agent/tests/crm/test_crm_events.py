@@ -19,7 +19,7 @@ from jwt.algorithms import OKPAlgorithm
 from agent_app.plugins import PluginHost, discover
 from agent_app.runtime import BUNDLED_PLUGINS
 from plugins.crm.events import AUDIENCE, ISSUER, EventVerifier, events_router
-from plugins.crm.store import MemoryReminderStore
+from plugins.crm.store import MemoryReminderStore, Visit
 from plugins.sso import Settings, authenticator
 from plugins.sso.keys import KeySet
 
@@ -238,14 +238,20 @@ async def test_the_plugin_mounts_the_events_route_among_its_hooks(crm: Crm) -> N
     assert answer.status_code == 200
 
 
-async def test_an_applied_event_wakes_the_reminder_loop_and_an_ignored_one_does_not(crm: Crm) -> None:
-    woken: list[int] = []
+async def test_an_applied_event_hands_on_the_visit_as_it_was_and_an_ignored_one_nothing(crm: Crm) -> None:
+    woken: list[Visit | None] = []
+
+    async def changed(before: Visit | None) -> None:
+        woken.append(before)
+
     app = FastAPI()
-    app.include_router(
-        events_router(EventVerifier(crm.keys()), MemoryReminderStore(), lambda: woken.append(1))
-    )
+    app.include_router(events_router(EventVerifier(crm.keys()), MemoryReminderStore(), changed))
     async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://agent") as c:
         await _send(c, crm.token({"kind": "invoice.paid"}))
         await _send(c, crm.token())
+        await _send(c, crm.token(visit(version=2, starts_at="2026-10-23T09:30:00+07:00")))
 
-    assert woken == [1]
+    assert woken[0] is None  # a visit not known before
+    assert len(woken) == 2
+    assert woken[1] is not None
+    assert woken[1].starts_at == datetime(2026, 10, 22, 2, 30, tzinfo=UTC)  # the time it had

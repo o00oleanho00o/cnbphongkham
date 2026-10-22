@@ -137,6 +137,9 @@ class Edge:
     """``(state) -> bool``; None always holds. The first edge from a node that holds is taken."""
     counter: str | None = None
     """A field of the state this edge adds one to; required on an edge that goes back."""
+    on: Literal["ok", "error"] = "ok"
+    """``error``: taken only when its node raised (the engine tries again from ``dst``, after a pause), never
+    when the node ran; one per node, without ``when``."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -195,8 +198,13 @@ def _check(spec: CaseSpec) -> None:
     unknown = [name for name in spec.stop.counters if name not in fields]
     if unknown:
         raise ValueError(f"case {spec.kind}: counter(s) not in the state: {', '.join(unknown)}")
+    failing = [e.src for e in spec.graph.edges if e.on == "error"]
+    if len(set(failing)) != len(failing):
+        raise ValueError(f"case {spec.kind}: one error edge per node at most")
     for edge in spec.graph.edges:
         where = f"case {spec.kind}, edge {edge.src} -> {edge.dst}"
+        if edge.on == "error" and edge.when is not None:
+            raise ValueError(f"{where}: an error edge has no condition")
         if edge.src not in order or edge.dst not in order:
             raise ValueError(f"{where}: names a node that is not there")
         if edge.counter is not None and edge.counter not in spec.stop.counters:

@@ -2,7 +2,7 @@
 
 Ghi 2026-10-22. Thiết kế gốc: `DESIGN-case-loop.md`. Chủ duyệt 2026-10-22: làm `case_done` và `case_wait_until`
 trước; `case_need_human` để sau. Lời duyệt đó cũng là duyệt L7 cho hai tool mới trong profile `clinic`.
-**Trạng thái (2026-10-22): bước A, B, C (mục 5) và mục 3.1 (trần token) đã làm.** Khác kế hoạch khi làm: `TurnNode` bỏ `sends` (một câu trả lời
+**Trạng thái (2026-10-22): bước A, B, C (mục 5), mục 3.1 (trần token) và bước D (mục 6, nhắc lịch) đã làm.** Khác kế hoạch khi làm: `TurnNode` bỏ `sends` (một câu trả lời
 khách không nhận không được vào lịch sử chat; bước chỉ phán đoán là `CodeNode` tự gọi model); hai tool chỉ có khi
 một plugin đang bật khai báo ca (agent không dùng ca giữ nguyên prompt và cache); động cơ nghe tin khách ở
 `ChannelHub` (mọi kênh đi qua đó), không qua `on_message` của plugin; `Proactive.send_to` giữ nguyên.
@@ -211,7 +211,8 @@ Test DB cần container `pema-scratch-pg` và `PEMA_TEST_DATABASE_URL`, không b
 3. **Chăm sóc lại thành plugin `follow_up` trên động cơ** (DESIGN 2.5). Lý do chưa làm ngay: route
   `/v1/admin/follow-ups` và hai trường `follow_up_*` của settings đang được frontend dùng, mà frontend do phiên
   Claude khác giữ; đổi cùng lúc với phiên đó.
-4. Nhắc lịch của `crm` lên động cơ (DESIGN 2.6).
+4. ~~Nhắc lịch của `crm` lên động cơ (DESIGN 2.6)~~ **đã làm 2026-10-22, mục 6.** Khác kế hoạch khi làm: `check`
+   kết thúc ngay ca của lịch đã hủy hay dời, trước khi xét mốc (ca được sự kiện đánh thức không đợi tới mốc mới dừng).
 5. `case_need_human`, `HumanNode`, route `resume`/`close`, giao diện nhân viên.
 6. Ngưỡng `run_turn` và nén ra cài đặt.
 
@@ -265,7 +266,7 @@ của ca còn xếp hàng có thể gọi `case_done` mà vẫn được gán ch
 **Vẽ lại sau khi xanh:** cột `pending` trong ERD `agent_rt` và hình "Agent · ca" của `pema-system-design.html`.
 
 
-## 6. Bước D: nhắc lịch của `crm` chạy trên động cơ ca (DESIGN 2.6; ghi 2026-10-22, chưa làm, chờ "go")
+## 6. Bước D: nhắc lịch của `crm` chạy trên động cơ ca (DESIGN 2.6; ghi 2026-10-22, đã làm cùng ngày)
 
 Chủ chọn làm 2.6 trước 2.5 (chăm sóc lại), vì 2.5 đụng route và cài đặt mà frontend đang dùng. Nhắc lịch thành ca
 thật đầu tiên chạy hết vòng: plugin khai báo ca, động cơ đợi đồng hồ, kiểm lại, gửi, ghi nhật ký.

@@ -145,8 +145,7 @@ def test_the_reminder_queries(db_url: str) -> None:
             (soon.appointment_id, AT, "24h"),
             (soon.appointment_id, AT, "3h"),
         }
-        assert await store.sent_since(T0) == {("zalo-acc1", "u777"): 1}
-        assert await other.sent_since(T0) == {}
+        assert await other.handled([soon.appointment_id]) == set()
 
         assert await store.mark_gone(T0, AT + timedelta(days=4), {soon.appointment_id}) == 1
         gone = await store.visit(later.appointment_id)

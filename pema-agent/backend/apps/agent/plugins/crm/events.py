@@ -8,13 +8,14 @@ two minutes, ``jti`` the event id, the event in the claim ``event``. Only that a
 The route writes STATE into the store (``store.py``) and answers at once: no model call, no CRM call, nothing
 returned to the CRM but ``{"ok": true}``. An event kind it does not know is accepted and ignored, so a newer
 CRM does not make the older agent's outbox retry for nothing. This is a trigger of the owner's loop frame
-(docs/IDEAS-agent-loops.md 5); the loop that acts on it is step 6.
+(docs/IDEAS-agent-loops.md 5): once an event is applied, ``on_change`` gets the visit as it was before it
+(None for a new visit or an event about a person), and wakes the reminder cases of that visit.
 """
 
 from __future__ import annotations
 
 import logging
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from datetime import datetime
 from typing import Annotated, Any, Final, Literal
 from uuid import UUID
@@ -125,10 +126,23 @@ async def apply(store: ReminderStore, event_id: UUID, event: dict[str, Any]) -> 
     return False
 
 
+async def _nothing(before: Visit | None) -> None:
+    return None
+
+
+async def _before(store: ReminderStore, event: dict[str, Any]) -> Visit | None:
+    """The visit an ``appointment.changed`` event is about, as held before it; ``ValueError`` on a bad id."""
+    if event.get("kind") != "appointment.changed":
+        return None
+    return await store.visit(UUID(str(event.get("appointment_id"))))
+
+
 def events_router(
-    verifier: EventVerifier, store: ReminderStore, on_change: Callable[[], None] = lambda: None
+    verifier: EventVerifier,
+    store: ReminderStore,
+    on_change: Callable[[Visit | None], Awaitable[None]] = _nothing,
 ) -> APIRouter:
-    """``on_change`` runs after an event was applied: it wakes the reminder loop."""
+    """``on_change(before)`` runs after an event was applied: it wakes the reminders."""
     router = APIRouter()
 
     @router.post("/events")
@@ -143,14 +157,16 @@ def events_router(
         if claims is None:
             return _answer(401, "unauthenticated")
         event: Any = claims.get("event")
+        body: dict[str, Any] = event if isinstance(event, dict) else {}  # pyright: ignore[reportUnknownVariableType]
         try:
             event_id = UUID(str(claims["jti"]))
-            known = await apply(store, event_id, event if isinstance(event, dict) else {})  # pyright: ignore[reportUnknownArgumentType]
+            before = await _before(store, body)
+            known = await apply(store, event_id, body)
         except (ValueError, ValidationError):
             logger.warning("a CRM event could not be read (jti %s)", claims.get("jti"))
             return _answer(422, "malformed_event")
         if known:
-            on_change()
+            await on_change(before)
         return _answer(200, "applied" if known else "ignored")
 
     return router

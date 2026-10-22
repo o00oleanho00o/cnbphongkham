@@ -203,6 +203,8 @@ off until switched on, in this order:
    Set it only after step 2, or the agent answers 500 and the API gives up on those events after about an hour.
 4. Reminders: `reminders_enabled = true` under `[plugins.crm]` of the agent's profile (off by default); marks,
    quiet hours and the daily cap are the plugin's settings.
+5. Reminders run as cases on the agent's case engine (since 2026-10-22), so they need its switch too, off by
+   default: `PATCH /v1/admin/settings {"cases_enabled": true}` once (it is stored). Off: nothing is sent.
 
 Key change without downtime: `keygen` into a fresh volume, put the new public key beside the old one
 (`PEMA_AGENT_GATEWAY_PUBLIC_KEYS=old,new`), restart `api`, switch `crm-signer` to the new volume, drop the old key.

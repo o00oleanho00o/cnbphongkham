@@ -8,8 +8,8 @@ in front of it. A turn without a person (the CLI, the web test console) is refus
 ``Idempotency-Key`` made from the session and the call, so a retried call never books twice.
 
 The tools are the "employee's tools" of the owner's loop frame (docs/IDEAS-agent-loops.md 5). The plugin also
-takes the CRM's events (``events.py``, ``POST /v1/hooks/crm/events``) into its own tables (``store.py``): the
-trigger side of the reminder loop, whose acting side is step 6.
+takes the CRM's events (``events.py``, ``POST /v1/hooks/crm/events``) into its own tables (``store.py``), and,
+with ``reminders_enabled``, declares the case ``reminder`` the agent's case engine runs (``reminders.py``).
 """
 
 from __future__ import annotations
@@ -31,7 +31,7 @@ from plugins.sso.keys import KeySet
 
 from .client import CrmClient, CrmError
 from .events import EventVerifier, events_router
-from .reminders import ReminderPolicy, Reminders
+from .reminders import ReminderPolicy, Reminders, reminder_case
 from .store import MemoryReminderStore, PostgresReminderStore, ReminderStore
 
 CHANNEL: Final = re.compile(r"[A-Za-z0-9_.:-]{1,64}")
@@ -305,9 +305,11 @@ def register(ctx: PluginContext) -> None:
     if ctx.config.get("reminders_enabled") is not True:
         ctx.register_routes(events_router(verifier, store), kind="hooks")
         return
-    reminders = Reminders(store, lambda: ctx.proactive, ReminderPolicy.of(ctx.config, zone), client)
+    policy = ReminderPolicy.of(ctx.config, zone)
+    reminders = Reminders(store, lambda: ctx.cases, lambda: ctx.proactive, policy, client)
+    ctx.register_case(reminder_case(reminders))
     ctx.register_job("reminders", reminders.run)
-    ctx.register_routes(events_router(verifier, store, reminders.wake), kind="hooks")
+    ctx.register_routes(events_router(verifier, store, reminders.changed), kind="hooks")
 
 
 def reminder_store(ctx: PluginContext) -> ReminderStore:

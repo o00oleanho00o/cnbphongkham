@@ -37,6 +37,7 @@ from agentcore.cases import (
     CodeNode,
     Decision,
     TurnNode,
+    after_error,
     apply,
     blocked,
     decision_from_json,
@@ -173,6 +174,13 @@ class CaseEngine:
         self._spec(plugin, kind)
         return await self._store.live(kind, key)
 
+    async def room_today(self, plugin: str, kind: str, channel: str, user_id: str) -> int:
+        """Messages a case of ``kind`` may still send this person today: the cap ``blocked`` checks (the
+        kind's budget, lowered by the setting) less what every case sent them since the local day began."""
+        spec = self._spec(plugin, kind)
+        cap = min(spec.budget.per_person_per_day, self._config().per_person_per_day)
+        return max(0, cap - await self._sent_today(channel, user_id, self._clock()))
+
     async def _wake(self, spec: CaseSpec, record: CaseRecord, patch: dict[str, Any], why: str) -> bool:
         now = self._clock()
         try:
@@ -246,7 +254,8 @@ class CaseEngine:
         for _ in range(self.settings.max_nodes_per_pass):
             now = self._clock()
             node = spec.graph.node(record.node)
-            today = await self._sent_today(record, now) if isinstance(node, TurnNode) else 0
+            turn = isinstance(node, TurnNode)
+            today = await self._sent_today(record.channel, record.user_id, now) if turn else 0
             block = blocked(
                 spec,
                 record,
@@ -264,11 +273,11 @@ class CaseEngine:
                 record, decision = await self._run(spec, record, node, now)
             except Exception as err:  # a plugin's node failing costs this case one retry, not the loop
                 logger.warning("case %d: node %s failed (%s)", record.id, node.id, type(err).__name__)
-                return await self._retry_later(record, node.id, type(err).__name__, now)
+                return await self._retry_later(spec, record, node.id, type(err).__name__, now)
             try:
                 after = apply(spec, record, decision, now)
             except ValueError as err:
-                return await self._retry_later(record, node.id, str(err), now)
+                return await self._retry_later(spec, record, node.id, str(err), now)
             saved = await self._store.save(after)
             if saved is None:
                 await self._store.log(record.id, "lost", node.id, {"why": "changed by another run"}, now)
@@ -304,10 +313,10 @@ class CaseEngine:
             await self._store.log(record.id, "sent", node.id, {"note": result.note}, now)
         return record, decision
 
-    async def _sent_today(self, record: CaseRecord, now: datetime) -> int:
+    async def _sent_today(self, channel: str, user_id: str, now: datetime) -> int:
         local = now.astimezone(self._zone())
         start = datetime.combine(local.date(), time(0), local.tzinfo)
-        return await self._store.sent_since(record.channel, record.user_id, start)
+        return await self._store.sent_since(channel, user_id, start)
 
     def _next_day(self, now: datetime) -> datetime:
         local = now.astimezone(self._zone())
@@ -327,11 +336,17 @@ class CaseEngine:
             return saved or record
         return await self._close(record, "stopped", reason, "blocked")
 
-    async def _retry_later(self, record: CaseRecord, node: str, why: str, now: datetime) -> CaseRecord:
-        later = min(now + self.settings.error_retry, record.deadline)
-        waiting = replace(record, status="waiting", wait_for="clock", wake_at=later, updated_at=now)
-        saved = await self._store.save(waiting)
-        await self._store.log(record.id, "error", node, {"why": why, "retry_at": later}, now)
+    async def _retry_later(
+        self, spec: CaseSpec, record: CaseRecord, node: str, why: str, now: datetime
+    ) -> CaseRecord:
+        """The node raised: the case waits, then runs the end of the node's error edge (or the node again)."""
+        # shortcut: a turn that reached the queue before the error still runs, even if the node checked again
+        # says no; withdraw the queued turn (ingress) when that matters.
+        later = now + self.settings.error_retry
+        after = after_error(spec, record, later, now)
+        saved = await self._store.save(after)
+        detail = {"why": why, "retry_at": after.wake_at, "next": after.node, "status": after.status}
+        await self._store.log(record.id, "error", node, detail, now)
         return saved or record
 
     async def _close(self, record: CaseRecord, status: str, reason: str, kind: str) -> CaseRecord:

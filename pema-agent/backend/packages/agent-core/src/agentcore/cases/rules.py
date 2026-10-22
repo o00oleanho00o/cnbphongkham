@@ -5,7 +5,8 @@
 An edge with a counter adds one to that field of the state; reaching its cap ends the case. No edge left
 ends the case as done. A ``TurnNode`` that sent and decided nothing waits for the customer, its pointer
 already moved; so does one that answered with the skip word. A case still ``open`` after ``apply`` runs its
-next node at once (the engine bounds how many).
+next node at once (the engine bounds how many). A node that raised is tried again later (``after_error``):
+from the end of its error edge when it has one, so a step can be checked again before it is retried.
 """
 
 from __future__ import annotations
@@ -168,7 +169,7 @@ def blocked(
 
 
 def _edge(spec: CaseSpec, ran: str, state: BaseModel, chosen: str | None) -> Edge | None:
-    edges = spec.graph.edges_from(ran)
+    edges = tuple(e for e in spec.graph.edges_from(ran) if e.on == "ok")
     if chosen is not None:
         found = next((e for e in edges if e.dst == chosen), None)
         if found is None:
@@ -219,6 +220,25 @@ def apply(spec: CaseSpec, record: CaseRecord, decision: Decision, now: datetime)
     status: CaseStatus = "open" if wait_for is None else "waiting"
     return replace(
         record, node=edge.dst, status=status, wait_for=wait_for, wake_at=wake_at, updated_at=now, **changes
+    )
+
+
+def after_error(spec: CaseSpec, record: CaseRecord, retry_at: datetime, now: datetime) -> CaseRecord:
+    """The record after the node at ``record.node`` raised: it waits for the clock until ``retry_at`` (never
+    past the deadline), then runs the end of the node's error edge, or the same node when it has none. The
+    edge's counter counts; reaching its cap ends the case."""
+    edge = next((e for e in spec.graph.edges_from(record.node) if e.on == "error"), None)
+    node, state = record.node, dict(record.state)
+    if edge is not None:
+        node = edge.dst
+        if edge.counter is not None:
+            state[edge.counter] = int(state.get(edge.counter, 0)) + 1
+            cap = spec.stop.counters[edge.counter]
+            if state[edge.counter] >= cap:
+                return _end(record, "stopped", f"{edge.counter} reached {cap}", now, state=state)
+    wake_at = min(retry_at, record.deadline)
+    return replace(
+        record, node=node, state=state, status="waiting", wait_for="clock", wake_at=wake_at, updated_at=now
     )
 
 

@@ -77,10 +77,6 @@ class ReminderStore(Protocol):
         """(visit, its time, mark) already sent or skipped, for these visits."""
         ...
 
-    async def sent_since(self, since: datetime) -> dict[tuple[str, str], int]:
-        """Reminders sent to each person (channel, external id) since ``since``."""
-        ...
-
     async def claim_mark(self, visit: Visit, mark: str, outcome: str) -> bool:
         """Records the mark of the visit at its current time as handled; False when it already was."""
         ...
@@ -126,13 +122,6 @@ class MemoryReminderStore:
     async def handled(self, appointment_ids: Collection[UUID]) -> set[tuple[UUID, datetime, str]]:
         wanted = set(appointment_ids)
         return {key for key in self._marks if key[0] in wanted}
-
-    async def sent_since(self, since: datetime) -> dict[tuple[str, str], int]:
-        counts: dict[tuple[str, str], int] = {}
-        for person, outcome, at in self._marks.values():
-            if outcome == "sent" and at >= since:
-                counts[person] = counts.get(person, 0) + 1
-        return counts
 
     async def claim_mark(self, visit: Visit, mark: str, outcome: str) -> bool:
         key = (visit.appointment_id, visit.starts_at, mark)
@@ -208,11 +197,6 @@ _HANDLED = text(
     "SELECT appointment_id, starts_at, mark FROM agent_rt.crm_reminder_sent "
     "WHERE tenant_id = :tenant_id AND agent = :agent AND appointment_id = ANY(:ids)"
 )
-_SENT_SINCE = text(
-    "SELECT channel, external_id, count(*) FROM agent_rt.crm_reminder_sent "
-    "WHERE tenant_id = :tenant_id AND agent = :agent AND outcome = 'sent' AND sent_at >= :since "
-    "GROUP BY channel, external_id"
-)
 _CLAIM = text(
     "INSERT INTO agent_rt.crm_reminder_sent (tenant_id, agent, appointment_id, starts_at, mark, channel, "
     "external_id, outcome) VALUES (:tenant_id, :agent, :appointment_id, :starts_at, :mark, :channel, "
@@ -281,11 +265,6 @@ class PostgresReminderStore:
         async with self._engine.connect() as conn:
             rows = await conn.execute(_HANDLED, {**self._scope, "ids": list(appointment_ids)})
             return {(row[0], row[1], row[2]) for row in rows}
-
-    async def sent_since(self, since: datetime) -> dict[tuple[str, str], int]:
-        async with self._engine.connect() as conn:
-            rows = await conn.execute(_SENT_SINCE, {**self._scope, "since": since})
-            return {(row[0], row[1]): int(row[2]) for row in rows}
 
     async def claim_mark(self, visit: Visit, mark: str, outcome: str) -> bool:
         values = {

@@ -1,17 +1,21 @@
-"""The reminder loop (docs/PLAN-crm-plugin.md 3.5, 3.6 V1 and V3), in the owner's frame of a loop
+"""Reminders of visits as cases on the agent's case engine (docs/PLAN-case-loop.md 6): one case of kind
+``reminder`` per mark of a visit (``starts_at`` minus 24 or 3 hours), in the owner's frame of a loop
 (docs/IDEAS-agent-loops.md 5):
 
-* trigger: the clock reaching a mark (``starts_at`` minus 24 or 3 hours), or an event of the CRM that changed
-  a visit (``wake``); a local one-hour safety net, never a poll of the CRM;
+* trigger: the clock reaching the mark, or an event of the CRM that changed the visit (``changed`` wakes the
+  case at once); the loop below only opens cases, every hour and after each event;
 * goal: the person hears of their visit once per mark, in time, only if they agreed;
-* verify: ``decide`` reads the local state again right before each send;
-* stop: every rule of ``decide`` that skips (visit over, cancelled, no consent, set after the mark, too late,
-  daily cap) and the claim row that makes a mark happen at most once;
-* memory: ``crm_reminder`` (visits), ``crm_person`` (consent, chat), ``crm_reminder_sent`` (marks handled).
+* verify: the case's ``check`` reads the local state again right before each send, also before a send that
+  is tried again after an error (the error edge leads back to it);
+* stop: every rule of ``decide`` that skips (visit over or moved, no consent, set after the mark, too late,
+  quiet hours wait, no room left today) and the claim row that opens a mark at most once;
+* memory: ``crm_reminder`` (visits), ``crm_person`` (consent, chat), ``crm_reminder_sent`` (marks opened) and
+  the case's own record and log (``agent_case``).
 
-The thresholds are data (``ReminderPolicy``, from the plugin's settings), not code, so they can be tuned or
-replaced by a schema without touching the loop. Reconciliation (V3) asks the CRM once at start and every 24
-hours for the visits it would remind of, to patch events the outbox gave up on.
+The engine sends (``check`` then the model's turn ``send``), counts every message a person gets from all cases
+and logs each step. The thresholds are data (``ReminderPolicy``, from the plugin's settings). Reconciliation
+(V3) asks the CRM once at start and every 24 hours for the visits it would remind of, to patch events the
+outbox gave up on.
 """
 
 from __future__ import annotations
@@ -26,13 +30,17 @@ from typing import Any, Final, Literal
 from uuid import UUID
 from zoneinfo import ZoneInfo
 
-from agent_app.plugins import PluginError, Proactive
+from pydantic import BaseModel
+
+from agent_app.plugins import Cases, PluginError
+from agentcore.cases import Budget, CaseSpec, CodeNode, Edge, Graph, StopRules, Trigger, TurnNode
+from agentcore.cases import Decision as Step
 
 from .client import CrmClient, CrmError
 from .store import ACTIVE, Person, ReminderStore, Visit
 
-INSTRUCTION_MARK: Final = "[Hệ thống · nhắc lịch]"
-"""Starts the instruction the loop gives the agent; it marks the text as not the customer's words."""
+KIND: Final = "reminder"
+EVENT: Final = "appointment_changed"
 SAFETY_NET: Final = timedelta(hours=1)
 RECONCILE_EVERY: Final = timedelta(hours=24)
 RECONCILE_RETRY: Final = timedelta(hours=1)
@@ -117,9 +125,11 @@ def due_at(visit: Visit, mark: Mark) -> datetime:
 
 
 def decide(
-    policy: ReminderPolicy, visit: Visit, person: Person | None, mark: Mark, now: datetime, sent_today: int
+    policy: ReminderPolicy, visit: Visit, person: Person | None, mark: Mark, now: datetime, room_today: int
 ) -> Decision:
-    """Whether the due ``mark`` of ``visit`` goes out now; pure, so every rule has its own test."""
+    """Whether the due ``mark`` of ``visit`` goes out now; pure, so every rule has its own test.
+    ``room_today`` is how many more messages the person may get today (the engine's count,
+    ``ctx.cases.room_today``)."""
     if visit.status not in ACTIVE or visit.starts_at <= now:
         return Decision("skip", "over")
     if person is None or person.messages_consent is not True:
@@ -135,14 +145,31 @@ def decide(
     until = policy.quiet_until(now)
     if until is not None:
         return Decision("wait", "quiet", until)
-    if sent_today >= policy.per_day:
+    if room_today <= 0:
         return Decision("skip", "daily_cap")
     return Decision("send")
 
 
-def instruction_for(visit: Visit, now: datetime, zone: ZoneInfo) -> str:
+class ReminderCase(BaseModel):
+    """The state of a reminder case: which mark of which visit, at the time it had when the case opened."""
+
+    appointment_id: UUID
+    starts_at: datetime
+    mark: str
+    status: str = "booked"
+    """As ``check`` last read it; the instruction asks for a confirmation only while it is ``booked``."""
+    looks: int = 0
+    retries: int = 0
+
+
+def case_key(appointment_id: UUID, starts_at: datetime, mark: str) -> str:
+    """A visit moved to another time is another case."""
+    return f"{appointment_id}:{int(starts_at.timestamp())}:{mark}"
+
+
+def instruction_for(case: ReminderCase, now: datetime, zone: ZoneInfo) -> str:
     """The time and date are written by code; the model only adds a greeting and must not change them."""
-    at = visit.starts_at.astimezone(zone)
+    at = case.starts_at.astimezone(zone)
     today = now.astimezone(zone).date()
     when = (
         "hôm nay"
@@ -155,97 +182,160 @@ def instruction_for(visit: Visit, now: datetime, zone: ZoneInfo) -> str:
     day = f"{at:%d/%m/%Y}"
     ask = (
         "Lịch đã được xác nhận, chỉ cần nhắc và chúc khách."
-        if visit.status == "confirmed"
+        if case.status == "confirmed"
         else "Mời khách trả lời 'đồng ý' để giữ lịch, hoặc nhắn nếu cần đổi giờ hay hủy."
     )
     return (
-        f"{INSTRUCTION_MARK} Nhắn khách nhắc lịch hẹn ở phòng khám lúc {hour} {when} ({day}), mã lịch "
-        f"{visit.appointment_id}. Giữ đúng giờ và ngày này, không đổi. {ask} Viết một tin ngắn, lịch sự, "
-        "không kèm giá hay dịch vụ. Nếu cuộc trò chuyện cho thấy không nên nhắn (khách vừa nói không đến, "
-        "vừa đổi lịch) thì trả lời đúng một chữ SKIP."
+        f"Nhắn khách nhắc lịch hẹn ở phòng khám lúc {hour} {when} ({day}), mã lịch {case.appointment_id}. "
+        f"Giữ đúng giờ và ngày này, không đổi. {ask} Viết một tin ngắn, lịch sự, không kèm giá hay dịch vụ. "
+        "Nếu cuộc trò chuyện cho thấy không nên nhắn (khách vừa nói không đến, vừa đổi lịch) thì trả lời "
+        "đúng một chữ SKIP."
     )
 
 
-def message_id(visit: Visit, mark: Mark) -> str:
-    return f"crm-reminder:{visit.appointment_id}:{int(visit.starts_at.timestamp())}:{mark.name}"
+def reminder_case(reminders: Reminders) -> CaseSpec:
+    """``check`` decides and waits; ``send`` is the model's one turn. A send that raised goes back through
+    ``check`` (the error edge), so nothing is sent that was not checked right before."""
+    policy = reminders.policy
+
+    def goal(case: ReminderCase) -> str:
+        at = case.starts_at.astimezone(policy.zone)
+        return f"Khách biết lịch hẹn lúc {at:%H:%M %d/%m/%Y} (nhắc mốc {case.mark})"
+
+    def verify(case: ReminderCase) -> str:
+        return "crm_reminder: lịch còn booked hay confirmed; tin nhắc nằm trong cuộc chat"
+
+    def instruction(case: ReminderCase, now: datetime) -> str:
+        return instruction_for(case, now, policy.zone)
+
+    return CaseSpec(
+        kind=KIND,
+        state_model=ReminderCase,
+        goal=goal,
+        triggers=(Trigger("clock"), Trigger("event", EVENT)),
+        graph=Graph(
+            start="check",
+            nodes=(CodeNode("check", reminders.check), TurnNode("send", instruction)),
+            edges=(
+                Edge("check", "send"),
+                Edge("check", "check", counter="looks"),
+                Edge("send", "check", counter="retries", on="error"),
+            ),
+        ),
+        verify=verify,
+        stop=StopRules(
+            max_turns=1, max_proactive=1, max_age=timedelta(days=2), counters={"looks": 20, "retries": 3}
+        ),
+        budget=Budget(per_person_per_day=policy.per_day),
+    )
 
 
 class Reminders:
+    """Opens the cases (``pass_once``, the job ``reminders``), checks each one at its mark (``check``, the
+    case's code node), wakes them on an event (``changed``) and reconciles with the CRM."""
+
     def __init__(
         self,
         store: ReminderStore,
-        proactive: Callable[[], Proactive],
+        cases: Callable[[], Cases],
+        ready: Callable[[], object],
         policy: ReminderPolicy,
         client: CrmClient | None,
         *,
         clock: Callable[[], datetime] = lambda: datetime.now(UTC),
     ) -> None:
+        """``ready`` raises ``PluginError`` while the service cannot send (only ``agent serve`` can)."""
         self._store = store
-        self._proactive = proactive
-        self._policy = policy
+        self._cases = cases
+        self._ready = ready
+        self.policy = policy
         self._client = client
         self._clock = clock
         self._wake = asyncio.Event()
         self._reconcile_at: datetime | None = None
 
-    def wake(self) -> None:
-        """An event changed a visit or a consent: look again now."""
-        self._wake.set()
-
-    async def pass_once(self) -> datetime | None:
-        """Handles every mark that is due; returns when the next one will be (None: nothing ahead)."""
-        policy = self._policy
+    async def pass_once(self) -> int:
+        """Opens a case for every mark of the visits ahead that has none yet; how many it opened."""
+        try:
+            self._ready()
+            cases = self._cases()
+        except PluginError:
+            return 0  # outside ``agent serve``: nothing is claimed, the next pass tries again
+        policy = self.policy
         now = self._clock()
         longest = max(m.hours for m in policy.marks)
         visits = await self._store.upcoming(now, now + timedelta(hours=longest) + SAFETY_NET)
         handled = await self._store.handled([v.appointment_id for v in visits])
-        sent = await self._store.sent_since(policy.day_start(now))
-        next_at: datetime | None = None
+        opened = 0
         for visit in visits:
             person = await self._store.person(visit.channel, visit.external_id)
+            if person is None or person.messages_consent is not True or not person.conversation_id:
+                continue  # nothing claimed: consent or a chat may still come before the mark
             for mark in policy.marks:
-                due = due_at(visit, mark)
                 if (visit.appointment_id, visit.starts_at, mark.name) in handled:
                     continue
-                if due > now:
-                    next_at = due if next_at is None else min(next_at, due)
+                if visit.starts_at - now < mark.min_left:
+                    continue  # too late for this mark: no case to open
+                # claimed BEFORE the case opens: a failure in between loses the mark rather than sending twice
+                if not await self._store.claim_mark(visit, mark.name, "case"):
                     continue
-                key = (visit.channel, visit.external_id)
-                decision = decide(policy, visit, person, mark, now, sent.get(key, 0))
-                if decision.verdict == "wait" and decision.until is not None:
-                    next_at = decision.until if next_at is None else min(next_at, decision.until)
-                    continue
-                if decision.verdict == "skip":
-                    await self._store.claim_mark(visit, mark.name, f"skip:{decision.reason}")
-                    continue
-                if person is None or not person.conversation_id:  # ``decide`` sends only with both
-                    continue
-                if await self._send(visit, person.conversation_id, mark, now):
-                    sent[key] = sent.get(key, 0) + 1
-        return next_at
+                state = ReminderCase(
+                    appointment_id=visit.appointment_id,
+                    starts_at=visit.starts_at,
+                    mark=mark.name,
+                    status=visit.status,
+                )
+                try:
+                    await cases.open(
+                        KIND,
+                        case_key(visit.appointment_id, visit.starts_at, mark.name),
+                        channel=visit.channel,
+                        conversation_id=person.conversation_id,
+                        user_id=visit.external_id,
+                        state=state,
+                    )
+                    opened += 1
+                except Exception as err:  # one case failing never stops the pass
+                    name = type(err).__name__
+                    logger.warning("reminder %s of a visit was not opened (%s)", mark.name, name)
+        return opened
 
-    async def _send(self, visit: Visit, conversation_id: str, mark: Mark, now: datetime) -> bool:
+    async def check(self, case: ReminderCase, now: datetime) -> Step:
+        """The case's code node: waits for the mark, then reads the visit and the person again and decides."""
+        mark = next((m for m in self.policy.marks if m.name == case.mark), None)
+        visit = await self._store.visit(case.appointment_id)
+        if mark is None:
+            return Step(stop="skip:no_mark", note="the plugin's marks changed")
+        if visit is None or visit.status not in ACTIVE:  # ends a woken case now, not at its mark
+            return Step(stop="skip:over")
+        if visit.starts_at != case.starts_at:
+            return Step(stop="skip:moved")
+        due = due_at(visit, mark)
+        if now < due:
+            return Step(next="check", wait_for="clock", wake_at=due)
+        person = await self._store.person(visit.channel, visit.external_id)
+        room = await self._cases().room_today(KIND, visit.channel, visit.external_id)
+        verdict = decide(self.policy, visit, person, mark, now, room)
+        if verdict.verdict == "wait" and verdict.until is not None:
+            return Step(next="check", wait_for="clock", wake_at=verdict.until, note=verdict.reason)
+        if verdict.verdict != "send":
+            return Step(stop=f"skip:{verdict.reason}")
+        return Step(next="send", patch={"status": visit.status})
+
+    async def changed(self, before: Visit | None) -> None:
+        """An event of the CRM was applied: the cases of the visit as it was look again now (a cancelled or
+        moved visit ends them), and the loop looks for marks to open."""
+        self._wake.set()
+        if before is None:
+            return
         try:
-            sender = self._proactive()
+            cases = self._cases()
+            for mark in self.policy.marks:
+                await cases.wake(KIND, case_key(before.appointment_id, before.starts_at, mark.name))
         except PluginError:
-            return False  # outside ``agent serve``: try again on the next pass
-        # claimed BEFORE it is sent: a crash in between loses this mark rather than sending it twice
-        if not await self._store.claim_mark(visit, mark.name, "sent"):
-            return False
-        try:
-            result = await sender.send_to(
-                channel=visit.channel,
-                conversation_id=conversation_id,
-                user_id=visit.external_id,
-                message_id=message_id(visit, mark),
-                instruction=instruction_for(visit, now, self._policy.zone),
-            )
-        except Exception as err:  # one reminder failing never stops the loop
-            logger.warning("reminder %s of a visit was not sent (%s)", mark.name, type(err).__name__)
-            return True
-        if not result.counted:
-            logger.info("reminder %s of a visit was not sent: %s", mark.name, result.note)
-        return True
+            return
+        except Exception as err:  # the event is applied; the case still checks at its mark
+            logger.warning("waking the reminders of a visit failed (%s)", type(err).__name__)
 
     async def reconcile(self) -> None:
         """Asks the CRM which visits of the next hours it would remind of: unknown ones are added (version
@@ -294,15 +384,12 @@ class Reminders:
     async def run(self) -> None:
         while True:
             self._wake.clear()
-            wait = SAFETY_NET.total_seconds()
             try:
                 await self._reconcile_if_due()
-                next_at = await self.pass_once()
-                if next_at is not None:
-                    wait = min(wait, max(1.0, (next_at - self._clock()).total_seconds()))
+                await self.pass_once()
             except asyncio.CancelledError:
                 raise
             except Exception as err:  # the loop outlives any error of one pass
                 logger.warning("reminder pass failed (%s)", type(err).__name__)
             with contextlib.suppress(TimeoutError):
-                await asyncio.wait_for(self._wake.wait(), timeout=wait)
+                await asyncio.wait_for(self._wake.wait(), timeout=SAFETY_NET.total_seconds())

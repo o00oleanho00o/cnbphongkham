@@ -168,11 +168,14 @@ class CaseService(Protocol):
 
     async def get_for(self, plugin: str, kind: str, key: str) -> CaseRecord | None: ...
 
+    async def room_today(self, plugin: str, kind: str, channel: str, user_id: str) -> int: ...
+
 
 @dataclass(frozen=True, slots=True)
 class Cases:
     """What a plugin does with its own kinds of case (``ctx.cases``): open one (idempotent per key while it
-    is live), wake one (an event changed something; ``patch`` goes into its state), read one."""
+    is live), wake one (an event changed something; ``patch`` goes into its state), read one, and ask how many
+    messages a person may still get today."""
 
     service: CaseService
     plugin: str
@@ -195,6 +198,11 @@ class Cases:
 
     async def get(self, kind: str, key: str) -> CaseRecord | None:
         return await self.service.get_for(self.plugin, kind, key)
+
+    async def room_today(self, kind: str, channel: str, user_id: str) -> int:
+        """Messages a case of ``kind`` may still send this person today, by the engine's own count: a node
+        that checks it before a turn never leaves the turn waiting on the cap."""
+        return await self.service.room_today(self.plugin, kind, channel, user_id)
 
 
 class PluginContext:

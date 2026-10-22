@@ -17,9 +17,16 @@ revision files `0001_agent_rt` … `0012_*` or plugin files `0002_*`/`0003_*`, t
   `0004_cases`, settings `cases_enabled` (off by default) and `proactive_per_person_per_day`, plugin contract
   `ctx.register_case` / `ctx.cases`, read-only `/v1/admin/cases`. The tools `case_done`, `case_wait_until`
   (owner approved 2026-10-22, T9) are given to the agent only while an enabled plugin declares a case.
-- **Not done:** no plugin declares a case yet, so nothing runs; `case_need_human` with resume/close; follow-up as a
-  plugin on the engine (its route and settings are used by the frontend, owned by the other session); reminders of
-  `crm` on the engine; the frontend page for cases and for the token budget settings.
+- **Reminders are cases (2026-10-22, plan section 6):** with `reminders_enabled` the `crm` plugin declares the case
+  `reminder`, one per mark of a visit: `check` (code: waits for the mark, reads the visit and the person again,
+  `decide()`) then `send` (the model's one turn); an error edge `send -> check` (counter `retries`, cap 3) checks again
+  before a failed send is retried (core: `Edge.on`, `after_error`). The loop `Reminders` only opens cases (hourly,
+  after each event); a CRM event wakes the waiting cases of the visit as it was, so a cancel or a move ends them
+  at once. `crm_reminder_sent` stays the "once per mark" claim. The daily cap is the engine's (`ctx.cases.room_today`).
+  **Reminders now need `cases_enabled` on** (`infra/README.md` step 5).
+- **Not done:** `case_need_human` with resume/close; follow-up as a plugin on the engine (its route and settings
+  are used by the frontend, owned by the other session); the frontend page for cases and for the token budget
+  settings.
 - **Fixed in step C (2026-10-22):** a proactive message (case, follow-up, reminder) never shares a turn with the
   customer's messages, so a `SKIP` cannot swallow the customer's reply; a steering tool's decision is kept in
   `agent_case.pending` by the turn's message id `case:<id>:<turn>` (`ToolContext.message_id`, migration

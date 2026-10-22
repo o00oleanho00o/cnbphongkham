@@ -79,5 +79,6 @@ base_url = "http://crm-signer:8090/agent-gateway"
 # the CRM's PUBLIC keys, to check the events it sends to /v1/hooks/crm/events (aud pema-agent-events)
 events_jwks_url = "http://api:8000/api/v1/.well-known/jwks.json"
 # the reminder loop of the plugin (marks, quiet hours and the daily cap are its settings): a person with consent gets a
-# message before a visit; off unless set here (docs/PLAN-crm-plugin.md step 6c)
+# message before a visit; off unless set here (docs/PLAN-crm-plugin.md step 6c). Each mark is a case on the case
+# engine, so the agent setting cases_enabled must be on too (docs/PLAN-case-loop.md 6)
 reminders_enabled = true
