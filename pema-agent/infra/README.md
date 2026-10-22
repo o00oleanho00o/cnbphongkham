@@ -205,6 +205,9 @@ off until switched on, in this order:
    quiet hours and the daily cap are the plugin's settings.
 5. Reminders run as cases on the agent's case engine (since 2026-10-22), so they need its switch too, off by
    default: `PATCH /v1/admin/settings {"cases_enabled": true}` once (it is stored). Off: nothing is sent.
+6. Follow-up (plugin `follow_up`, since 2026-10-23) is a case too: it needs `cases_enabled`, and its setting
+   `channels` names the chat channels it follows (empty: none). Migration `0007` carries over an old
+   `follow_up_enabled` and its channels.
 
 Key change without downtime: `keygen` into a fresh volume, put the new public key beside the old one
 (`PEMA_AGENT_GATEWAY_PUBLIC_KEYS=old,new`), restart `api`, switch `crm-signer` to the new volume, drop the old key.

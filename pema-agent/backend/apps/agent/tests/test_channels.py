@@ -438,6 +438,7 @@ async def test_the_hub_tells_the_listeners_what_the_agent_said_once_it_is_sent(t
         "(echo) hello",
     )
     assert reply.message_id == "m1#reply"
+    assert reply.user_id == "u1"  # whom it answered: a plugin opens or wakes the person's case with it
     await dispatcher.close()
 
 

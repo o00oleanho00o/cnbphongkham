@@ -17,10 +17,10 @@ import pytest
 
 from agent_app.channel_hub import ChannelHub, DeliverySettings
 from agent_app.dispatcher import Dispatcher, DispatchSettings
-from agent_app.follow_up import DispatcherOutbox, FollowUp
 from agent_app.gateway import GatewaySettings, create_app
 from agent_app.plugins import PluginHost, discover
 from agent_app.plugins.records import InMemoryPluginRecords
+from agent_app.proactive import DispatcherOutbox
 from agent_app.profile import load_profile
 from agent_app.runtime import BUNDLED_PLUGINS, Runtime, build_runtime
 from agentcore.harness.model.scripted import ScriptedModel, reply
@@ -585,7 +585,7 @@ async def test_auto_accept_takes_the_requests_that_waited_and_keeps_a_failed_one
     assert [r.from_uid for r in await requests.list("off")] == ["old"]
 
 
-async def test_a_follow_up_leaves_as_a_proactive_send_and_an_answer_does_not(
+async def test_a_message_the_agent_starts_leaves_as_a_proactive_send_and_an_answer_does_not(
     tmp_path: Path, bridge: FakeBridge
 ) -> None:
     setup = Setup(_runtime(tmp_path, bridge))
@@ -597,10 +597,15 @@ async def test_a_follow_up_leaves_as_a_proactive_send_and_an_answer_does_not(
     await setup.until(lambda: bridge.sent)
     (channel,) = setup.hub.running
 
-    row = FollowUp(channel, "u1", "u1", "s1", state="hesitant", reason="hỏi giá rồi im")
     outbox = DispatcherOutbox(setup.dispatcher, poll_s=0.01)
     ticking = asyncio.create_task(_tick(setup))
-    sent = await outbox.send(row, "followup:u1:1:0", "[Hệ thống · chăm sóc lại] nhắn lại")
+    sent = await outbox.send_to(
+        channel=channel,
+        conversation_id="u1",
+        user_id="u1",
+        message_id="case:1:0",
+        instruction="[Hệ thống · chăm sóc lại] nhắn lại",
+    )
     ticking.cancel()
 
     assert sent.counted is True

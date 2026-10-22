@@ -2,7 +2,7 @@
 
 Ghi 2026-10-22. Thiết kế gốc: `DESIGN-case-loop.md`. Chủ duyệt 2026-10-22: làm `case_done` và `case_wait_until`
 trước; `case_need_human` để sau. Lời duyệt đó cũng là duyệt L7 cho hai tool mới trong profile `clinic`.
-**Trạng thái (2026-10-22): bước A, B, C (mục 5), mục 3.1 (trần token) và bước D (mục 6, nhắc lịch) đã làm.** Khác kế hoạch khi làm: `TurnNode` bỏ `sends` (một câu trả lời
+**Trạng thái (2026-10-22): bước A, B, C (mục 5), mục 3.1 (trần token) và bước D (mục 6, nhắc lịch) đã làm; bước 5 (mục 7, chăm sóc lại thành plugin) đã làm 2026-10-23.** Khác kế hoạch khi làm: `TurnNode` bỏ `sends` (một câu trả lời
 khách không nhận không được vào lịch sử chat; bước chỉ phán đoán là `CodeNode` tự gọi model); hai tool chỉ có khi
 một plugin đang bật khai báo ca (agent không dùng ca giữ nguyên prompt và cache); động cơ nghe tin khách ở
 `ChannelHub` (mọi kênh đi qua đó), không qua `on_message` của plugin; `Proactive.send_to` giữ nguyên.
@@ -211,7 +211,7 @@ Test DB cần container `pema-scratch-pg` và `PEMA_TEST_DATABASE_URL`, không b
    `apps/agent/plugin_kit/` (không phải package mới: image đã chép cả `apps/agent`, nên Dockerfile, compose, `uv.lock`
    không đổi) giữ hợp đồng dịch vụ và `KeySet` (trước ở `plugins/sso/keys.py`, `crm` import thẳng). Harness hết mang
    hợp đồng riêng, CLI hết gọi tên plugin `web`; T9 thêm test plugin không import plugin khác.
-3. **Chăm sóc lại thành plugin `follow_up` trên động cơ** (DESIGN 2.5). Lý do chưa làm ngay: route
+3. ~~Chăm sóc lại thành plugin `follow_up` trên động cơ~~ **đã làm 2026-10-23, mục 7** (DESIGN 2.5). Lý do hoãn lúc đầu: route
   `/v1/admin/follow-ups` và hai trường `follow_up_*` của settings đang được frontend dùng, mà frontend do phiên
   Claude khác giữ; đổi cùng lúc với phiên đó.
 4. ~~Nhắc lịch của `crm` lên động cơ (DESIGN 2.6)~~ **đã làm 2026-10-22, mục 6.** Khác kế hoạch khi làm: `check`
@@ -386,3 +386,132 @@ thật đầu tiên chạy hết vòng: plugin khai báo ca, động cơ đợi 
 - Không có migration, nên `pema-system-design.html` chỉ sửa chữ nếu có đoạn tả vòng nhắc lịch.
 - `/archify`: sơ đồ vòng nhắc lịch, hoặc thêm nhánh `crm` vào workflow của ca.
 - Ranh giới L1–L7 không đổi: không thêm tool, route, sự kiện, trường dữ liệu hay biến môi trường.
+
+## 7. Bước 5: chăm sóc lại thành plugin `follow_up` trên động cơ ca (DESIGN 2.5; ghi 2026-10-22, chủ nói "go" cùng ngày, kèm: phán đoán bằng Jev khi có; đã làm 2026-10-23)
+
+**Khác kế hoạch khi làm:** (1) `TurnNode` thêm `look_again` (lõi, chung cho mọi ca): sau lượt gửi, ca đợi khách
+nhưng tối đa chừng đó rồi chạy nút kế dù khách im; không có nó thì tin chủ động (không mở lại ca) để ca đợi khách
+mãi và `unanswered` không bao giờ lên 2. (2) `write → quiet` thay vì `check → quiet`; `judge` có cạnh lỗi về `quiet`.
+(3) Ca giữ `sending_at` (lúc `check` cho gửi), `quiet` đổi nó thành `last_sent_at`. (4) `deadline` của ca chuyển từ
+bảng cũ là `next_at + 74 ngày` (tạm ngưng tối đa 60 ngày + 14). (5) Đường gửi chủ động chung ở `agent_app/proactive.py`,
+`Dispatcher.history` là đường đọc chat của plugin.
+
+Xóa vi phạm cuối trong `.claude/rules/agent-harness.md` ("mọi thứ là plugin", H6): harness hết biết chăm sóc lại,
+tin chăm sóc lại tính chung vào trần mỗi người mỗi ngày với nhắc lịch.
+
+### 7.1 Đọc code thấy gì (khác với lúc hoãn và với DESIGN 2.5)
+
+- **Frontend không dùng gì của chăm sóc lại.** Grep `frontend/src` không có `follow_up`, `follow-ups` (trang cài
+  đặt chỉ vẽ các trường nó biết). Lý do hoãn ở mục 3 bước 3 không còn: bỏ được route `/v1/admin/follow-ups`, hai
+  trường `follow_up_*` của settings và cờ CLI mà không đụng frontend. Danh sách ca đã có ở `/v1/admin/cases`.
+- **Plugin chưa đọc được lịch sử chat.** Nút `judge` cần đoạn hội thoại (hôm nay `FollowUps` giữ `SessionStore`).
+  Plugin chỉ có `ctx.model`, `ctx.proactive`, `ctx.cases`.
+- **Plugin nghe được câu trả lời của agent** (`ctx.on_message`, `origin="agent"`, cả tin chủ động, có `metadata`),
+  nhưng không biết người: `ObservedMessage` của câu trả lời có `sender_id=""`.
+- **Không cần quét bảng hàng đợi để biết hội thoại im.** Agent chỉ trả lời (không chủ động) khi khách vừa nhắn; nên
+  "câu trả lời không chủ động vừa đi" = "khách vừa nói chuyện", và "ca đã dừng chỉ mở lại khi khách nhắn trước" tự
+  đúng: ca mới chỉ mở từ câu trả lời đó. Plugin không đọc `agent_ingress` (H1).
+- `DispatcherOutbox.send_to` là đường gửi chủ động chung (động cơ ca, `ctx.proactive`), không thuộc chăm sóc lại.
+
+### 7.2 Đổi ở harness và lõi (nhỏ, chung cho mọi plugin, H10)
+
+1. `ObservedMessage.user_id: str = ""` (lõi `agentcore.channels`): người của cuộc chat (câu trả lời của agent:
+   người được trả lời). `ChannelHub._tell_of_reply` điền `record.user_id`.
+2. `ctx.chat_history(channel, conversation_id, limit=40) -> list[Message]`: chỉ đọc, các tin của phiên hiện tại của
+   cuộc chat (qua `session_for` + `SessionStore.load`). `PluginHost.use_history(...)` gắn lúc `agent serve` như
+   `use_proactive`; chưa gắn thì `PluginError`. Chỉ đọc phiên của agent, không bảng nào khác (L4 không đổi).
+3. `DispatcherOutbox` chuyển sang `agent_app/proactive.py` (bỏ `send(row: FollowUp, ...)`, giữ `send_to`).
+
+### 7.3 Plugin `apps/agent/plugins/follow_up/`
+
+- `plugin.toml`: không migration riêng; `user_config.channels` (danh sách kênh, mặc định rỗng = không theo dõi kênh
+  nào), `user_config.timezone` (mặc định `Asia/Ho_Chi_Minh`). Bật/tắt = bật/tắt plugin; ca chạy khi
+  `cases_enabled` bật.
+- `rules.py`: chép nguyên phần thuần của `follow_up.py` (`FollowUpPolicy`, `decide`, `may_send` thành kiểm trên
+  state, `asks_to_stop`, `SYSTEM_PROMPT`, `instruction_for`, `render_transcript`, `parse_verdict`).
+- **State** `FollowUpState`: `replied_at` (câu trả lời cuối của agent), `judged_at`, `state`, `reason`, `next_at`,
+  `paused_until`, `last_sent_at`, `unanswered`, `restarts`, `retries`.
+- **Đồ thị** (khóa ca `f"{channel}:{conversation_id}"`):
+
+  | Nút | Loại | Làm gì |
+  |---|---|---|
+  | `quiet` | code | chưa im đủ `quiet_after` (2 giờ) từ `replied_at` → đợi đồng hồ; im quá `quiet_after + 1 ngày` (dịch vụ chết lâu) → done; còn lại → `judge` |
+  | `judge` | code | đọc `ctx.chat_history`, lưới từ khóa `asks_to_stop` trên lượt khách cuối, phán đoán (7.3a), `decide()`: `done` → done; `hard_decline`, `negative` → stop; `hesitant`, `call_back`, `soft_decline` → ghi hẹn, sang `check` |
+  | `check` | code | kiểm ngay trước gửi (H5): khách nhắn sau lần phán đoán (`replied_at > judged_at`) → về `quiet`; hẹn trễ quá `max_late` (2 ngày) → done; chưa tới hẹn, ngoài giờ 8–20, chưa đủ 24 giờ từ tin trước, đang tạm ngưng → đợi đồng hồ tới lúc được; hết chỗ hôm nay (`ctx.cases.room_today`, H6) → đợi sang ngày; còn lại → `write` |
+  | `write` | lượt | `instruction_for(state)`: một tin tự nhiên hoặc `SKIP` |
+
+  Cạnh: `quiet→judge`, `judge→check`, `check→write`, `check→quiet` (counter `restarts`, trần 20),
+  `write→quiet` (counter `unanswered`, trần 2: hai tin liền không được trả lời thì ca dừng, như hôm nay),
+  `write→check` cạnh lỗi (counter `retries`, trần 3).
+  `StopRules(max_turns=4, max_proactive=4, max_age=14 ngày)`, `Budget(per_person_per_day=1)`,
+  `stop_if = asks_to_stop` (khách nhắn "đừng nhắn nữa" khi ca đang đợi → ca dừng ngay; động cơ đã làm sẵn).
+- **Ai mở, ai đánh thức** (`ctx.on_message`): câu trả lời của agent (`origin="agent"`) trong cuộc chat một-một của
+  kênh trong `channels`:
+  - không chủ động (khách vừa nhắn): `ctx.cases.wake(..., {"replied_at": at, "unanswered": 0})`; không có ca sống
+    thì `ctx.cases.open(...)` ở `quiet`;
+  - chủ động (tin của ca này hay ca khác vừa đi): chỉ `wake(..., {"replied_at": at})` để `quiet` đếm im từ đó.
+
+  Không nghe tin khách trực tiếp: tin khách luôn kéo theo câu trả lời, và `stop_if` của động cơ đã nghe tin khách.
+- Model trả `SKIP` ở `write`: ca đợi khách (luật sẵn của `TurnNode`), không nhắn nữa tới khi khách nhắn.
+
+### 7.3a Phán đoán: Jev trước, model chat khi Jev không chắc (chủ yêu cầu 2026-10-22)
+
+- Có dịch vụ `judge` (plugin `jev` bật, `ready()`): hỏi **một** câu `choice` tên `state`, sáu phương án đúng sáu
+  trạng thái, mô tả và ví dụ lấy từ `SYSTEM_PROMPT` (luật giữ nguyên), `state` của request là giờ hiện tại và
+  đoạn hội thoại `render_transcript`. Câu trả lời: `choice`, `probabilities`, `confidence` (0–1, tài liệu
+  TypeSafe `primitives/choice`).
+- Dùng kết quả của Jev khi `confidence >= 0.6` và trạng thái không phải `call_back`. Giờ nhắn lại lấy mặc định
+  của `FollowUpPolicy` (`hesitant` 24 giờ, `soft_decline` tạm ngưng 14 ngày), vì Jev không đọc ra được ngày giờ;
+  lý do ghi `Jev: <trạng thái> (<độ tin>%)`.
+- Còn lại gọi model chat như hôm nay: Jev không bật, chưa sẵn sàng, lỗi, trả dữ liệu lạ, không chắc (`confidence`
+  thấp, trong đó có "không chắc thì chọn done" của prompt), hoặc ra `call_back` (khách hẹn giờ cụ thể, cần
+  model tính `after_h`).
+- Nhật ký ca ghi ai phán đoán (`jev` hay `model`) và độ tin, để chủ đo tỉ lệ Jev đỡ được và độ đúng.
+- `user_config.judge_with_jev` (mặc định bật), `user_config.jev_min_confidence` (mặc định 0.6).
+- **Rủi ro:** đoạn hội thoại của khách (có thể có tên, số điện thoại, bệnh) đi tới TypeSafe (Mỹ); hôm nay Jev
+  chỉ nhận câu tìm và tài liệu. Chủ đã chấp nhận dữ liệu ra nước ngoài cho Jev (PLAN-jev-plugin, 2026-10-14);
+  tắt bằng `judge_with_jev = false`. Jev chưa được đo trên tiếng Việt: ngưỡng độ tin là chỗ chỉnh.
+
+### 7.4 Bỏ đi
+
+`agent_app/follow_up.py`; `FollowUpConfig`, `follow_up_enabled`, `follow_up_channels` ở `agent_settings.py`,
+gateway (`PATCH` settings, `/v1/admin/follow-ups`, task nền `follow-ups`), `runtime.py`, `cli.py` (`--follow-up`,
+`--follow-up-channel`); `agent_follow_up` khỏi `db_roles.py`.
+
+### 7.5 Migration `0007_follow_up_plugin.{sql,py}` (`pema_agent`)
+
+1. Hẹn còn sống (`next_at` có, chưa `stopped`) → một hàng `agent_case` (`plugin='follow_up'`, `kind='follow_up'`,
+   nút `check`, `waiting` đồng hồ tới `next_at`, state từ các cột cũ, `deadline = now() + 14 ngày`). Hàng khác bỏ:
+   `stopped` không cần giữ vì ca mới chỉ mở khi khách nhắn trước (7.1).
+2. `follow_up_enabled = true` → bật plugin `follow_up` trong `agent_plugin` với `config.channels` = kênh cũ.
+3. Bỏ bảng `agent_follow_up` và hai cột `follow_up_*` của `agent_settings`. `downgrade`: tạo lại bảng và cột rỗng
+   (không chép ngược).
+4. Kèm (việc nhỏ chủ dặn): migration `crm_0002` của plugin `crm` bỏ index thừa `crm_reminder_sent_person`.
+
+### 7.6 Đổi hành vi (chủ cần biết)
+
+- Tin chăm sóc lại tính vào trần chung mỗi người mỗi ngày (cùng nhắc lịch); riêng nó tối đa 1 tin/người/ngày.
+- Chăm sóc lại cần **cả** plugin `follow_up` bật **và** `cases_enabled` bật (công tắc khẩn tắt được nó).
+- Mỗi ca tối đa 4 tin trong 14 ngày (hôm nay không có trần tổng, chỉ có 2 tin liền không trả lời); khách nhắn lại
+  thì đếm "không trả lời" về 0 như hôm nay.
+- **L7:** thêm plugin `follow_up` vào profile `clinic` là đổi danh sách T9 (`CLINIC_PLUGINS`). Chủ duyệt mục này là
+  duyệt L7. Plugin không thêm tool, route, biến môi trường hay đường ra ngoài.
+
+### 7.7 Test
+
+- **Chép theo code:** test thuần của `test_follow_up.py` (`decide`, giờ nhắn, `asks_to_stop`, `parse_verdict`,
+  `render_transcript`) sang `tests/follow_up/`.
+- **Viết lại trên động cơ thật** (`InMemoryCaseStore`, model và kênh giả, như `test_crm_reminders.py`): im đủ lâu
+  thì phán đoán đúng một lần; `done`/`hard_decline` không gửi; `hesitant` gửi đúng giờ, một lần; khách nhắn trước
+  hẹn thì ca về `quiet`, không gửi; "đừng nhắn nữa" dừng ca; hai tin không trả lời thì dừng; ngoài giờ và hết chỗ
+  trong ngày thì đợi; gửi lỗi quay về `check`; plugin tắt hoặc `cases_enabled` tắt thì không gửi; nhóm chat và
+  kênh không theo dõi không mở ca.
+- **Harness:** `ObservedMessage.user_id` của câu trả lời; `ctx.chat_history`.
+- **DB (scratch):** migration 0007 chuyển hẹn sống thành ca, bật plugin; `test_ingress_db.py` bỏ phần follow-up.
+- **Chạy lại:** T9 (`test_tool_allowlist.py`, thêm `follow_up` vào `CLINIC_PLUGINS`), `test_cases_engine.py`,
+  `test_agent_settings.py`, `tests/zalo/`, `tests/crm/`; cả suite vì có migration.
+
+### 7.8 Sau khi xanh
+
+- Xóa dòng vi phạm trong `.claude/rules/agent-harness.md`; mục 3 bước 3 của kế hoạch này; HANDOFF; `infra/README.md`.
+- `/diagram-design`: `pema-system-design.html` (bỏ `agent_follow_up`, bỏ hai cột). `/archify`: sơ đồ ca chăm sóc lại.

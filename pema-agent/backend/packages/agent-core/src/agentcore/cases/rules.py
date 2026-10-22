@@ -3,10 +3,11 @@
 ``node`` of a record is the node to run next. After a node ran, ``apply`` moves it: to ``decision.next``
 (which must be the end of an edge from the node that ran), else along the first edge whose ``when`` holds.
 An edge with a counter adds one to that field of the state; reaching its cap ends the case. No edge left
-ends the case as done. A ``TurnNode`` that sent and decided nothing waits for the customer, its pointer
-already moved; so does one that answered with the skip word. A case still ``open`` after ``apply`` runs its
-next node at once (the engine bounds how many). A node that raised is tried again later (``after_error``):
-from the end of its error edge when it has one, so a step can be checked again before it is retried.
+ends the case as done. A ``TurnNode`` that sent and decided nothing waits for the customer (at most its
+``look_again``), its pointer already moved; so does one that answered with the skip word. A case still
+``open`` after ``apply`` runs its next node at once (the engine bounds how many). A node that raised is
+tried again later (``after_error``): from the end of its error edge when it has one, so a step can be
+checked again before it is retried.
 """
 
 from __future__ import annotations
@@ -215,6 +216,8 @@ def apply(spec: CaseSpec, record: CaseRecord, decision: Decision, now: datetime)
     wake_at = decision.wake_at
     if wait_for is None and isinstance(ran, TurnNode):
         wait_for = "customer"  # it wrote (or chose to say nothing): the next move is the customer's
+        if wake_at is None and ran.look_again is not None:
+            wake_at = now + ran.look_again
     if wake_at is not None:
         wake_at = min(wake_at, record.deadline)
     status: CaseStatus = "open" if wait_for is None else "waiting"

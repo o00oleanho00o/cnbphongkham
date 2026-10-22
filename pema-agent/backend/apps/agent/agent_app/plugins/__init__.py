@@ -5,6 +5,7 @@ from __future__ import annotations
 from agent_app.plugins.host import (
     Cases,
     CaseService,
+    ChatHistory,
     Contributions,
     DatabaseAccess,
     Disposer,
@@ -34,6 +35,7 @@ __all__ = [
     "PLUGIN_API",
     "CaseService",
     "Cases",
+    "ChatHistory",
     "ConfigField",
     "Contributions",
     "DatabaseAccess",

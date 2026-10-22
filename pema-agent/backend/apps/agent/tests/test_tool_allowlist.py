@@ -54,7 +54,7 @@ APPROVED_TOOLS: dict[str, str] = {
     "crm_reschedule_appointment": "crm",
     "crm_cancel_appointment": "crm",
 }
-CLINIC_PLUGINS = {"sso", "knowledge", "skills", "conversations", "jev", "crm"}
+CLINIC_PLUGINS = {"sso", "knowledge", "skills", "conversations", "jev", "crm", "follow_up"}
 CLINIC_PROFILE_TOOLS = {"get_datetime", "memory", "web_search", "web_fetch"}
 STARTS_A_PROCESS = {
     "agent_app/plugins/install.py",  # an admin installs a plugin's packages; no tool reaches it

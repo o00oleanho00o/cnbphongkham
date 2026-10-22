@@ -19,7 +19,6 @@ from agent_app.assembly import Agent, build_agent
 from agent_app.cases import CaseEngine, CaseStore, InMemoryCaseStore, PostgresCaseStore
 from agent_app.channel_hub import PACED_DELIVERY, ChannelHub, DeliverySettings
 from agent_app.dispatcher import Dispatcher, DispatchSettings
-from agent_app.follow_up import FollowUps, PostgresFollowUpStore
 from agent_app.ingress import (
     ConversationStore,
     IngressStore,
@@ -102,7 +101,6 @@ class Runtime:
     """None with ``--fake``: the echo model ignores the settings."""
     plugin_manager: PluginManager
     agent_settings: AgentSettings
-    follow_ups: FollowUps | None = None
     """Judges the conversations that went quiet (Postgres only); runs once an admin switches it on."""
     cases: CaseEngine | None = None
     """Runs the cases plugins declare; runs once an admin switches cases on."""
@@ -323,13 +321,6 @@ def build_runtime(
             cases=cases,
         )
     sessions = PostgresSessionStore(db, agent=name)
-    follow_ups = FollowUps(
-        PostgresFollowUpStore(db, agent=name),
-        sessions,
-        lambda: live.current().model,
-        lambda: agent_settings.effective.follow_up,
-        tenant_id=tenant_id,
-    )
     model_name: Callable[[], str] = (lambda: "echo") if dynamic is None else (lambda: dynamic.model_name)
     return Runtime(
         live=live,
@@ -344,6 +335,5 @@ def build_runtime(
         dynamic_model=dynamic,
         plugin_manager=plugin_manager,
         agent_settings=agent_settings,
-        follow_ups=follow_ups,
         cases=cases,
     )

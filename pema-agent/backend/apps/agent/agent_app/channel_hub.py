@@ -291,6 +291,7 @@ class ChannelHub:
                     channel=record.channel,
                     conversation_id=record.conversation_id,
                     sender_id="",
+                    user_id=record.user_id,
                     message_id=f"{record.external_id}#reply",
                     text=text,
                     origin="agent",

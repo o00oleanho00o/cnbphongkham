@@ -99,6 +99,8 @@ class ObservedMessage:
     origin: Origin
     is_group: bool = False
     sender_name: str = ""
+    user_id: str = ""
+    """The person of the chat: who wrote, or whom the agent's reply answers; "" when not known."""
     answered: bool = False
     """``inbound`` only: the agent takes the message up and will answer it."""
     at: datetime = field(default_factory=lambda: datetime.now(UTC))

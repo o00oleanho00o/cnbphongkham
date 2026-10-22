@@ -45,7 +45,6 @@ from agent_app.auth import ADMIN, CHAT, Authenticator, Principal
 from agent_app.cases import CaseEngine
 from agent_app.channel_hub import ChannelHub
 from agent_app.dispatcher import Dispatcher, StreamObserver
-from agent_app.follow_up import FollowUps
 from agent_app.ingress import IngressRecord
 from agent_app.model_factory import Provider
 from agent_app.model_settings import ModelAdmin, ModelEntryError, SecretKeyMissingError
@@ -264,8 +263,6 @@ class AgentSettingsPatch(_Body):
     memory_enabled: bool | None = None
     memory_agent_chars: int | None = Field(default=None, ge=100, le=20_000)
     memory_user_chars: int | None = Field(default=None, ge=100, le=20_000)
-    follow_up_enabled: bool | None = None
-    follow_up_channels: list[str] | None = Field(default=None, max_length=20)
     cases_enabled: bool | None = None
     proactive_per_person_per_day: int | None = Field(default=None, ge=1, le=20)
     tokens_per_session_per_day: int | None = Field(default=None, ge=10_000, le=100_000_000)
@@ -338,7 +335,6 @@ def create_app(
     jobs: JobRunner | None = None,
     activity: Activity | None = None,
     agent_settings: AgentSettings | None = None,
-    follow_ups: FollowUps | None = None,
     cases: CaseEngine | None = None,
 ) -> FastAPI:
     @contextlib.asynccontextmanager
@@ -348,8 +344,6 @@ def create_app(
             background.append(asyncio.create_task(channels.run(), name="channel hub"))
         if jobs is not None:
             background.append(asyncio.create_task(jobs.run(), name="plugin jobs"))
-        if follow_ups is not None:
-            background.append(asyncio.create_task(follow_ups.run(), name="follow-ups"))
         if cases is not None:
             background.append(asyncio.create_task(cases.run(), name="cases"))
         try:
@@ -427,8 +421,8 @@ def create_app(
         session_id = await dispatcher.reset(CHANNEL, body.conversation_id or body.user_id)
         return {"session_id": session_id}
 
-    if (admin, plugins, channels, jobs, agent_settings, follow_ups, cases) != (None,) * 7:
-        _add_admin_routes(app, gate, admin, plugins, channels, jobs, agent_settings, follow_ups, cases)
+    if (admin, plugins, channels, jobs, agent_settings, cases) != (None,) * 6:
+        _add_admin_routes(app, gate, admin, plugins, channels, jobs, agent_settings, cases)
         profile = dispatcher.agent.profile
         _add_activity_routes(
             app,
@@ -577,7 +571,6 @@ def _add_admin_routes(
     channels: ChannelHub | None = None,
     jobs: JobRunner | None = None,
     agent_settings: AgentSettings | None = None,
-    follow_ups: FollowUps | None = None,
     cases: CaseEngine | None = None,
 ) -> None:
     """Model settings (read with the key masked, change, clear, test), the plugin manager, the plugins' own
@@ -622,13 +615,6 @@ def _add_admin_routes(
 
     if agent_settings is not None:
         _add_settings_routes(app, agent_settings, authorized)
-
-    if follow_ups is not None:
-        loop = follow_ups
-
-        @app.get("/v1/admin/follow-ups", dependencies=[authorized])
-        async def list_follow_ups() -> dict[str, Any]:
-            return {"follow_ups": await loop.status()}
 
     if cases is not None:
         _add_case_routes(app, cases, authorized)

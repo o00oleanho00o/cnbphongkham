@@ -160,6 +160,80 @@ def test_the_migration_goes_down_and_up_again(admin: tuple[str, Engine]) -> None
     assert gone
 
 
+def test_live_follow_ups_become_cases_of_the_plugin_and_the_switch_its_setting(
+    admin: tuple[str, Engine],
+) -> None:
+    """Migration 0007 (docs/PLAN-case-loop.md 7.5): an appointment still to come waits at ``check`` in a state the
+    plugin reads; the rest is dropped; the table and the two settings are gone."""
+    from plugins.follow_up.case import FollowUpCase
+
+    url, engine = admin
+    _migrate(url, "0006_token_budget", down=True)
+    with engine.begin() as conn:
+        conn.execute(
+            sql(
+                "INSERT INTO agent_rt.agent_settings (tenant_id, agent, follow_up_enabled, follow_up_channels) "
+                "VALUES ('t', 'dev', true, '[\"zalo-a1\", \"zalo-b2\"]')"
+            )
+        )
+        conn.execute(
+            sql(
+                "INSERT INTO agent_rt.agent_follow_up (tenant_id, agent, channel, conversation_id, user_id, "
+                "session_id, state, reason, next_at, stopped, last_sent_at) VALUES "
+                "('t', 'dev', 'zalo-a1', 'c1', 'u1', 's1', 'hesitant', 'hỏi giá', now() + interval '3 hours', "
+                "false, now() - interval '2 days'), "
+                "('t', 'dev', 'zalo-a1', 'c2', 'u2', 's2', 'hard_decline', '', NULL, true, NULL), "
+                "('t', 'dev', 'zalo-a1', 'c3', 'u3', 's3', 'hesitant', '', now(), true, NULL)"
+            )
+        )
+    _migrate(url, "head")
+    try:
+        with engine.connect() as conn:
+            cases = conn.execute(
+                sql(
+                    "SELECT key, plugin, session_id, node, status, wait_for, wake_at, deadline, state "
+                    "FROM agent_rt.agent_case WHERE kind = 'follow_up'"
+                )
+            ).all()
+            plugin = conn.execute(
+                sql("SELECT enabled, config->>'channels' FROM agent_rt.agent_plugin WHERE name = 'follow_up'")
+            ).one()
+            table = conn.execute(sql("SELECT to_regclass('agent_rt.agent_follow_up')")).scalar()
+            columns = conn.execute(
+                sql(
+                    "SELECT count(*) FROM information_schema.columns WHERE table_schema = 'agent_rt' "
+                    "AND table_name = 'agent_settings' AND column_name LIKE 'follow_up%'"
+                )
+            ).scalar()
+    finally:
+        with engine.begin() as conn:
+            conn.execute(
+                sql("TRUNCATE agent_rt.agent_case, agent_rt.agent_plugin, agent_rt.agent_settings CASCADE")
+            )
+
+    (case,) = cases
+    assert (case.key, case.plugin, case.session_id, case.node, case.status, case.wait_for) == (
+        "zalo-a1:c1",
+        "follow_up",
+        "s1",
+        "check",
+        "waiting",
+        "clock",
+    )
+    assert case.deadline - case.wake_at == timedelta(days=74)
+    state = FollowUpCase.model_validate(case.state)
+    assert (state.user_id, state.state, state.reason, state.next_at) == (
+        "u1",
+        "hesitant",
+        "hỏi giá",
+        case.wake_at,
+    )
+    assert state.last_sent_at is not None
+    assert state.judged_at == state.replied_at  # not taken for a customer who wrote since
+    assert tuple(plugin) == (True, "zalo-a1,zalo-b2")
+    assert (table, columns) == (None, 0)
+
+
 HISTORY = [
     Message.user("Xin chào, mấy giờ rồi?"),
     Message(

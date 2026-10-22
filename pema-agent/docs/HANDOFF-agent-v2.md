@@ -24,9 +24,15 @@ revision files `0001_agent_rt` … `0012_*` or plugin files `0002_*`/`0003_*`, t
   after each event); a CRM event wakes the waiting cases of the visit as it was, so a cancel or a move ends them
   at once. `crm_reminder_sent` stays the "once per mark" claim. The daily cap is the engine's (`ctx.cases.room_today`).
   **Reminders now need `cases_enabled` on** (`infra/README.md` step 5).
-- **Not done:** `case_need_human` with resume/close; follow-up as a plugin on the engine (its route and settings
-  are used by the frontend, owned by the other session); the frontend page for cases and for the token budget
+- **Not done:** `case_need_human` with resume/close; the frontend page for cases and for the token budget
   settings.
+- **Follow-up is the plugin `follow_up` (2026-10-23, plan section 7):** a case on the engine (`quiet` → `judge` →
+  `check` → `write`), opened by the agent's answer in a followed one-to-one chat. Jev judges when it is on and
+  sure (`judge_with_jev`, `jev_min_confidence` 0.6), else the chat model with the old prompt. Its messages count
+  in the daily cap of every case. Gone from the harness: `agent_app/follow_up.py`, the settings `follow_up_*`,
+  `/v1/admin/follow-ups`, the CLI flags, the table `agent_follow_up` (migration `0007_follow_up_plugin` moves live
+  appointments to cases and the switch to the plugin). New for every plugin: `ctx.chat_history`,
+  `ObservedMessage.user_id`, `TurnNode.look_again`. The crm plugin's migration `0002` drops an unused index.
 - **Fixed in step C (2026-10-22):** a proactive message (case, follow-up, reminder) never shares a turn with the
   customer's messages, so a `SKIP` cannot swallow the customer's reply; a steering tool's decision is kept in
   `agent_case.pending` by the turn's message id `case:<id>:<turn>` (`ToolContext.message_id`, migration
@@ -39,8 +45,8 @@ revision files `0001_agent_rt` … `0012_*` or plugin files `0002_*`/`0003_*`, t
   budget by those turns.
 - **Plugin kit (2026-10-22, plan section 3 item 2):** what plugins share lives in `apps/agent/plugin_kit/` (service
   contracts `EMBEDDINGS`, `JUDGE` and their protocols; `KeySet` for JWKS, moved from `plugins/sso/keys.py`). A plugin
-  never imports another plugin (T9). The rule file `.claude/rules/agent-harness.md` (H1-H11) lists the one known
-  violation left: the follow-up loop inside the harness.
+  never imports another plugin (T9). The rule file `.claude/rules/agent-harness.md` (H1-H11) listed one known
+  violation, the follow-up loop inside the harness; gone since 2026-10-23.
 - **Known limits:** cases run one after another in a pass; a turn sent before a restart and sent again by id is
   logged as sent twice, so the daily cap may count it twice (it sends less, never more).
 

@@ -29,6 +29,7 @@ from agent_app.profile import QueueMode
 from agent_app.storage import PostgresSessionStore
 from agentcore import (
     DEFAULT_TENANT,
+    Message,
     ModelError,
     SessionStore,
     ToolResultBlock,
@@ -194,6 +195,12 @@ class Dispatcher:
     async def session_for(self, channel: str, conversation_id: str) -> str:
         epoch = await self._conversations.epoch(self.tenant_id, channel, conversation_id)
         return session_id_for(self.agent.profile.agent.name, channel, conversation_id, epoch)
+
+    async def history(self, channel: str, conversation_id: str, limit: int) -> list[Message]:
+        """The newest ``limit`` messages of the chat's current session, oldest first (what plugins read
+        with ``ctx.chat_history``)."""
+        session_id = await self.session_for(channel, conversation_id)
+        return (await self.store.load(self.tenant_id, session_id))[-limit:]
 
     async def reset(self, channel: str, conversation_id: str) -> str:
         """Starts the conversation over; returns its new session id. The old session stays readable."""

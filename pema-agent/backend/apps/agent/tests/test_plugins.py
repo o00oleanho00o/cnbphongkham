@@ -409,3 +409,45 @@ async def test_a_plugin_writes_on_its_own_only_once_the_service_gives_it_the_out
             "instruction": "nhắc lịch",
         }
     ]
+
+
+HISTORY = """
+from pydantic import BaseModel
+
+from agentcore import ToolOutput, ToolSpec
+
+
+class Args(BaseModel):
+    pass
+
+
+def register(ctx):
+    async def run(args, tool):
+        messages = await ctx.chat_history("zalo-a", "c1", 5)
+        return ToolOutput(text=" | ".join(m.text() for m in messages))
+
+    ctx.register_tool(ToolSpec(name="read", description="read", args_model=Args, handler=run))
+"""
+
+
+async def test_a_plugin_reads_a_chat_only_once_the_service_gives_it_the_way(tmp_path: Path) -> None:
+    from agent_app.plugins import PluginError
+    from agentcore import Message, ToolContext
+
+    _plugin(tmp_path, "reader", HISTORY)
+    host = _host(tmp_path)
+    host.enable("reader")
+    (read,) = host.contributions().tools
+    asked: list[tuple[str, str, int]] = []
+
+    async def history(channel: str, conversation_id: str, limit: int) -> list[Message]:
+        asked.append((channel, conversation_id, limit))
+        return [Message.user("giá?")]
+
+    with pytest.raises(PluginError, match="cannot read chats"):
+        await read.handler(read.args_model(), ToolContext(session_id="s"))
+    host.use_history(history)
+    out = await read.handler(read.args_model(), ToolContext(session_id="s"))
+
+    assert out.text == "giá?"
+    assert asked == [("zalo-a", "c1", 5)]

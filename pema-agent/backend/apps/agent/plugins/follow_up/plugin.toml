@@ -1,0 +1,28 @@
+name = "follow_up"
+version = "0.1.0"
+description = "Writes once more, at the right time, to a customer whose one-to-one chat went quiet, or leaves them alone: a case on the agent's case engine (judge the silence with Jev when it is on, else with the chat model; check the hours, the gap and the day's cap right before; then one natural message or SKIP). Runs only while the cases are switched on."
+api = 1
+
+[user_config.channels]
+type = "string"
+title = "Channels"
+description = "The channels whose one-to-one chats are followed up, by the name the channel hub gives them, comma separated (e.g. zalo-a1,zalo-b2). Empty: none."
+default = ""
+
+[user_config.timezone]
+type = "string"
+title = "Time zone"
+description = "Where the hours customers may be written to (8:00-20:00) are counted."
+default = "Asia/Ho_Chi_Minh"
+
+[user_config.judge_with_jev]
+type = "boolean"
+title = "Judge with Jev"
+description = "Ask Jev (plugin jev, when on) what state a quiet customer is in, and the chat model only when Jev is unsure or the customer named a time. The conversation then goes to TypeSafe."
+default = true
+
+[user_config.jev_min_confidence]
+type = "number"
+title = "Jev's least confidence"
+description = "Under this confidence (0-1) Jev's judgement is not used and the chat model judges."
+default = 0.6

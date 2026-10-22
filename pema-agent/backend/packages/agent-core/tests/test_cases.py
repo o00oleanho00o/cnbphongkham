@@ -268,6 +268,22 @@ def test_a_turn_that_wrote_and_decided_nothing_waits_for_the_customer() -> None:
     )
 
 
+def test_a_turn_that_looks_again_waits_for_the_customer_at_most_that_long() -> None:
+    write = TurnNode("write", lambda s, now: "write", look_again=timedelta(hours=2))
+    spec = _spec(
+        graph=Graph(
+            start="judge",
+            nodes=(CodeNode("judge", _judge), write),
+            edges=(Edge("judge", "write"), Edge("write", "judge", counter="unanswered")),
+        )
+    )
+    after = apply(spec, _record(spec, node="write"), Decision(), NOW)
+    chosen = apply(spec, _record(spec, node="write"), Decision(wait_for="customer"), NOW)
+
+    assert (after.status, after.wait_for, after.wake_at) == ("waiting", "customer", NOW + timedelta(hours=2))
+    assert chosen.wake_at is None  # what the model decided wins
+
+
 def test_the_edge_back_that_reaches_its_cap_stops_the_case() -> None:
     spec = _spec()
     record = _record(spec, node="write", state={"unanswered": 1, "verdict": "later"})

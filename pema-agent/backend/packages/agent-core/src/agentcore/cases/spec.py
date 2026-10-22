@@ -124,6 +124,9 @@ class TurnNode:
     id: str
     instruction: Callable[[Any, datetime], str]
     """``(state, now) -> text``: what to do at this step, in the plugin's words."""
+    look_again: timedelta | None = None
+    """When the turn decided nothing and the case waits for the customer: run the next node this long later
+    anyway, heard or not (a follow-up looks again after a silence). None waits for the customer only."""
 
 
 Node = CodeNode | TurnNode

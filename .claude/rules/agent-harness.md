@@ -57,7 +57,7 @@ Rà toàn bộ code theo H1–H11 ngày 2026-10-22. Agent sau gặp chỗ này t
 
 | Chỗ | Luật | Vì sao chưa sửa | Sửa ở đâu |
 |---|---|---|---|
-| Chăm sóc lại là tính năng nằm trong harness: `agent_app/follow_up.py`, settings `follow_up_*`, route `/v1/admin/follow-ups`; tự gửi tin ngoài động cơ ca, nên không bị tính vào trần mỗi người mỗi ngày | "mọi thứ là plugin", H6 | route và settings đang được frontend dùng; frontend do phiên Claude khác giữ | `pema-agent/docs/PLAN-case-loop.md` mục 3 bước 3 (DESIGN 2.5): plugin `follow_up` trên động cơ |
+| (không còn: chăm sóc lại thành plugin `follow_up` trên động cơ ngày 2026-10-23, PLAN-case-loop mục 7) | | | |
 
 ## Khi viết một ca mới (checklist)
 
@@ -80,3 +80,4 @@ Rà toàn bộ code theo H1–H11 ngày 2026-10-22. Agent sau gặp chỗ này t
 | tin chủ động không gộp lượt | H8 | `apps/agent/tests/test_queue_modes.py` |
 | trần token | H6 | `apps/agent/tests/test_token_budget.py` |
 | ca nhắc lịch: kiểm trước gửi, gửi lỗi quay về kiểm, sự kiện kết thúc ca | H4, H5 | `apps/agent/tests/crm/test_crm_reminders.py` |
+| ca chăm sóc lại: phán đoán một lần, kiểm trước gửi, khách nhắn trước thì về chờ im, hai tin không trả lời thì dừng, Jev trước model | H4, H5, H6 | `apps/agent/tests/follow_up/test_follow_up_case.py` |

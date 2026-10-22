@@ -65,8 +65,11 @@ queue_typing_max_wait_s = 30.0
 # skills: skills, rules and persona bound to the agent, to a chat plugin or to one account;
 # conversations: keeps the conversations of the channels switched on in its page (all off until then);
 # crm: free times, save the contact, book, show, confirm, move, cancel, for the person of the chat only, through
-# crm-signer (which holds the key; the agent holds none: docs/PLAN-crm-plugin.md)
-enabled = ["sso", "knowledge", "skills", "conversations", "jev", "crm"]
+# crm-signer (which holds the key; the agent holds none: docs/PLAN-crm-plugin.md);
+# follow_up: writes once more to a customer whose one-to-one chat went quiet, as a case on the case engine; it
+# watches no channel until its setting "channels" names some, and runs only while cases_enabled is on
+# (docs/PLAN-case-loop.md 7)
+enabled = ["sso", "knowledge", "skills", "conversations", "jev", "crm", "follow_up"]
 
 [plugins.sso]
 issuer = "pema-clinic"

@@ -25,7 +25,6 @@ import uvicorn
 from agent_app.agent_settings import MEMORY_FIELDS, TEXT_FIELDS, SettingsError
 from agent_app.assembly import Agent
 from agent_app.db_roles import MIGRATION_URL_ENV, PASSWORD_ENV, RUNTIME_ROLE, bootstrap_role
-from agent_app.follow_up import DispatcherOutbox
 from agent_app.gateway import GatewaySettings, create_app
 from agent_app.home import DEFAULT_HOME, ServiceHome
 from agent_app.ingress import SessionBusyError
@@ -40,6 +39,7 @@ from agent_app.model_settings import (
 from agent_app.plugins import PluginError, PluginOrigin, discover
 from agent_app.plugins.manager import PluginManager
 from agent_app.plugins.migrations import migrate_plugins, plugins_with_migrations
+from agent_app.proactive import DispatcherOutbox
 from agent_app.profile import Profile, load_profile
 from agent_app.replay import replay
 from agent_app.runtime import BUNDLED_PLUGINS, PLUGIN_DIR_ENV, Runtime, build_runtime
@@ -231,20 +231,11 @@ def _add_settings_commands(settings: argparse.ArgumentParser, home: argparse.Arg
         action.add_argument("--memory", choices=("on", "off"))
         action.add_argument("--memory-agent-chars", type=int, dest="memory_agent_chars")
         action.add_argument("--memory-user-chars", type=int, dest="memory_user_chars")
-        action.add_argument("--follow-up", choices=("on", "off"), help="the follow-up loop")
-        action.add_argument(
-            "--follow-up-channel",
-            action="append",
-            default=[],
-            metavar="NAME",
-            dest="follow_up_channels",
-            help="a channel the follow-up loop watches (repeatable; the channel's name in the dashboard)",
-        )
         action.add_argument(
             "--clear",
             action="append",
             default=[],
-            choices=(*TEXT_FIELDS, *MEMORY_FIELDS, "variables", "follow_up_channels"),
+            choices=(*TEXT_FIELDS, *MEMORY_FIELDS, "variables"),
             help="give this field back to the profile (repeatable)",
         )
 
@@ -441,10 +432,6 @@ def _settings_changes(args: argparse.Namespace) -> dict[str, Any]:
         given["rules"] = args.rules_file.read_text(encoding="utf-8").lstrip("﻿")
     if args.memory is not None:
         given["memory_enabled"] = args.memory == "on"
-    if args.follow_up is not None:
-        given["follow_up_enabled"] = args.follow_up == "on"
-    if args.follow_up_channels:
-        given["follow_up_channels"] = args.follow_up_channels
     if args.variable:
         pairs = [item.partition("=") for item in args.variable]
         if any(not sep for _, sep, _ in pairs):
@@ -528,8 +515,7 @@ async def _serve(profile_path: Path, *, fake: bool, host: str, port: int, home: 
             dispatcher = runtime.dispatcher()
             outbox = DispatcherOutbox(dispatcher)
             runtime.plugins.use_proactive(outbox)
-            if runtime.follow_ups is not None:
-                runtime.follow_ups.send_through(outbox)
+            runtime.plugins.use_history(dispatcher.history)
             if runtime.cases is not None:
                 runtime.cases.attach(outbox, dispatcher.session_for)
             app = create_app(
@@ -541,7 +527,6 @@ async def _serve(profile_path: Path, *, fake: bool, host: str, port: int, home: 
                 channels=runtime.channel_hub(dispatcher),
                 jobs=runtime.job_runner(),
                 agent_settings=runtime.agent_settings,
-                follow_ups=runtime.follow_ups,
                 cases=runtime.cases,
             )
             server = uvicorn.Server(

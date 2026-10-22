@@ -31,7 +31,7 @@ from agent_app.model_settings import NO_SECRET_KEY, SECRET_KEY_ENV
 from agent_app.plugins.manifest import PluginError, PluginSource, UiSpec
 from agent_app.plugins.migrations import NOT_MIGRATED, latest_applied, migration_files
 from agent_app.plugins.records import InMemoryPluginRecords, PluginStorage, StorageFor
-from agentcore import ModelClient, ToolSpec
+from agentcore import Message, ModelClient, ToolSpec
 from agentcore.cases import CaseRecord, CaseSpec
 from agentcore.channels import ChannelAdapter, Observe, ObservedMessage, valid_channel_name
 from agentcore.harness.hooks import Hook
@@ -149,6 +149,10 @@ class Proactive(Protocol):
         ...
 
 
+class ChatHistory(Protocol):
+    async def __call__(self, channel: str, conversation_id: str, limit: int) -> list[Message]: ...
+
+
 class CaseService(Protocol):
     """The case engine as the host sees it; plugins get it through ``ctx.cases``, bound to their name."""
 
@@ -224,7 +228,9 @@ class PluginContext:
         service: Callable[[str], object | None] = lambda name: None,
         proactive: Callable[[], Proactive | None] = lambda: None,
         cases: Callable[[], CaseService | None] = lambda: None,
+        history: Callable[[], ChatHistory | None] = lambda: None,
     ) -> None:
+        self._history = history
         self._proactive = proactive
         self._cases = cases
         self._observe = observe
@@ -286,6 +292,14 @@ class PluginContext:
         if found is None:
             raise PluginError(self.name, "the agent runs no cases here (no running service)")
         return Cases(found, self.name)
+
+    async def chat_history(self, channel: str, conversation_id: str, limit: int = 40) -> list[Message]:
+        """The newest ``limit`` messages of the chat's current session, oldest first, read only: for a plugin
+        that must read the conversation (a judgement). Raises ``PluginError`` while the service has none."""
+        found = self._history()
+        if found is None:
+            raise PluginError(self.name, "the agent cannot read chats here (no running service)")
+        return await found(channel, conversation_id, limit)
 
     @property
     def storage(self) -> PluginStorage:
@@ -477,6 +491,7 @@ class PluginHost:
         self._model: ModelClient | None = None
         self._proactive: Proactive | None = None
         self._cases: CaseService | None = None
+        self._history: ChatHistory | None = None
         self._loaded: dict[str, _Loaded] = {}
         self._generation = itertools.count(1)
         self.version = 0
@@ -504,6 +519,10 @@ class PluginHost:
         """What plugins write to a chat with on their own (``ctx.proactive``), once the service has its
         dispatcher."""
         self._proactive = sender
+
+    def use_history(self, history: ChatHistory) -> None:
+        """How plugins read a chat (``ctx.chat_history``), once the service has its dispatcher."""
+        self._history = history
 
     def use_cases(self, engine: CaseService) -> None:
         """The case engine plugins reach through ``ctx.cases``."""
@@ -556,6 +575,7 @@ class PluginHost:
                     model=lambda: self._model,
                     proactive=lambda: self._proactive,
                     cases=lambda: self._cases,
+                    history=lambda: self._history,
                     observe=self.observe,
                     service=self._service,
                 )
