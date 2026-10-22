@@ -1,17 +1,17 @@
 {
   "schemaVersion": 1,
-  "receiptId": "b061dc0b-21d3-4b97-887d-243947e12cea",
+  "receiptId": "7bf449ac-6405-4154-b86f-b51a29e9b5f7",
   "status": "current",
   "command": "deliver",
   "type": "erd",
   "input": "E:\\Desktop\\cnbphongkham\\.archify\\erd-agent-rt-20261022-171500\\candidate.json",
   "output": "E:\\Desktop\\cnbphongkham\\.archify\\erd-agent-rt-20261022-171500\\agent-rt.html",
   "specification": {
-    "sha256": "b20edbfb27a4bd51b14aef372bdc96a2cc2cbcf770f65d930271926478452894",
-    "bytes": 30390
+    "sha256": "0b686ad861eb24357fbc429490615a9a9f4166661be53188b2be2141c1eac1c7",
+    "bytes": 30852
   },
   "artifact": {
-    "sha256": "6b6ee711a04eacbff0c9666489764bec64d8bfecbbfb47ebc65c86f67d762d51",
-    "bytes": 943631
+    "sha256": "8381afeaf5c7ed6c4204e9d683e7a6ff938b2193bc270a5c4fcd87fb193a3393",
+    "bytes": 945066
   }
 }

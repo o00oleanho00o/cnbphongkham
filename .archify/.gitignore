@@ -1,0 +1,6 @@
+# Receipts of archify finalize: machine evidence with local paths (README.md, step 3). Never committed.
+*.finalize.json
+*.finalize-summary.json
+*.browser-check.json
+*.delivery.json
+review-*/
