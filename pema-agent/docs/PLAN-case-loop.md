@@ -300,7 +300,7 @@ thật đầu tiên chạy hết vòng: plugin khai báo ca, động cơ đợi 
   Lịch đã dời giờ (`starts_at` khác state) → `stop="skip:moved"`.
 - **`send`:** lời dặn của `instruction_for` (giờ, ngày do code viết, có lối `SKIP`). Gửi xong thì hết cạnh, ca
   `done`.
-- **Trigger:** `clock`. **Stop:** `max_turns=1`, `max_proactive=1`, `max_age=2 ngày`. **Budget:**
+- **Trigger:** `clock` và `event` (`appointment_changed`). **Stop:** `max_turns=1`, `max_proactive=1`, `max_age=2 ngày`. **Budget:**
   `per_person_per_day = policy.per_day`. **Goal:** "khách biết lịch lúc HH:MM ngày …, mốc …". **Verify:** lịch còn
   `booked`/`confirmed` trong `crm_reminder`, tin nhắc nằm trong chat.
 
@@ -313,7 +313,12 @@ thật đầu tiên chạy hết vòng: plugin khai báo ca, động cơ đợi 
 - Thứ tự giữ như code hôm nay: claim trước, mở ca sau. Lỗi giữa hai bước thì mất mốc đó chứ không bao giờ nhắc
   hai lần. Ngoài `agent serve` (chưa có đường gửi, `ctx.proactive` báo `PluginError`) thì bỏ cả lượt quét và
   không claim gì, như hôm nay.
-- Lịch hủy hay dời sau khi đã mở ca: `check` thấy lúc tới mốc và bỏ. Không đánh thức ca theo sự kiện ở bước này.
+- **Sự kiện đánh thức ca đang đợi (chủ chọn cách B, 2026-10-22).** Route `/v1/hooks/crm/events` đọc lịch cũ
+  trước khi ghi sự kiện. Ghi xong, với mỗi mốc của lịch cũ, nó gọi `ctx.cases.wake("reminder", key)`. Ca thức
+  dậy và chạy `check` ngay: lịch hủy thì dừng với `skip:over`, dời giờ thì dừng với `skip:moved`. Nhật ký ghi
+  đúng lúc có sự kiện, không phải lúc tới mốc. Ca cho giờ mới do vòng quét mở như cũ, vì `on_change` vẫn đánh
+  thức vòng quét. Chỉ đánh thức ca có con trỏ ở `check`: con trỏ chỉ nằm ở `send` khi lượt gửi lỗi và đang chờ
+  thử lại, mà đánh thức lúc đó thì sẽ gửi luôn, không kiểm lại.
 
 ### 6.4 Đổi ở động cơ (nhỏ, chung cho mọi ca)
 
@@ -347,6 +352,8 @@ thật đầu tiên chạy hết vòng: plugin khai báo ca, động cơ đợi 
   - giờ yên lặng dời tới lúc hết;
   - lịch hủy trước mốc → `skip:over`, không gửi;
   - lịch dời giờ → ca cũ `skip:moved`, ca mới theo giờ mới;
+  - sự kiện hủy hay dời làm ca đang đợi dừng ngay, không đợi tới mốc;
+  - ca có con trỏ ở `send` không bị sự kiện đánh thức;
   - mốc đã có trong `crm_reminder_sent` (gửi trước khi chuyển) không gửi lại;
   - hết chỗ trong ngày → `skip:daily_cap`;
   - `cases_enabled` tắt thì không gửi gì.
