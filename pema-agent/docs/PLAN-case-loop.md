@@ -2,7 +2,7 @@
 
 Ghi 2026-10-22. Thiết kế gốc: `DESIGN-case-loop.md`. Chủ duyệt 2026-10-22: làm `case_done` và `case_wait_until`
 trước; `case_need_human` để sau. Lời duyệt đó cũng là duyệt L7 cho hai tool mới trong profile `clinic`.
-**Trạng thái (2026-10-22): bước A và B đã làm.** Khác kế hoạch khi làm: `TurnNode` bỏ `sends` (một câu trả lời
+**Trạng thái (2026-10-22): bước A, B, C (mục 5) và mục 3.1 (trần token) đã làm.** Khác kế hoạch khi làm: `TurnNode` bỏ `sends` (một câu trả lời
 khách không nhận không được vào lịch sử chat; bước chỉ phán đoán là `CodeNode` tự gọi model); hai tool chỉ có khi
 một plugin đang bật khai báo ca (agent không dùng ca giữ nguyên prompt và cache); động cơ nghe tin khách ở
 `ChannelHub` (mọi kênh đi qua đó), không qua `on_message` của plugin; `Proactive.send_to` giữ nguyên.
@@ -201,7 +201,12 @@ Test DB cần container `pema-scratch-pg` và `PEMA_TEST_DATABASE_URL`, không b
 
 ## 3. Chưa làm trong hai bước này, làm sau theo thứ tự
 
-1. Ngân sách token theo phiên và ngày trước `run_turn` (DESIGN mục 3 bước 1).
+1. ~~Ngân sách token theo phiên và ngày trước `run_turn`~~ **đã làm 2026-10-22:** `TokenBudget` (`dispatcher.py`) kiểm trước mỗi lượt
+   tổng token (prompt, kể cả phần cache, và sinh ra) của các lượt trong ngày theo giờ địa phương, đếm từ
+   `agent_turn`: một phiên (`tokens_per_session_per_day`, mặc định 2 triệu) và cả agent (`tokens_per_day`,
+   mặc định 50 triệu), hai cột của `agent_settings` (migration `0006_token_budget`, có index `agent_turn(tenant_id,
+   agent, started_at)`). Quá trần thì lượt không chạy, tin hỏng với `token_budget`: khách nhận câu báo lỗi có sẵn,
+   tin chủ động bị bỏ qua, lượt của ca tính là đã dùng. Lượt vượt trần vẫn chạy hết (kiểm trước lượt, không giữa lượt).
 2. Hợp đồng `JudgeService`, `EmbeddingService` ra package trung lập.
 3. **Chăm sóc lại thành plugin `follow_up` trên động cơ** (DESIGN 2.5). Lý do chưa làm ngay: route
   `/v1/admin/follow-ups` và hai trường `follow_up_*` của settings đang được frontend dùng, mà frontend do phiên
@@ -212,10 +217,9 @@ Test DB cần container `pema-scratch-pg` và `PEMA_TEST_DATABASE_URL`, không b
 
 ## 4. Rủi ro ghi trước
 
-- Động cơ không có ca nào chạy cho tới khi một plugin `register_case`: sau bước B, hệ chạy y như cũ (hai tool có
-  trong registry nhưng trả lỗi "không có ca" khi model gọi ngoài ca). Prompt của model đổi vân tay (thêm hai tool)
-  → mọi phiên dựng lại system prompt một lần, có log cache break; chấp nhận.
-- Quyết định của tool ghi trong RAM của tiến trình (mục 0): mất khi lượt bị tiến trình khác vớt.
+- Động cơ không có ca nào chạy cho tới khi một plugin `register_case`: sau bước B, hệ chạy y như cũ. (Đã khác khi
+  làm: hai tool chỉ có khi một plugin đang bật khai báo ca, nên prompt và cache không đổi; quyết định của tool nằm
+  ở `agent_case.pending` từ bước C2, không còn trong RAM.)
 - `apply` chạy tiếp nút `open` ngay trong một lượt quét: trần `max_nodes_per_pass` và `max_turns` giữ cho không
   quay vô hạn; test có ca cho cả hai.
 

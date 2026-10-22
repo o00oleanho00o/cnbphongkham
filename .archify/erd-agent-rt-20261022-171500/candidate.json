@@ -9,7 +9,7 @@
     "repository": {
       "url": "git@github-personal20:o00oleanho00o/cnbphongkham.git",
       "link_mode": "local-only",
-      "revision": "d9faf4db6e5367e8c957fd095591db7093e9457c"
+      "revision": "af1e8c4ebc1ab4b1ca5ec22cd6796b39c4362c0d"
     }
   },
   "layout": {
@@ -559,16 +559,16 @@
           "label": "agent_settings"
         },
         {
-          "path": "pema-agent/backend/apps/agent/alembic/versions/0003_follow_up.sql",
-          "line": 3,
-          "end_line": 6,
-          "label": "+ follow_up_*"
-        },
-        {
           "path": "pema-agent/backend/apps/agent/alembic/versions/0004_cases.sql",
           "line": 62,
           "end_line": 65,
           "label": "+ cases_*"
+        },
+        {
+          "path": "pema-agent/backend/apps/agent/alembic/versions/0006_token_budget.sql",
+          "line": 3,
+          "end_line": 7,
+          "label": "+ tokens_*"
         }
       ],
       "attributes": [
@@ -633,6 +633,14 @@
         {
           "name": "proactive_per_person_per_day",
           "type": "integer (1–20)"
+        },
+        {
+          "name": "tokens_per_session_per_day",
+          "type": "bigint"
+        },
+        {
+          "name": "tokens_per_day",
+          "type": "bigint"
         },
         {
           "name": "version",

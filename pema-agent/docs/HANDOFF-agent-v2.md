@@ -19,11 +19,17 @@ revision files `0001_agent_rt` … `0012_*` or plugin files `0002_*`/`0003_*`, t
   (owner approved 2026-10-22, T9) are given to the agent only while an enabled plugin declares a case.
 - **Not done:** no plugin declares a case yet, so nothing runs; `case_need_human` with resume/close; follow-up as a
   plugin on the engine (its route and settings are used by the frontend, owned by the other session); reminders of
-  `crm` on the engine; the per-session/day token budget; the frontend page for cases.
+  `crm` on the engine; the frontend page for cases and for the token budget settings.
 - **Fixed in step C (2026-10-22):** a proactive message (case, follow-up, reminder) never shares a turn with the
   customer's messages, so a `SKIP` cannot swallow the customer's reply; a steering tool's decision is kept in
   `agent_case.pending` by the turn's message id `case:<id>:<turn>` (`ToolContext.message_id`, migration
   `0005_case_pending`), so a restart keeps it and a customer's turn cannot steer a case.
+- **Token budget (2026-10-22, plan section 3 item 1):** before every turn the dispatcher sums the tokens of
+  today's turns (local day, from `agent_turn`) of the session and of the whole agent; over
+  `tokens_per_session_per_day` (default 2M) or `tokens_per_day` (default 50M) the turn does not run and fails with
+  `token_budget` (the customer gets the failure reply; a proactive message is skipped). Migration
+  `0006_token_budget`. The turn that crosses the line still ends; turns running at once may overshoot the agent
+  budget by those turns.
 - **Known limits:** cases run one after another in a pass; a turn sent before a restart and sent again by id is
   logged as sent twice, so the daily cap may count it twice (it sends less, never more).
 
