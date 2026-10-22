@@ -1,0 +1,225 @@
+{
+  "schemaVersion": 1,
+  "ok": false,
+  "command": "finalize",
+  "status": "fail",
+  "type": "workflow",
+  "quality": "showcase",
+  "startedAt": "2026-10-22T15:51:37.147Z",
+  "specification": {
+    "path": "E:\\Desktop\\cnbphongkham\\.archify\\workflow-reminder-loop-20261022-091319\\candidate.json",
+    "sha256": "80fb376d787c4454ed507ee23754a42178d9db5c56b17659a145604b2b020439",
+    "bytes": 9644
+  },
+  "artifact": {
+    "path": "E:\\Desktop\\cnbphongkham\\.archify\\workflow-reminder-loop-20261022-091319\\reminder-loop.html",
+    "sha256": "97cec937cbf17e6bf8b8134804ddf1f3a377f839bc4740a4dbb502388aecb5dc",
+    "bytes": 831053
+  },
+  "stages": {
+    "validate": {
+      "status": "fail",
+      "exitCode": 1,
+      "durationMs": null,
+      "command": [
+        "C:\\Program Files\\nodejs\\node.exe",
+        "C:\\Users\\My PC\\.agents\\skills\\archify\\bin\\archify.mjs",
+        "deliver",
+        "workflow",
+        "E:\\Desktop\\cnbphongkham\\.archify\\workflow-reminder-loop-20261022-091319\\candidate.json",
+        "E:\\Desktop\\cnbphongkham\\.archify\\workflow-reminder-loop-20261022-091319\\reminder-loop.html",
+        "--quality",
+        "showcase",
+        "--repo-root",
+        "E:\\Desktop\\cnbphongkham",
+        "--json"
+      ],
+      "receipt": {
+        "schemaVersion": 1,
+        "ok": false,
+        "command": "deliver",
+        "receiptId": "9ecec3ef-d8a1-4904-a410-03655c181552",
+        "stage": "render",
+        "type": "workflow",
+        "input": "E:\\Desktop\\cnbphongkham\\.archify\\workflow-reminder-loop-20261022-091319\\candidate.json",
+        "output": "E:\\Desktop\\cnbphongkham\\.archify\\workflow-reminder-loop-20261022-091319\\reminder-loop.html",
+        "error": "Workflow layout validation failed",
+        "diagnostics": [
+          {
+            "code": "i18n/locale-fallback",
+            "severity": "warning",
+            "message": "meta.locale \"vi\" has no bundled catalog and no usable meta.translations; the Viewer chrome and <html lang> fall back to English.",
+            "subject": {
+              "diagramType": "workflow",
+              "path": "/meta/locale"
+            },
+            "evidence": {
+              "locale": "vi",
+              "bundledLocales": [
+                "en",
+                "zh-CN",
+                "zh-TW",
+                "es",
+                "ko",
+                "ar"
+              ]
+            },
+            "supportedFixes": [
+              "Supply meta.translations for this locale.",
+              "Use a bundled locale: en, zh-CN, zh-TW, es, ko, ar."
+            ]
+          },
+          {
+            "code": "workflow/sublabel-readability",
+            "severity": "error",
+            "message": "Sublabel \"/v1/hooks/crm/events, đánh thức ca\" needs ~145px at the 7.1px minimum that stays readable on this 1089px canvas, but node \"receive\" provides 124px — shorten the sublabel while preserving its role or protocol.",
+            "subject": {
+              "diagramType": "workflow",
+              "node": "receive",
+              "path": "/nodes/3/sublabel"
+            },
+            "evidence": {
+              "requiredFontPx": 7.1,
+              "maximumSlotFontPx": 8,
+              "canvasWidthPx": 1089,
+              "maximumCanvasWidthPx": 1240,
+              "requiredTextWidthPx": 144.83999999999997,
+              "availableTextWidthPx": 124
+            },
+            "supportedFixes": [
+              "shorten node \"receive\" sublabel while preserving its role or protocol; move supplementary facts into a card"
+            ]
+          },
+          {
+            "code": "workflow/sublabel-readability",
+            "severity": "error",
+            "message": "Sublabel \"đọc lại lịch, decide(), 7 luật\" needs ~128px at the 7.1px minimum that stays readable on this 1089px canvas, but node \"decide\" provides 124px — shorten the sublabel while preserving its role or protocol.",
+            "subject": {
+              "diagramType": "workflow",
+              "node": "decide",
+              "path": "/nodes/7/sublabel"
+            },
+            "evidence": {
+              "requiredFontPx": 7.1,
+              "maximumSlotFontPx": 8,
+              "canvasWidthPx": 1089,
+              "maximumCanvasWidthPx": 1240,
+              "requiredTextWidthPx": 127.8,
+              "availableTextWidthPx": 124
+            },
+            "supportedFixes": [
+              "shorten node \"decide\" sublabel while preserving its role or protocol; move supplementary facts into a card"
+            ]
+          }
+        ],
+        "provenance": "failed",
+        "update": {
+          "status": "unavailable",
+          "installedVersion": null,
+          "availableVersion": null,
+          "releaseNotes": null,
+          "checkedAt": null,
+          "source": null,
+          "noticeRequired": false,
+          "noticeText": null,
+          "reason": "disabled"
+        }
+      },
+      "execution": "embedded-in-deliver"
+    },
+    "deliver": {
+      "status": "not-run",
+      "execution": "blocked-by-validate"
+    }
+  },
+  "browserCheck": {
+    "requested": true,
+    "ran": false
+  },
+  "diagnostics": [
+    {
+      "code": "i18n/locale-fallback",
+      "severity": "warning",
+      "message": "meta.locale \"vi\" has no bundled catalog and no usable meta.translations; the Viewer chrome and <html lang> fall back to English.",
+      "subject": {
+        "diagramType": "workflow",
+        "path": "/meta/locale"
+      },
+      "evidence": {
+        "locale": "vi",
+        "bundledLocales": [
+          "en",
+          "zh-CN",
+          "zh-TW",
+          "es",
+          "ko",
+          "ar"
+        ]
+      },
+      "supportedFixes": [
+        "Supply meta.translations for this locale.",
+        "Use a bundled locale: en, zh-CN, zh-TW, es, ko, ar."
+      ]
+    },
+    {
+      "code": "workflow/sublabel-readability",
+      "severity": "error",
+      "message": "Sublabel \"/v1/hooks/crm/events, đánh thức ca\" needs ~145px at the 7.1px minimum that stays readable on this 1089px canvas, but node \"receive\" provides 124px — shorten the sublabel while preserving its role or protocol.",
+      "subject": {
+        "diagramType": "workflow",
+        "node": "receive",
+        "path": "/nodes/3/sublabel"
+      },
+      "evidence": {
+        "requiredFontPx": 7.1,
+        "maximumSlotFontPx": 8,
+        "canvasWidthPx": 1089,
+        "maximumCanvasWidthPx": 1240,
+        "requiredTextWidthPx": 144.83999999999997,
+        "availableTextWidthPx": 124
+      },
+      "supportedFixes": [
+        "shorten node \"receive\" sublabel while preserving its role or protocol; move supplementary facts into a card"
+      ]
+    },
+    {
+      "code": "workflow/sublabel-readability",
+      "severity": "error",
+      "message": "Sublabel \"đọc lại lịch, decide(), 7 luật\" needs ~128px at the 7.1px minimum that stays readable on this 1089px canvas, but node \"decide\" provides 124px — shorten the sublabel while preserving its role or protocol.",
+      "subject": {
+        "diagramType": "workflow",
+        "node": "decide",
+        "path": "/nodes/7/sublabel"
+      },
+      "evidence": {
+        "requiredFontPx": 7.1,
+        "maximumSlotFontPx": 8,
+        "canvasWidthPx": 1089,
+        "maximumCanvasWidthPx": 1240,
+        "requiredTextWidthPx": 127.8,
+        "availableTextWidthPx": 124
+      },
+      "supportedFixes": [
+        "shorten node \"decide\" sublabel while preserving its role or protocol; move supplementary facts into a card"
+      ]
+    }
+  ],
+  "evidence": {
+    "receipt": "E:\\Desktop\\cnbphongkham\\.archify\\workflow-reminder-loop-20261022-091319\\review-2\\reminder-loop.finalize.json",
+    "summaryReceipt": "E:\\Desktop\\cnbphongkham\\.archify\\workflow-reminder-loop-20261022-091319\\review-2\\reminder-loop.finalize-summary.json"
+  },
+  "visualReview": "not-requested",
+  "failedStage": "validate",
+  "finishedAt": "2026-10-22T15:51:38.069Z",
+  "durationMs": 922,
+  "update": {
+    "status": "current",
+    "installedVersion": "3.2.0",
+    "availableVersion": "3.2.0",
+    "releaseNotes": null,
+    "checkedAt": "2026-10-22T01:56:02.656Z",
+    "source": "cache",
+    "noticeRequired": false,
+    "noticeText": null
+  }
+}
