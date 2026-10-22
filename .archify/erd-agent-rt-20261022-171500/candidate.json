@@ -9,7 +9,7 @@
     "repository": {
       "url": "git@github-personal20:o00oleanho00o/cnbphongkham.git",
       "link_mode": "local-only",
-      "revision": "e2142ea4553c1d56138264ba805be792e0e614c1"
+      "revision": "d9faf4db6e5367e8c957fd095591db7093e9457c"
     }
   },
   "layout": {
@@ -998,6 +998,12 @@
           "line": 38,
           "end_line": 39,
           "label": "một ca sống mỗi khóa"
+        },
+        {
+          "path": "pema-agent/backend/apps/agent/alembic/versions/0005_case_pending.sql",
+          "line": 4,
+          "end_line": 6,
+          "label": "+ pending"
         }
       ],
       "attributes": [
@@ -1081,6 +1087,10 @@
         {
           "name": "end_reason",
           "type": "text (≤300)"
+        },
+        {
+          "name": "pending",
+          "type": "jsonb"
         },
         {
           "name": "version",

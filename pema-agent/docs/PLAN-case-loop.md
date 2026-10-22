@@ -219,7 +219,7 @@ Test DB cần container `pema-scratch-pg` và `PEMA_TEST_DATABASE_URL`, không b
 - `apply` chạy tiếp nút `open` ngay trong một lượt quét: trần `max_nodes_per_pass` và `max_turns` giữ cho không
   quay vô hạn; test có ca cho cả hai.
 
-## 5. Bước C: sửa hai lỗ sau bước B (ghi 2026-10-22, chờ "go")
+## 5. Bước C: sửa hai lỗ sau bước B (ghi 2026-10-22; C1 và C2 đã làm cùng ngày)
 
 ### C1. Tin chủ động không bao giờ gộp lượt với tin khác (một commit, làm trước)
 

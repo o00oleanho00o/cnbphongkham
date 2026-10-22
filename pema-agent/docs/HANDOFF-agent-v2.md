@@ -20,10 +20,12 @@ revision files `0001_agent_rt` … `0012_*` or plugin files `0002_*`/`0003_*`, t
 - **Not done:** no plugin declares a case yet, so nothing runs; `case_need_human` with resume/close; follow-up as a
   plugin on the engine (its route and settings are used by the frontend, owned by the other session); reminders of
   `crm` on the engine; the per-session/day token budget; the frontend page for cases.
-- **Known limits:** a decision of a steering tool is kept in the engine's memory while the case's turn runs: a turn
-  picked up by another process (the sweeper) loses it and the case falls back to waiting for the customer. Cases run
-  one after another in a pass. A case's message carries the customer's `user_id`, so the queue may answer it in one
-  turn with a customer message that arrived at the same moment (true of follow-ups and reminders today too).
+- **Fixed in step C (2026-10-22):** a proactive message (case, follow-up, reminder) never shares a turn with the
+  customer's messages, so a `SKIP` cannot swallow the customer's reply; a steering tool's decision is kept in
+  `agent_case.pending` by the turn's message id `case:<id>:<turn>` (`ToolContext.message_id`, migration
+  `0005_case_pending`), so a restart keeps it and a customer's turn cannot steer a case.
+- **Known limits:** cases run one after another in a pass; a turn sent before a restart and sent again by id is
+  logged as sent twice, so the daily cap may count it twice (it sends less, never more).
 
 ## CRM plugin (since 2026-10-21, `docs/PLAN-crm-plugin.md` steps 0–7, 9 and part of 10 done)
 

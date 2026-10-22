@@ -9,7 +9,7 @@
     "repository": {
       "url": "git@github-personal20:o00oleanho00o/cnbphongkham.git",
       "link_mode": "local-only",
-      "revision": "e2142ea4553c1d56138264ba805be792e0e614c1"
+      "revision": "d9faf4db6e5367e8c957fd095591db7093e9457c"
     }
   },
   "lanes": [
@@ -79,8 +79,8 @@
         },
         {
           "path": "pema-agent/backend/apps/agent/agent_app/cases/engine.py",
-          "line": 127,
-          "end_line": 156,
+          "line": 134,
+          "end_line": 163,
           "label": "open_for"
         }
       ]
@@ -101,8 +101,8 @@
         },
         {
           "path": "pema-agent/backend/apps/agent/agent_app/cases/engine.py",
-          "line": 188,
-          "end_line": 205,
+          "line": 195,
+          "end_line": 210,
           "label": "on_inbound"
         }
       ]
@@ -117,14 +117,14 @@
       "sources": [
         {
           "path": "pema-agent/backend/apps/agent/agent_app/cases/engine.py",
-          "line": 169,
-          "end_line": 186,
+          "line": 176,
+          "end_line": 191,
           "label": "_wake"
         },
         {
           "path": "pema-agent/backend/apps/agent/agent_app/cases/engine.py",
-          "line": 207,
-          "end_line": 231,
+          "line": 214,
+          "end_line": 238,
           "label": "run, pass_once"
         }
       ]
@@ -140,8 +140,8 @@
       "sources": [
         {
           "path": "pema-agent/backend/packages/agent-core/src/agentcore/cases/rules.py",
-          "line": 102,
-          "end_line": 137,
+          "line": 132,
+          "end_line": 167,
           "label": "blocked"
         }
       ]
@@ -156,8 +156,8 @@
       "sources": [
         {
           "path": "pema-agent/backend/apps/agent/agent_app/cases/engine.py",
-          "line": 233,
-          "end_line": 273,
+          "line": 240,
+          "end_line": 280,
           "label": "step"
         }
       ]
@@ -172,8 +172,8 @@
       "sources": [
         {
           "path": "pema-agent/backend/apps/agent/agent_app/cases/engine.py",
-          "line": 274,
-          "end_line": 278,
+          "line": 282,
+          "end_line": 286,
           "label": "_run: nút mã"
         }
       ]
@@ -189,14 +189,14 @@
       "sources": [
         {
           "path": "pema-agent/backend/apps/agent/agent_app/cases/engine.py",
-          "line": 279,
-          "end_line": 299,
+          "line": 287,
+          "end_line": 305,
           "label": "_run: nút model"
         },
         {
           "path": "pema-agent/backend/packages/agent-core/src/agentcore/cases/rules.py",
-          "line": 195,
-          "end_line": 206,
+          "line": 225,
+          "end_line": 236,
           "label": "turn_text"
         }
       ]
@@ -207,7 +207,7 @@
       "col": 3,
       "type": "security",
       "label": "case_done, case_wait_until",
-      "sublabel": "model điều khiển ca",
+      "sublabel": "giữ trong agent_case.pending",
       "sources": [
         {
           "path": "pema-agent/backend/packages/agent-core/src/agentcore/cases/tools.py",
@@ -217,8 +217,8 @@
         },
         {
           "path": "pema-agent/backend/apps/agent/agent_app/cases/engine.py",
-          "line": 112,
-          "end_line": 118,
+          "line": 116,
+          "end_line": 124,
           "label": "take"
         }
       ]
@@ -233,8 +233,8 @@
       "sources": [
         {
           "path": "pema-agent/backend/packages/agent-core/src/agentcore/cases/rules.py",
-          "line": 163,
-          "end_line": 192,
+          "line": 193,
+          "end_line": 222,
           "label": "apply"
         }
       ]
@@ -249,14 +249,14 @@
       "sources": [
         {
           "path": "pema-agent/backend/apps/agent/agent_app/cases/store.py",
-          "line": 310,
-          "end_line": 332,
+          "line": 350,
+          "end_line": 373,
           "label": "save"
         },
         {
           "path": "pema-agent/backend/apps/agent/agent_app/cases/engine.py",
-          "line": 265,
-          "end_line": 272,
+          "line": 272,
+          "end_line": 279,
           "label": "lưu, lost"
         }
       ],
@@ -272,14 +272,14 @@
       "sources": [
         {
           "path": "pema-agent/backend/packages/agent-core/src/agentcore/cases/rules.py",
-          "line": 150,
-          "end_line": 160,
+          "line": 180,
+          "end_line": 190,
           "label": "_end"
         },
         {
           "path": "pema-agent/backend/apps/agent/agent_app/cases/engine.py",
-          "line": 311,
-          "end_line": 347,
+          "line": 316,
+          "end_line": 351,
           "label": "_blocked, _close"
         }
       ]
@@ -390,8 +390,8 @@
       "title": "Không chạy hai lần",
       "items": [
         "Một ca sống mỗi (plugin, kind, key); lưu chỉ thắng khi version còn đúng, bên thua ghi 'lost'",
-        "Lượt model vào hàng đợi với mã case:id:lượt, nên chạy đúng một lần và giữ khóa phiên như mọi tin",
-        "Động cơ không cầm khóa phiên: lượt cầm, cầm trước là tự khóa mình"
+        "Lượt model vào hàng đợi với mã case:id:lượt, chạy đúng một lần và không bao giờ gộp với tin của khách",
+        "Tool chỉ nhận quyết định khi lượt đang trả lời đúng mã đó, ghi vào agent_case.pending theo lượt: khởi động lại giữa lượt vẫn đọc được, lượt của khách không điều khiển được ca"
       ]
     }
   ]
