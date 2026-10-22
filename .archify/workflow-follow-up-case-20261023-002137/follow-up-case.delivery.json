@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "fe2ecb8d-f9b3-412a-874f-eab612a68ecd",
+  "status": "current",
+  "command": "deliver",
+  "type": "workflow",
+  "input": "E:\\Desktop\\cnbphongkham\\.archify\\workflow-follow-up-case-20261023-002137\\candidate.json",
+  "output": "E:\\Desktop\\cnbphongkham\\.archify\\workflow-follow-up-case-20261023-002137\\follow-up-case.html",
+  "specification": {
+    "sha256": "31c985ad915001abd2ca3c960339d411a691dcbcc3b7540642ea86aa2e1f3a9b",
+    "bytes": 9078
+  },
+  "artifact": {
+    "sha256": "8286a3a1ad149910bd13f92799e19c3e1fd5d2d6a1443731fb957a02b4102a4f",
+    "bytes": 833723
+  }
+}

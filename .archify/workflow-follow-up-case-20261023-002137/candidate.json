@@ -1,0 +1,271 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Chăm sóc lại: plugin follow_up chạy như một ca trên động cơ",
+    "locale": "vi",
+    "output": ".archify/workflow-follow-up-case-20261023-002137/follow-up-case.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "git@github-personal20:o00oleanho00o/cnbphongkham.git",
+      "link_mode": "local-only",
+      "revision": "64a3919d7a7c84522c48791708ad44fc288fed3b"
+    }
+  },
+  "lanes": [
+    { "id": "chat", "label": "Kênh chat (harness)" },
+    { "id": "plugin", "label": "Plugin follow_up: nút mã" },
+    { "id": "judges", "label": "Bộ phán đoán", "variant": "exception" },
+    { "id": "out", "label": "Động cơ ca: gửi hay kết thúc" }
+  ],
+  "phases": [
+    { "id": "p-open", "label": "Mở ca", "fromCol": 0, "toCol": 0 },
+    { "id": "p-judge", "label": "Chờ im, phán đoán", "fromCol": 1, "toCol": 2, "variant": "emphasis" },
+    { "id": "p-send", "label": "Kiểm ngay trước khi gửi", "fromCol": 3, "toCol": 5 }
+  ],
+  "mainPath": ["answer", "open", "quiet", "judge", "jev", "check", "write", "customer"],
+  "nodes": [
+    {
+      "id": "answer",
+      "lane": "chat",
+      "col": 0,
+      "type": "frontend",
+      "label": "Agent trả lời khách",
+      "sublabel": "báo plugin, kèm user_id",
+      "sources": [
+        {
+          "path": "pema-agent/backend/apps/agent/agent_app/channel_hub.py",
+          "line": 279,
+          "end_line": 302,
+          "label": "_tell_of_reply"
+        }
+      ]
+    },
+    {
+      "id": "open",
+      "lane": "plugin",
+      "col": 0,
+      "type": "backend",
+      "label": "Mở hay đánh thức ca",
+      "sublabel": "chat một-một, kênh được theo dõi",
+      "tag": "bỏ qua tin chủ động",
+      "sources": [
+        {
+          "path": "pema-agent/backend/apps/agent/plugins/follow_up/case.py",
+          "line": 130,
+          "end_line": 166,
+          "label": "heard"
+        }
+      ]
+    },
+    {
+      "id": "quiet",
+      "lane": "plugin",
+      "col": 1,
+      "type": "messagebus",
+      "label": "quiet",
+      "sublabel": "chờ khách im 2 giờ",
+      "sources": [
+        {
+          "path": "pema-agent/backend/apps/agent/plugins/follow_up/case.py",
+          "line": 168,
+          "end_line": 179,
+          "label": "quiet"
+        }
+      ]
+    },
+    {
+      "id": "judge",
+      "lane": "plugin",
+      "col": 2,
+      "type": "backend",
+      "label": "judge",
+      "sublabel": "đọc chat, từ khóa 'đừng nhắn'",
+      "sources": [
+        {
+          "path": "pema-agent/backend/apps/agent/plugins/follow_up/case.py",
+          "line": 181,
+          "end_line": 202,
+          "label": "judge"
+        },
+        {
+          "path": "pema-agent/backend/apps/agent/plugins/follow_up/rules.py",
+          "line": 167,
+          "end_line": 185,
+          "label": "decide"
+        }
+      ]
+    },
+    {
+      "id": "jev",
+      "lane": "judges",
+      "col": 2,
+      "type": "external",
+      "label": "Jev hỏi trước",
+      "sublabel": "choice 6 trạng thái",
+      "tag": "dùng khi tin ≥ 60%",
+      "sources": [
+        {
+          "path": "pema-agent/backend/apps/agent/plugins/follow_up/case.py",
+          "line": 223,
+          "end_line": 252,
+          "label": "_verdict"
+        },
+        {
+          "path": "pema-agent/backend/apps/agent/plugins/follow_up/rules.py",
+          "line": 255,
+          "end_line": 272,
+          "label": "read_jev"
+        }
+      ]
+    },
+    {
+      "id": "model",
+      "lane": "judges",
+      "col": 3,
+      "type": "external",
+      "label": "Model chat",
+      "sublabel": "prompt cũ, đọc giờ khách hẹn",
+      "sources": [
+        {
+          "path": "pema-agent/backend/apps/agent/plugins/follow_up/rules.py",
+          "line": 188,
+          "end_line": 212,
+          "label": "SYSTEM_PROMPT"
+        },
+        {
+          "path": "pema-agent/backend/apps/agent/plugins/follow_up/rules.py",
+          "line": 332,
+          "end_line": 345,
+          "label": "parse_verdict"
+        }
+      ]
+    },
+    {
+      "id": "check",
+      "lane": "plugin",
+      "col": 3,
+      "type": "security",
+      "label": "check",
+      "sublabel": "8–20 giờ, cách 24 giờ, trần ngày",
+      "sources": [
+        {
+          "path": "pema-agent/backend/apps/agent/plugins/follow_up/case.py",
+          "line": 204,
+          "end_line": 221,
+          "label": "check"
+        },
+        {
+          "path": "pema-agent/backend/apps/agent/plugins/follow_up/rules.py",
+          "line": 102,
+          "end_line": 116,
+          "label": "send_at"
+        },
+        {
+          "path": "pema-agent/backend/apps/agent/agent_app/cases/engine.py",
+          "line": 177,
+          "end_line": 190,
+          "label": "room_today"
+        }
+      ]
+    },
+    {
+      "id": "end",
+      "lane": "out",
+      "col": 3,
+      "type": "database",
+      "label": "Ca kết thúc",
+      "sublabel": "xong, từ chối, 2 tin không trả lời",
+      "tag": "kết thúc",
+      "sources": [
+        {
+          "path": "pema-agent/backend/apps/agent/plugins/follow_up/case.py",
+          "line": 255,
+          "end_line": 307,
+          "label": "follow_up_case"
+        }
+      ]
+    },
+    {
+      "id": "write",
+      "lane": "out",
+      "col": 4,
+      "type": "backend",
+      "label": "write",
+      "sublabel": "lượt model: một tin hoặc SKIP",
+      "sources": [
+        {
+          "path": "pema-agent/backend/apps/agent/plugins/follow_up/rules.py",
+          "line": 274,
+          "end_line": 282,
+          "label": "instruction_for"
+        },
+        {
+          "path": "pema-agent/backend/packages/agent-core/src/agentcore/cases/rules.py",
+          "line": 216,
+          "end_line": 221,
+          "label": "look_again"
+        }
+      ]
+    },
+    {
+      "id": "customer",
+      "lane": "out",
+      "col": 5,
+      "type": "external",
+      "label": "Khách",
+      "sublabel": "tin chủ động trên kênh",
+      "sources": [
+        {
+          "path": "pema-agent/backend/apps/agent/agent_app/proactive.py",
+          "line": 32,
+          "end_line": 64,
+          "label": "send_to"
+        }
+      ]
+    }
+  ],
+  "edges": [
+    { "id": "answer-open", "from": "answer", "to": "open", "variant": "emphasis" },
+    { "id": "open-quiet", "from": "open", "to": "quiet", "label": "mở ca", "variant": "emphasis" },
+    { "id": "quiet-judge", "from": "quiet", "to": "judge", "label": "đã im", "variant": "emphasis" },
+    { "id": "judge-jev", "from": "judge", "to": "jev", "label": "hỏi", "variant": "emphasis" },
+    { "id": "jev-model", "from": "jev", "to": "model", "label": "không chắc", "variant": "dashed", "role": "branch" },
+    { "id": "jev-check", "from": "jev", "to": "check", "label": "hẹn giờ", "variant": "emphasis" },
+    { "id": "model-check", "from": "model", "to": "check", "label": "hẹn giờ", "variant": "default", "role": "branch" },
+    { "id": "judge-end", "from": "judge", "to": "end", "label": "xong / từ chối", "variant": "security", "role": "error" },
+    { "id": "check-quiet", "from": "check", "to": "quiet", "label": "khách nhắn trước", "variant": "dashed", "role": "return" },
+    { "id": "check-write", "from": "check", "to": "write", "label": "tới giờ", "variant": "emphasis" },
+    { "id": "write-customer", "from": "write", "to": "customer", "label": "một tin", "variant": "emphasis" },
+    { "id": "write-check", "from": "write", "to": "check", "label": "lỗi", "variant": "dashed", "role": "return" }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Harness không biết chăm sóc lại",
+      "items": [
+        "Plugin nghe câu trả lời của agent (on_message, user_id), đọc chat qua ctx.chat_history, mở ca qua ctx.cases",
+        "Không bảng, tool hay route riêng; ca nằm trong agent_case, xem ở /v1/admin/cases",
+        "Chạy khi plugin bật, có kênh trong cài đặt channels, và cases_enabled bật"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Jev trước, model chat khi cần",
+      "items": [
+        "Jev trả một trong sáu trạng thái kèm độ tin; từ 60% trở lên thì dùng luôn, giờ nhắn lấy mặc định 24 giờ",
+        "Model chat chạy khi Jev tắt, lỗi, không chắc, hoặc ra call_back (khách hẹn một giờ cụ thể)",
+        "Nhật ký ca ghi ai phán đoán, để đo Jev đỡ được bao nhiêu lần gọi model"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Cái gì làm vòng dừng",
+      "items": [
+        "Sau mỗi tin, ca đợi khách tối đa 2 giờ (look_again) rồi xét lại; hai tin liền không được trả lời thì ca dừng",
+        "Khách nhắn 'đừng nhắn nữa' (stop_if) dừng ca ngay; tối đa 4 tin trong 14 ngày",
+        "Tin tính chung vào trần mỗi người mỗi ngày với nhắc lịch; gửi lỗi quay về check, lỗi 3 lần thì dừng"
+      ]
+    }
+  ]
+}

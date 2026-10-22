@@ -9,7 +9,7 @@
     "repository": {
       "url": "git@github-personal20:o00oleanho00o/cnbphongkham.git",
       "link_mode": "local-only",
-      "revision": "af1e8c4ebc1ab4b1ca5ec22cd6796b39c4362c0d"
+      "revision": "64a3919d7a7c84522c48791708ad44fc288fed3b"
     }
   },
   "layout": {
@@ -157,8 +157,8 @@
         },
         {
           "path": "pema-agent/backend/packages/agent-core/src/agentcore/channels.py",
-          "line": 184,
-          "end_line": 195,
+          "line": 186,
+          "end_line": 197,
           "label": "session_id_for(epoch)"
         }
       ],
@@ -309,87 +309,6 @@
         },
         {
           "name": "delivery_after",
-          "type": "timestamptz"
-        }
-      ]
-    },
-    {
-      "id": "agent_follow_up",
-      "label": "agent_follow_up",
-      "tag": "hàng đợi",
-      "row": 1,
-      "col": 1,
-      "sources": [
-        {
-          "path": "pema-agent/backend/apps/agent/alembic/versions/0003_follow_up.sql",
-          "line": 8,
-          "end_line": 29,
-          "label": "agent_follow_up"
-        }
-      ],
-      "attributes": [
-        {
-          "name": "tenant_id",
-          "type": "text",
-          "key": "pk"
-        },
-        {
-          "name": "agent",
-          "type": "text",
-          "key": "pk"
-        },
-        {
-          "name": "channel",
-          "type": "text",
-          "key": "pk"
-        },
-        {
-          "name": "conversation_id",
-          "type": "text",
-          "key": "pk"
-        },
-        {
-          "name": "user_id",
-          "type": "text"
-        },
-        {
-          "name": "session_id",
-          "type": "text"
-        },
-        {
-          "name": "state",
-          "type": "text (6 giá trị)"
-        },
-        {
-          "name": "reason",
-          "type": "text (≤500)"
-        },
-        {
-          "name": "next_at",
-          "type": "timestamptz"
-        },
-        {
-          "name": "paused_until",
-          "type": "timestamptz"
-        },
-        {
-          "name": "stopped",
-          "type": "boolean"
-        },
-        {
-          "name": "unanswered",
-          "type": "integer"
-        },
-        {
-          "name": "last_sent_at",
-          "type": "timestamptz"
-        },
-        {
-          "name": "reviewed_through",
-          "type": "bigint"
-        },
-        {
-          "name": "updated_at",
           "type": "timestamptz"
         }
       ]
@@ -616,14 +535,6 @@
         },
         {
           "name": "tools",
-          "type": "jsonb"
-        },
-        {
-          "name": "follow_up_enabled",
-          "type": "boolean"
-        },
-        {
-          "name": "follow_up_channels",
           "type": "jsonb"
         },
         {
@@ -1214,16 +1125,6 @@
       "variant": "dashed"
     },
     {
-      "id": "followup-ingress",
-      "from": "agent_follow_up",
-      "to": "agent_ingress",
-      "label": "reviewed_through = id",
-      "fromCardinality": "one",
-      "toCardinality": "one",
-      "identifying": false,
-      "variant": "dashed"
-    },
-    {
       "id": "settings-entry",
       "from": "agent_model_settings",
       "to": "agent_model_entry",
@@ -1281,7 +1182,7 @@
       "title": "Ai ghi bảng nào",
       "items": [
         "run_turn: agent_message (append có seq), agent_session (prompt_text, summary), agent_turn + agent_turn_event (một giao dịch, cuối lượt)",
-        "Dispatcher / ChannelHub: agent_ingress (status, delivery); FollowUps: agent_follow_up; động cơ ca: agent_case (lưu theo version), agent_case_event (dòng sent đếm trần mỗi người mỗi ngày)",
+        "Dispatcher / ChannelHub: agent_ingress (status, delivery); động cơ ca: agent_case (lưu theo version), agent_case_event (dòng sent đếm trần mỗi người mỗi ngày)",
         "Trang quản trị: agent_settings, agent_model_settings, agent_model_entry, agent_plugin; tool memory: agent_memory; plugin: agent_plugin_record"
       ]
     },

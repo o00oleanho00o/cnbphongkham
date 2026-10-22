@@ -104,9 +104,9 @@
 
   <h3>2d. Vòng chủ động và dữ liệu</h3>
   <div class="grid">
-    <a class="card" href="workflow-follow-up-loop-20261022-112511/follow-up-loop.html">
-      <strong>Vòng chăm sóc lại</strong>
-      <span>Hội thoại im thì model phán đoán, mã quyết có gửi không (giờ, khoảng cách, số lần), gửi qua hàng đợi như mọi trả lời.</span>
+    <a class="card" href="workflow-follow-up-case-20261023-002137/follow-up-case.html">
+      <strong>Chăm sóc lại (plugin follow_up)</strong>
+      <span>Một ca trên động cơ: câu trả lời của agent mở ca, chờ khách im, Jev phán đoán trước (model chat khi Jev không chắc), code kiểm giờ và trần ngay trước khi gửi.</span>
     </a>
     <a class="card" href="workflow-case-loop-20261022-171500/case-loop.html">
       <strong>Một ca chạy thế nào</strong>
@@ -114,7 +114,7 @@
     </a>
     <a class="card" href="erd-agent-rt-20261022-171500/agent-rt.html">
       <strong>Schema agent_rt</strong>
-      <span>16 bảng của lõi với mọi cột: phiên và lịch sử, hàng đợi, trace, cài đặt, plugin, ca; ba FK thật, còn lại nối theo giá trị.</span>
+      <span>15 bảng của lõi với mọi cột: phiên và lịch sử, hàng đợi, trace, cài đặt, plugin, ca; ba FK thật, còn lại nối theo giá trị.</span>
       <small>Vẽ ở mức standard (dày hơn) vì nhiều cột; bảng của plugin (kb_, sk_, cv_, crm_) không ở đây.</small>
     </a>
   </div>
@@ -149,7 +149,7 @@
   </div>
 
   <footer>
-    Vẽ bằng Archify từ mã tại commit <code>7d86533</code> (2026-10-22); sơ đồ ca tại <code>d9faf4d</code>, schema agent_rt tại <code>af1e8c4</code>, vòng nhắc lịch tại <code>a939357</code>, hợp đồng plugin tại <code>3ca3147</code>. Giao diện của trình xem bằng tiếng Anh; nội dung sơ đồ bằng tiếng Việt. Vẽ lại: sửa <code>candidate.json</code> trong thư mục của sơ đồ rồi chạy <code>archify finalize</code>.
+    Vẽ bằng Archify từ mã tại commit <code>7d86533</code> (2026-10-22); sơ đồ ca tại <code>d9faf4d</code>, schema agent_rt và chăm sóc lại tại <code>64a3919</code>, vòng nhắc lịch tại <code>a939357</code>, hợp đồng plugin tại <code>3ca3147</code>. Giao diện của trình xem bằng tiếng Anh; nội dung sơ đồ bằng tiếng Việt. Vẽ lại: sửa <code>candidate.json</code> trong thư mục của sơ đồ rồi chạy <code>archify finalize</code>.
   </footer>
 </main>
 </body>
