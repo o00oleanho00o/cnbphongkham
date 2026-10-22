@@ -218,3 +218,44 @@ Test DB cần container `pema-scratch-pg` và `PEMA_TEST_DATABASE_URL`, không b
 - Quyết định của tool ghi trong RAM của tiến trình (mục 0): mất khi lượt bị tiến trình khác vớt.
 - `apply` chạy tiếp nút `open` ngay trong một lượt quét: trần `max_nodes_per_pass` và `max_turns` giữ cho không
   quay vô hạn; test có ca cho cả hai.
+
+## 5. Bước C: sửa hai lỗ sau bước B (ghi 2026-10-22, chờ "go")
+
+### C1. Tin chủ động không bao giờ gộp lượt với tin khác (một commit, làm trước)
+
+**Lỗi:** `Dispatcher._gather` gom các tin xếp hàng của cùng `user_id` vào một lượt, và `steer_in` nhét tin đến giữa
+lượt vào lượt đang chạy. Tin chủ động (ca, chăm sóc lại, nhắc lịch của `crm`) mang `user_id` của khách nên bị gom
+chung. Chỉ câu trả lời của tin đứng đầu được gửi đi: tin chủ động đứng đầu mà model trả `SKIP` thì câu hỏi thật của
+khách mất trả lời; tin khách đứng đầu thì chỉ dẫn của vòng lẫn vào câu khách hỏi. Lỗi có thật hôm nay với nhắc lịch.
+
+**Sửa:** trong `_gather`, lead là tin chủ động thì không gom gì; gặp một tin chủ động khi đang gom tin khách thì dừng.
+`steer_in` dùng chính `_gather` nên được sửa theo. Tin chủ động bỏ qua `_quiet` (không ai đang gõ tin đó).
+
+**Test** (`test_queue_modes.py`): tin khách rồi tin chủ động xếp hàng thành hai lượt, hai câu trả lời; tin chủ động
+rồi tin khách cũng hai lượt, `SKIP` của lượt chủ động không nuốt câu trả lời của khách; chế độ `steer` không nhét tin
+chủ động vào lượt của khách và ngược lại.
+
+### C2. Quyết định của tool điều khiển xuống DB, gắn với đúng tin của lượt (một commit)
+
+**Lỗi:** quyết định nằm trong dict của tiến trình, tra theo chat. Mất khi agent khởi động lại giữa lượt (sweeper chạy
+lại lượt nhưng dict trống) hoặc khi tiến trình khác chạy lượt; và một lượt bình thường của khách chạy trong lúc tin
+của ca còn xếp hàng có thể gọi `case_done` mà vẫn được gán cho ca.
+
+**Sửa:**
+- Lõi: `ToolContext.message_id` (mã tin mà lượt trả lời, chung cho mọi tool), `run_turn(message_id=...)`; dispatcher
+  truyền `lead.external_id`. Nhờ C1, lead của lượt chủ động luôn là chính tin chủ động.
+- `agentcore.cases`: `turn_message_id(case_id, turn)` và `parse_turn_message_id(text)` (chuyển tiền tố `case:` từ
+  động cơ về lõi); `Decision` đọc ghi JSON qua `TypeAdapter`.
+- Migration `0005_case_pending`: `agent_case.pending jsonb` (quyết định của lượt đang chạy, kèm số lượt).
+- Tool: không có `case:<id>:<lượt>` trong `ctx.message_id` thì từ chối (lượt của khách không điều khiển được ca); có
+  thì `store.set_pending(id, turn, decision)`: `UPDATE ... SET pending WHERE id AND turns = :turn AND status sống`,
+  không tăng `version` (động cơ đang giữ bản đọc trước lượt). Ca đã đi tiếp thì từ chối.
+- Động cơ: bỏ `_running`, `_taken`; sau lượt đọc `store.pending(id, turn)`; `save` ghi `pending = NULL`.
+- Phục hồi khi agent chết giữa lượt: ca vẫn `open` với `turns = n`; lần quét sau gửi lại cùng mã `case:<id>:<n>`,
+  hàng đợi trả bản ghi cũ (không chạy hay gửi lần hai), động cơ chờ nó xong rồi đọc `pending` từ DB.
+
+**Test:** lượt của khách gọi `case_done` bị từ chối; quyết định của lượt ca sống qua một động cơ mới (giả lập khởi
+động lại) cùng store; gửi lại cùng mã lượt chỉ tính một tin; ca đã đi tiếp thì `set_pending` từ chối; test DB cho
+`pending` và chuyện không tăng `version`; `test_run_turn` kiểm `message_id` tới `ToolContext`.
+
+**Vẽ lại sau khi xanh:** cột `pending` trong ERD `agent_rt` và hình "Agent · ca" của `pema-system-design.html`.
