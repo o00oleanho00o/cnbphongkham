@@ -263,3 +263,99 @@ của ca còn xếp hàng có thể gọi `case_done` mà vẫn được gán ch
 `pending` và chuyện không tăng `version`; `test_run_turn` kiểm `message_id` tới `ToolContext`.
 
 **Vẽ lại sau khi xanh:** cột `pending` trong ERD `agent_rt` và hình "Agent · ca" của `pema-system-design.html`.
+
+
+## 6. Bước D: nhắc lịch của `crm` chạy trên động cơ ca (DESIGN 2.6; ghi 2026-10-22, chưa làm, chờ "go")
+
+Chủ chọn làm 2.6 trước 2.5 (chăm sóc lại), vì 2.5 đụng route và cài đặt mà frontend đang dùng. Nhắc lịch thành ca
+thật đầu tiên chạy hết vòng: plugin khai báo ca, động cơ đợi đồng hồ, kiểm lại, gửi, ghi nhật ký.
+
+### 6.1 Đọc code thấy gì (khác với DESIGN 2.6)
+
+- **Một ca cho mỗi mốc, không phải một ca cho mỗi lịch.** DESIGN viết một ca giữ cả hai mốc (24h, 3h). Nhưng theo
+  `apply`, sau một `TurnNode` ca chờ khách, không có giờ dự phòng; mốc 3h sẽ không bao giờ tới nếu khách không nhắn
+  lại. Một ca một mốc thì gửi xong là hết đồ thị, ca `done`, không cần sửa lõi. Khóa ca:
+  `f"{appointment_id}:{int(starts_at.timestamp())}:{mark}"`, nên lịch dời giờ là khóa mới.
+- **`claim_mark` ở lại, làm chốt "mỗi mốc một lần".** Chỗ chống trùng của động cơ chỉ áp cho ca còn sống; ca đã
+  `done` mà vòng quét mở lại cùng khóa thì sẽ thành ca mới và gửi lần hai. Bảng `crm_reminder_sent` đã có khóa
+  duy nhất đúng nghĩa đó, và còn giữ các mốc đã gửi trước khi chuyển, nên lúc chuyển không ai bị nhắc hai lần.
+  Không cần migration.
+- **Trần mỗi người mỗi ngày phải do một chỗ quyết.** Nếu `decide` đếm riêng (`crm_reminder_sent`) mà động cơ chặn
+  ở nút gửi theo trần chung, con trỏ sẽ nằm ở `send` tới hôm sau, và sáng hôm sau gửi luôn, không kiểm lại (có thể
+  lúc 00:00, có thể lịch đã hủy). Nên `decide` hỏi động cơ còn được gửi bao nhiêu tin cho người này hôm nay
+  (cùng luật động cơ dùng ở `blocked`), và bỏ mốc khi hết chỗ, như hôm nay.
+
+### 6.2 Hình của ca `reminder`
+
+- **State** (`ReminderCase`): `appointment_id`, `starts_at`, `mark` (`24h`, `3h`), `status` (lấy lại lúc kiểm),
+  `looks` (bộ đếm).
+- **Đồ thị:** `check` (`CodeNode`) → `send` (`TurnNode`); cạnh quay `check → check` mang bộ đếm `looks`, trần 10.
+- **`check`:** đọc lại lịch và người từ `crm_reminder`, `crm_person`, chạy `decide()` như hôm nay (bảy lý do bỏ giữ
+  nguyên):
+  - chưa tới mốc → `next="check"`, chờ đồng hồ tới `due_at`;
+  - giờ yên lặng → chờ tới hết giờ yên lặng;
+  - bỏ → `stop=f"skip:{reason}"`;
+  - gửi → `patch={"status": ...}`, `next="send"`.
+
+  Lịch đã dời giờ (`starts_at` khác state) → `stop="skip:moved"`.
+- **`send`:** lời dặn của `instruction_for` (giờ, ngày do code viết, có lối `SKIP`). Gửi xong thì hết cạnh, ca
+  `done`.
+- **Trigger:** `clock`. **Stop:** `max_turns=1`, `max_proactive=1`, `max_age=2 ngày`. **Budget:**
+  `per_person_per_day = policy.per_day`. **Goal:** "khách biết lịch lúc HH:MM ngày …, mốc …". **Verify:** lịch còn
+  `booked`/`confirmed` trong `crm_reminder`, tin nhắc nằm trong chat.
+
+### 6.3 Ai mở ca
+
+- `Reminders.pass_once` hết gửi, chỉ còn mở ca. Với mỗi lịch trong cửa sổ hiện có (`upcoming`, tới mốc dài nhất +
+  1 giờ) có người đồng ý và có chat 1-1, với mỗi mốc chưa có trong `crm_reminder_sent`:
+  `claim_mark(visit, mark, "case")` rồi `ctx.cases.open("reminder", key, ...)`. Ca tự đợi tới mốc.
+- Job `reminders` vẫn chạy mỗi giờ, khi có sự kiện CRM (`wake`), và đối soát 24 giờ như cũ.
+- Thứ tự giữ như code hôm nay: claim trước, mở ca sau. Lỗi giữa hai bước thì mất mốc đó chứ không bao giờ nhắc
+  hai lần. Ngoài `agent serve` (chưa có đường gửi, `ctx.proactive` báo `PluginError`) thì bỏ cả lượt quét và
+  không claim gì, như hôm nay.
+- Lịch hủy hay dời sau khi đã mở ca: `check` thấy lúc tới mốc và bỏ. Không đánh thức ca theo sự kiện ở bước này.
+
+### 6.4 Đổi ở động cơ (nhỏ, chung cho mọi ca)
+
+- `CaseEngine.room_today(plugin, kind, channel, user_id) -> int`: số tin mọi ca còn được gửi người này hôm nay, bằng
+  `min(spec.budget, cài đặt) - đã gửi`, đúng phép tính của `blocked`.
+- `ctx.cases.room_today(kind, channel, user_id)` gọi tới nó (`Cases`, `CaseService`).
+
+### 6.5 Bỏ đi
+
+- Phần gửi của `Reminders` (`_send`, `message_id`, `INSTRUCTION_MARK`; `turn_text` đã gắn dấu `[Case · reminder]`).
+- `ReminderStore.sent_since` và chỗ dùng nó.
+- Bảng `crm_reminder_sent` giữ lại: là chốt "một lần".
+
+### 6.6 Đổi hành vi (chủ cần biết)
+
+- **Nhắc lịch chỉ chạy khi `cases_enabled` bật.** Công tắc khẩn của mọi ca nay cũng tắt nhắc lịch; mặc định là
+  tắt. Sau khi deploy, admin bật một lần (`PATCH /v1/admin/settings {"cases_enabled": true}`). Thứ tự bật trong
+  `infra/README.md` thêm bước này. Nếu chưa bật, nhắc lịch ngừng.
+- Trần mỗi người mỗi ngày nay tính chung cho mọi ca (hôm nay chỉ có nhắc lịch, nên như cũ). Chỉnh bằng
+  `proactive_per_person_per_day`; `reminders_per_day` của plugin vẫn là trần riêng của nhắc lịch.
+- Model thấy lời dặn trong khung của ca (tiếng Anh của harness và lời dặn tiếng Việt của plugin). Hai tool
+  `case_done`, `case_wait_until` có trong profile `clinic` (đã duyệt L7, T9).
+- Mã tin đổi từ `crm-reminder:…` sang `case:<id>:0`.
+
+### 6.7 Test
+
+- **Giữ:** test của `decide`, `ReminderPolicy`, `instruction_for`, đối soát.
+- **Viết lại trên động cơ** (store trong RAM, kênh giả như `test_cases_engine`):
+  - mốc tới thì gửi đúng một lần dù quét nhiều lần;
+  - mốc chưa tới thì ca chờ đúng giờ;
+  - giờ yên lặng dời tới lúc hết;
+  - lịch hủy trước mốc → `skip:over`, không gửi;
+  - lịch dời giờ → ca cũ `skip:moved`, ca mới theo giờ mới;
+  - mốc đã có trong `crm_reminder_sent` (gửi trước khi chuyển) không gửi lại;
+  - hết chỗ trong ngày → `skip:daily_cap`;
+  - `cases_enabled` tắt thì không gửi gì.
+- **Động cơ:** `room_today` khớp với `blocked`.
+- **Chạy lại:** `tests/crm/`, `test_cases_engine.py`, `test_tool_allowlist.py` (T9) và các test ranh giới của `crm`.
+
+### 6.8 Sau khi xanh
+
+- Sửa đoạn nhắc lịch trong `infra/README.md`, HANDOFF, mục 3 của kế hoạch này.
+- Không có migration, nên `pema-system-design.html` chỉ sửa chữ nếu có đoạn tả vòng nhắc lịch.
+- `/archify`: sơ đồ vòng nhắc lịch, hoặc thêm nhánh `crm` vào workflow của ca.
+- Ranh giới L1–L7 không đổi: không thêm tool, route, sự kiện, trường dữ liệu hay biến môi trường.
