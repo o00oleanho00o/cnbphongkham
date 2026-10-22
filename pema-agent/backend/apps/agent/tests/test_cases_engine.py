@@ -14,7 +14,7 @@ from zoneinfo import ZoneInfo
 import pytest
 from pydantic import BaseModel
 
-from agent_app.cases import NO_CASE, CaseEngine, CasesConfig, InMemoryCaseStore
+from agent_app.cases import MOVED_ON, NO_CASE, CaseEngine, CasesConfig, InMemoryCaseStore
 from agent_app.plugins import PluginError, PluginHost, ProactiveSent, discover
 from agentcore import ToolContext, ToolOutput, ToolSpec
 from agentcore.cases import (
@@ -96,7 +96,9 @@ class FakeChat:
         self, *, channel: str, conversation_id: str, user_id: str, message_id: str, instruction: str
     ) -> ProactiveSent:
         self.turns.append({"channel": channel, "message_id": message_id, "instruction": instruction})
-        ctx = ToolContext(session_id="s1", channel=channel, conversation_id=conversation_id, now=NOW)
+        ctx = ToolContext(
+            session_id="s1", channel=channel, conversation_id=conversation_id, message_id=message_id, now=NOW
+        )
         for name, args in self.calls:
             spec = self.tools[name]
             self.outputs.append(await spec.handler(spec.args_model.model_validate(args), ctx))
@@ -203,6 +205,71 @@ async def test_outside_a_case_the_steering_tools_refuse() -> None:
         ToolContext(session_id="s1", channel="zalo-a", conversation_id="c1"),
     )
     assert (out.is_error, out.text) == (True, NO_CASE)
+
+
+async def test_only_the_cases_own_turn_in_its_own_chat_can_steer_it() -> None:
+    s = Setup(_spec(Judge()))
+    case = await s.open()
+    await s.engine.pass_once()  # turn 0 ran; the case now waits at turn 1
+    done = s.chat.tools["case_done"]
+    args = done.args_model.model_validate({"reason": "x"})
+
+    def ctx(message_id: str, conversation_id: str = "c1") -> ToolContext:
+        return ToolContext(
+            session_id="s1", channel="zalo-a", conversation_id=conversation_id, message_id=message_id
+        )
+
+    customer = await done.handler(args, ctx("zalo-msg-123"))
+    other_chat = await done.handler(args, ctx(f"case:{case.id}:1", conversation_id="c9"))
+    old_turn = await done.handler(args, ctx(f"case:{case.id}:0"))
+    assert [(o.is_error, o.text) for o in (customer, other_chat, old_turn)] == [
+        (True, NO_CASE),
+        (True, MOVED_ON),
+        (True, MOVED_ON),
+    ]
+    after = await s.store.get(case.id)
+    assert after is not None
+    assert after.status == "waiting"
+
+
+async def test_a_decision_outlives_the_engine_that_ran_the_turn() -> None:
+    """The service stops after the model decided but before the case was saved: a new engine on the same store
+    sends the same turn again (the queue hands back the one already run) and reads the decision kept for it."""
+    s = Setup(_spec(Judge()))
+    case = await s.open()
+
+    async def dies(**kw: str) -> ProactiveSent:
+        await FakeChat.send_to(s.chat, **kw)  # the turn runs and the model calls case_done
+        raise RuntimeError("service stopped")
+
+    s.chat.calls = [("case_done", {"reason": "crm says confirmed"})]
+    s.chat.send_to = dies  # type: ignore[method-assign]
+    await s.engine.pass_once()
+    stuck = await s.store.get(case.id)
+    assert stuck is not None
+    assert (stuck.status, stuck.turns) == ("waiting", 0)
+
+    again = Setup(_spec(Judge()))
+    again.store = s.store
+    again.engine = CaseEngine(
+        s.store,
+        lambda: again.specs,
+        config=lambda: ON,
+        zone=lambda: ZONE,
+        clock=lambda: NOW + timedelta(minutes=5),
+    )
+    again.chat = FakeChat(again.engine.tools())
+
+    async def session_for(channel: str, conversation_id: str) -> str:
+        return "s1"
+
+    again.engine.attach(again.chat, session_for)
+    await again.engine.pass_once()
+
+    after = await s.store.get(case.id)
+    assert after is not None
+    assert (after.status, after.end_reason, after.turns) == ("done", "crm says confirmed", 1)
+    assert [t["message_id"] for t in [*s.chat.turns, *again.chat.turns]] == [f"case:{case.id}:0"] * 2
 
 
 async def test_the_customer_writing_wakes_the_case() -> None:

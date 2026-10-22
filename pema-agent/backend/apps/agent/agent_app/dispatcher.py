@@ -319,6 +319,7 @@ class Dispatcher:
                 channel=lead.channel,
                 conversation_id=lead.conversation_id,
                 is_group=in_group(lead.metadata),
+                message_id=lead.external_id,
                 context=agent.context,
                 observer=observer,
                 hooks=agent.hooks,

@@ -29,6 +29,9 @@ class ToolContext:
     """The chat the turn answers (a thread of the channel), set by the caller."""
     is_group: bool = False
     """True in a group chat, where everyone in it reads the reply; set by the caller from the channel."""
+    message_id: str | None = None
+    """The id of the message the turn answers (the first one, when several are answered together), set by
+    the caller: which request this turn is, for a tool that must tell turns apart."""
     now: datetime | None = None
     """When the turn started (timezone-aware), from the turn's clock: the date a question is asked on, so a
     tool picks the prices and rules in force that day. A replay or a test fixes it with its own clock."""

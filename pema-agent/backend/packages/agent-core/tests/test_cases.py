@@ -23,8 +23,12 @@ from agentcore.cases import (
     TurnNode,
     apply,
     blocked,
+    decision_from_json,
+    decision_to_json,
     make_case_tools,
     new_record,
+    parse_turn_message_id,
+    turn_message_id,
     turn_text,
 )
 
@@ -360,3 +364,18 @@ async def test_outside_a_case_the_tools_say_so() -> None:
     out = await done.handler(done.args_model(reason="x"), CTX)
     assert out.is_error
     assert out.text == "There is no case running in this chat."
+
+
+def test_a_turn_message_id_names_its_case_and_turn_and_nothing_else_parses() -> None:
+    assert turn_message_id(5, 2) == "case:5:2"
+    assert parse_turn_message_id("case:5:2") == (5, 2)
+    for other in (None, "", "zalo-123", "case:5", "case:x:1", "case:5:2:9", "followup:c1:3:0"):
+        assert parse_turn_message_id(other) is None
+
+
+def test_a_decision_goes_to_json_and_back() -> None:
+    decision = Decision(
+        wait_for="clock", wake_at=NOW + timedelta(days=1), patch={"verdict": "later"}, note="n"
+    )
+    assert decision_from_json(decision_to_json(decision)) == decision
+    assert decision_from_json({"done": "x", "stop": "y"}) is None

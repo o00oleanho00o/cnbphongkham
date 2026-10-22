@@ -156,6 +156,7 @@ async def run_turn(
     channel: str | None = None,
     conversation_id: str | None = None,
     is_group: bool = False,
+    message_id: str | None = None,
     context: ContextManager | None = None,
     observer: TurnObserver | None = None,
     hooks: HookSet | None = None,
@@ -185,6 +186,7 @@ async def run_turn(
         channel=channel,
         conversation_id=conversation_id,
         is_group=is_group,
+        message_id=message_id,
         now=started_at,
     )
     schemas = tools.schemas()

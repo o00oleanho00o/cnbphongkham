@@ -160,3 +160,22 @@ def test_the_settings_of_cases_have_their_columns(migrated: tuple[str, Engine]) 
                 )
             )
         conn.execute(sql("DELETE FROM agent_rt.agent_settings WHERE agent = 'cases-test'"))
+
+
+def test_a_decision_is_kept_for_its_turn_and_chat_without_touching_the_version(db_url: str) -> None:
+    async def check(store: PostgresCaseStore) -> None:
+        case, _ = await store.open("demo", _case())
+        decision = {"done": "booked", "note": "booked"}
+        assert await store.set_pending(case.id, 0, "zalo-a", "c1", decision)
+        assert not await store.set_pending(case.id, 1, "zalo-a", "c1", decision)  # not that turn
+        assert not await store.set_pending(case.id, 0, "zalo-a", "c9", decision)  # not that chat
+        assert await store.pending(case.id, 0) == decision
+        assert await store.pending(case.id, 1) is None
+        current = await store.get(case.id)
+        assert current is not None
+        assert current.version == case.version
+        saved = await store.save(replace(case, turns=1))
+        assert saved is not None
+        assert not await store.set_pending(case.id, 0, "zalo-a", "c1", decision)  # moved on
+
+    _run(db_url, check)

@@ -5,11 +5,14 @@ none of them by name. Three things wake a case: the clock (``wake_at`` came), a 
 chat (``on_inbound``), and an event a plugin reports (``wake``). Before every node the rules of
 ``agentcore.cases.blocked`` are asked; a ``TurnNode`` goes into the chat's queue like any proactive message
 (``Proactive.send_to``), so the turn takes the chat's own lock and the usual way out. The two steering tools
-(``case_done``, ``case_wait_until``) hand their decision to ``take`` while that turn runs.
+(``case_done``, ``case_wait_until``) hand their decision to ``take``, which keeps it in the database for that
+case and turn, found from the turn's message id; a turn of the customer cannot steer a case.
 
 The engine holds no lock of the chat: the turn does, and holding it here would wait on itself. Two runs of
 one case are kept apart by the record's ``version`` (the one that saves second drops its result) and by the
-message id ``case:<id>:<turn>``, which the queue takes once.
+message id ``case:<id>:<turn>``, which the queue takes once. If the service stops during a turn, the case is
+still at that turn: the next pass sends the same message id, the queue hands back the turn already there, and
+its decision is read from the database.
 """
 
 from __future__ import annotations
@@ -36,15 +39,19 @@ from agentcore.cases import (
     TurnNode,
     apply,
     blocked,
+    decision_from_json,
+    decision_to_json,
     make_case_tools,
     new_record,
+    parse_turn_message_id,
     state_of,
+    turn_message_id,
     turn_text,
 )
 from agentcore.channels import PROACTIVE, InboundMessage, in_group
 
 NO_CASE: Final = "There is no case running in this chat: case tools work only during a case's turn."
-MESSAGE_PREFIX: Final = "case:"
+MOVED_ON: Final = "This case has moved on since this turn began; nothing was changed."
 
 logger = logging.getLogger(__name__)
 
@@ -90,9 +97,6 @@ class CaseEngine:
         self.settings = settings or EngineSettings()
         self._proactive: Proactive | None = None
         self._session_for: SessionFor | None = None
-        self._running: dict[tuple[str, str], int] = {}
-        """(channel, conversation_id) -> the case whose turn runs there now."""
-        self._taken: dict[int, Decision] = {}
         self._nudge = asyncio.Event()
 
     @property
@@ -110,11 +114,14 @@ class CaseEngine:
     # --- the steering tools ---
 
     async def take(self, ctx: ToolContext, decision: Decision) -> str | None:
-        case_id = self._running.get((ctx.channel or "", ctx.conversation_id or ""))
-        if case_id is None:
+        turn = parse_turn_message_id(ctx.message_id)
+        if turn is None:
             return NO_CASE
-        self._taken[case_id] = decision
-        return None
+        case_id, number = turn
+        kept = await self._store.set_pending(
+            case_id, number, ctx.channel or "", ctx.conversation_id or "", decision_to_json(decision)
+        )
+        return None if kept else MOVED_ON
 
     # --- what plugins do (ctx.cases) ---
 
@@ -280,22 +287,20 @@ class CaseEngine:
         proactive = self._proactive
         if proactive is None:
             raise RuntimeError("no way to reach the chat")
-        chat = (record.channel, record.conversation_id)
-        self._running[chat] = record.id
-        try:
-            result = await proactive.send_to(
-                channel=record.channel,
-                conversation_id=record.conversation_id,
-                user_id=record.user_id,
-                message_id=f"{MESSAGE_PREFIX}{record.id}:{record.turns}",
-                instruction=turn_text(spec, record, node, now),
-            )
-        finally:
-            self._running.pop(chat, None)
-        decision = self._taken.pop(record.id, None) or Decision()
+        result = await proactive.send_to(
+            channel=record.channel,
+            conversation_id=record.conversation_id,
+            user_id=record.user_id,
+            message_id=turn_message_id(record.id, record.turns),
+            instruction=turn_text(spec, record, node, now),
+        )
+        kept = await self._store.pending(record.id, record.turns)
+        decision = (decision_from_json(kept) if kept is not None else None) or Decision()
         sent = record.proactive_sent + result.counted
         record = replace(record, turns=record.turns + 1, proactive_sent=sent)
         if result.counted:
+            # shortcut: a turn sent before the service stopped and sent again by id is logged twice, so the
+            # daily cap may count it twice (it sends less, never more); count by (case, turn) if it matters.
             await self._store.log(record.id, "sent", node.id, {"note": result.note}, now)
         return record, decision
 

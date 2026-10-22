@@ -135,11 +135,12 @@ async def test_a_tool_is_told_the_chat_the_turn_answers_and_whether_it_is_a_grou
             channel="zalo-a",
             conversation_id="thread-9",
             is_group=is_group,
+            message_id="m-7",
         )
 
-    assert [(c.user_id, c.channel, c.conversation_id, c.is_group) for c in seen] == [
-        ("u1", "zalo-a", "thread-9", False),
-        ("u1", "zalo-a", "thread-9", True),
+    assert [(c.user_id, c.channel, c.conversation_id, c.is_group, c.message_id) for c in seen] == [
+        ("u1", "zalo-a", "thread-9", False, "m-7"),
+        ("u1", "zalo-a", "thread-9", True, "m-7"),
     ]
 
 

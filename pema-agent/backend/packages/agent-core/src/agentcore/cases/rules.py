@@ -15,12 +15,16 @@ from dataclasses import dataclass, replace
 from datetime import datetime
 from typing import Any, Final
 
-from pydantic import BaseModel
+from pydantic import BaseModel, TypeAdapter, ValidationError
 
 from agentcore.cases.spec import LIVE, CaseSpec, CaseStatus, Decision, Edge, TurnNode, WaitFor
 
 CASE_MARK: Final = "[Case"
 """Starts the text the engine gives the agent for a case's turn: the harness's words, not the customer's."""
+TURN_PREFIX: Final = "case:"
+"""The message id of a case's turn is ``case:<id>:<turn>``: the queue runs it once, and a steering tool knows
+from it which case and which turn it is called in."""
+_DECISION: Final = TypeAdapter(Decision)
 MAX_REASON_CHARS: Final = 300
 
 
@@ -61,6 +65,32 @@ class Block:
 
     reason: str
     retry_at: datetime | None = None
+
+
+def turn_message_id(case_id: int, turn: int) -> str:
+    return f"{TURN_PREFIX}{case_id}:{turn}"
+
+
+def parse_turn_message_id(message_id: str | None) -> tuple[int, int] | None:
+    """(case id, turn) of a case's turn, or None for any other message (the customer's own)."""
+    if not message_id or not message_id.startswith(TURN_PREFIX):
+        return None
+    parts = message_id[len(TURN_PREFIX) :].split(":")
+    if len(parts) != 2 or not all(p.isdigit() for p in parts):
+        return None
+    return int(parts[0]), int(parts[1])
+
+
+def decision_to_json(decision: Decision) -> dict[str, Any]:
+    return _DECISION.dump_python(decision, mode="json")
+
+
+def decision_from_json(data: Mapping[str, Any]) -> Decision | None:
+    """None when ``data`` is not a decision this version can read."""
+    try:
+        return _DECISION.validate_python(dict(data))
+    except (ValidationError, ValueError):
+        return None
 
 
 def state_of(spec: CaseSpec, record: CaseRecord) -> BaseModel:

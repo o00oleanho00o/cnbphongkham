@@ -11,7 +11,7 @@ from __future__ import annotations
 import json
 from dataclasses import replace
 from datetime import datetime
-from typing import Any, Final, Protocol
+from typing import Any, Final, Protocol, cast
 
 from sqlalchemy import text as sql
 
@@ -53,6 +53,18 @@ class CaseStore(Protocol):
         """Messages every case together sent this person since ``since``."""
         ...
 
+    async def set_pending(
+        self, case_id: int, turn: int, channel: str, conversation_id: str, decision: dict[str, Any]
+    ) -> bool:
+        """Keeps the decision a steering tool gave in ``turn`` of a live case of that chat; False when there
+        is no such case or it has moved past that turn. Never changes ``version``: the engine holds the record
+        it read before the turn."""
+        ...
+
+    async def pending(self, case_id: int, turn: int) -> dict[str, Any] | None:
+        """The decision kept for ``turn``, or None."""
+        ...
+
     async def list(self, status: str | None = None, limit: int = LIST_LIMIT) -> list[CaseRecord]: ...
 
     async def events(self, case_id: int, limit: int = LIST_LIMIT) -> list[dict[str, Any]]: ...
@@ -70,6 +82,7 @@ class InMemoryCaseStore:
     def __init__(self) -> None:
         self._rows: dict[int, tuple[str, CaseRecord]] = {}
         self._events: dict[int, list[dict[str, Any]]] = {}
+        self._pending: dict[int, dict[str, Any]] = {}
         self._next = 1
 
     async def open(self, plugin: str, record: CaseRecord) -> tuple[CaseRecord, bool]:
@@ -136,6 +149,24 @@ class InMemoryCaseStore:
             if e["kind"] == "sent" and datetime.fromisoformat(e["at"]) >= since
         )
 
+    async def set_pending(
+        self, case_id: int, turn: int, channel: str, conversation_id: str, decision: dict[str, Any]
+    ) -> bool:
+        row = self._rows.get(case_id)
+        if row is None:
+            return False
+        record = row[1]
+        if (record.turns, record.channel, record.conversation_id) != (turn, channel, conversation_id):
+            return False
+        if record.status not in LIVE:
+            return False
+        self._pending[case_id] = {"turn": turn, "decision": decision}
+        return True
+
+    async def pending(self, case_id: int, turn: int) -> dict[str, Any] | None:
+        found = self._pending.get(case_id)
+        return found["decision"] if found is not None and found["turn"] == turn else None
+
     async def list(self, status: str | None = None, limit: int = LIST_LIMIT) -> list[CaseRecord]:
         rows = [r for _, r in self._rows.values() if status is None or r.status == status]
         return sorted(rows, key=lambda r: r.updated_at, reverse=True)[:limit]
@@ -201,6 +232,15 @@ _SENT_SINCE = sql(
     "SELECT count(*) FROM agent_rt.agent_case_event e JOIN agent_rt.agent_case c ON c.id = e.case_id "
     "WHERE c.tenant_id = :tenant_id AND c.agent = :agent AND c.channel = :channel AND c.user_id = :user_id "
     "AND e.kind = 'sent' AND e.at >= :since"
+)
+_SET_PENDING = sql(
+    "UPDATE agent_rt.agent_case SET pending = CAST(:pending AS jsonb) "
+    "WHERE tenant_id = :tenant_id AND agent = :agent AND id = :id AND turns = :turn "
+    "AND channel = :channel AND conversation_id = :conversation_id "
+    "AND status IN ('open', 'waiting', 'needs_human') RETURNING id"
+)
+_PENDING = sql(
+    "SELECT pending FROM agent_rt.agent_case WHERE tenant_id = :tenant_id AND agent = :agent AND id = :id"
 )
 _LIST = sql(
     "SELECT "
@@ -357,6 +397,40 @@ class PostgresCaseStore:
                 return int((await conn.execute(_SENT_SINCE, params)).scalar_one())
 
         return await retrying("count messages sent to a person", work)
+
+    async def set_pending(
+        self, case_id: int, turn: int, channel: str, conversation_id: str, decision: dict[str, Any]
+    ) -> bool:
+        params = {
+            **self._scope,
+            "id": case_id,
+            "turn": turn,
+            "channel": channel,
+            "conversation_id": conversation_id,
+            "pending": json.dumps({"turn": turn, "decision": decision}, ensure_ascii=False),
+        }
+
+        async def work() -> bool:
+            async with self._engine.begin() as conn:
+                return (await conn.execute(_SET_PENDING, params)).one_or_none() is not None
+
+        return await retrying("keep a case's decision", work)
+
+    async def pending(self, case_id: int, turn: int) -> dict[str, Any] | None:
+        params = {**self._scope, "id": case_id}
+
+        async def work() -> dict[str, Any] | None:
+            async with self._engine.connect() as conn:
+                found: Any = (await conn.execute(_PENDING, params)).scalar_one_or_none()
+            if not isinstance(found, dict):
+                return None
+            kept = cast(dict[str, Any], found)
+            decision: Any = kept.get("decision")
+            if kept.get("turn") != turn or not isinstance(decision, dict):
+                return None
+            return dict(cast(dict[str, Any], decision))
+
+        return await retrying("read a case's decision", work)
 
     async def list(self, status: str | None = None, limit: int = LIST_LIMIT) -> list[CaseRecord]:
         return await self._many("list cases", _LIST, {"status": status, "limit": limit})
