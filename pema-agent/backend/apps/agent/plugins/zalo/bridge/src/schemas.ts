@@ -9,8 +9,6 @@ import { TextStyle } from "zca-js";
 import type { SendMessageQuote, Style } from "zca-js";
 import { z } from "zod";
 
-export const MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024;
-
 export const accountIdSchema = z.string().regex(/^[A-Za-z0-9._:-]{1,128}$/, "invalid account id");
 
 const threadIdSchema = z.string().min(1).max(64);
@@ -78,22 +76,6 @@ export const sendBodySchema = sendTargetSchema.extend({
   styles: z.array(styleSchema).optional(),
   quote: quoteSchema.optional(),
   mentions: z.array(mentionSchema).max(MAX_MENTIONS).optional(),
-});
-
-export const sendAttachmentBodySchema = sendTargetSchema.extend({
-  filename: z.string().regex(/^[^/\\\0]{1,200}\.[A-Za-z0-9]{1,10}$/, "invalid filename"),
-  data_base64: z.string().min(1),
-  caption: z.string().default(""),
-});
-
-export const sendVideoBodySchema = sendTargetSchema.extend({
-  video_url: z.string().min(1).max(2048),
-  caption: z.string().default(""),
-  /** Additive, optional: Zalo refuses a video card without a thumbnail (code 114 in the original's notes). */
-  thumbnail_url: z.string().max(2048).optional(),
-  duration_ms: z.number().int().min(0).optional(),
-  width: z.number().int().min(1).optional(),
-  height: z.number().int().min(1).optional(),
 });
 
 export const typingBodySchema = z.object({

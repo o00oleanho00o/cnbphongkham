@@ -10,7 +10,6 @@ import type { EventPublisher } from "./event-publisher.js";
 import type { AppEnv } from "./http.js";
 import { QrLoginManager } from "./qr-login-manager.js";
 import { KillSwitch } from "./safety.js";
-import { lookupAddresses, type HostLookup } from "./url-guard.js";
 import type { Gateway } from "./zalo-types.js";
 
 export type Bridge = {
@@ -25,7 +24,6 @@ export type BridgeOptions = {
   gateway: Gateway;
   publisher: EventPublisher;
   now?: () => number;
-  lookupHost?: HostLookup;
 };
 
 export function createBridge(options: BridgeOptions): Bridge {
@@ -39,10 +37,6 @@ export function createBridge(options: BridgeOptions): Bridge {
     stopAccount: (accountId) => accounts.stop(accountId),
     now,
   });
-  const app = createApp(
-    config,
-    { config, accounts, qr, killSwitch, lookupHost: options.lookupHost ?? lookupAddresses },
-    now,
-  );
+  const app = createApp(config, { config, accounts, qr, killSwitch }, now);
   return { app, accounts, qr, killSwitch };
 }

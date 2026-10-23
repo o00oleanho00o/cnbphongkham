@@ -20,8 +20,8 @@ import { messagingRoutes } from "./routes-messaging.js";
 
 const log = createLogger("app");
 
-/** Largest request body: a 10 MB attachment is ~13.4 MB as base64. */
-export const MAX_BODY_BYTES = 16 * 1024 * 1024;
+/** Largest request body. */
+const MAX_BODY_BYTES = 16 * 1024 * 1024;
 
 function hmacMiddleware(secret: string, clock: () => number): MiddlewareHandler<AppEnv> {
   return async (c, next) => {

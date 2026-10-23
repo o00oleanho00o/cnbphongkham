@@ -1,8 +1,6 @@
 // ported from: src/zalo/send-reply-in-parts.ts (only `duongGuiZcaJs` and `laLoiMayChuTuChoi`)
 // The splitting, retry-without-style and queueing of that file live in the Python API (the ported
-// `send_reply_in_parts`); the bridge sends ONE part per call. No forced deviation except that the
-// attachment helper below is new (the original sent file paths; the bridge receives bytes).
-import { imageSize } from "image-size";
+// `send_reply_in_parts`); the bridge sends ONE part per call. No forced deviation.
 import type { Mention, SendMessageQuote, Style, ThreadType } from "zca-js";
 import type { ZaloApi } from "./zalo-types.js";
 
@@ -61,34 +59,4 @@ export function duongGuiZcaJs(
  */
 export function laLoiMayChuTuChoi(err: unknown): boolean {
   return typeof (err as { code?: unknown } | null)?.code === "number";
-}
-
-const IMAGE_EXTENSIONS = new Set(["jpg", "jpeg", "png", "webp", "bmp"]);
-
-export type AttachmentSourceBuffer = {
-  data: Buffer;
-  filename: `${string}.${string}`;
-  metadata: { totalSize: number; width?: number; height?: number };
-};
-
-/**
- * Build a zca-js in-memory attachment. For images zca-js reads `width/height` from `metadata` when the
- * source is a buffer (it only calls `imageMetadataGetter` for file paths), so they are measured here with
- * `image-size`, the same library as the original getter. The bridge never writes the bytes to disk.
- */
-export function buildAttachmentSource(
-  filename: `${string}.${string}`,
-  data: Buffer,
-): AttachmentSourceBuffer {
-  const extension = filename.slice(filename.lastIndexOf(".") + 1).toLowerCase();
-  const metadata: AttachmentSourceBuffer["metadata"] = { totalSize: data.byteLength };
-  if (!IMAGE_EXTENSIONS.has(extension)) return { data, filename, metadata };
-  try {
-    const { width, height } = imageSize(data);
-    return width && height
-      ? { data, filename, metadata: { ...metadata, width, height } }
-      : { data, filename, metadata };
-  } catch {
-    return { data, filename, metadata };
-  }
 }

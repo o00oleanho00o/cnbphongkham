@@ -5,7 +5,6 @@ import type {
   JevState,
   JudgeLevel,
   KnowledgeSettings,
-  ParserTest,
   SettingOrigin,
   SettingsPatch,
 } from "../types";
@@ -21,7 +20,7 @@ export const ORIGIN_HINT: Record<SettingOrigin, string> = {
 };
 
 /** The groups that can go back to the agent's own configuration. */
-export type ResettableGroup = "embedding" | "parser";
+export type ResettableGroup = "embedding";
 
 /** `PATCH /settings` with `reset` puts those groups back to the configuration and forgets what was saved. */
 export type SettingsChange = SettingsPatch;
@@ -173,37 +172,6 @@ export function embeddingTestText(test: EmbeddingTest, savedDimensions: number):
   return `${parts.join(" · ")}.${warn}`;
 }
 
-export function parserTestText(test: ParserTest): string {
-  if (!test.ok) return test.message || "Không kết nối được.";
-  const timing = test.ms === null ? "" : ` · ${test.ms} ms`;
-  return `${test.message || "Kết nối tốt"}${timing}.`;
-}
-
-// -- parser ----------------------------------------------------------------------------------------------
-
-export interface ParserForm {
-  kind: "simple" | "docling";
-  docling_url: string;
-}
-
-export const PARSER_OPTIONS = [
-  { value: "simple", label: "Đơn giản (không cần dịch vụ ngoài; PDF scan chưa đọc được)" },
-  { value: "docling", label: "Docling (đọc PDF và bảng tốt hơn, cần dịch vụ Docling)" },
-] as const;
-
-export function parserFormOf(saved: KnowledgeSettings["parser"]): ParserForm {
-  return { kind: saved.kind, docling_url: saved.docling_url };
-}
-
-export function parserProblems(form: ParserForm): Problems<"docling_url"> {
-  return { docling_url: urlProblem(form.docling_url, "Địa chỉ Docling", form.kind === "docling") ?? undefined };
-}
-
-export function parserChange(form: ParserForm, saved: KnowledgeSettings["parser"]): SettingsPatch | null {
-  const parser = changed(parserFormOf(saved), { ...form, docling_url: form.docling_url.trim() });
-  return isEmpty(parser) ? null : { parser };
-}
-
 // -- judging (Jev) ---------------------------------------------------------------------------------------
 
 export type JudgingForm = KnowledgeSettings["judging"];
@@ -241,19 +209,11 @@ export interface SearchForm {
   results: string;
   min_score: string;
   char_budget: string;
-  patient_channel_prefix: string;
-  patient_only_approved: boolean;
 }
 
 export function searchFormOf(saved: KnowledgeSettings["search"]): SearchForm {
-  const { results, min_score, char_budget, patient_channel_prefix, patient_only_approved } = saved;
-  return {
-    results: String(results),
-    min_score: String(min_score),
-    char_budget: String(char_budget),
-    patient_channel_prefix,
-    patient_only_approved,
-  };
+  const { results, min_score, char_budget } = saved;
+  return { results: String(results), min_score: String(min_score), char_budget: String(char_budget) };
 }
 
 export type SearchProblems = Problems<"results" | "min_score" | "char_budget">;
@@ -268,11 +228,10 @@ export function searchProblems(form: SearchForm): SearchProblems {
 
 export function searchChange(form: SearchForm, saved: KnowledgeSettings["search"]): SettingsPatch | null {
   const next: KnowledgeSettings["search"] = {
+    ...saved,
     results: parseNumber(form.results) ?? saved.results,
     min_score: parseNumber(form.min_score) ?? saved.min_score,
     char_budget: parseNumber(form.char_budget) ?? saved.char_budget,
-    patient_channel_prefix: form.patient_channel_prefix.trim(),
-    patient_only_approved: form.patient_only_approved,
   };
   const search = changed(saved, next);
   return isEmpty(search) ? null : { search };

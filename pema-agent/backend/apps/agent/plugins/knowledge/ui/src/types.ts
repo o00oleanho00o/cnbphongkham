@@ -358,12 +358,6 @@ export interface EmbeddingTest {
   message: string;
 }
 
-export interface ParserTest {
-  ok: boolean;
-  ms: number | null;
-  message: string;
-}
-
 export interface KnowledgeStatus {
   embedding_connected: boolean;
   embedding_model: string | null;

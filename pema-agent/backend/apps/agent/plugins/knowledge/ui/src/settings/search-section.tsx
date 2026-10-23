@@ -1,12 +1,10 @@
-/** Tìm kiếm: how many results, the minimum score, the character budget and the rules of the patient channel. */
+/** Tìm kiếm: how many results, the minimum score and the character budget. */
 import { useState } from "react";
 
 import { knowledge } from "../client";
-import { Switch } from "../parts";
 import { ui } from "../sdk";
 import { SectionCard, type SectionProps, useSectionRun } from "./section-card";
 import { RANGES, type SearchForm, hasProblems, searchChange, searchFormOf, searchProblems } from "./settings-logic";
-import { APPROVAL_STEP, AUDIENCE_SPLIT } from "../logic";
 
 const rangeHint = (range: { min: number; max: number }) => `Từ ${range.min} đến ${range.max}`;
 
@@ -50,22 +48,6 @@ export function SearchSection({ settings, onSaved }: SectionProps) {
           <ui.Input inputMode="numeric" value={form.char_budget} onChange={(event) => set("char_budget", event.target.value)} />
         </ui.Field>
       </div>
-      {AUDIENCE_SPLIT && (
-        <ui.Field label="Tiền tố kênh bệnh nhân" hint='Kênh có mã bắt đầu bằng chữ này là kênh bệnh nhân, ví dụ "zalo-"'>
-          <ui.Input
-            value={form.patient_channel_prefix}
-            onChange={(event) => set("patient_channel_prefix", event.target.value)}
-          />
-        </ui.Field>
-      )}
-      {APPROVAL_STEP && (
-      <Switch
-        label="Kênh bệnh nhân chỉ thấy nguồn đã duyệt"
-        hint="Nguồn chưa duyệt chỉ nhân viên thấy"
-        checked={form.patient_only_approved}
-        onChange={(next) => set("patient_only_approved", next)}
-      />
-      )}
     </SectionCard>
   );
 }

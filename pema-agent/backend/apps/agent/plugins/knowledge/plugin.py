@@ -77,15 +77,11 @@ def default_settings(config: Mapping[str, Any]) -> dict[str, Any]:
             "origin": "profile",
             "chunks_without_vector": 0,
         },
-        "parser": {"kind": "simple", "docling_url": "", "origin": "profile"},
-        "labelling": {"enabled": False, "model_entry": None},
         "judging": {"enabled": False, "level": DEFAULT_LEVEL},
         "search": {
             "results": int(config.get("results", 6)),
             "min_score": float(config.get("vector_min_similarity", 0.35)),
             "char_budget": min(int(config.get("char_budget", 6000)), MAX_CHAR_BUDGET),
-            "patient_channel_prefix": "",
-            "patient_only_approved": False,
         },
         "benchmark_mode": bool(config.get("benchmark_mode", False)),
     }
@@ -284,7 +280,7 @@ class KnowledgePlugin:
 
     async def save_settings(self, patch: Mapping[str, Any]) -> dict[str, Any]:
         current = await self.settings()
-        resets = [group for group in patch.get("reset", []) if group in ("embedding", "parser")]
+        resets = [group for group in patch.get("reset", []) if group == "embedding"]
         base = default_settings(self._ctx.config)
         changed = copy.deepcopy(current)
         for group, given in patch.items():
@@ -292,10 +288,10 @@ class KnowledgePlugin:
             if group not in changed or group in ("reset", "benchmark_mode") or not values:
                 continue
             changed[group] = {**changed[group], **{k: v for k, v in values.items() if k not in DERIVED}}
-            if group in ("embedding", "parser"):
+            if group == "embedding":
                 changed[group]["origin"] = "saved"
-            if group == "embedding" and "api_key" in values:
-                await self._store_key(str(values["api_key"]).strip())
+                if "api_key" in values:
+                    await self._store_key(str(values["api_key"]).strip())
         if "benchmark_mode" in patch:
             changed["benchmark_mode"] = bool(patch["benchmark_mode"])
         for group in resets:

@@ -376,10 +376,6 @@ def knowledge_routes(plugin: KnowledgePlugin) -> APIRouter:
         plugin.embedder.wake()
         return {"queued": queued}
 
-    @router.post("/settings/test-parser")
-    async def test_parser() -> dict[str, Any]:
-        return {"ok": True, "ms": 0, "message": "Bộ đọc đơn giản (.md, .txt) sẵn sàng."}
-
     return router
 
 

@@ -24,7 +24,6 @@ export type ListenerPort = {
 export type ZaloApi = Pick<
   API,
   | "sendMessage"
-  | "sendVideo"
   | "sendTypingEvent"
   | "sendDeliveredEvent"
   | "sendSeenEvent"

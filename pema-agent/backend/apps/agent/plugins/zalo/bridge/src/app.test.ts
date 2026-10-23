@@ -6,7 +6,6 @@ import { Reactions, ZaloApiError } from "zca-js";
 import { SIGNATURE_HEADER, TIMESTAMP_HEADER, signedHeaders } from "./auth.js";
 import { createBridge, type Bridge } from "./bridge.js";
 import { doiChoDenKhi } from "./doi-cho-den-khi.js";
-import { MAX_BODY_BYTES } from "./app.js";
 import {
   FakeGateway,
   RecordingPublisher,
@@ -22,10 +21,6 @@ import {
 } from "./test-support.js";
 import type { BridgeConfig } from "./config.js";
 
-const PUBLIC_LOOKUP = async (): Promise<string[]> => ["93.184.216.34"];
-const TINY_PNG_BASE64 =
-  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==";
-
 type Fixture = {
   bridge: Bridge;
   gateway: FakeGateway;
@@ -35,7 +30,7 @@ type Fixture = {
   clock: { now: number };
 };
 
-function build(configOverrides: Partial<BridgeConfig> = {}, lookup = PUBLIC_LOOKUP) {
+function build(configOverrides: Partial<BridgeConfig> = {}) {
   const gateway = new FakeGateway();
   const publisher = new RecordingPublisher();
   const clock = { now: Date.parse("2026-10-01T03:00:00Z") };
@@ -44,7 +39,6 @@ function build(configOverrides: Partial<BridgeConfig> = {}, lookup = PUBLIC_LOOK
     gateway,
     publisher,
     now: () => clock.now,
-    lookupHost: lookup,
   });
   const sender = signedSender(bridge.app, SECRET, () => Math.floor(clock.now / 1000));
   return { bridge, gateway, publisher, sender, clock };
@@ -713,36 +707,6 @@ describe("app: breaker", () => {
     assert.equal(publisher.ofType("account_state").length, 0);
   });
 
-  it("send_attachment_and_send_video_also_feed_the_breaker", async () => {
-    const { sender } = await running(
-      { blockAfterRejectedSends: 2 },
-      {
-        sendMessage: rejecting.sendMessage,
-        sendVideo: async () => {
-          throw new ZaloApiError("rejected", 114);
-        },
-      },
-    );
-    await sender.post("/v1/accounts/acc-1/send-attachment", {
-      thread_id: "2000001",
-      thread_type: 0,
-      filename: "a.pdf",
-      data_base64: Buffer.from("x").toString("base64"),
-      caption: "",
-      proactive: false,
-    });
-    await sender.post("/v1/accounts/acc-1/send-video", {
-      thread_id: "2000001",
-      thread_type: 0,
-      video_url: "https://videos.example.test/a.mp4",
-      caption: "",
-      proactive: false,
-    });
-
-    const after = await errorOf(await sender.post("/v1/accounts/acc-1/send", sendBody()));
-    assert.equal(after.kind, "blocked");
-  });
-
   it("blocked_clears_on_a_new_start", async () => {
     const { sender, gateway } = await running({ blockAfterRejectedSends: 1 }, rejecting);
     await sender.post("/v1/accounts/acc-1/send", sendBody());
@@ -771,208 +735,6 @@ describe("app: breaker", () => {
     );
 
     assert.equal((await sender.post("/v1/accounts/acc-1/send", sendBody())).status, 200);
-  });
-});
-
-describe("app: send-attachment", () => {
-  const attachmentBody = (overrides: Record<string, unknown> = {}) => ({
-    thread_id: "2000001",
-    thread_type: 0,
-    filename: "huong-dan.pdf",
-    data_base64: Buffer.from("noi dung tong hop").toString("base64"),
-    caption: "Tài liệu",
-    proactive: false,
-    ...overrides,
-  });
-
-  it("the_file_is_sent_from_memory_with_its_caption_and_size", async () => {
-    const { sender, fake } = await running();
-
-    const response = await sender.post("/v1/accounts/acc-1/send-attachment", attachmentBody());
-
-    assert.equal(response.status, 200);
-    const [payload, threadId, type] = fake.callsTo("sendMessage")[0]?.args as [
-      {
-        msg: string;
-        attachments: Array<{ data: Buffer; filename: string; metadata: { totalSize: number } }>;
-      },
-      string,
-      number,
-    ];
-    assert.equal(payload.msg, "Tài liệu");
-    assert.equal(payload.attachments[0]?.filename, "huong-dan.pdf");
-    assert.equal(payload.attachments[0]?.data.toString(), "noi dung tong hop");
-    assert.equal(payload.attachments[0]?.metadata.totalSize, "noi dung tong hop".length);
-    assert.deepEqual([threadId, type], ["2000001", 0]);
-  });
-
-  it("an_image_gets_its_width_and_height_measured", async () => {
-    const { sender, fake } = await running();
-    await sender.post(
-      "/v1/accounts/acc-1/send-attachment",
-      attachmentBody({ filename: "anh.png", data_base64: TINY_PNG_BASE64 }),
-    );
-    const [payload] = fake.callsTo("sendMessage")[0]?.args as [
-      { attachments: Array<{ metadata: { width?: number; height?: number } }> },
-    ];
-    assert.deepEqual(
-      [payload.attachments[0]?.metadata.width, payload.attachments[0]?.metadata.height],
-      [1, 1],
-    );
-  });
-
-  it("a_file_over_10_mb_decoded_is_refused_before_zalo_is_called", async () => {
-    const { sender, fake } = await running();
-    const tooBig = Buffer.alloc(10 * 1024 * 1024 + 1).toString("base64");
-
-    const result = await errorOf(
-      await sender.post(
-        "/v1/accounts/acc-1/send-attachment",
-        attachmentBody({ data_base64: tooBig }),
-      ),
-    );
-
-    assert.deepEqual([result.status, result.kind], [422, "bad_request"]);
-    assert.equal(fake.callsTo("sendMessage").length, 0);
-  });
-
-  it("a_file_of_exactly_10_mb_is_accepted", async () => {
-    const { sender } = await running();
-    const exactly = Buffer.alloc(10 * 1024 * 1024).toString("base64");
-    assert.ok(exactly.length < MAX_BODY_BYTES);
-    const response = await sender.post(
-      "/v1/accounts/acc-1/send-attachment",
-      attachmentBody({ data_base64: exactly }),
-    );
-    assert.equal(response.status, 200);
-  });
-
-  it("text_that_is_not_base64_is_refused", async () => {
-    const { sender } = await running();
-    const result = await errorOf(
-      await sender.post(
-        "/v1/accounts/acc-1/send-attachment",
-        attachmentBody({ data_base64: "not base64 !!" }),
-      ),
-    );
-    assert.equal(result.status, 422);
-  });
-
-  it("a_filename_with_a_path_is_refused", async () => {
-    const { sender } = await running();
-    const result = await errorOf(
-      await sender.post(
-        "/v1/accounts/acc-1/send-attachment",
-        attachmentBody({ filename: "../etc/passwd.txt" }),
-      ),
-    );
-    assert.equal(result.status, 422);
-  });
-
-  it("an_attachment_obeys_the_same_gates_as_a_text_send", async () => {
-    const { sender, fake } = await running();
-    await sender.post("/v1/kill-switch", { on: true, scope: "proactive" });
-
-    const proactive = await errorOf(
-      await sender.post("/v1/accounts/acc-1/send-attachment", attachmentBody({ proactive: true })),
-    );
-
-    assert.equal(proactive.kind, "kill_switch");
-    assert.equal(fake.callsTo("sendMessage").length, 0);
-  });
-
-  it("an_attachment_counts_toward_the_per_minute_ceiling", async () => {
-    const { sender } = await running({ maxSendsPerMinutePerAccount: 1 });
-    await sender.post("/v1/accounts/acc-1/send-attachment", attachmentBody());
-    const second = await errorOf(await sender.post("/v1/accounts/acc-1/send", sendBody()));
-    assert.equal(second.kind, "rate_limited");
-  });
-});
-
-describe("app: send-video", () => {
-  const videoBody = (overrides: Record<string, unknown> = {}) => ({
-    thread_id: "2000001",
-    thread_type: 0,
-    video_url: "https://videos.example.test/huong-dan.mp4",
-    caption: "Video hướng dẫn",
-    proactive: false,
-    ...overrides,
-  });
-
-  it("the_video_url_and_caption_are_forwarded_to_zalo", async () => {
-    const { sender, fake } = await running();
-
-    const response = await sender.post(
-      "/v1/accounts/acc-1/send-video",
-      videoBody({ thumbnail_url: "https://videos.example.test/t.jpg" }),
-    );
-
-    assert.deepEqual(await response.json(), { ok: true, msg_id: "222" });
-    assert.deepEqual(fake.callsTo("sendVideo")[0]?.args, [
-      {
-        msg: "Video hướng dẫn",
-        videoUrl: "https://videos.example.test/huong-dan.mp4",
-        thumbnailUrl: "https://videos.example.test/t.jpg",
-      },
-      "2000001",
-      0,
-    ]);
-  });
-
-  it("urls_that_point_inside_the_network_are_refused_before_zalo_is_called", async () => {
-    const { sender, fake } = await running();
-    const urls = [
-      "http://127.0.0.1/a.mp4",
-      "http://localhost/a.mp4",
-      "http://169.254.169.254/latest/meta-data",
-      "http://10.0.0.5/a.mp4",
-      "http://[::1]/a.mp4",
-      "ftp://videos.example.test/a.mp4",
-      "https://user:pass@videos.example.test/a.mp4",
-    ];
-
-    const statuses = await Promise.all(
-      urls.map(
-        async (url) =>
-          (await sender.post("/v1/accounts/acc-1/send-video", videoBody({ video_url: url })))
-            .status,
-      ),
-    );
-
-    assert.deepEqual(
-      statuses,
-      urls.map(() => 422),
-    );
-    assert.equal(fake.callsTo("sendVideo").length, 0);
-  });
-
-  it("a_host_that_resolves_to_a_private_address_is_refused", async () => {
-    const gateway = new FakeGateway();
-    const fake = createFakeApi();
-    const bridge = createBridge({
-      config: makeConfig(),
-      gateway,
-      publisher: new RecordingPublisher(),
-      lookupHost: async () => ["10.1.2.3"],
-    });
-    const sender = signedSender(bridge.app);
-    gateway.nextSessions.push(createFakeSession(fake));
-    await sender.post("/v1/accounts/acc-1/start", startBody);
-
-    const response = await sender.post("/v1/accounts/acc-1/send-video", videoBody());
-
-    assert.equal(response.status, 422);
-    assert.equal(fake.callsTo("sendVideo").length, 0);
-  });
-
-  it("a_video_obeys_the_same_gates_as_a_text_send", async () => {
-    const { sender, fake } = await running();
-    await sender.post("/v1/kill-switch", { on: true, scope: "all" });
-
-    const result = await errorOf(await sender.post("/v1/accounts/acc-1/send-video", videoBody()));
-
-    assert.equal(result.kind, "kill_switch");
-    assert.equal(fake.callsTo("sendVideo").length, 0);
   });
 });
 

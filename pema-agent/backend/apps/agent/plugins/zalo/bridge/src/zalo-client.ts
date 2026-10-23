@@ -8,32 +8,17 @@
 //   (see `xuLySuKienQr`): QRCodeExpired does NOT regenerate the QR when a callback is given, and
 //   QRCodeDeclined never settles the login promise;
 // - `loginWithQR` (QR file on disk, used by `scripts/login-account.ts`) is not ported: no file is written.
-import fs from "node:fs";
-import { imageSize } from "image-size";
 import {
   LoginQRCallbackEventType,
   Zalo,
   type API,
   type Credentials,
-  type ImageMetadataGetter,
   type LoginQRCallbackEvent,
 } from "zca-js";
 import { createLogger } from "./logger.js";
 import type { Credential, Gateway, QrLoginEvent, ZaloSession } from "./zalo-types.js";
 
 const log = createLogger("zalo-client");
-
-// zca-js v2 bỏ sharp - phải tự cung cấp hàm đọc metadata ảnh khi gửi ảnh
-export const imageMetadataGetter: ImageMetadataGetter = async (filePath) => {
-  try {
-    const buffer = fs.readFileSync(filePath);
-    const { width, height } = imageSize(buffer);
-    if (!width || !height) return null;
-    return { width, height, size: buffer.byteLength };
-  } catch {
-    return null;
-  }
-};
 
 /** The slice of the `Zalo` class used here, so a fake can stand in for it. */
 export type ZaloLike = Pick<Zalo, "login" | "loginQR">;
@@ -43,7 +28,6 @@ function createZaloInstance(): Zalo {
     checkUpdate: false,
     logging: false,
     selfListen: true, // the owner's own messages reach the agent as conversation data; it never answers them
-    imageMetadataGetter,
   });
 }
 

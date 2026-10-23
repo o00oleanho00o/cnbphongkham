@@ -1,12 +1,12 @@
 /**
- * Outbound routes: send, send-attachment, send-video, typing, receipts, reaction.
+ * Outbound routes: send, typing, receipts, reaction.
  *
  * New module (no TS original); the calls themselves are the original's (`duongGuiZcaJs`,
- * `sendTypingEvent`, `sendDeliveredEvent`/`sendSeenEvent`, `addReaction`, `sendVideo`).
+ * `sendTypingEvent`, `sendDeliveredEvent`/`sendSeenEvent`, `addReaction`).
  *
  * Every send passes the safety gates BEFORE zca-js is called, in this order: not running, kill switch,
- * breaker (blocked), per-minute ceiling, per-day proactive ceiling. Only `send`, `send-attachment` and
- * `send-video` are sends; typing, receipts and reactions are not gated by the ceilings.
+ * breaker (blocked), per-minute ceiling, per-day proactive ceiling. Only `send` is a send; typing,
+ * receipts and reactions are not gated by the ceilings.
  */
 import { Hono } from "hono";
 import type { AccountManager, ManagedAccount } from "./account-registry.js";
@@ -15,37 +15,30 @@ import { fail, failFromThrown, ok, parseJsonBody, type AppEnv } from "./http.js"
 import { createLogger, errorInfo } from "./logger.js";
 import { toZaloReaction } from "./reaction-icons.js";
 import {
-  MAX_ATTACHMENT_BYTES,
   accountIdSchema,
   deliveredBodySchema,
   reactionBodySchema,
   seenBodySchema,
-  sendAttachmentBodySchema,
   sendBodySchema,
-  sendVideoBodySchema,
   toZcaQuote,
   toZcaStyles,
   typingBodySchema,
 } from "./schemas.js";
 import type { KillSwitch } from "./safety.js";
-import { checkPublicHttpUrl } from "./url-guard.js";
-import { buildAttachmentSource, duongGuiZcaJs, laLoiMayChuTuChoi } from "./zalo-send.js";
+import { duongGuiZcaJs, laLoiMayChuTuChoi } from "./zalo-send.js";
 import type { ZaloApi } from "./zalo-types.js";
 
 const log = createLogger("routes-messaging");
 
 type MsgId = number | bigint | string;
-/** `sendMessage` answers `{message, attachment[]}`, `sendVideo` answers `{msgId}`. */
-type SendOutcome =
-  | { msgId?: MsgId; message?: { msgId: MsgId } | null; attachment?: Array<{ msgId: MsgId }> }
-  | null
-  | undefined;
+/** `sendMessage` answers `{message, attachment[]}`. */
+type SendOutcome = { message?: { msgId: MsgId } | null } | null | undefined;
 
 /** zca-js ids are numbers that can exceed 2^53, so the wire carries them as strings. */
 function messageIdOf(result: unknown): string | null {
-  // zca-js' two answer shapes, both read-only here; anything else yields no id.
+  // zca-js' answer shape, read-only here; anything else yields no id.
   const outcome = result as SendOutcome;
-  const id = outcome?.msgId ?? outcome?.message?.msgId ?? outcome?.attachment?.[0]?.msgId;
+  const id = outcome?.message?.msgId;
   return id === undefined ? null : String(id);
 }
 
@@ -88,15 +81,6 @@ async function guardedSend(
   }
 }
 
-/** Decode base64 and enforce the 10 MB cap on the DECODED size (checked before allocating). */
-function decodeAttachment(base64: string): Buffer | null {
-  if (!/^[A-Za-z0-9+/]+={0,2}$/.test(base64)) return null;
-  const padding = base64.endsWith("==") ? 2 : base64.endsWith("=") ? 1 : 0;
-  const decodedSize = Math.floor((base64.length * 3) / 4) - padding;
-  if (decodedSize > MAX_ATTACHMENT_BYTES) return null;
-  return Buffer.from(base64, "base64");
-}
-
 export function messagingRoutes(deps: AppDeps): Hono<AppEnv> {
   const { accounts, killSwitch } = deps;
   const gates: Gates = { accounts, killSwitch };
@@ -136,53 +120,6 @@ export function messagingRoutes(deps: AppDeps): Hono<AppEnv> {
         ...(quote ? { quote } : {}),
         ...(mentions ? { mentions } : {}),
       }),
-    );
-  });
-
-  app.post("/accounts/:id/send-attachment", async (c) => {
-    const id = idOf(c.req.param("id"));
-    if (!id) return badId();
-    const body = parseJsonBody(c, sendAttachmentBodySchema);
-    if (!body.ok) return body.response;
-    const { thread_id, thread_type, filename, data_base64, caption, proactive } = body.data;
-
-    const data = decodeAttachment(data_base64);
-    if (!data) return fail("bad_request", "data_base64 is not valid base64 or exceeds 10 MB");
-    // The regex of the schema guarantees "<name>.<ext>"; the template type cannot express it.
-    const source = buildAttachmentSource(filename as `${string}.${string}`, data);
-
-    return guardedSend(gates, id, proactive, (api) =>
-      api.sendMessage({ msg: caption, attachments: [source] }, thread_id, thread_type),
-    );
-  });
-
-  app.post("/accounts/:id/send-video", async (c) => {
-    const id = idOf(c.req.param("id"));
-    if (!id) return badId();
-    const body = parseJsonBody(c, sendVideoBodySchema);
-    if (!body.ok) return body.response;
-    const { thread_id, thread_type, video_url, caption, proactive } = body.data;
-
-    const verdict = await checkPublicHttpUrl(video_url, deps.lookupHost);
-    if (!verdict.ok) return fail("bad_request", verdict.message);
-    if (body.data.thumbnail_url !== undefined) {
-      const thumb = await checkPublicHttpUrl(body.data.thumbnail_url, deps.lookupHost);
-      if (!thumb.ok) return fail("bad_request", "thumbnail_url host is not public");
-    }
-
-    return guardedSend(gates, id, proactive, (api) =>
-      api.sendVideo(
-        {
-          msg: caption,
-          videoUrl: video_url,
-          thumbnailUrl: body.data.thumbnail_url ?? "",
-          ...(body.data.duration_ms === undefined ? {} : { duration: body.data.duration_ms }),
-          ...(body.data.width === undefined ? {} : { width: body.data.width }),
-          ...(body.data.height === undefined ? {} : { height: body.data.height }),
-        },
-        thread_id,
-        thread_type,
-      ),
     );
   });
 

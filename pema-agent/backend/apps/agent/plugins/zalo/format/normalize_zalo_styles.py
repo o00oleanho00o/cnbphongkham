@@ -21,8 +21,7 @@ Pure module. Forced deviations (see PLAN-AI01 and the decisions of package C2):
 * ``Style.indentSize`` (an extra key of the ``Indent`` style) cannot live in ``TextStyle`` (the contract
   forbids extra fields), so this module defines ``ZaloStyle(TextStyle)`` with an optional ``indent_size``.
   It is still a ``TextStyle`` for every consumer; ``style_to_wire`` emits it as ``indentSize``.
-* ``style_to_wire`` is the one place that knows the wire shape ``{"start", "len", "st"[, "indentSize"]}``;
-  byte budgets (``so_byte_tin``) are measured on it so they equal the original's ``JSON.stringify``.
+* ``style_to_wire`` is the one place that knows the wire shape ``{"start", "len", "st"[, "indentSize"]}``.
 """
 
 from __future__ import annotations

@@ -1,10 +1,10 @@
 // Tests for `duongGuiZcaJs` / `laLoiMayChuTuChoi` (ported from send-reply-in-parts.ts; the original tests of
-// that file cover the splitting and retry logic that lives in the Python API) and the attachment builder.
+// that file cover the splitting and retry logic that lives in the Python API).
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { TextStyle, ZaloApiError, type SendMessageQuote } from "zca-js";
 import { createFakeApi } from "./test-support.js";
-import { buildAttachmentSource, duongGuiZcaJs, laLoiMayChuTuChoi } from "./zalo-send.js";
+import { duongGuiZcaJs, laLoiMayChuTuChoi } from "./zalo-send.js";
 
 const QUOTE = { msgId: "m1", uidFrom: "2000001", content: "gốc" } as unknown as SendMessageQuote; // synthetic
 
@@ -65,27 +65,5 @@ describe("laLoiMayChuTuChoi", () => {
     assert.equal(laLoiMayChuTuChoi(new ZaloApiError("no code")), false);
     assert.equal(laLoiMayChuTuChoi(null), false);
     assert.equal(laLoiMayChuTuChoi({ code: "112" }), false);
-  });
-});
-
-describe("buildAttachmentSource", () => {
-  const TINY_PNG = Buffer.from(
-    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==",
-    "base64",
-  );
-
-  it("a_png_gets_its_measured_size_and_byte_count", () => {
-    const source = buildAttachmentSource("anh.png", TINY_PNG);
-    assert.deepEqual(source.metadata, { totalSize: TINY_PNG.byteLength, width: 1, height: 1 });
-  });
-
-  it("a_document_only_gets_its_byte_count", () => {
-    const source = buildAttachmentSource("tai-lieu.pdf", Buffer.from("abc"));
-    assert.deepEqual(source.metadata, { totalSize: 3 });
-  });
-
-  it("an_image_that_cannot_be_measured_still_gets_its_byte_count", () => {
-    const source = buildAttachmentSource("hong.jpg", Buffer.from("not an image"));
-    assert.deepEqual(source.metadata, { totalSize: 12 });
   });
 });

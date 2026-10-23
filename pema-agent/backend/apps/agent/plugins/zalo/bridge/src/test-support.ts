@@ -129,10 +129,6 @@ export function createFakeApi(overrides: Partial<Omit<ZaloApi, "listener">> = {}
       record("sendMessage", args);
       return { message: { msgId: 111 }, attachment: [] };
     },
-    sendVideo: async (...args) => {
-      record("sendVideo", args);
-      return { msgId: 222 };
-    },
     sendTypingEvent: async (...args) => {
       record("sendTypingEvent", args);
       return { status: 0 };

@@ -13,7 +13,7 @@ unit by construction. ``to_units`` / ``from_units`` convert at the public bounda
 
 * texts coming IN from callers (real ``str``) are converted with ``to_units``;
 * texts going OUT (message parts, stripped text) are converted back with ``from_units``;
-* every ``start`` / ``length`` that crosses a module boundary (``TextStyle``, ``DoanDaCat``) is in UTF-16
+* every ``start`` / ``length`` that crosses a module boundary (``TextStyle``) is in UTF-16
   units relative to the text it belongs to.
 
 A cut must never split a surrogate pair (the original could, a latent bug on a 2000-char window): see

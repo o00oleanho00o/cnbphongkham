@@ -12,7 +12,6 @@ import type {
   JevState,
   KnowledgeSettings,
   KnowledgeStatus,
-  ParserTest,
   PreviewInput,
   PreviewResult,
   SearchDebug,
@@ -93,7 +92,6 @@ export const knowledge = {
   saveSettings: (body: SettingsPatch) => api.patch<KnowledgeSettings>(`${BASE}/settings`, body),
   testEmbedding: () => api.post<EmbeddingTest>(`${BASE}/settings/test-embedding`),
   reembed: () => api.post<{ queued: number }>(`${BASE}/settings/reembed`),
-  testParser: () => api.post<ParserTest>(`${BASE}/settings/test-parser`),
 };
 
 /** Whether plugin jev is on and has a TypeSafe key, for the judging section (its own routes, not this plugin's). */

@@ -208,6 +208,5 @@ def markdown_sang_style_zalo(input_text: str) -> KetQuaDinhDang:
             con_tro += 1
 
     # Chuẩn hóa ở ĐÂY chứ không ở nơi gửi: mọi span đều sinh ra từ hàm này, nên đây là chỗ duy nhất bảo đảm
-    # được bất biến "không span nào chồng span cùng kiểu". Bộ cắt tin bên `split_styled_message.py` chỉ CẮT
-    # span có sẵn nên không thể tạo ra chồng lấn mới.
+    # được bất biến "không span nào chồng span cùng kiểu".
     return KetQuaDinhDang(text=from_units("".join(phan)), styles=chuan_hoa_styles(styles))

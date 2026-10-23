@@ -108,7 +108,6 @@ and nothing was delivered).
 - `POST /accounts/:id/typing`, `/receipts/delivered`, `/receipts/seen`, `/reaction`
 - `GET /accounts/:id/user-info?uid=`, `GET /accounts/:id/friends` (only `userId`, `displayName`, `zaloName`),
   `POST /accounts/:id/friends/accept|reject`, `GET /accounts/:id/group-info?thread_id=`
-- `POST /accounts/:id/send-attachment`, `POST /accounts/:id/send-video` (same gates as `send`)
 - `POST /kill-switch` `{on, scope?, reason?}`, `GET /kill-switch`
 
 **Events (bridge to API)**, posted to `{PEMA_API_BASE_URL}/webhooks/zalo-bridge/{account_id}`, signed,
