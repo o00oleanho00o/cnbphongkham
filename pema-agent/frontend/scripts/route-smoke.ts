@@ -53,6 +53,7 @@ const EXPECTATIONS: Readonly<Record<string, Expectation>> = {
     heading: "Trace",
     action: { role: "checkbox", name: "Chỉ lượt không thành công" },
   },
+  "/admin/agent/cases": { heading: "Ca", action: { role: "button", name: "Tải lại" } },
   "/admin/agent/model": { heading: "Model", action: { role: "button", name: "Lưu" } },
   "/admin/agent/settings": {
     heading: "Cài đặt",
