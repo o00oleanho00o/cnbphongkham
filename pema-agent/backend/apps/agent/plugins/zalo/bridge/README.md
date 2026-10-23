@@ -123,7 +123,6 @@ See `.env.example`. Hard backstops: `ZALO_BRIDGE_MAX_PROACTIVE_PER_DAY_PER_ACCOU
 
 ```sh
 bun install
-bun run test       # bun test; no network, a fake zca-js gateway
 bun run typecheck
 bun run lint
 bun run format:check

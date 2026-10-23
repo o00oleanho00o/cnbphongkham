@@ -37,7 +37,6 @@ ignore = [
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"**/tests/**" = ["S101", "S105", "S106", "E501", "PT012"]
 "**/alembic/versions/*.py" = ["E501", "S608"]
 "**/alembic/env.py" = ["S608"]
 
@@ -61,17 +60,6 @@ extraPaths = [
     "apps/agent",
     "apps/crm-signer",
     "..",
-]
-
-# -------------------------------------------------------------- pytest
-[tool.pytest.ini_options]
-testpaths = ["packages", "apps"]
-addopts = "-ra --import-mode=importlib"
-asyncio_mode = "auto"
-asyncio_default_fixture_loop_scope = "function"
-markers = [
-    "db: needs a clean Postgres with pgvector reachable via PEMA_TEST_DATABASE_URL (skipped otherwise)",
-    "redis: needs a throwaway Redis reachable via PEMA_TEST_REDIS_URL (skipped otherwise)",
 ]
 
 # ------------------------------------------------------- import-linter

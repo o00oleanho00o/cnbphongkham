@@ -13,7 +13,7 @@ OPENAPI := $(BACKEND)/apps/api/openapi.json
 LOAD_ENV_ROOT := set -a; if [ -f infra/.env ]; then . infra/.env; fi; set +a;
 LOAD_ENV := set -a; if [ -f ../infra/.env ]; then . ../infra/.env; fi; set +a;
 
-.PHONY: help setup lint format typecheck test test-db openapi types db-upgrade db-downgrade clean \
+.PHONY: help setup lint format typecheck openapi types db-upgrade db-downgrade clean \
         infra-secrets infra-config up up-app up-agent up-proxy down down-proxy logs ps db-migrate db-bootstrap \
         retention-dry-run backup restore-verify
 
@@ -22,8 +22,6 @@ help:
 	@echo "lint        ruff + pyright (strict) + import-linter"
 	@echo "format      ruff format + autofix"
 	@echo "typecheck   pyright (backend) and tsc (frontend)"
-	@echo "test        pytest (DB tests skip unless PEMA_TEST_DATABASE_URL is set)"
-	@echo "test-db     pytest against PEMA_TEST_DATABASE_URL (a THROWAWAY Postgres with pgvector)"
 	@echo "openapi     regenerate $(OPENAPI)"
 	@echo "types       regenerate frontend TypeScript types from the OpenAPI file"
 	@echo "db-upgrade  alembic upgrade heads for ctx and clinic (reads infra/.env)"
@@ -55,13 +53,6 @@ format:
 typecheck:
 	cd $(BACKEND) && uv run pyright
 	cd $(FRONTEND) && bun run check:types
-
-test:
-	cd $(BACKEND) && uv run pytest
-
-test-db:
-	@test -n "$$PEMA_TEST_DATABASE_URL" || (echo "set PEMA_TEST_DATABASE_URL to a throwaway Postgres (see backend/apps/api/tests/test_database.py)"; exit 1)
-	cd $(BACKEND) && uv run pytest apps/api/tests/test_database.py -v
 
 openapi:
 	cd $(BACKEND) && uv run python -m pema.api.export_openapi

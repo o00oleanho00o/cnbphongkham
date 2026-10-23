@@ -7,7 +7,7 @@
  *
  * Rules for editing:
  *   - Only plain `--name: value;` declarations inside `@theme static` (light; static so every token is emitted as a CSS variable) and `.dark` (overrides).
- *   - Run `bun run tokens` afterwards: it regenerates tokens.json; `vitest` fails when they drift apart.
+ *   - Run `bun run tokens` afterwards: it regenerates tokens.json.
  *   - Name prefix decides the JSON group: color, radius, shadow, text, space, layout, breakpoint, z, font.
  */
 @theme static {

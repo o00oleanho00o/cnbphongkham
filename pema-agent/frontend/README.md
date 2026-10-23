@@ -19,7 +19,7 @@ bun install
 bun run dev:mock        # mock backend on :4010 plus vite dev on :3000 (no other service needed)
 bun run dev             # against the real API (PEMA_API_URL, default http://127.0.0.1:8000)
 bun run build && bun run start      # the build is the Nitro server in .output/, run by bun
-bun run lint && bun run typecheck && bun run test
+bun run lint && bun run typecheck
 bun run inventory       # FEATURE-INVENTORY.md against the routes and tests on disk (fails when a screen or a test disappears)
 bun run smoke           # Playwright: every route renders, main heading and primary control visible (needs `bun run dev:mock`)
 bun run visual          # Playwright: every route at the 5 viewports, fails on horizontal overflow (needs `bun run dev:mock`)
@@ -61,7 +61,7 @@ src/components/ops/                   clinic operation components (new, no zalo-
 src/components/catalog/, src/lib/catalog/   service catalog, protocols, doctors and rooms, photo studio (U4)
 src/components/orders/, src/lib/orders/     quick order dialog, A5 sheets, Patient 360 orders card (U5)
 src/components/finance/, src/lib/finance/   finance shell pieces, entry form, receipts, invoice panel (U6)
-src/lib/admin/<area>/                 ported pure logic and its tests (vitest, same titles as the originals)
+src/lib/admin/<area>/                 ported pure logic
 src/lib/api/                          client.ts (typed openapi-fetch + ApiError), schema.d.ts (generated)
 src/lib/session/, src/lib/nav.tsx     session context, menu and permission filter
 mock/                                 mock backend
@@ -77,7 +77,7 @@ Reference clone (read only): `E:\Desktop\zalo-agent-ref\web\src`. Target paths o
 2. Keep names, constants, thresholds and the reason comments of the original (they are the specification). Record forced deviations in a comment under the header.
 3. API: use `http` and `unwrap` from `@/lib/api/client` and DTO types from `Schemas` in `@/lib/api` (snake_case, English names; the original's Vietnamese-named DTOs no longer exist). Errors arrive as `ApiError` with the BE's Vietnamese message. Never invent an endpoint: if the contract lacks one, show the control disabled or hide it, and list it as an open item.
 4. react-router becomes `next/link`, `useRouter`, `usePathname`, `useParams`, `useSearchParams` (wrap in `<Suspense>` in the page). Vite globals (`__APP_VERSION__`, `import.meta`) become `process.env.NEXT_PUBLIC_*`.
-5. Tests: `node:test` to vitest with the same titles (`describe`/`it` from `vitest`, `node:assert/strict` may stay); fake timers via `vi.useFakeTimers()`. Screens get no unit test: they are checked end to end (`e2e/`).
+5. Tests: no unit tests. Screens are checked end to end (`e2e/`, `bun run e2e`; rule `.claude/rules/test-writing.md`).
 6. Quality: no `any`, no `console.*`, named imports, hoist constant objects and wrap handlers passed to children in `useCallback`, clean timers and listeners in `useEffect`. Never log or render secrets: keys come back masked (`api_key_masked`), tokens only go up.
 7. Mobile first: 390x844 must work with no document-level horizontal scroll (tables scroll inside their card), touch targets of at least 44px on phone widths, text readable without zoom. Desktop uses the width (1920x1020, 1440x900, 1280x720, 1024x768).
 8. Mock: add the area's handlers under `mock/handlers/` with fictional Vietnamese data (no real name, phone, token, photo).

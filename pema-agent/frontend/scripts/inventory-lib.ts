@@ -1,5 +1,5 @@
-// Checks behind `bun run inventory` (package U, step U1): plain functions over text, so `src/lib/inventory.test.ts`
-// can run them on small inputs. The command itself is `inventory-check.ts`.
+// Checks behind `bun run inventory` (package U, step U1): plain functions over text.
+// The command itself is `inventory-check.ts`.
 //
 // `bun run inventory` fails (exit 1, one line per problem) when
 //   - a route of the first table has no `src/routes/**/index.tsx`, or a page has no row;
