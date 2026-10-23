@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Logical backup of the Pema databases: one custom-format dump of `pema` (the clinic), one of `pema_agent` (the
-# agent, when it exists) + the cluster's roles (globals),
+# agent, when it exists) + the cluster's roles (globals) + the clinic photos (from the api container),
 # verified, encrypted, with simple retention. One installation = one clinic = one database, so the dump is the
 # WHOLE clinic (every patient, message and credential it has); treat it with that weight. A second clinic has its
 # own stack and must use its own PEMA_BACKUP_DIR and its own age key. Run from the host that runs docker compose
@@ -20,6 +20,7 @@
 #   PEMA_BACKUP_SERVICE         compose service name of Postgres (default postgres)
 #   PEMA_BACKUP_DB              database (default pema)
 #   PEMA_BACKUP_AGENT_DB        the agent's database (default pema_agent; skipped when the server has none)
+#   PEMA_BACKUP_API_SERVICE     compose service name of the API, which holds the clinic photos (default api)
 #   PEMA_BACKUP_HOOK            command run with the finished file path as $1 (rsync/rclone to the second site)
 #
 # Exit codes: 0 ok; non-zero on any failure (cron mails stderr). Nothing is printed except file names and sizes.
@@ -32,6 +33,9 @@ KEEP="${PEMA_BACKUP_KEEP_DAYS:-14}"
 SERVICE="${PEMA_BACKUP_SERVICE:-postgres}"
 DB="${PEMA_BACKUP_DB:-pema}"
 AGENT_DB="${PEMA_BACKUP_AGENT_DB:-pema_agent}"
+API_SERVICE="${PEMA_BACKUP_API_SERVICE:-api}"
+# the photos of the Ảnh trước / sau tab: <PEMA_DATA_DIR>/clinic-media on the pema-data volume (docker-compose.yml)
+MEDIA_DIR=/var/lib/pema/clinic-media
 read -r -a COMPOSE <<<"${PEMA_BACKUP_COMPOSE:-docker compose -f $INFRA/docker-compose.yml --env-file $INFRA/.env}"
 
 encrypt() { # stdin -> stdout
@@ -75,6 +79,11 @@ if [ "$("${COMPOSE[@]}" exec -T "$SERVICE" psql -U postgres -Atc "SELECT 1 FROM 
     { echo "backup check failed: schema agent_rt missing in $AGENT_DB" >&2; exit 2; }
   FILES+=(agent.dump)
 fi
+# The photos go into the same archive as the rows that point at them (same date, same encryption). mkdir -p: the
+# folder appears only with the first upload; a stopped api fails the backup instead of silently leaving them out.
+"${COMPOSE[@]}" exec -T "$API_SERVICE" mkdir -p "$MEDIA_DIR"
+"${COMPOSE[@]}" exec -T "$API_SERVICE" tar -C "$MEDIA_DIR" -czf - . >"$TMP/media.tar.gz"
+FILES+=(media.tar.gz)
 
 # 2. Verify before trusting it: pg_restore must be able to list the archive and it must contain the schemas.
 "${COMPOSE[@]}" exec -T "$SERVICE" pg_restore --list <"$TMP/db.dump" >"$TMP/db.list"

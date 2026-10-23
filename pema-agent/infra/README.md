@@ -116,8 +116,8 @@ it); add `--profile worker` for the agent worker.
 | `internal` | no domain yet | `localhost`, `pema.lan`, a MagicDNS name | Caddy's own CA signs the certificate; browsers warn until the CA root is installed (below); no HSTS |
 | `off` | plain HTTP **only** over Tailscale/WireGuard | `http://100.x.y.z` | also `PEMA_PROXY_BIND=<tailscale ip>` and `PEMA_SESSION_COOKIE_SECURE=false` (a Secure cookie is not sent over http, so login would loop); never on the public internet |
 
-Routing: `/api/v1/*` and `/healthz` go to `api:8000`, everything else to `frontend:3000`. The Zalo bridge webhook
-(`/api/v1/webhooks/zalo-bridge/<account_id>`, matched as `/api/v1/webhooks/zalo-bridge/*`) is answered 404 from outside: the bridge talks to the API over the compose network.
+Routing: `/api/v1/*` and `/healthz` go to `api:8000`, everything else to `frontend:3000`. The agent gateway
+(`/api/v1/agent-gateway/*`) is answered 404 from outside: only `crm-signer` calls it, over the compose network.
 `/docs`, `/openapi.json` and every other path never reach the API. Postgres, Redis and the bridge cannot be routed:
 Caddy is attached only to the `edge` network (fixed subnet `PEMA_PROXY_SUBNET`, default `172.29.80.0/24`; Caddy is
 `PEMA_PROXY_IP`, default `.2`), where only `api` and `frontend` live. Change the subnet and the IP together if the
@@ -126,8 +126,8 @@ subnet collides with one of yours (a running stack needs `down` first, networks 
 What Caddy does to every answer (the one exception: the automatic 308 redirect from http to https is built by Caddy
 itself and still carries `Server: Caddy`): removes `Server`, `Via` and `X-Powered-By`, adds `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`,
 `Content-Security-Policy: frame-ancestors 'none'`, `Referrer-Policy`, `Permissions-Policy` (and HSTS in mode `auto`);
-cuts a request body larger than 4 MiB with 413 before the API reads it (the API's own `MAX_BODY_BYTES`; only the two
-knowledge-base upload routes get 105 MiB, above `KB_MAX_FILE_MB` at most 100); `read_header` 10 s against slowloris;
+cuts a request body larger than 4 MiB with 413 before the API reads it (the API's own `MAX_BODY_BYTES`; only the photo
+upload `PUT /api/v1/media/<uuid>/content` gets 9 MiB, above `MEDIA_MAX_BYTES` 8 MiB); `read_header` 10 s against slowloris;
 compresses with zstd and gzip. The access log (stdout, JSON) leaves out the query string, `Cookie`, `Authorization`,
 `Set-Cookie` and the query of `Referer`; it still holds the client IP and the path (personal data of the visitor,
 retention is your decision).
@@ -214,8 +214,9 @@ Key change without downtime: `keygen` into a fresh volume, put the new public ke
 
 ## Backups
 
-`scripts/backup-postgres.sh` (verified dump + globals, encrypted with age or gpg, retention, off-site hook) and
-`scripts/restore-postgres.sh --verify|--restore` (never overwrites the live database; it also checks that the restored
+`scripts/backup-postgres.sh` (verified dump + globals + the clinic photos of `/var/lib/pema/clinic-media` from the api
+container, encrypted with age or gpg, retention, off-site hook) and
+`scripts/restore-postgres.sh --verify|--restore` (never overwrites the live database or photos; it also checks that the restored
 database holds exactly one clinic and prints its name). With one clinic per database a dump is the whole clinic: every
 patient, message and stored credential. Because there is no row level security to fall back on, who may read the backup
 directory and the age private key is as important as who holds the `be_app` password. Plaintext is refused unless

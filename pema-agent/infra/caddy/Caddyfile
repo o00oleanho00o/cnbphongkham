@@ -2,7 +2,7 @@
 # imports /etc/caddy/mode.caddy (the TLS mode: auto | internal | off, see infra/caddy/modes/ and infra/README.md).
 #
 # What is routed, and what never is:
-#   /api/v1/*   -> api:8000        (except the Zalo bridge webhook, see below)
+#   /api/v1/*   -> api:8000        (except the agent gateway, see below)
 #   /healthz    -> api:8000
 #   everything else -> frontend:3000 (the TanStack Start dashboard)
 #   Postgres, Redis and the Zalo bridge are NOT routed and cannot be: Caddy is attached only to the `edge` network,
@@ -75,29 +75,32 @@ import mode.caddy
 		}
 	}
 
-	# The bridge posts its events to the API over the compose network (http://api:8000), never through here. It
-	# authenticates with an HMAC, but there is no reason to leave the route reachable from the internet. The path
-	# is /api/v1/webhooks/zalo-bridge/<account_id> (one installation = one clinic: no clinic segment).
-	handle /api/v1/webhooks/zalo-bridge/* {
+	# Only crm-signer calls the agent gateway, over the compose network (L2); it is never reachable from outside.
+	handle /api/v1/agent-gateway/* {
 		respond "Not found" 404
 	}
 
-	# Knowledge-base uploads carry documents (KB_MAX_FILE_MB is at most 100): the API cuts them at its own limit,
-	# this ceiling only needs to be above it. Every other request body is small JSON and gets the API's own 4 MiB
-	# (BodyLimitMiddleware, MAX_BODY_BYTES); Caddy refuses a larger body with 413 before the API reads it.
-	@kb_documents path /api/v1/admin/kb/sources/file /api/v1/admin/kb/sources/text
-	handle @kb_documents {
-		request_body {
-			max_size 105MiB
-		}
-		import to_api
+	# The photo upload sends raw bytes that the API cuts at MEDIA_MAX_BYTES (8 MiB): this ceiling only needs to be
+	# above it. Every other request body is small JSON and gets the API's own 4 MiB (BodyLimitMiddleware,
+	# MAX_BODY_BYTES); Caddy refuses a larger body with 413 before the API reads it. The photo handle is nested:
+	# at the top level a named matcher sorts after `handle /api/v1/*` and would never match.
+	@photo {
+		method PUT
+		path_regexp ^/api/v1/media/[0-9a-f-]{36}/content$
 	}
-
 	handle /api/v1/* {
-		request_body {
-			max_size 4MiB
+		handle @photo {
+			request_body {
+				max_size 9MiB
+			}
+			import to_api
 		}
-		import to_api
+		handle {
+			request_body {
+				max_size 4MiB
+			}
+			import to_api
+		}
 	}
 
 	handle /healthz {

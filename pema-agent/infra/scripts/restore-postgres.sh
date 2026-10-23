@@ -3,15 +3,17 @@
 #
 #   restore-postgres.sh --verify  <file>            restore into a scratch database, count tables, drop it
 #   restore-postgres.sh --restore <file>            restore into a NEW database (name: PEMA_RESTORE_DB)
-#                                                   and the agent's into <that name>_agent
+#                                                   and the agent's into <that name>_agent, the photos into
+#                                                   /var/lib/pema/clinic-media.<that name> (api container)
 #
-# It never overwrites the live database. To go live after a disaster: stop api/worker, run --restore into
-# `pema_restored`, check it, then `ALTER DATABASE pema RENAME TO pema_old; ALTER DATABASE pema_restored RENAME
-# TO pema;` (nobody connected), the same for `pema_agent` and `pema_restored_agent`, start the services. Run
+# It never overwrites the live database or the live photos. To go live after a disaster: stop api/worker, run
+# --restore into `pema_restored`, check it, then `ALTER DATABASE pema RENAME TO pema_old; ALTER DATABASE
+# pema_restored RENAME TO pema;` (nobody connected), the same for `pema_agent` and `pema_restored_agent`, move
+# clinic-media to clinic-media.old and clinic-media.pema_restored to clinic-media, start the services. Run
 # --verify at least once a quarter: a backup that was never restored is a hope, not a backup.
 #
 # Decryption: PEMA_RESTORE_AGE_IDENTITY (path of the age private key) for *.age; gpg uses its own keyring.
-# Same PEMA_BACKUP_COMPOSE / PEMA_BACKUP_SERVICE variables as backup-postgres.sh.
+# Same PEMA_BACKUP_COMPOSE / PEMA_BACKUP_SERVICE / PEMA_BACKUP_API_SERVICE variables as backup-postgres.sh.
 set -euo pipefail
 umask 077
 
@@ -21,6 +23,8 @@ MODE="${1:-}"; FILE="${2:-}"
 
 INFRA="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SERVICE="${PEMA_BACKUP_SERVICE:-postgres}"
+API_SERVICE="${PEMA_BACKUP_API_SERVICE:-api}"
+MEDIA_DIR=/var/lib/pema/clinic-media
 read -r -a COMPOSE <<<"${PEMA_BACKUP_COMPOSE:-docker compose -f $INFRA/docker-compose.yml --env-file $INFRA/.env}"
 if [ "$MODE" = "--verify" ]; then TARGET="pema_verify_$$"; else TARGET="${PEMA_RESTORE_DB:-pema_restored}"; fi
 
@@ -61,6 +65,20 @@ if [ -f "$TMP/agent.dump" ]; then
   "${COMPOSE[@]}" exec -T "$SERVICE" pg_restore -U postgres -d "${TARGET}_agent" --exit-on-error <"$TMP/agent.dump"
   AGENT_TABLES="$(psql_in -d "${TARGET}_agent" -At -c "SELECT count(*) FROM information_schema.tables WHERE table_schema = 'agent_rt'")"
   echo "restored the agent into ${TARGET}_agent: $AGENT_TABLES tables in agent_rt"
+fi
+
+if [ -f "$TMP/media.tar.gz" ]; then
+  # reading the whole archive checks it; --verify stops there, like the scratch database it drops
+  tar -tzf "$TMP/media.tar.gz" >"$TMP/media.list"
+  PHOTOS="$(grep -vc '/$' "$TMP/media.list" || true)"
+  if [ "$MODE" = "--restore" ]; then
+    # mkdir without -p fails when the folder exists: a restore never writes over photos already there
+    "${COMPOSE[@]}" exec -T "$API_SERVICE" mkdir "$MEDIA_DIR.$TARGET"
+    "${COMPOSE[@]}" exec -T "$API_SERVICE" tar -C "$MEDIA_DIR.$TARGET" -xzf - <"$TMP/media.tar.gz"
+    echo "restored $PHOTOS photo file(s) into $MEDIA_DIR.$TARGET"
+  else
+    echo "photo archive readable: $PHOTOS file(s)"
+  fi
 fi
 
 if [ "$MODE" = "--verify" ]; then

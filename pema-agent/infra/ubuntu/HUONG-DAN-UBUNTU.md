@@ -384,8 +384,8 @@ sudo ufw status verbose
    đứng trước Caddy thì phải thêm dải của nó vào `PEMA_TRUSTED_PROXIES` **và** cấu hình `trusted_proxies` của Caddy.
    Cookie phiên `Secure` nên đăng nhập chỉ chạy qua https (trừ chế độ `off`).
 6. **Webhook Zalo Bot:** đặt `PEMA_ZALO_BOT_WEBHOOK_BASE_URL=https://clinic.example.com` (không có dấu `/` cuối) nếu dùng chế độ
-   `webhook`; đường `/api/v1/webhooks/zalo-bot/<account_id>` đi qua (không có đoạn phòng khám), riêng webhook cầu nối Zalo
-   cá nhân (`/api/v1/webhooks/zalo-bridge/*`) bị chặn từ ngoài.
+   `webhook`; đường `/api/v1/webhooks/zalo-bot/<account_id>` đi qua (không có đoạn phòng khám). Cổng agent
+   (`/api/v1/agent-gateway/*`) bị chặn từ ngoài: chỉ `crm-signer` gọi nó trong mạng compose.
 
 Chưa kiểm: Let's Encrypt thật (chế độ `auto`) chưa được thử; chế độ `internal` đã chạy thử trên máy dev.
 
@@ -423,8 +423,9 @@ Các unit này **chưa được chạy thử** trong gói F.
 ## 10. Sao lưu Postgres
 
 Dữ liệu cần giữ: database `pema` (CRM) và `pema_agent` (agent, kho tri thức), tệp `infra/.env`, volume `agent-home`
-(khóa bí mật của agent; mất nó thì API key model và thông tin Zalo trong DB không đọc lại được), và volume `pema-data` nếu nơi lưu
-tệp/ảnh/KB tải lên được chốt là ổ đĩa cục bộ (đang là việc mở). Mô hình Ollama tải lại được, không cần sao lưu.
+(khóa bí mật của agent; mất nó thì API key model và thông tin Zalo trong DB không đọc lại được), và ảnh lâm sàng (tab Ảnh
+trước / sau) nằm ở `/var/lib/pema/clinic-media` trong volume `pema-data` của container `api`. Mô hình Ollama tải lại được,
+không cần sao lưu.
 
 ```bash
 sudo apt install -y age
@@ -440,7 +441,9 @@ sudo systemctl start pema-backup.service && journalctl -u pema-backup.service -n
 ```
 
 `backup-postgres.sh` làm: `pg_dump -Fc` + `pg_dumpall --globals-only` (role và hash mật khẩu), kiểm tra bằng
-`pg_restore --list` và sự có mặt của các schema `clinic`, `ctx` (và `agent_rt` trong `pema_agent`), gói vào một tệp, **mã hóa bằng
+`pg_restore --list` và sự có mặt của các schema `clinic`, `ctx` (và `agent_rt` trong `pema_agent`), nén thư mục ảnh
+`/var/lib/pema/clinic-media` từ container `api` (`media.tar.gz`; `api` phải đang chạy, không thì bản sao lưu báo lỗi), gói tất cả
+vào một tệp (ảnh và các dòng trỏ tới ảnh cùng một thời điểm), **mã hóa bằng
 age (hoặc gpg)**, xóa tệp quá `PEMA_BACKUP_KEEP_DAYS`, rồi gọi `PEMA_BACKUP_HOOK` để chép ra nơi khác. Script từ
 chối ghi bản không mã hóa, trừ khi `PEMA_BACKUP_ALLOW_PLAINTEXT=true` (chỉ để thử). Vì một CSDL là một phòng khám, một tệp
 sao lưu là TOÀN BỘ dữ liệu phòng khám đó (bệnh nhân, tin nhắn, thông tin đăng nhập Zalo đã mã hóa): thư mục sao lưu và khóa
@@ -452,8 +455,11 @@ Quy tắc:
   ngoài phòng khám (cloud VN hoặc ổ rời mang về). Bản sao nằm cùng phòng với máy chủ không chống được cháy, trộm.
 - **Diễn tập khôi phục mỗi quý** và sau mỗi lần đổi phiên bản Postgres:
   `make restore-verify FILE=/mnt/backup-disk/pema/pema-YYYYmmdd-HHMMSS.tar.age`
-  (đặt `PEMA_RESTORE_AGE_IDENTITY=/đường/dẫn/pema-backup.key`; khôi phục vào CSDL tạm rồi xóa, không đụng CSDL đang chạy).
-  Khôi phục thật: `restore-postgres.sh --restore <tệp>` vào `pema_restored`, kiểm tra, rồi đổi tên CSDL khi dừng api/worker.
+  (đặt `PEMA_RESTORE_AGE_IDENTITY=/đường/dẫn/pema-backup.key`; khôi phục vào CSDL tạm rồi xóa, đọc hết tệp ảnh và đếm số ảnh,
+  không đụng CSDL hay ảnh đang chạy).
+  Khôi phục thật: `restore-postgres.sh --restore <tệp>` vào `pema_restored`, ảnh vào thư mục mới
+  `/var/lib/pema/clinic-media.pema_restored` (thư mục đã có thì script dừng, không ghi đè), kiểm tra, rồi khi dừng api/worker đổi tên
+  CSDL và đổi `clinic-media` thành `clinic-media.old`, `clinic-media.pema_restored` thành `clinic-media`.
 - Điểm mất dữ liệu tối đa (RPO) của cách này là **một ngày**. Nếu chủ phòng khám cần ngắn hơn, chuyển sang lưu WAL liên tục
   (pgBackRest hoặc WAL-G) là bước kế tiếp, chưa làm.
 - Thời hạn lưu bản sao là quyết định của chủ phòng khám (bản sao chứa dữ liệu bệnh nhân; Nghị định 13/2023). Mặc định 14 ngày.
