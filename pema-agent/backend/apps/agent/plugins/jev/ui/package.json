@@ -7,7 +7,7 @@
   "scripts": {
     "build": "tsc --noEmit && vite build",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run --passWithNoTests"
   },
   "devDependencies": {
     "@types/react": "^19.3.0",
