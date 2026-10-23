@@ -32,6 +32,8 @@ class ModelEntry:
     reasoning: ReasoningEffort | None = None
     dialect: OpenAIDialect | None = None
     api_key_enc: str | None = None
+    window_tokens: int | None = None
+    """The model's context window; None leaves it to the profile."""
 
 
 class ModelEntryStore(Protocol):
@@ -64,22 +66,23 @@ class InMemoryModelEntryStore:
 
 
 _LIST = sql(
-    "SELECT id, label, provider, model, base_url, reasoning, dialect, api_key_enc "
+    "SELECT id, label, provider, model, base_url, reasoning, dialect, api_key_enc, window_tokens "
     "FROM agent_rt.agent_model_entry "
     "WHERE tenant_id = :tenant_id AND agent = :agent ORDER BY created_at, id"
 )
 _GET = sql(
-    "SELECT id, label, provider, model, base_url, reasoning, dialect, api_key_enc "
+    "SELECT id, label, provider, model, base_url, reasoning, dialect, api_key_enc, window_tokens "
     "FROM agent_rt.agent_model_entry "
     "WHERE tenant_id = :tenant_id AND agent = :agent AND id = :id"
 )
 _SAVE = sql(
     "INSERT INTO agent_rt.agent_model_entry (tenant_id, agent, id, label, provider, model, base_url, "
-    "reasoning, dialect, api_key_enc) VALUES (:tenant_id, :agent, :id, :label, :provider, :model, :base_url, "
-    ":reasoning, :dialect, :api_key_enc) ON CONFLICT (tenant_id, agent, id) DO UPDATE SET "
+    "reasoning, dialect, api_key_enc, window_tokens) VALUES (:tenant_id, :agent, :id, :label, :provider, "
+    ":model, :base_url, :reasoning, :dialect, :api_key_enc, :window_tokens) "
+    "ON CONFLICT (tenant_id, agent, id) DO UPDATE SET "
     "label = EXCLUDED.label, provider = EXCLUDED.provider, model = EXCLUDED.model, "
     "base_url = EXCLUDED.base_url, reasoning = EXCLUDED.reasoning, dialect = EXCLUDED.dialect, "
-    "api_key_enc = EXCLUDED.api_key_enc, updated_at = now()"
+    "api_key_enc = EXCLUDED.api_key_enc, window_tokens = EXCLUDED.window_tokens, updated_at = now()"
 )
 _DELETE = sql(
     "DELETE FROM agent_rt.agent_model_entry WHERE tenant_id = :tenant_id AND agent = :agent AND id = :id"
@@ -96,6 +99,7 @@ def _entry(row: Row[Any]) -> ModelEntry:
         reasoning=row.reasoning,
         dialect=row.dialect,
         api_key_enc=row.api_key_enc,
+        window_tokens=row.window_tokens,
     )
 
 
@@ -135,6 +139,7 @@ class PostgresModelEntryStore:
             "reasoning": entry.reasoning,
             "dialect": entry.dialect,
             "api_key_enc": entry.api_key_enc,
+            "window_tokens": entry.window_tokens,
         }
 
         async def work() -> None:

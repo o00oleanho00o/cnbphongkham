@@ -86,6 +86,7 @@ def test_each_field_comes_from_the_database_then_the_profile() -> None:
         "base_url": "db",
         "reasoning": "profile",
         "dialect": "profile",
+        "window_tokens": "profile",
         "api_key": "db",
     }
     assert with_db.version == 3
@@ -347,6 +348,30 @@ async def test_the_list_keeps_several_models_each_with_its_own_masked_key() -> N
     assert (first["api_key"], second["api_key"], third["has_key"]) == ("sk-de...efgh", "sk-ot...5678", False)
     assert "sk-deepseek-abcdefgh" not in str(listed)
     assert [e["active"] for e in listed] == [False, False, False]
+
+
+async def test_the_context_window_follows_the_model_in_use_else_the_profile() -> None:
+    profile = PROFILE.model_copy(
+        update={"context": PROFILE.context.model_copy(update={"window_tokens": 128_000})}
+    )
+    store = InMemoryModelSettingsStore()
+    admin = ModelAdmin(profile, store, tenant_id="t", secret_key=KEY)
+    model = DynamicModel(profile, store, tenant_id="t", secret_key=KEY, factory=Factory(), refresh_s=0)
+    request = LlmRequest(system="s", messages=[Message.user("hi")])
+    assert model.window_tokens == 128_000
+
+    small = await admin.add_entry({**DEEPSEEK, "window_tokens": 64_000})
+    plain = await admin.add_entry({**DEEPSEEK, "label": "no window"})
+    await admin.use_entry(small["id"])
+    await model.complete(request)
+    used_small = model.window_tokens
+    shown = await admin.show()
+    await admin.use_entry(plain["id"])
+    await model.complete(request)
+
+    assert (small["window_tokens"], used_small, shown["window_tokens"]) == (64_000, 64_000, 64_000)
+    assert shown["sources"]["window_tokens"] == "db"
+    assert model.window_tokens == 128_000  # a model without one: the profile's
 
 
 async def test_using_a_model_gives_the_agent_its_fields_and_key_and_marks_it_in_use() -> None:

@@ -413,7 +413,12 @@ def test_the_list_of_models_is_stored_per_agent_and_the_settings_remember_which_
     async def check(db: AgentDatabase) -> None:
         entries = PostgresModelEntryStore(db, agent="dev")
         first = ModelEntry(
-            id="a" * 32, label="DeepSeek", provider="openai-compatible", model="m1", api_key_enc="s1"
+            id="a" * 32,
+            label="DeepSeek",
+            provider="openai-compatible",
+            model="m1",
+            api_key_enc="s1",
+            window_tokens=64_000,
         )
         second = ModelEntry(id="b" * 32, label="Claude", provider="anthropic", model="m2", reasoning="low")
 
@@ -427,10 +432,15 @@ def test_the_list_of_models_is_stored_per_agent_and_the_settings_remember_which_
         assert (await entries.delete("t", second.id), await entries.delete("t", second.id)) == (True, False)
 
         settings = PostgresModelSettingsStore(db, agent="dev")
-        await settings.save("t", StoredModelSettings(model="m1b", entry_id=first.id))
+        await settings.save("t", StoredModelSettings(model="m1b", window_tokens=64_000, entry_id=first.id))
         loaded = await settings.get("t")
         assert loaded is not None
-        assert loaded.entry_id == first.id
+        assert (loaded.entry_id, loaded.window_tokens) == (first.id, 64_000)
+        for bad in (replace(first, window_tokens=100), replace(first, window_tokens=3_000_000)):
+            with pytest.raises(Exception, match="agent_model_entry_window"):
+                await entries.save("t", bad)
+        with pytest.raises(Exception, match="agent_model_window"):
+            await settings.save("t", StoredModelSettings(window_tokens=100))
 
     _run(db_url, check)
 
@@ -468,6 +478,10 @@ def test_agent_settings_are_stored_per_agent_and_a_clear_never_lowers_the_versio
             memory_agent_chars=500,
             tokens_per_session_per_day=50_000,
             tokens_per_day=1_000_000,
+            max_steps=8,
+            max_turn_s=90.0,
+            compact_at=0.6,
+            max_tool_calls_per_step=12,
             variables={"clinic": "Pema"},
             tools={"web_fetch": True, "kb_search": False},
             updated_by="an@admin",
@@ -496,6 +510,8 @@ def test_the_database_refuses_agent_settings_outside_their_limits(db_url: str) -
             StoredAgentSettings(timezone=""),
             StoredAgentSettings(tokens_per_session_per_day=9_999),
             StoredAgentSettings(tokens_per_day=2_000_000_001),
+            StoredAgentSettings(max_steps=51),
+            StoredAgentSettings(keep_recent_ratio=0.9),
         ):
             with pytest.raises(Exception, match="agent_settings"):
                 await store.save("t", bad)

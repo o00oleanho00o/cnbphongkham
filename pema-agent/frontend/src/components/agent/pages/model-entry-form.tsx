@@ -48,6 +48,8 @@ const ERRORS: Record<string, string> = {
 const KEY_FIELD = "model-api-key";
 const MODEL_OPTIONS = "model-options";
 const NO_ENDPOINT = "Nhà cung cấp không cho xem danh sách";
+export const WINDOW_MIN = 4000;
+export const WINDOW_MAX = 2_000_000;
 
 interface Form {
   label: string;
@@ -56,6 +58,7 @@ interface Form {
   base_url: string;
   reasoning: string;
   dialect: string;
+  window_tokens: string;
   api_key: string;
 }
 
@@ -74,6 +77,7 @@ const EMPTY_FORM: Form = {
   base_url: "",
   reasoning: "",
   dialect: "",
+  window_tokens: "",
   api_key: "",
 };
 
@@ -92,14 +96,17 @@ function formOf(entry: ModelEntry | null): Form {
     base_url: entry.base_url ?? "",
     reasoning: entry.reasoning ?? "",
     dialect: entry.dialect ?? "",
+    window_tokens: entry.window_tokens === null ? "" : String(entry.window_tokens),
     api_key: "",
   };
 }
 
 const orNull = (value: string) => (value === "" ? null : value);
 
-/** What a new model sends: an empty address, effort or API kind is left out, the agent decides. */
-function newBody(form: Form): Record<string, string> {
+const windowOrNull = (value: string) => (value.trim() === "" ? null : Number(value));
+
+/** What a new model sends: an empty address, effort, API kind or window is left out, the agent decides. */
+function newBody(form: Form): Record<string, string | number> {
   const optional = (["base_url", "reasoning", "dialect", "api_key"] as const)
     .filter((key) => form[key] !== "")
     .map((key) => [key, form[key]]);
@@ -108,18 +115,23 @@ function newBody(form: Form): Record<string, string> {
     provider: form.provider,
     model: form.model.trim(),
     ...Object.fromEntries(optional),
+    ...(form.window_tokens.trim() === "" ? {} : { window_tokens: Number(form.window_tokens) }),
   };
 }
 
 /** What an edit sends: only the fields that changed; the key only when one was typed. */
-function changesOf(form: Form, entry: ModelEntry): Record<string, string | null> {
+function changesOf(form: Form, entry: ModelEntry): Record<string, string | number | null> {
   const before = formOf(entry);
   const changed = CHANGEABLE.filter((key) => form[key] !== before[key]).map((key) => [
     key,
     orNull(form[key]),
   ]);
+  const window =
+    windowOrNull(form.window_tokens) === entry.window_tokens
+      ? []
+      : [["window_tokens", windowOrNull(form.window_tokens)]];
   const key = form.api_key ? [["api_key", form.api_key]] : [];
-  return Object.fromEntries([...changed, ...key]);
+  return Object.fromEntries([...changed, ...window, ...key]);
 }
 
 export function ModelEntryForm({
@@ -299,6 +311,21 @@ export function ModelEntryForm({
               options={DIALECTS}
               value={form.dialect}
               onChange={(e) => set("dialect")(e.target.value)}
+            />
+          </Field>
+          <Field
+            label="Cửa sổ ngữ cảnh (token)"
+            hint="Model đọc được tối đa bao nhiêu token; agent dựa vào đây để biết lúc nào nén hội thoại. Để trống: dùng giá trị của profile."
+          >
+            <Input
+              type="number"
+              inputMode="numeric"
+              min={WINDOW_MIN}
+              max={WINDOW_MAX}
+              step={1}
+              value={form.window_tokens}
+              placeholder="vd: 128000"
+              onChange={(e) => set("window_tokens")(e.target.value)}
             />
           </Field>
           <Field label="Khóa API" hint={keyHint}>

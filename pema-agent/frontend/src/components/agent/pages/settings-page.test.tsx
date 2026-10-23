@@ -16,6 +16,20 @@ const SHOWN = {
   memory_enabled: true,
   memory_agent_chars: 2200,
   memory_user_chars: 1400,
+  cases_enabled: false,
+  proactive_per_person_per_day: 2,
+  tokens_per_session_per_day: 2_000_000,
+  tokens_per_day: 50_000_000,
+  max_steps: 10,
+  max_output_tokens: 2048,
+  max_turn_s: 300,
+  max_turn_tokens: null,
+  stop_after_repeats: 10,
+  error_streak_stop: 5,
+  max_parallel_tools: 4,
+  max_tool_calls_per_step: 8,
+  compact_at: 0.75,
+  keep_recent_ratio: 0.2,
   sources: {
     timezone: "profile",
     failure_reply: "profile",
@@ -25,6 +39,20 @@ const SHOWN = {
     memory_enabled: "profile",
     memory_agent_chars: "profile",
     memory_user_chars: "profile",
+    cases_enabled: "profile",
+    proactive_per_person_per_day: "profile",
+    tokens_per_session_per_day: "profile",
+    tokens_per_day: "profile",
+    max_steps: "profile",
+    max_output_tokens: "profile",
+    max_turn_s: "profile",
+    max_turn_tokens: "profile",
+    stop_after_repeats: "profile",
+    error_streak_stop: "profile",
+    max_parallel_tools: "profile",
+    max_tool_calls_per_step: "profile",
+    compact_at: "profile",
+    keep_recent_ratio: "profile",
   },
   stored: false,
   version: 0,
@@ -159,6 +187,45 @@ describe("a save", () => {
     fireEvent.change(await screen.findByDisplayValue("2200"), { target: { value: "50" } });
 
     expect(screen.getByText("Trong khoảng 100 - 20000")).toBeTruthy();
+    expect(
+      (screen.getByRole("button", { name: "Lưu thay đổi" }) as HTMLButtonElement).disabled,
+    ).toBe(true);
+    expect(mutations(calls)).toEqual([]);
+  });
+
+  it("sends_the_limits_of_a_turn_and_the_switch_of_the_cases", async () => {
+    const calls = fakeAgent();
+    render(<SettingsPage />);
+
+    fireEvent.change(await screen.findByLabelText("Số bước tối đa mỗi lượt"), {
+      target: { value: "4" },
+    });
+    fireEvent.change(screen.getByLabelText("Nén khi hội thoại dùng tới (tỉ lệ cửa sổ)"), {
+      target: { value: "0.6" },
+    });
+    fireEvent.click(screen.getByRole("switch", { name: "Bật ca chủ động" }));
+    fireEvent.click(screen.getByRole("button", { name: "Lưu thay đổi" }));
+
+    await waitFor(() =>
+      expect(mutations(calls)).toEqual([
+        {
+          method: "PATCH",
+          url: SETTINGS_URL,
+          body: { max_steps: 4, compact_at: 0.6, cases_enabled: true },
+        },
+      ]),
+    );
+  });
+
+  it("refuses_a_limit_out_of_range_and_shows_the_bounds", async () => {
+    const calls = fakeAgent();
+    render(<SettingsPage />);
+
+    fireEvent.change(await screen.findByLabelText("Tool chạy song song tối đa"), {
+      target: { value: "40" },
+    });
+
+    expect(screen.getByText("Trong khoảng 1 - 32")).toBeTruthy();
     expect(
       (screen.getByRole("button", { name: "Lưu thay đổi" }) as HTMLButtonElement).disabled,
     ).toBe(true);

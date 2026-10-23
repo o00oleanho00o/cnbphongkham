@@ -9,7 +9,7 @@
     "repository": {
       "url": "git@github-personal20:o00oleanho00o/cnbphongkham.git",
       "link_mode": "local-only",
-      "revision": "64a3919d7a7c84522c48791708ad44fc288fed3b"
+      "revision": "1cbd95d28f791363b9885ff29a6476d752097c91"
     }
   },
   "layout": {
@@ -554,6 +554,46 @@
           "type": "bigint"
         },
         {
+          "name": "max_steps",
+          "type": "integer"
+        },
+        {
+          "name": "max_output_tokens",
+          "type": "integer"
+        },
+        {
+          "name": "max_turn_s",
+          "type": "double precision"
+        },
+        {
+          "name": "max_turn_tokens",
+          "type": "integer"
+        },
+        {
+          "name": "stop_after_repeats",
+          "type": "integer"
+        },
+        {
+          "name": "error_streak_stop",
+          "type": "integer"
+        },
+        {
+          "name": "compact_at",
+          "type": "double precision"
+        },
+        {
+          "name": "keep_recent_ratio",
+          "type": "double precision"
+        },
+        {
+          "name": "max_parallel_tools",
+          "type": "integer"
+        },
+        {
+          "name": "max_tool_calls_per_step",
+          "type": "integer"
+        },
+        {
           "name": "version",
           "type": "integer"
         },
@@ -612,6 +652,10 @@
         {
           "name": "dialect",
           "type": "text"
+        },
+        {
+          "name": "window_tokens",
+          "type": "integer"
         },
         {
           "name": "api_key_enc",
@@ -684,6 +728,10 @@
         {
           "name": "dialect",
           "type": "text"
+        },
+        {
+          "name": "window_tokens",
+          "type": "integer"
         },
         {
           "name": "api_key_enc",

@@ -1,6 +1,7 @@
-// Cài đặt của agent: time zone, the reply after a failed turn, the variables, the persona (Vai trò), the rules and
-// the memory. Each field says where its value comes from (the stored one, or the profile's) and can go back to the
-// profile; a save sends only what changed. A persona or rules text kept in the system hides the file in git, so the
+// Cài đặt của agent: time zone, the reply after a failed turn, the variables, the persona (Vai trò), the rules,
+// the memory, the cases, the token budget and the limits of a turn and of compaction. Each field says where its
+// value comes from (the stored one, or the profile's) and can go back to the profile; a save sends only what
+// changed. A persona or rules text kept in the system hides the file in git, so the
 // page warns and offers "Dùng lại file". Changes apply from the next reply of the agent.
 import { useEffect, useState } from "react";
 
@@ -26,6 +27,8 @@ import {
   draftOf,
   isAgentSettings,
   isStored,
+  type NumberField,
+  NUMBER_SPECS,
   patchOf,
   SETTINGS_PATH,
   type SettingField,
@@ -44,6 +47,33 @@ const MEMORY_LABELS = {
   memory_agent_chars: "Trí nhớ về agent (số ký tự)",
   memory_user_chars: "Trí nhớ về khách (số ký tự)",
 } as const;
+
+const NUMBER_GROUPS: readonly { title: string; hint: string; fields: readonly NumberField[] }[] = [
+  {
+    title: "Ngân sách token",
+    hint: "Trần token mỗi ngày, tính theo giờ địa phương. Lượt đang chạy khi chạm trần vẫn chạy hết.",
+    fields: ["tokens_per_session_per_day", "tokens_per_day"],
+  },
+  {
+    title: "Giới hạn mỗi lượt trả lời",
+    hint: "Giới hạn cho một lượt agent trả lời (một tin khách có thể kéo theo nhiều bước nghĩ và gọi tool).",
+    fields: [
+      "max_steps",
+      "max_output_tokens",
+      "max_turn_s",
+      "max_turn_tokens",
+      "stop_after_repeats",
+      "error_streak_stop",
+      "max_parallel_tools",
+      "max_tool_calls_per_step",
+    ],
+  },
+  {
+    title: "Nén hội thoại dài",
+    hint: "Khi hội thoại gần đầy cửa sổ ngữ cảnh của model (đặt ở trang Model), phần cũ được tóm tắt.",
+    fields: ["compact_at", "keep_recent_ratio"],
+  },
+];
 
 const errorText = (err: unknown) => (err instanceof Error ? err.message : "Lỗi");
 
@@ -164,6 +194,31 @@ export function SettingsPage() {
     />
   );
 
+  const numberField = (field: NumberField) => {
+    const spec = NUMBER_SPECS[field];
+    return (
+      <div key={field}>
+        {head(field, spec.label, `setting-${field}`)}
+        <Input
+          id={`setting-${field}`}
+          type="number"
+          inputMode={spec.integer ? "numeric" : "decimal"}
+          step={spec.integer ? 1 : "any"}
+          min={spec.min}
+          max={spec.max}
+          placeholder={spec.optional ? "Không giới hạn" : undefined}
+          value={draft[field]}
+          onChange={(e) => change({ [field]: e.target.value })}
+        />
+        <FieldError message={errors[field]} />
+        <p className="mt-1 text-label text-ink-soft">
+          {spec.min} - {spec.max}
+          {spec.hint ? `. ${spec.hint}` : ""}
+        </p>
+      </div>
+    );
+  };
+
   const textCard = (field: TextField, title: string, label: string, hint: string) => (
     <Card title={title}>
       <div className="space-y-3">
@@ -202,7 +257,7 @@ export function SettingsPage() {
     <div className="space-y-4">
       <PageHeader
         title="Cài đặt"
-        subtitle="Múi giờ, lời trả lời khi lỗi, biến, vai trò, quy tắc và trí nhớ của agent. Thay đổi áp dụng từ lượt trả lời tiếp theo của agent, không cần khởi động lại."
+        subtitle="Múi giờ, lời trả lời khi lỗi, biến, vai trò, quy tắc, trí nhớ, ca chủ động và các giới hạn của agent. Thay đổi áp dụng từ lượt trả lời tiếp theo của agent, không cần khởi động lại."
       />
       <Card title="Chung">
         <div className="space-y-4">
@@ -300,6 +355,35 @@ export function SettingsPage() {
           ))}
         </div>
       </Card>
+      <Card title="Ca chủ động">
+        <div className="space-y-4">
+          <p className="text-small text-ink-soft">
+            Tin agent tự nhắn (nhắc lịch, chăm sóc lại). Tắt là công tắc khẩn: không ca nào gửi gì.
+          </p>
+          <div>
+            {head("cases_enabled", "Ca chủ động")}
+            <div className="flex items-center gap-2">
+              <Toggle
+                label="Bật ca chủ động"
+                checked={draft.cases_enabled}
+                onChange={(next) => change({ cases_enabled: next })}
+              />
+              <span className="text-body text-ink">
+                {draft.cases_enabled ? "Đang bật" : "Đang tắt"}
+              </span>
+            </div>
+          </div>
+          {numberField("proactive_per_person_per_day")}
+        </div>
+      </Card>
+      {NUMBER_GROUPS.map((group) => (
+        <Card key={group.title} title={group.title}>
+          <div className="space-y-4">
+            <p className="text-small text-ink-soft">{group.hint}</p>
+            {group.fields.map(numberField)}
+          </div>
+        </Card>
+      ))}
       <Card>
         <div className="space-y-3">
           {message && <Notice tone={message.tone}>{message.text}</Notice>}

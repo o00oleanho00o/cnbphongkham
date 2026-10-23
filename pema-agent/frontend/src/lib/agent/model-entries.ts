@@ -13,6 +13,8 @@ export interface ModelEntry {
   base_url: string | null;
   reasoning: string | null;
   dialect: string | null;
+  /** The model's context window (when the agent compacts); null: the profile's. */
+  window_tokens: number | null;
   /** Masked: the key itself never comes back. */
   api_key: string;
   has_key: boolean;

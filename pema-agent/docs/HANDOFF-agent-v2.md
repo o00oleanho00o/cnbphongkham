@@ -26,6 +26,14 @@ revision files `0001_agent_rt` … `0012_*` or plugin files `0002_*`/`0003_*`, t
   **Reminders now need `cases_enabled` on** (`infra/README.md` step 5).
 - **Not done:** `case_need_human` with resume/close; the frontend page for cases and for the token budget
   settings.
+- **Limits from the dashboard (2026-10-23, plan section 8):** ten limits of a turn and of compaction
+  (`LIMIT_FIELDS` in `agent_settings.py`: `max_steps`, `max_output_tokens`, `max_turn_s`, `max_turn_tokens`,
+  `stop_after_repeats`, `error_streak_stop`, `compact_at`, `keep_recent_ratio`, `max_parallel_tools`,
+  `max_tool_calls_per_step`) live in `agent_settings`, laid over the profile, through `PATCH /v1/admin/settings`
+  and `agent settings set`. Each model of the list and the model in use carry `window_tokens`; compaction reads
+  the window of the model in use at each check (`ContextManager(window=...)`), the profile's otherwise.
+  Migration `0008_agent_limits`. Frontend: the Cài đặt page edits them (and the cases switch, the daily cap,
+  the token budget), the Model page the window.
 - **Follow-up is the plugin `follow_up` (2026-10-23, plan section 7):** a case on the engine (`quiet` → `judge` →
   `check` → `write`), opened by the agent's answer in a followed one-to-one chat. Jev judges when it is on and
   sure (`judge_with_jev`, `jev_min_confidence` 0.6), else the chat model with the old prompt. Its messages count

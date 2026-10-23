@@ -249,6 +249,7 @@ class ModelSettingsPatch(_Body):
     base_url: str | None = Field(default=None, max_length=500, pattern=r"^https?://")
     reasoning: ReasoningEffort | None = None
     dialect: OpenAIDialect | None = None
+    window_tokens: int | None = Field(default=None, ge=4_000, le=2_000_000)
     api_key: str | None = Field(default=None, max_length=500)
 
 
@@ -267,6 +268,16 @@ class AgentSettingsPatch(_Body):
     proactive_per_person_per_day: int | None = Field(default=None, ge=1, le=20)
     tokens_per_session_per_day: int | None = Field(default=None, ge=10_000, le=100_000_000)
     tokens_per_day: int | None = Field(default=None, ge=100_000, le=2_000_000_000)
+    max_steps: int | None = Field(default=None, ge=1, le=50)
+    max_output_tokens: int | None = Field(default=None, ge=64, le=32_768)
+    max_turn_s: float | None = Field(default=None, ge=10, le=1_800)
+    max_turn_tokens: int | None = Field(default=None, ge=1_000, le=10_000_000)
+    stop_after_repeats: int | None = Field(default=None, ge=2, le=50)
+    error_streak_stop: int | None = Field(default=None, ge=2, le=50)
+    compact_at: float | None = Field(default=None, ge=0.3, le=0.95)
+    keep_recent_ratio: float | None = Field(default=None, ge=0, le=0.6)
+    max_parallel_tools: int | None = Field(default=None, ge=1, le=32)
+    max_tool_calls_per_step: int | None = Field(default=None, ge=1, le=64)
     variables: dict[str, str | None] | None = None
 
 
@@ -292,6 +303,7 @@ class ModelEntryBody(_Body):
     base_url: str | None = Field(default=None, max_length=500, pattern=r"^https?://")
     reasoning: ReasoningEffort | None = None
     dialect: OpenAIDialect | None = None
+    window_tokens: int | None = Field(default=None, ge=4_000, le=2_000_000)
     api_key: str | None = Field(default=None, max_length=500)
 
 
@@ -304,6 +316,7 @@ class ModelEntryPatch(_Body):
     base_url: str | None = Field(default=None, max_length=500, pattern=r"^https?://")
     reasoning: ReasoningEffort | None = None
     dialect: OpenAIDialect | None = None
+    window_tokens: int | None = Field(default=None, ge=4_000, le=2_000_000)
     api_key: str | None = Field(default=None, max_length=500)
 
 

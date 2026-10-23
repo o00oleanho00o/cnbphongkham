@@ -1,6 +1,7 @@
 // The fake agent's own settings and tool switches (`/v1/admin/settings`, `/v1/admin/tools`), kept in memory the way
 // the backend keeps them in its table: a value sets a field and flips its source to "db", null gives it back to the
 // profile, `variables` holds only the values an admin changed. FICTIONAL profile. Not in the clinic contract.
+import { NUMBER_FIELDS, NUMBER_SPECS } from "../src/lib/agent/agent-settings";
 import { type Reply, type Router, bodyOf } from "./core";
 
 const PROFILE = {
@@ -15,6 +16,20 @@ const PROFILE = {
   memory_enabled: true,
   memory_agent_chars: 2200,
   memory_user_chars: 1400,
+  cases_enabled: false,
+  proactive_per_person_per_day: 2,
+  tokens_per_session_per_day: 2_000_000,
+  tokens_per_day: 50_000_000,
+  max_steps: 10,
+  max_output_tokens: 2048,
+  max_turn_s: 300,
+  max_turn_tokens: null as number | null,
+  stop_after_repeats: 10,
+  error_streak_stop: 5,
+  max_parallel_tools: 4,
+  max_tool_calls_per_step: 8,
+  compact_at: 0.75,
+  keep_recent_ratio: 0.2,
 };
 
 type Scalars = Omit<typeof PROFILE, "variables">;
@@ -145,10 +160,20 @@ function problemOf(next: Stored): string | null {
   if (memory.some((n) => !Number.isInteger(n) || n < 100 || n > 20000)) {
     return "memory_agent_chars is between 100 and 20000";
   }
+  const outside = NUMBER_FIELDS.find((name) => !withinSpec(name, next.scalars[name]));
+  if (outside)
+    return `${outside} is between ${NUMBER_SPECS[outside].min} and ${NUMBER_SPECS[outside].max}`;
   return (
     missingVariable("persona", scalars.persona, next) ??
     missingVariable("rules", scalars.rules, next)
   );
+}
+
+function withinSpec(name: (typeof NUMBER_FIELDS)[number], value: unknown): boolean {
+  if (value === undefined || value === null) return true;
+  const spec = NUMBER_SPECS[name];
+  if (typeof value !== "number" || (spec.integer && !Number.isInteger(value))) return false;
+  return value >= spec.min && value <= spec.max;
 }
 
 function validZone(zone: string): boolean {

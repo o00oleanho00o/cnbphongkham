@@ -30,6 +30,8 @@ class ModelSettings:
     timeout_s: float
     reasoning: ReasoningEffort | None
     dialect: OpenAIDialect | None = None
+    window_tokens: int | None = None
+    """The model's context window: when to compact (``[context] window_tokens`` of the profile by default)."""
 
 
 def resolve_model_settings(profile: Profile) -> ModelSettings:
@@ -42,6 +44,7 @@ def resolve_model_settings(profile: Profile) -> ModelSettings:
         timeout_s=profile.model.timeout_s,
         reasoning=profile.model.reasoning,
         dialect=profile.model.dialect,
+        window_tokens=profile.context.window_tokens,
     )
 
 

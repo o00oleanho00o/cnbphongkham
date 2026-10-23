@@ -167,6 +167,7 @@ type ModelShown = {
   base_url: string | null;
   reasoning: string | null;
   dialect: string | null;
+  window_tokens: number | null;
   api_key: string;
   api_key_broken: boolean;
   sources: Record<string, "db" | "profile" | "unset">;
@@ -180,6 +181,7 @@ const MODEL_FROM_PROFILE: ModelShown = {
   base_url: "https://api.deepseek.com/v1",
   reasoning: null,
   dialect: "deepseek",
+  window_tokens: 128000,
   api_key: "",
   api_key_broken: false,
   sources: {
@@ -188,6 +190,7 @@ const MODEL_FROM_PROFILE: ModelShown = {
     base_url: "profile",
     reasoning: "profile",
     dialect: "profile",
+    window_tokens: "profile",
     api_key: "unset",
   },
   stored: false,
@@ -220,6 +223,7 @@ type EntryFields = {
   base_url: string | null;
   reasoning: string | null;
   dialect: string | null;
+  window_tokens: number | null;
 };
 type EntryRow = EntryFields & { id: string; has_key: boolean };
 
@@ -237,6 +241,7 @@ let entries: EntryRow[] = [
     base_url: "https://api.deepseek.com",
     reasoning: null,
     dialect: "deepseek",
+    window_tokens: 128000,
   }),
   sampleEntry("b", {
     label: "DeepSeek dự phòng",
@@ -245,6 +250,7 @@ let entries: EntryRow[] = [
     base_url: "https://api.deepseek.com",
     reasoning: null,
     dialect: "deepseek",
+    window_tokens: null,
   }),
   sampleEntry("c", {
     label: "OpenAI chăm sóc khách",
@@ -253,6 +259,7 @@ let entries: EntryRow[] = [
     base_url: "https://api.openai.com/v1",
     reasoning: null,
     dialect: "openai",
+    window_tokens: 400000,
   }),
   sampleEntry(
     "d",
@@ -263,6 +270,7 @@ let entries: EntryRow[] = [
       base_url: null,
       reasoning: null,
       dialect: null,
+      window_tokens: 200000,
     },
     false,
   ),
@@ -295,6 +303,7 @@ function applyEntry(entry: EntryRow): void {
     base_url: entry.base_url,
     reasoning: entry.reasoning,
     dialect: entry.dialect,
+    window_tokens: entry.window_tokens ?? MODEL_FROM_PROFILE.window_tokens,
     api_key: entry.has_key ? "sk-…mẫu" : "",
     sources: { ...model.sources, api_key: entry.has_key ? "db" : "unset" },
     stored: true,
@@ -704,6 +713,7 @@ export function buildAgentRouter(): Router {
       base_url: body.base_url ?? null,
       reasoning: body.reasoning ?? null,
       dialect: body.dialect ?? null,
+      window_tokens: body.window_tokens ?? null,
       has_key: Boolean(body.api_key),
     };
     entries = [...entries, row];

@@ -97,6 +97,20 @@ def test_the_threshold_leaves_room_for_the_reply() -> None:
     assert policy.threshold(5000) == 0
 
 
+def test_the_window_is_read_at_each_check_so_a_model_changed_at_runtime_is_followed() -> None:
+    window: list[int | None] = [None]
+    policy = ContextPolicy(window_tokens=1000, compact_at=0.75, keep_recent_ratio=0.2)
+    manager = ContextManager(policy, ScriptedModel([]), window=lambda: window[0])
+    request = LlmRequest(system="s" * 3000, messages=[Message.user("hi")], max_output_tokens=200)
+
+    assert manager.policy.window_tokens == 1000  # nothing given: the policy's
+    assert manager.over_budget(request)
+    window[0] = 100_000
+    assert manager.policy.window_tokens == 100_000
+    assert manager.policy.compact_at == 0.75
+    assert not manager.over_budget(request)
+
+
 def test_the_cut_keeps_as_many_recent_turns_as_the_budget_allows() -> None:
     def cut(budget: int, keep_from: int = 8, start: int = 0) -> int | None:
         return choose_cut(HISTORY, start=start, keep_from=keep_from, keep_budget=budget, estimator=ESTIMATOR)

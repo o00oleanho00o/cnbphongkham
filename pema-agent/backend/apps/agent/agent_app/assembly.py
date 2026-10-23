@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Collection, Mapping, Sequence
+from collections.abc import Callable, Collection, Mapping, Sequence
 from dataclasses import dataclass, replace
 from typing import Any
 
@@ -46,11 +46,14 @@ def build_agent(
     plugins: Contributions | None = None,
     disabled_tools: Collection[str] = (),
     case_tools: Sequence[ToolSpec[Any]] = (),
+    window: Callable[[], int | None] | None = None,
 ) -> Agent:
     """Without a backend or store, memory and agent-written skills live in process memory. A given ``model``
     (the settings-aware one of a service) picks its own reasoning effort, so the policy leaves it unset.
     ``plugins`` adds their tools, prompt sections (after the profile's, unless it lists them) and hooks;
-    a plugin tool named in ``disabled_tools`` is left out (an admin switched it off)."""
+    a plugin tool named in ``disabled_tools`` is left out (an admin switched it off). ``window`` is the
+    context window of the model in use when it changes at runtime; compaction still needs the profile's
+    ``[context] window_tokens`` to be on."""
     name = profile.agent.name
     added = plugins or Contributions()
     client = model or build_model(profile, fake=fake)
@@ -66,7 +69,7 @@ def build_agent(
             tools.register(spec)
     prompt = build_prompt(profile, tool_names=tools.names(), memory=memory, extra_sections=added.sections)
     context_policy = profile.context_policy()
-    context = ContextManager(context_policy, client) if context_policy else None
+    context = ContextManager(context_policy, client, window=window) if context_policy else None
     if model is not None:
         policy = replace(profile.loop_policy(), reasoning=None)
     else:

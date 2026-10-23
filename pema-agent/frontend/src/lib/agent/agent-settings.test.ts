@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 import {
   type AgentSettings,
   draftErrors,
+  numberError,
   draftOf,
   isAgentSettings,
   isStored,
@@ -21,6 +22,20 @@ const SHOWN: AgentSettings = {
   memory_enabled: true,
   memory_agent_chars: 2200,
   memory_user_chars: 1400,
+  cases_enabled: false,
+  proactive_per_person_per_day: 2,
+  tokens_per_session_per_day: 2_000_000,
+  tokens_per_day: 50_000_000,
+  max_steps: 10,
+  max_output_tokens: 2048,
+  max_turn_s: 300,
+  max_turn_tokens: null,
+  stop_after_repeats: 10,
+  error_streak_stop: 5,
+  max_parallel_tools: 4,
+  max_tool_calls_per_step: 8,
+  compact_at: 0.75,
+  keep_recent_ratio: 0.2,
   sources: {
     timezone: "profile",
     failure_reply: "profile",
@@ -30,6 +45,20 @@ const SHOWN: AgentSettings = {
     memory_enabled: "profile",
     memory_agent_chars: "profile",
     memory_user_chars: "profile",
+    cases_enabled: "profile",
+    proactive_per_person_per_day: "profile",
+    tokens_per_session_per_day: "profile",
+    tokens_per_day: "profile",
+    max_steps: "profile",
+    max_output_tokens: "profile",
+    max_turn_s: "profile",
+    max_turn_tokens: "profile",
+    stop_after_repeats: "profile",
+    error_streak_stop: "profile",
+    max_parallel_tools: "profile",
+    max_tool_calls_per_step: "profile",
+    compact_at: "profile",
+    keep_recent_ratio: "profile",
   },
   stored: true,
   version: 3,
@@ -45,6 +74,29 @@ describe("patchOf", () => {
     const draft = { ...draftOf(SHOWN), timezone: "Asia/Bangkok", memory_user_chars: "3000" };
 
     expect(patchOf(draft, SHOWN)).toEqual({ timezone: "Asia/Bangkok", memory_user_chars: 3000 });
+  });
+
+  it("sends_the_limits_as_numbers_and_an_empty_optional_one_as_null", () => {
+    const shown = { ...SHOWN, max_turn_tokens: 50_000 };
+    const draft = {
+      ...draftOf(shown),
+      max_steps: "4",
+      compact_at: "0.6",
+      max_turn_tokens: "",
+      cases_enabled: true,
+    };
+
+    expect(patchOf(draft, shown)).toEqual({
+      max_steps: 4,
+      compact_at: 0.6,
+      max_turn_tokens: null,
+      cases_enabled: true,
+    });
+  });
+
+  it("leaves_an_unset_optional_limit_alone", () => {
+    expect(draftOf(SHOWN).max_turn_tokens).toBe("");
+    expect(patchOf(draftOf(SHOWN), SHOWN)).toEqual({});
   });
 
   it("sends_the_memory_switch_as_a_boolean", () => {
@@ -126,5 +178,22 @@ describe("source and shape", () => {
       isAgentSettings({ error: "x" }),
       isAgentSettings(null),
     ]).toEqual([true, false, false]);
+  });
+});
+
+describe("numberError", () => {
+  it("refuses_what_the_agent_would_refuse", () => {
+    expect(numberError("max_steps", "51")).toBe("Trong khoảng 1 - 50");
+    expect(numberError("max_steps", "2.5")).toBe("Nhập một số nguyên");
+    expect(numberError("max_steps", "")).toBe("Nhập một số");
+    expect(numberError("compact_at", "0.2")).toBe("Trong khoảng 0.3 - 0.95");
+    expect(numberError("compact_at", "0.5")).toBeNull();
+    expect(numberError("max_turn_tokens", "")).toBeNull();
+  });
+
+  it("blocks_the_save_through_draftErrors", () => {
+    expect(draftErrors({ ...draftOf(SHOWN), keep_recent_ratio: "0.9" })).toEqual({
+      keep_recent_ratio: "Trong khoảng 0 - 0.6",
+    });
   });
 });

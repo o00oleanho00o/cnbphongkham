@@ -42,7 +42,7 @@ SECRET_KEY_ENV: Final = "AGENT_SECRET_ENCRYPTION_KEY"  # noqa: S105 - a setting'
 """The service setting holding the secret key; the CLI fills it from the home folder, not the environment."""
 REFRESH_S: Final = 5.0
 TEST_TIMEOUT_S: Final = 30.0
-SETTING_FIELDS: Final = ("provider", "model", "base_url", "reasoning", "dialect")
+SETTING_FIELDS: Final = ("provider", "model", "base_url", "reasoning", "dialect", "window_tokens")
 NO_SECRET_KEY: Final = "the service has no secret key (agent serve creates one in its home folder)"  # noqa: S105
 
 FieldSource = Literal["db", "profile", "unset"]
@@ -75,6 +75,7 @@ class StoredModelSettings:
     base_url: str | None = None
     reasoning: ReasoningEffort | None = None
     dialect: OpenAIDialect | None = None
+    window_tokens: int | None = None
     api_key_enc: str | None = None
     entry_id: str | None = None
     """The model of the list these fields were copied from; None once they were changed by hand."""
@@ -144,7 +145,7 @@ class InMemoryModelSettingsStore:
 
 
 _GET = sql(
-    "SELECT provider, model, base_url, reasoning, dialect, api_key_enc, entry_id, version "
+    "SELECT provider, model, base_url, reasoning, dialect, window_tokens, api_key_enc, entry_id, version "
     "FROM agent_rt.agent_model_settings WHERE tenant_id = :tenant_id AND agent = :agent"
 )
 _VERSION = sql(
@@ -152,11 +153,12 @@ _VERSION = sql(
 )
 _SAVE = sql(
     "INSERT INTO agent_rt.agent_model_settings (tenant_id, agent, provider, model, base_url, reasoning, "
-    "dialect, api_key_enc, entry_id) VALUES (:tenant_id, :agent, :provider, :model, :base_url, :reasoning, "
-    ":dialect, :api_key_enc, :entry_id) ON CONFLICT (tenant_id, agent) DO UPDATE SET "
+    "dialect, window_tokens, api_key_enc, entry_id) VALUES (:tenant_id, :agent, :provider, :model, "
+    ":base_url, :reasoning, :dialect, :window_tokens, :api_key_enc, :entry_id) "
+    "ON CONFLICT (tenant_id, agent) DO UPDATE SET "
     "provider = EXCLUDED.provider, "
     "model = EXCLUDED.model, base_url = EXCLUDED.base_url, reasoning = EXCLUDED.reasoning, "
-    "dialect = EXCLUDED.dialect, "
+    "dialect = EXCLUDED.dialect, window_tokens = EXCLUDED.window_tokens, "
     "api_key_enc = EXCLUDED.api_key_enc, entry_id = EXCLUDED.entry_id, "
     "version = agent_rt.agent_model_settings.version + 1, "
     "updated_at = now() RETURNING version"
@@ -183,6 +185,7 @@ class PostgresModelSettingsStore:
                 base_url=row.base_url,
                 reasoning=row.reasoning,
                 dialect=row.dialect,
+                window_tokens=row.window_tokens,
                 api_key_enc=row.api_key_enc,
                 entry_id=row.entry_id,
                 version=row.version,
@@ -250,6 +253,14 @@ class DynamicModel:
             return self._resolved.settings.model
         return resolve_model_settings(self._profile).model
 
+    @property
+    def window_tokens(self) -> int | None:
+        """The context window of the model in use (seen at the last check of the settings), else the
+        profile's: the agent's compaction follows a model changed at runtime."""
+        if self._resolved is not None:
+            return self._resolved.settings.window_tokens
+        return resolve_model_settings(self._profile).window_tokens
+
     def invalidate(self) -> None:
         self._checked = -math.inf
 
@@ -314,6 +325,7 @@ class ModelAdmin:
             "base_url": settings.base_url,
             "reasoning": settings.reasoning,
             "dialect": settings.dialect,
+            "window_tokens": settings.window_tokens,
             "api_key": mask_secret(settings.api_key),
             "api_key_broken": resolved.api_key_broken,
             "sources": dict(resolved.sources),
@@ -388,7 +400,8 @@ class ModelAdmin:
         return {"entries": [self._shown(e, active) for e in await self._entries.list(self._tenant_id)]}
 
     async def add_entry(self, fields: Mapping[str, Any]) -> dict[str, Any]:
-        """``fields``: label, provider, model and optionally base_url, reasoning, dialect, api_key."""
+        """``fields``: label, provider, model and optionally base_url, reasoning, dialect, window_tokens,
+        api_key."""
         if len(await self._entries.list(self._tenant_id)) >= MAX_ENTRIES:
             raise ModelEntryError("list_full", f"the list holds at most {MAX_ENTRIES} models")
         entry = ModelEntry(
@@ -399,6 +412,7 @@ class ModelAdmin:
             base_url=fields.get("base_url"),
             reasoning=fields.get("reasoning"),
             dialect=fields.get("dialect"),
+            window_tokens=fields.get("window_tokens"),
             api_key_enc=self._sealed(fields.get("api_key")),
         )
         await self._entries.save(self._tenant_id, entry)
@@ -411,7 +425,7 @@ class ModelAdmin:
         entry = await self._entry(entry_id)
         updates: dict[str, Any] = {
             name: changes[name]
-            for name in ("label", "provider", "model", "base_url", "reasoning", "dialect")
+            for name in ("label", "provider", "model", "base_url", "reasoning", "dialect", "window_tokens")
             if name in changes
         }
         if "api_key" in changes and changes["api_key"] != "":
@@ -468,6 +482,7 @@ class ModelAdmin:
             base_url=entry.base_url,
             reasoning=entry.reasoning,
             dialect=entry.dialect,
+            window_tokens=entry.window_tokens or self._profile.context.window_tokens,
             api_key=api_key,
         )
 
@@ -481,6 +496,7 @@ class ModelAdmin:
             "base_url": entry.base_url,
             "reasoning": entry.reasoning,
             "dialect": entry.dialect,
+            "window_tokens": entry.window_tokens,
             "api_key": mask_secret(api_key),
             "has_key": entry.api_key_enc is not None,
             "api_key_broken": broken,
@@ -496,6 +512,7 @@ class ModelAdmin:
             base_url=entry.base_url,
             reasoning=entry.reasoning,
             dialect=entry.dialect,
+            window_tokens=entry.window_tokens,
             api_key_enc=entry.api_key_enc,
             entry_id=entry.id,
         )

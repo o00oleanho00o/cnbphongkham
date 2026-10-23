@@ -164,6 +164,32 @@ async def test_cases_are_off_until_switched_on_and_the_daily_cap_has_bounds() ->
     assert settings.effective.cases == CasesConfig(False, 2)
 
 
+async def test_the_limits_of_a_turn_and_of_compaction_are_laid_over_the_profile_and_have_bounds() -> None:
+    settings = AgentSettings(_profile(), InMemoryAgentSettingsStore(), tenant_id="t")
+    before = settings.effective.profile
+
+    shown = await settings.update(
+        {"max_steps": 3, "max_turn_s": 60.0, "compact_at": 0.5, "max_parallel_tools": 2}
+    )
+
+    laid = settings.effective.profile
+    assert (laid.loop.max_steps, laid.loop.max_turn_s) == (3, 60.0)
+    assert (laid.context.compact_at, laid.guards.max_parallel_tools) == (0.5, 2)
+    assert laid.loop_policy().max_steps == 3
+    assert (shown["max_steps"], shown["compact_at"], shown["sources"]["max_steps"]) == (3, 0.5, "db")
+    assert shown["max_output_tokens"] == before.loop.max_output_tokens
+    assert shown["sources"]["max_output_tokens"] == "profile"
+    for name, refused in (("max_steps", 51), ("compact_at", 0.2), ("keep_recent_ratio", 0.7)):
+        with pytest.raises(SettingsError):
+            await settings.update({name: refused})
+    with pytest.raises(SettingsError, match="stop_after_repeats"):  # not above the last reminder (8)
+        await settings.update({"stop_after_repeats": 5})
+    await settings.update(
+        {"max_steps": None, "max_turn_s": None, "compact_at": None, "max_parallel_tools": None}
+    )
+    assert settings.effective.profile.loop.max_steps == before.loop.max_steps
+
+
 async def test_the_daily_token_budget_has_a_default_and_bounds() -> None:
     settings = AgentSettings(_profile(), InMemoryAgentSettingsStore(), tenant_id="t")
     assert settings.effective.budget == TokenBudget()
@@ -323,6 +349,16 @@ async def test_the_tool_routes_list_and_switch() -> None:
     assert "get_datetime" not in runtime.agent.tools.names()
     assert (missing.status_code, missing.json()["error"]["kind"]) == (404, "unknown_tool")
     assert bad_body.status_code == 422
+
+
+async def test_the_limits_are_changed_through_the_settings_route_within_bounds() -> None:
+    client, _ = _service()
+    async with client:
+        changed = await client.patch("/v1/admin/settings", headers=ADMIN, json={"max_steps": 4})
+        refused = await client.patch("/v1/admin/settings", headers=ADMIN, json={"max_turn_s": 5})
+
+    assert (changed.json()["max_steps"], changed.json()["sources"]["max_steps"]) == (4, "db")
+    assert refused.status_code == 422
 
 
 async def test_the_settings_routes_need_the_admin_scope() -> None:

@@ -15,6 +15,7 @@ const entry = (id: string, label: string, model: string, host: string, extra = {
   base_url: host ? `https://${host}` : null,
   reasoning: null,
   dialect: null,
+  window_tokens: null,
   api_key: "sk-…1234",
   has_key: true,
   api_key_broken: false,
@@ -284,6 +285,20 @@ describe("changing a model", () => {
       url: `/agent/v1/admin/model/entries/${"b".repeat(32)}`,
       body: { model: "deepseek-reasoner" },
     });
+  });
+
+  it("sends_the_context_window_as_a_number_and_an_emptied_one_as_null", async () => {
+    // Given
+    const calls = fakeAgent();
+    await openEdit();
+
+    // When
+    fireEvent.change(screen.getByLabelText(/^Cửa sổ ngữ cảnh/), { target: { value: "64000" } });
+    fireEvent.click(screen.getByRole("button", { name: "Lưu thay đổi" }));
+
+    // Then
+    await waitFor(() => expect(mutations(calls)).toHaveLength(1));
+    expect(mutations(calls)[0].body).toEqual({ window_tokens: 64000 });
   });
 
   it("asks_for_the_list_with_the_stored_key_of_that_model", async () => {

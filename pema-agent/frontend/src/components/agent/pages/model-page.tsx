@@ -285,7 +285,12 @@ function EntryRow({
     <div className="flex flex-wrap items-center gap-3 px-1 py-3">
       <div className="min-w-0 flex-1 basis-56">
         <p className="truncate font-semibold text-ink">{entry.label}</p>
-        <p className="truncate text-small text-ink-soft">{entry.model}</p>
+        <p className="truncate text-small text-ink-soft">
+          {entry.model}
+          {entry.window_tokens === null
+            ? " · cửa sổ theo profile"
+            : ` · cửa sổ ${entry.window_tokens.toLocaleString("vi-VN")} token`}
+        </p>
       </div>
       <div className="flex items-center gap-2">
         {keyBadge(entry)}

@@ -1,10 +1,12 @@
 """Settings of the agent an admin changes at runtime (dashboard or ``agent settings``): time zone, the reply
-after a failed turn, the values of the persona's variables, the persona and the rules, the memory limits and
-which tools are on. They are stored per (tenant, agent), resolved field by field as database > profile, and
-applied from the next turn on without a restart.
+after a failed turn, the values of the persona's variables, the persona and the rules, the memory limits,
+which tools are on, the cases, the token budget and the limits of a turn and of compaction
+(``LIMIT_FIELDS``, the owner's choice of 2026-10-23: docs/PLAN-case-loop.md 8). They are stored per (tenant,
+agent), resolved field by field as database > profile, and applied from the next turn on without a restart.
 
-What stays in the profile (``agent.toml``): the guards, the loop, the context and the prompt sections. They
-are limits of the service, not choices of whoever runs the clinic.
+What stays in the profile (``agent.toml``): the injection and secret guards, the reminders of the loop guard,
+how messages are gathered per channel, the context window (per model: ``agent_app.model_settings``) and the
+prompt sections.
 """
 
 from __future__ import annotations
@@ -44,7 +46,21 @@ TEXT_FIELDS: Final = ("timezone", "failure_reply", "persona", "rules")
 MEMORY_FIELDS: Final = ("memory_enabled", "memory_agent_chars", "memory_user_chars")
 CASE_FIELDS: Final = ("cases_enabled", "proactive_per_person_per_day")
 BUDGET_FIELDS: Final = ("tokens_per_session_per_day", "tokens_per_day")
-SCALAR_FIELDS: Final = (*TEXT_FIELDS, *MEMORY_FIELDS, *CASE_FIELDS, *BUDGET_FIELDS)
+LIMIT_FIELDS: Final[dict[str, tuple[str, float, float]]] = {
+    "max_steps": ("loop", 1, 50),
+    "max_output_tokens": ("loop", 64, 32_768),
+    "max_turn_s": ("loop", 10, 1_800),
+    "max_turn_tokens": ("loop", 1_000, 10_000_000),
+    "stop_after_repeats": ("loop", 2, 50),
+    "error_streak_stop": ("loop", 2, 50),
+    "compact_at": ("context", 0.3, 0.95),
+    "keep_recent_ratio": ("context", 0.0, 0.6),
+    "max_parallel_tools": ("guards", 1, 32),
+    "max_tool_calls_per_step": ("guards", 1, 64),
+}
+"""The limits of a turn and of compaction an admin may change: the profile section each overrides, and its
+bounds (the same as the database's checks)."""
+SCALAR_FIELDS: Final = (*TEXT_FIELDS, *MEMORY_FIELDS, *CASE_FIELDS, *BUDGET_FIELDS, *LIMIT_FIELDS)
 MAX_PROACTIVE_PER_DAY: Final = 20
 TOKEN_LIMITS: Final = {
     "tokens_per_session_per_day": (10_000, 100_000_000),
@@ -83,6 +99,16 @@ class StoredAgentSettings:
     tokens_per_session_per_day: int | None = None
     tokens_per_day: int | None = None
     """The daily token budget (``TokenBudget``) of one session and of the whole agent (None: the default)."""
+    max_steps: int | None = None
+    max_output_tokens: int | None = None
+    max_turn_s: float | None = None
+    max_turn_tokens: int | None = None
+    stop_after_repeats: int | None = None
+    error_streak_stop: int | None = None
+    compact_at: float | None = None
+    keep_recent_ratio: float | None = None
+    max_parallel_tools: int | None = None
+    max_tool_calls_per_step: int | None = None
     variables: Mapping[str, str] = field(default_factory=dict[str, str])
     """Only the variables whose value an admin changed; the others keep the profile's."""
     tools: Mapping[str, bool] = field(default_factory=dict[str, bool])
@@ -147,12 +173,22 @@ def resolve_agent(profile: Profile, stored: StoredAgentSettings | None) -> Effec
         sources[key] = "db" if value is not None else "profile"
         if value is not None:
             memory[attr] = value
+    limits: dict[str, dict[str, Any]] = {"loop": {}, "context": {}, "guards": {}}
+    for key, (section, _, _) in LIMIT_FIELDS.items():
+        value = getattr(stored, key)
+        sources[key] = "db" if value is not None else "profile"
+        if value is not None:
+            limits[section][key] = value
     laid = profile.model_copy(
         update={
             "agent": agent.model_copy(update=changes),
             "memory": profile.memory.model_copy(update=memory),
+            **{name: getattr(profile, name).model_copy(update=v) for name, v in limits.items() if v},
         }
     )
+    # The limits depend on each other (a stop above the last reminder): what the loop refuses is refused here.
+    laid.loop_policy()
+    laid.context_policy()
     disabled = frozenset(n for n, on in stored.tools.items() if not on and n not in core)
     for name in CASE_FIELDS:
         sources[name] = "db" if getattr(stored, name) is not None else "profile"
@@ -193,22 +229,27 @@ class InMemoryAgentSettingsStore:
         return saved
 
 
+# Column names come from LIMIT_FIELDS, constants of this module, never from a request.
+_LIMIT_COLUMNS: Final = ", ".join(LIMIT_FIELDS)
+_LIMIT_PARAMS: Final = ", ".join(f":{name}" for name in LIMIT_FIELDS)
+_LIMIT_UPDATES: Final = ", ".join(f"{name} = EXCLUDED.{name}" for name in LIMIT_FIELDS)
 _GET = sql(
-    "SELECT timezone, failure_reply, persona, rules, memory_enabled, memory_agent_chars, memory_user_chars, "
+    "SELECT timezone, failure_reply, persona, rules, memory_enabled, memory_agent_chars, memory_user_chars, "  # noqa: S608
     "variables, tools, cases_enabled, proactive_per_person_per_day, "
-    "tokens_per_session_per_day, tokens_per_day, version, updated_by FROM agent_rt.agent_settings "
+    f"tokens_per_session_per_day, tokens_per_day, {_LIMIT_COLUMNS}, "
+    "version, updated_by FROM agent_rt.agent_settings "
     "WHERE tenant_id = :tenant_id AND agent = :agent"
 )
 _VERSION = sql("SELECT version FROM agent_rt.agent_settings WHERE tenant_id = :tenant_id AND agent = :agent")
 _SAVE = sql(
-    "INSERT INTO agent_rt.agent_settings (tenant_id, agent, timezone, failure_reply, persona, rules, "
+    "INSERT INTO agent_rt.agent_settings (tenant_id, agent, timezone, failure_reply, persona, rules, "  # noqa: S608
     "memory_enabled, memory_agent_chars, memory_user_chars, "
     "cases_enabled, proactive_per_person_per_day, tokens_per_session_per_day, tokens_per_day, variables, "
-    "tools, updated_by) "
+    f"tools, updated_by, {_LIMIT_COLUMNS}) "
     "VALUES (:tenant_id, :agent, :timezone, :failure_reply, :persona, :rules, :memory_enabled, "
     ":memory_agent_chars, :memory_user_chars, "
     ":cases_enabled, :proactive_per_person_per_day, :tokens_per_session_per_day, :tokens_per_day, "
-    "CAST(:variables AS jsonb), CAST(:tools AS jsonb), :updated_by) "
+    f"CAST(:variables AS jsonb), CAST(:tools AS jsonb), :updated_by, {_LIMIT_PARAMS}) "
     "ON CONFLICT (tenant_id, agent) DO UPDATE SET timezone = EXCLUDED.timezone, "
     "failure_reply = EXCLUDED.failure_reply, persona = EXCLUDED.persona, rules = EXCLUDED.rules, "
     "memory_enabled = EXCLUDED.memory_enabled, memory_agent_chars = EXCLUDED.memory_agent_chars, "
@@ -216,6 +257,7 @@ _SAVE = sql(
     "proactive_per_person_per_day = EXCLUDED.proactive_per_person_per_day, "
     "tokens_per_session_per_day = EXCLUDED.tokens_per_session_per_day, "
     "tokens_per_day = EXCLUDED.tokens_per_day, "
+    f"{_LIMIT_UPDATES}, "
     "variables = EXCLUDED.variables, "
     "tools = EXCLUDED.tools, updated_by = EXCLUDED.updated_by, "
     "version = agent_rt.agent_settings.version + 1, updated_at = now() RETURNING version"
@@ -248,6 +290,7 @@ class PostgresAgentSettingsStore:
                 proactive_per_person_per_day=row.proactive_per_person_per_day,
                 tokens_per_session_per_day=row.tokens_per_session_per_day,
                 tokens_per_day=row.tokens_per_day,
+                **{name: getattr(row, name) for name in LIMIT_FIELDS},
                 variables=dict(row.variables),
                 tools=dict(row.tools),
                 version=row.version,
@@ -365,6 +408,10 @@ class AgentSettings:
             "proactive_per_person_per_day": effective.cases.per_person_per_day,
             "tokens_per_session_per_day": effective.budget.per_session_per_day,
             "tokens_per_day": effective.budget.per_day,
+            **{
+                name: getattr(getattr(effective.profile, section), name)
+                for name, (section, _, _) in LIMIT_FIELDS.items()
+            },
             "sources": dict(effective.sources),
             "stored": not stored.empty,
             "version": stored.version,
@@ -500,6 +547,9 @@ def _check_scalar(name: str, value: Any) -> None:
     elif name in TOKEN_LIMITS and not TOKEN_LIMITS[name][0] <= value <= TOKEN_LIMITS[name][1]:
         low, high = TOKEN_LIMITS[name]
         raise SettingsError("invalid", f"{name} is between {low} and {high}")
+    elif name in LIMIT_FIELDS and not LIMIT_FIELDS[name][1] <= value <= LIMIT_FIELDS[name][2]:
+        _, low, high = LIMIT_FIELDS[name]
+        raise SettingsError("invalid", f"{name} is between {low:g} and {high:g}")
 
 
 def _merged_variables(current: Mapping[str, str], changes: Mapping[str, str | None] | None) -> dict[str, str]:

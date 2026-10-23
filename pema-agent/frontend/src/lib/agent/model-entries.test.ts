@@ -12,6 +12,7 @@ const entry = (label: string, provider: string, base_url: string | null): ModelE
   base_url,
   reasoning: null,
   dialect: null,
+  window_tokens: null,
   api_key: "",
   has_key: false,
   api_key_broken: false,

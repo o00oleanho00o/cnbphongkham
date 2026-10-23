@@ -22,7 +22,7 @@ from uuid import uuid4
 import psycopg
 import uvicorn
 
-from agent_app.agent_settings import MEMORY_FIELDS, TEXT_FIELDS, SettingsError
+from agent_app.agent_settings import LIMIT_FIELDS, MEMORY_FIELDS, TEXT_FIELDS, SettingsError
 from agent_app.assembly import Agent
 from agent_app.db_roles import MIGRATION_URL_ENV, PASSWORD_ENV, RUNTIME_ROLE, bootstrap_role
 from agent_app.gateway import GatewaySettings, create_app
@@ -198,6 +198,7 @@ def _add_model_commands(model: argparse.ArgumentParser, home: argparse.ArgumentP
         action.add_argument("--base-url", type=_http_url)
         action.add_argument("--reasoning", choices=get_args(ReasoningEffort))
         action.add_argument("--dialect", choices=get_args(OpenAIDialect))
+        action.add_argument("--window-tokens", type=int, help="the model's context window (when to compact)")
         key = action.add_mutually_exclusive_group()
         key.add_argument("--api-key-env", metavar="NAME", help="read the API key from this variable")
         key.add_argument("--ask-key", action="store_true", help="type the API key (not echoed)")
@@ -231,11 +232,18 @@ def _add_settings_commands(settings: argparse.ArgumentParser, home: argparse.Arg
         action.add_argument("--memory", choices=("on", "off"))
         action.add_argument("--memory-agent-chars", type=int, dest="memory_agent_chars")
         action.add_argument("--memory-user-chars", type=int, dest="memory_user_chars")
+        for limit, (_, low, high) in LIMIT_FIELDS.items():
+            action.add_argument(
+                f"--{limit.replace('_', '-')}",
+                type=float if isinstance(low, float) else int,
+                dest=limit,
+                help=f"{low:g} to {high:g}",
+            )
         action.add_argument(
             "--clear",
             action="append",
             default=[],
-            choices=(*TEXT_FIELDS, *MEMORY_FIELDS, "variables"),
+            choices=(*TEXT_FIELDS, *MEMORY_FIELDS, *LIMIT_FIELDS, "variables"),
             help="give this field back to the profile (repeatable)",
         )
 
@@ -425,6 +433,7 @@ def _settings_changes(args: argparse.Namespace) -> dict[str, Any]:
         "failure_reply": args.failure_reply,
         "memory_agent_chars": args.memory_agent_chars,
         "memory_user_chars": args.memory_user_chars,
+        **{name: getattr(args, name) for name in LIMIT_FIELDS},
     }
     if args.persona_file is not None:
         given["persona"] = args.persona_file.read_text(encoding="utf-8").lstrip("﻿")
@@ -481,6 +490,7 @@ def _model_changes(args: argparse.Namespace) -> dict[str, Any]:
         "base_url": args.base_url,
         "reasoning": args.reasoning,
         "dialect": args.dialect,
+        "window_tokens": args.window_tokens,
     }
     changes.update({name: value for name, value in given.items() if value is not None})
     if args.api_key_env:

@@ -217,7 +217,7 @@ Test DB cần container `pema-scratch-pg` và `PEMA_TEST_DATABASE_URL`, không b
 4. ~~Nhắc lịch của `crm` lên động cơ (DESIGN 2.6)~~ **đã làm 2026-10-22, mục 6.** Khác kế hoạch khi làm: `check`
    kết thúc ngay ca của lịch đã hủy hay dời, trước khi xét mốc (ca được sự kiện đánh thức không đợi tới mốc mới dừng).
 5. `case_need_human`, `HumanNode`, route `resume`/`close`, giao diện nhân viên.
-6. Ngưỡng `run_turn` và nén ra cài đặt.
+6. ~~Ngưỡng `run_turn` và nén ra cài đặt~~ **đã làm 2026-10-23, mục 8.**
 
 ## 4. Rủi ro ghi trước
 
@@ -515,3 +515,89 @@ gateway (`PATCH` settings, `/v1/admin/follow-ups`, task nền `follow-ups`), `ru
 
 - Xóa dòng vi phạm trong `.claude/rules/agent-harness.md`; mục 3 bước 3 của kế hoạch này; HANDOFF; `infra/README.md`.
 - `/diagram-design`: `pema-system-design.html` (bỏ `agent_follow_up`, bỏ hai cột). `/archify`: sơ đồ ca chăm sóc lại.
+
+## 8. Bước 7: ngưỡng `run_turn` và nén ra cài đặt (mục 3 điểm 6; ghi 2026-10-23, chủ chốt hướng cùng ngày: cấu hình từ frontend; đã làm 2026-10-23, cả frontend theo lời chủ)
+
+**Khác kế hoạch khi làm:** (1) `resolve_agent` dựng thử chính sách vòng lặp và nén, nên tổ hợp sai (ví dụ
+`stop_after_repeats` không lớn hơn mốc nhắc lặp cuối của profile) bị từ chối khi lưu. (2) Nén vẫn cần
+`[context] window_tokens` của profile để bật; cửa sổ của model chỉ thay số đó. (3) Cửa sổ của model đổi trên
+giao diện có hiệu lực sau lần gọi model kế tiếp (`DynamicModel` đọc lại settings trước mỗi lần gọi, tối đa
+5 giây một lần), nên lượt đầu sau khi đổi có thể còn dùng số cũ. (4) CLI có cờ cho mọi trường mới
+(`agent settings set --max-steps ...`, `agent model set --window-tokens ...`). (5) Frontend: trang Cài đặt
+thêm bốn nhóm (ca chủ động, ngân sách token, giới hạn mỗi lượt, nén), trang Model thêm ô cửa sổ ngữ cảnh.
+
+### 8.1 Đọc code thấy gì (khác với DESIGN, chỗ nói "ngưỡng đang là hằng trong code")
+
+- **Ngưỡng đã là dữ liệu, không còn viết cứng.** Mọi ngưỡng của vòng trong lượt và của nén nằm trong profile
+  (`agent.toml`), có kiểm giới hạn (`profile.py`):
+  - `[loop]`: `max_steps`, `max_output_tokens`, `max_turn_s`, `max_turn_tokens`, `repeat_thresholds`,
+    `stop_after_repeats`, `error_streak_remind`, `error_streak_stop`, cách gom tin (`queue_*`);
+  - `[context]`: `window_tokens`, `compact_at`, `keep_recent_ratio`, `chars_per_token`;
+  - `[guards]`: `max_parallel_tools`, `max_tool_calls_per_step`.
+  Hằng còn lại trong `agentcore` (`FLUSH_STEPS`, `SUMMARY_OUTPUT_TOKENS`, `TRANSCRIPT_BLOCK_CHARS`,
+  `MESSAGE_OVERHEAD_TOKENS`…) là chi tiết cách làm, không phải ngưỡng ai cần chỉnh: giữ nguyên.
+- **Đã có quyết định cũ là để chúng trong profile:** docstring `agent_settings.py`: "guards, loop, context… là giới
+  hạn của dịch vụ, không phải lựa chọn của người vận hành phòng khám". Đưa cả khối lên trang cài đặt (DB) là đảo
+  quyết định đó, và cho người vận hành nới trần mà chủ đặt.
+- **Lỗ thật: cửa sổ ngữ cảnh không theo model.** Model đổi được trên giao diện (`agent_model_entry`,
+  `agent_model_settings`), nhưng `window_tokens` cố định trong profile (`clinic`: 128000). Đổi sang model cửa sổ
+  nhỏ hơn (ví dụ 32k) thì agent không nén tới khi vượt 96k token, và model trả lỗi quá cửa sổ ở các cuộc chat dài.
+  Ngược lại, model cửa sổ lớn bị nén sớm vô ích.
+
+### 8.2 Chủ chốt (2026-10-23)
+
+Ngưỡng cấu hình được từ frontend (trang cài đặt agent), đổi có hiệu lực từ lượt kế tiếp, không khởi động lại. Đảo
+quyết định cũ trong docstring `agent_settings.py` ("guards, loop, context… ở profile"): sửa docstring đó.
+Hằng trong `agentcore` (8.1) giữ nguyên trong code.
+
+### 8.3 Ngưỡng của agent: `agent_settings`, cùng cách `memory_*`, `cases_enabled`, `tokens_*`
+
+1. Trường mới (NULL = lấy profile; giới hạn y như `profile.py` hôm nay, kiểm ở code, ở `PATCH` và CHECK ở DB):
+
+   | Nhóm | Trường | Giới hạn |
+   |---|---|---|
+   | Vòng trong lượt | `max_steps` | 1–50 |
+   | | `max_output_tokens` | 64–32 768 |
+   | | `max_turn_s` | 10–1 800 |
+   | | `max_turn_tokens` | 1 000–10 000 000, NULL = không trần |
+   | Chống lặp, lỗi | `stop_after_repeats`, `error_streak_stop` | 2–50 |
+   | Nén | `compact_at` | 0.3–0.95 |
+   | | `keep_recent_ratio` | 0–0.6 |
+   | Tool | `max_parallel_tools` | 1–32 |
+   | | `max_tool_calls_per_step` | 1–64 |
+
+   Không đưa lên: `repeat_thresholds`, `error_streak_remind` (lời nhắc model, hiếm khi chỉnh), `chars_per_token`
+   (ước lượng kỹ thuật), các `queue_*` (cách gom tin theo kênh, gắn với kênh).
+2. `resolve_agent` đặt chúng lên `Profile` (`loop`, `context`, `guards`) như đang làm với `memory`; `show()` trả giá
+   trị đang dùng và `sources` (db / profile); `PATCH /v1/admin/settings` nhận chúng; `--clear` của CLI trả về
+   profile. Đổi xong thì `AgentSettings` dựng lại agent ở lượt kế tiếp (đường sẵn có).
+3. Migration `0008_agent_limits.{sql,py}`: các cột trên của `agent_settings`, CHECK theo bảng; `downgrade` bỏ cột.
+
+### 8.4 Cửa sổ ngữ cảnh theo model: trên trang model
+
+1. `agent_model_entry` và `agent_model_settings` thêm `window_tokens integer` (NULL được, CHECK 4 000 – 2 000 000),
+   cùng migration 0008. Route model (`/v1/admin/model`, danh sách model) nhận và trả trường này; chọn một model trong
+   danh sách thì chép cả `window_tokens` như các trường khác.
+2. Model đổi lúc đang chạy mà không dựng lại agent (`DynamicModel`), nên `ContextManager` đọc cửa sổ lúc kiểm nén:
+   nhận `window: Callable[[], int | None]` (lõi, chung, H10). `assembly.py` đưa vào hàm: cửa sổ của model đang dùng,
+   không có thì `window_tokens` của profile, không có cả hai thì không nén như hôm nay.
+3. Bỏ được `[context] window_tokens` trong profile? Không: giữ làm mặc định cho model chưa khai.
+
+### 8.5 Frontend
+
+Phiên frontend (Claude khác) giữ `pema-agent/frontend`; tôi không sửa. Sau khi backend xanh: sinh lại OpenAPI ở
+backend, ghi cho phiên đó danh sách trường, giới hạn, nhóm và chữ hiển thị đề xuất (vào `HANDOFF` hoặc file bàn giao
+nó đọc). Trước khi có giao diện, đặt được qua `PATCH` hoặc CLI.
+
+### 8.6 Test
+
+- Settings: mỗi trường lưu, đọc, trả về profile khi xóa; ngoài giới hạn bị từ chối ở code, ở `PATCH` (422) và ở DB.
+- Agent dựng lại theo giá trị mới ở lượt kế tiếp (`max_steps` hạ thì lượt dừng sớm hơn).
+- Lõi: ngưỡng nén tính theo cửa sổ hàm trả về lúc gọi; đổi model giữa hai lượt thì ngưỡng đổi theo.
+- Model: `window_tokens` lưu, chép từ danh sách, ngoài giới hạn bị từ chối.
+- DB (scratch): migration 0008 lên, xuống. Chạy cả `apps/agent` + `packages` vì có migration.
+
+### 8.7 Sau khi xanh
+
+- `/diagram-design`: cột mới trên `pema-system-design.html`; ERD archify `agent_rt`.
+- HANDOFF, `infra/README.md`; bàn giao cho phiên frontend (8.5).

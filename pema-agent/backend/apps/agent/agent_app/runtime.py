@@ -275,6 +275,9 @@ def build_runtime(
         zone=lambda: ZoneInfo(agent_settings.effective.profile.agent.timezone),
     )
 
+    def dynamic_window() -> int | None:
+        return None if dynamic is None else dynamic.window_tokens
+
     def build(added: Contributions) -> Agent:
         effective = agent_settings.effective
         return build_agent(
@@ -287,6 +290,7 @@ def build_runtime(
             disabled_tools=effective.disabled_tools,
             # only while a plugin declares cases: an agent without any keeps its prompt (and its cache)
             case_tools=cases.tools() if added.cases else (),
+            window=None if dynamic is None else dynamic_window,
         )
 
     access = None if db is None else DatabaseAccess(db.engine, tenant_id=tenant_id, agent=name)

@@ -10,7 +10,7 @@ from __future__ import annotations
 import json
 import logging
 from collections.abc import Awaitable, Callable, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Final
 
 from agentcore.context.policy import ContextPolicy
@@ -57,10 +57,26 @@ class CompactionResult:
 
 
 class ContextManager:
-    def __init__(self, policy: ContextPolicy, summariser: ModelClient) -> None:
-        self.policy = policy
+    def __init__(
+        self,
+        policy: ContextPolicy,
+        summariser: ModelClient,
+        *,
+        window: Callable[[], int | None] | None = None,
+    ) -> None:
+        """``window`` gives the context window at the moment of each check (the model may change while the
+        agent runs); None from it, or no ``window``, keeps the policy's."""
+        self._policy = policy
+        self._window = window
         self.estimator = TokenEstimator(policy.chars_per_token)
         self._summariser = summariser
+
+    @property
+    def policy(self) -> ContextPolicy:
+        found = None if self._window is None else self._window()
+        if found is None or found == self._policy.window_tokens:
+            return self._policy
+        return replace(self._policy, window_tokens=found)
 
     def over_budget(self, request: LlmRequest) -> bool:
         return self.estimator.request(request) > self.policy.threshold(request.max_output_tokens)
