@@ -709,8 +709,9 @@ CaseStatusParam = Literal["open", "waiting", "needs_human", "done", "stopped"]
 
 
 def _add_case_routes(app: FastAPI, cases: CaseEngine, authorized: Any) -> None:
-    """The cases, newest first, one case with its log, and "run now" (wake a live case: its checks still run).
-    Resuming or closing one by hand comes with ``case_need_human``."""
+    """The cases, newest first, one case with its log, "run now" (wake a live case: its checks still run) and
+    "send a test now" (one turn of a copy, the case left as it was). Resuming or closing one by hand comes
+    with ``case_need_human``."""
     store = cases.store
 
     @app.get("/v1/admin/cases", dependencies=[authorized])
@@ -733,6 +734,15 @@ def _add_case_routes(app: FastAPI, cases: CaseEngine, authorized: Any) -> None:
             return _error(409, "not_live", "the case is closed, or its plugin is off")
         record = await store.get(case_id)
         return JSONResponse(_case(record) if record is not None else {})
+
+    @app.post("/v1/admin/cases/{case_id}/try", dependencies=[authorized])
+    async def try_case(case_id: int) -> Response:
+        if await store.get(case_id) is None:
+            return _error(404, "not_found", "no such case")
+        outcome = await cases.try_now(case_id)
+        if outcome is None:
+            return _error(409, "not_live", "the case is closed, or its plugin is off")
+        return JSONResponse({"sent": outcome.sent, "why": outcome.why})
 
 
 def _case(record: CaseRecord) -> dict[str, Any]:

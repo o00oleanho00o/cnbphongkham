@@ -1,8 +1,11 @@
 // Ca của agent: the proactive work its plugins opened (appointment reminders, follow-ups), newest first, each with
-// its log on demand and, while it is live, "Chạy ngay": the case runs at the agent's next pass instead of waiting for
-// its hour. Its checks still run (hours, daily cap, the customer's silence), so it may wait again without writing.
+// its log on demand and, while it is live, two buttons. "Chạy ngay": the case runs at the agent's next pass instead
+// of waiting for its hour; its checks still run (hours, daily cap, the customer's silence), so it may wait again
+// without writing. "Gửi thử ngay" (after a confirmation): one message now, over every wait and the hours, and the
+// case stays as it was; the switch, a closed case and the person's daily cap still hold.
 import { useCallback, useEffect, useState } from "react";
 
+import { useConfirmDialog } from "@/components/admin/shared/confirm-dialog";
 import {
   Badge,
   Button,
@@ -24,6 +27,9 @@ import {
   isLive,
   KIND_LABELS,
   STATUS_LABELS,
+  type TryOutcome,
+  tryPath,
+  tryReason,
   WAIT_LABELS,
   wakePath,
 } from "@/lib/agent/agent-cases";
@@ -39,6 +45,24 @@ const STATUS_TONES: Record<CaseStatus, KitTone> = {
 };
 
 const errorText = (err: unknown) => (err instanceof Error ? err.message : "Lỗi");
+
+/** The agent answers 409 when the case closed meanwhile or its plugin is off: null, said in words by the caller. */
+function closedAsNull(err: unknown): null {
+  if (err instanceof ApiError && err.status === 409) return null;
+  throw err;
+}
+
+const closedMessage = (item: AgentCase): Message => ({
+  tone: "warning",
+  text: `Ca #${item.id} đã đóng hoặc plugin của nó đang tắt.`,
+});
+
+function tryMessage(item: AgentCase, outcome: TryOutcome): Message {
+  if (outcome.sent) {
+    return { tone: "success", text: `Đã gửi thử cho ca #${item.id}. Ca vẫn giữ nguyên như trước.` };
+  }
+  return { tone: "warning", text: `Ca #${item.id} không gửi: ${tryReason(outcome.why)}.` };
+}
 
 const when = (iso: string | null) =>
   iso === null
@@ -66,6 +90,7 @@ export function CasesPage() {
   const [message, setMessage] = useState<Message | null>(null);
   const [busy, setBusy] = useState("");
   const [opened, setOpened] = useState<{ id: number; events: CaseEvent[] } | null>(null);
+  const { confirm, confirmDialog } = useConfirmDialog();
 
   const load = useCallback(async () => setCases(accept(await api.get<unknown>(CASES_PATH))), []);
 
@@ -87,21 +112,30 @@ export function CasesPage() {
 
   const wake = (item: AgentCase) =>
     run(`wake-${item.id}`, async () => {
-      const refused = await api.post(wakePath(item.id)).then(
-        () => false,
-        (err: unknown) => {
-          if (err instanceof ApiError && err.status === 409) return true;
-          throw err;
-        },
-      );
+      const woken = await api.post<AgentCase>(wakePath(item.id)).catch(closedAsNull);
       await load();
-      if (refused)
-        return { tone: "warning", text: `Ca #${item.id} đã đóng hoặc plugin của nó đang tắt.` };
+      if (woken === null) return closedMessage(item);
       return {
         tone: "success",
         text: `Ca #${item.id} sẽ chạy trong vài giây. Các bước kiểm vẫn chạy, nên ca có thể chờ tiếp mà chưa nhắn.`,
       };
     });
+
+  async function tryNow(item: AgentCase) {
+    const ok = await confirm({
+      title: `Gửi thử ca #${item.id}?`,
+      message:
+        "Agent nhắn thật cho khách của ca này ngay bây giờ, kể cả ngoài giờ 8:00-20:00, rồi ca giữ nguyên như trước. Tin này tính vào số tin chủ động của khách hôm nay.",
+      confirmLabel: "Gửi thử",
+    });
+    if (!ok) return;
+    await run(`try-${item.id}`, async () => {
+      const outcome = await api.post<TryOutcome>(tryPath(item.id)).catch(closedAsNull);
+      await load();
+      if (outcome === null) return closedMessage(item);
+      return tryMessage(item, outcome);
+    });
+  }
 
   const reload = () =>
     run("reload", async () => {
@@ -134,7 +168,7 @@ export function CasesPage() {
     <div className="space-y-4">
       <PageHeader
         title="Ca"
-        subtitle="Việc agent tự làm theo thời gian: nhắc lịch, chăm sóc lại. Chạy ngay cho ca chạy ở lượt quét tới thay vì chờ tới giờ; các bước kiểm vẫn chạy."
+        subtitle="Việc agent tự làm theo thời gian: nhắc lịch, chăm sóc lại. Chạy ngay cho ca chạy ở lượt quét tới thay vì chờ tới giờ; các bước kiểm vẫn chạy. Gửi thử ngay nhắn khách một tin ngay rồi ca giữ nguyên."
         aside={
           <Button variant="secondary" busy={busy === "reload"} onClick={reload}>
             Tải lại
@@ -161,6 +195,7 @@ export function CasesPage() {
                   busy={busy}
                   events={opened?.id === item.id ? opened.events : null}
                   onWake={() => wake(item)}
+                  onTry={() => tryNow(item)}
                   onLog={() => toggleLog(item)}
                 />
               </li>
@@ -168,6 +203,7 @@ export function CasesPage() {
           </ul>
         )}
       </Card>
+      {confirmDialog}
     </div>
   );
 }
@@ -177,12 +213,14 @@ function CaseRow({
   busy,
   events,
   onWake,
+  onTry,
   onLog,
 }: {
   item: AgentCase;
   busy: string;
   events: CaseEvent[] | null;
   onWake: () => void;
+  onTry: () => void;
   onLog: () => void;
 }) {
   const kind = KIND_LABELS[item.kind] ?? item.kind;
@@ -209,6 +247,16 @@ function CaseRow({
               onClick={onWake}
             >
               Chạy ngay
+            </Button>
+          )}
+          {isLive(item) && (
+            <Button
+              variant="secondary"
+              aria-label={`Gửi thử ngay ca #${item.id}`}
+              busy={busy === `try-${item.id}`}
+              onClick={onTry}
+            >
+              Gửi thử ngay
             </Button>
           )}
           <Button

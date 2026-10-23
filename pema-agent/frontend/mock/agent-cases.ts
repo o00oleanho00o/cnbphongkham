@@ -1,6 +1,6 @@
 // The fake agent's cases (`/v1/admin/cases`): three FICTIONAL ones in memory (a follow-up waiting for the silence,
 // a reminder waiting for its hour, a follow-up done). "Run now" wakes a live one the way the engine does: the wake
-// is written in its log and its hour becomes now; it does not run its nodes.
+// is written in its log and its hour becomes now; it does not run its nodes. "Send a test now" says it was sent.
 import { HOUR, MIN, type Reply, type Router, isoFromNow } from "./core";
 
 type Case = {
@@ -131,4 +131,15 @@ export function registerAgentCases(r: Router): void {
     return { body: { ...found, events: store.events.get(found.id) ?? [] } };
   });
   r.post("/v1/admin/cases/{case_id}/wake", null, (ctx): Reply => wake(Number(ctx.params.case_id)));
+  r.post("/v1/admin/cases/{case_id}/try", null, (ctx): Reply => {
+    const found = store.cases.find((c) => c.id === Number(ctx.params.case_id));
+    if (!found) return notFound;
+    if (!LIVE.has(found.status)) {
+      return {
+        status: 409,
+        body: { error: { kind: "not_live", message: "the case is closed, or its plugin is off" } },
+      };
+    }
+    return { body: { sent: true, why: "" } };
+  });
 }

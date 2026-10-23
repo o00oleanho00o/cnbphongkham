@@ -38,6 +38,28 @@ export const casePath = (id: number) => `${CASES_PATH}/${id}`;
 
 export const wakePath = (id: number) => `${casePath(id)}/wake`;
 
+export const tryPath = (id: number) => `${casePath(id)}/try`;
+
+/** What "Gửi thử ngay" did: written to, or why not. */
+export interface TryOutcome {
+  sent: boolean;
+  why: string;
+}
+
+const TRY_REASONS: Record<string, string> = {
+  disabled: "ca chủ động đang tắt (trang Cài đặt)",
+  closed: "ca đã đóng",
+  expired: "ca đã quá hạn",
+  person_daily_cap: "khách đã nhận đủ số tin chủ động hôm nay",
+  max_turns: "ca đã hết số lượt",
+  max_proactive: "ca đã hết số tin được gửi",
+  "the case waits for the customer": "ca đang chờ khách nhắn",
+};
+
+export function tryReason(why: string): string {
+  return TRY_REASONS[why] ?? why;
+}
+
 export const STATUS_LABELS: Record<CaseStatus, string> = {
   open: "Đang chạy",
   waiting: "Đang chờ",

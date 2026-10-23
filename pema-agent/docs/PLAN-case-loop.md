@@ -616,3 +616,11 @@ Chủ muốn thử ca chủ động trên demo mà không đợi giờ thật.
 4. Frontend: tab **Ca** trong Điều khiển agent (danh sách, nhật ký từng ca, nút Chạy ngay cho ca sống).
 5. Test: `test_cases_engine.py` (chạy ngay, từ chối, route), `follow_up/test_follow_up_case.py` (cài đặt, giờ ngắn
    thì nhắn trong vài phút), `cases-page.test.tsx`.
+
+## 10. "Gửi thử ngay" một ca (ghi và làm 2026-10-23; chủ chọn: gửi bất kể giờ của plugin, giữ ba cài đặt phút)
+
+`CaseEngine.try_now(case_id)`: chạy một bản sao của ca từ chỗ nó đang đứng, trên đồng hồ nhảy qua mọi lần chờ, tới
+lượt gửi đầu tiên; gửi lượt đó một lần (mã tin `case-try:<id>:<giờ>`, nên tool điều khiển ca từ chối); ca giữ nguyên.
+Luật chung hỏi bằng giờ thật (công tắc, ca đóng, bộ đếm, trần mỗi người mỗi ngày; tin thử tính vào trần). Nhật ký ca
+ghi `sent` hoặc `blocked` với `by: admin_try` (không thêm loại sự kiện, không migration). Route
+`POST /v1/admin/cases/{id}/try`; tab Ca có nút "Gửi thử ngay" kèm hộp xác nhận.

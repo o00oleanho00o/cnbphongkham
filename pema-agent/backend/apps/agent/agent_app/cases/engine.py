@@ -53,6 +53,8 @@ from agentcore.channels import PROACTIVE, InboundMessage, in_group
 
 NO_CASE: Final = "There is no case running in this chat: case tools work only during a case's turn."
 MOVED_ON: Final = "This case has moved on since this turn began; nothing was changed."
+TRY_PREFIX: Final = "case-try:"
+"""Message id of an admin's test turn: not a case's turn id, so the steering tools refuse in it."""
 
 logger = logging.getLogger(__name__)
 
@@ -77,6 +79,14 @@ class EngineSettings:
     """Nodes one case may run in a row before the next pass (open after open: code nodes in a chain)."""
     error_retry: timedelta = timedelta(minutes=5)
     """A node that raised is tried again this much later (until the case's deadline)."""
+
+
+@dataclass(frozen=True, slots=True)
+class TryOutcome:
+    """What an admin's "send a test now" did: written to, or why not."""
+
+    sent: bool
+    why: str = ""
 
 
 class CaseEngine:
@@ -191,6 +201,71 @@ class CaseEngine:
         if record is None or found is None or record.status not in ("open", "waiting"):
             return False
         return await self._wake(found[1], record, {}, "admin")
+
+    async def try_now(self, case_id: int) -> TryOutcome | None:
+        """An admin's "send a test now": runs a copy of the case from where it is on a clock that jumps over
+        every wait, up to its first turn, and sends that turn once (its own message id, so it cannot steer the
+        case). The case itself is left as it was. The shared limits (the switch, a closed case, the counters,
+        the person's daily cap) are asked with the real clock; the plugin's own hours are not: an admin chose
+        to write. None when there is no such live case or its plugin is off."""
+        record = await self._store.get(case_id)
+        found = None if record is None else self._specs().get(record.kind)
+        if record is None or found is None or record.status not in ("open", "waiting"):
+            return None
+        spec, config, now = found[1], self._config(), self._clock()
+        copy, at = record, max(now, record.wake_at or now)
+        for _ in range(self.settings.max_nodes_per_pass):
+            node = spec.graph.node(copy.node)
+            turn = isinstance(node, TurnNode)
+            today = await self._sent_today(record.channel, record.user_id, now) if turn else 0
+            block = blocked(
+                spec,
+                replace(copy, status="open"),
+                now,
+                enabled=config.enabled,
+                sent_to_person_today=today,
+                per_person_per_day=config.per_person_per_day,
+                next_day=self._next_day(now),
+            )
+            if block is not None or node is None:
+                return await self._tried(record, node, block.reason if block else "no node")
+            if isinstance(node, TurnNode):
+                return await self._try_turn(spec, record, copy, node, now)
+            try:
+                copy = apply(spec, copy, await node.run(state_of(spec, copy), at), at)
+            except Exception as err:  # a plugin's node failing ends the test, never the case
+                return await self._tried(record, node, f"{node.id} failed ({type(err).__name__})")
+            if copy.status not in ("open", "waiting"):
+                return await self._tried(record, node, f"the case would end: {copy.end_reason}")
+            if copy.status == "waiting" and copy.wake_at is None:
+                return await self._tried(record, node, "the case waits for the customer")
+            at = max(at, copy.wake_at or at)
+        return await self._tried(record, None, f"no turn within {self.settings.max_nodes_per_pass} steps")
+
+    async def _try_turn(
+        self, spec: CaseSpec, record: CaseRecord, copy: CaseRecord, node: TurnNode, now: datetime
+    ) -> TryOutcome:
+        proactive = self._proactive
+        if proactive is None:
+            return await self._tried(record, node, "no way to reach the chat")
+        result = await proactive.send_to(
+            channel=record.channel,
+            conversation_id=record.conversation_id,
+            user_id=record.user_id,
+            message_id=f"{TRY_PREFIX}{record.id}:{now.strftime('%Y%m%d%H%M%S')}",
+            instruction=turn_text(spec, copy, node, now),
+        )
+        if not result.counted:
+            return await self._tried(record, node, f"the agent chose not to write ({result.note or 'skip'})")
+        await self._store.log(record.id, "sent", node.id, {"by": "admin_try", "note": result.note}, now)
+        return TryOutcome(sent=True)
+
+    async def _tried(self, record: CaseRecord, node: CodeNode | TurnNode | None, why: str) -> TryOutcome:
+        at = self._clock()
+        await self._store.log(
+            record.id, "blocked", node.id if node else None, {"by": "admin_try", "why": why}, at
+        )
+        return TryOutcome(sent=False, why=why)
 
     async def _wake(self, spec: CaseSpec, record: CaseRecord, patch: dict[str, Any], why: str) -> bool:
         now = self._clock()
