@@ -110,10 +110,18 @@ export function CasesPage() {
     }
   }
 
+  /** The list again, and the log that is open (a wake or a test send has just written to it). */
+  async function refresh() {
+    await load();
+    if (opened === null) return;
+    const found = await api.get<{ events: CaseEvent[] }>(casePath(opened.id));
+    setOpened({ id: opened.id, events: found.events });
+  }
+
   const wake = (item: AgentCase) =>
     run(`wake-${item.id}`, async () => {
       const woken = await api.post<AgentCase>(wakePath(item.id)).catch(closedAsNull);
-      await load();
+      await refresh();
       if (woken === null) return closedMessage(item);
       return {
         tone: "success",
@@ -131,7 +139,7 @@ export function CasesPage() {
     if (!ok) return;
     await run(`try-${item.id}`, async () => {
       const outcome = await api.post<TryOutcome>(tryPath(item.id)).catch(closedAsNull);
-      await load();
+      await refresh();
       if (outcome === null) return closedMessage(item);
       return tryMessage(item, outcome);
     });
@@ -139,7 +147,7 @@ export function CasesPage() {
 
   const reload = () =>
     run("reload", async () => {
-      await load();
+      await refresh();
       return null;
     });
 
