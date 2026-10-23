@@ -1,10 +1,9 @@
 # ported from: src/agent/prompt-leak-markers.ts
-"""CHARACTERISTIC snippets of the clinic profile's system prompt (``agents/clinic/AGENTS.md`` and
-``SOUL.md``), the signs ``zalo/sanitize_reply_text`` looks for to block an answer that leaked it.
+"""CHARACTERISTIC snippets of the clinic agent's persona and rules (the text saved on the dashboard, kept in the
+database), the signs ``zalo/sanitize_reply_text`` looks for to block an answer that leaked it.
 
-The snippets must match the profile's files character for character: rename a heading there and forget this
-module, and the prompt-leak barrier silently stops working. ``tests/zalo/test_sanitize_reply_text.py`` reads
-the files and turns red when a snippet is no longer in them.
+The snippets must match that text character for character: rename a heading there and forget this module, and
+the prompt-leak barrier silently stops working (no test checks it any more).
 
 PURE module: no imports.
 """
