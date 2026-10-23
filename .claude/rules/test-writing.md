@@ -15,8 +15,10 @@ Chủ hệ thống chốt (2026-10-23). Luật này nói **viết test gì**; `t
 - **Mỗi mô-đun tối đa 2 test unit: một ca chạy đúng, một ca bị từ chối hoặc lỗi.** Chọn hai ca đáng giá nhất; thêm ca thứ ba
   phải có lý do viết ngay trong test (một lỗi đã xảy ra thật, không phải "cho chắc").
 - **Sửa lỗi:** thêm đúng một test cho lỗi đó nếu nó thuộc nhóm UI không thấy được; nếu UI thấy được thì thêm vào spec e2e.
-- **Không tự xóa test có sẵn** chỉ vì luật này; test giữ luật T1–T9 và H1–H11 giữ nguyên trừ khi chủ nói khác. Việc rút
-  gọn test cũ là việc chủ yêu cầu riêng.
+- **Được xóa test có sẵn** khi một spec e2e qua UI kiểm được điều đó hoặc khi nó chỉ lặp lại điều đã kiểm, kể cả test
+  phân quyền và bảo mật mà UI thấy được (ví dụ vai trò nào vào được màn hình nào). Chủ cho phép (2026-10-23). **Giữ**
+  những gì UI không thể kiểm: vai trò và quyền của database, token và khóa, import giữa các lớp, luật harness H1–H11,
+  ràng buộc DB, động cơ.
 - Test e2e chạy cần stack đang chạy (cấu hình và biến môi trường trong `frontend/e2e/playwright.config.ts`, đăng nhập trong `session.ts`); không tự dựng lại
   Docker hay đụng DB demo `pema` để chạy chúng, và chỉ chạy khi chủ bảo.
 - Cuối báo cáo của task có code mới, ghi một dòng: test nào đã viết (e2e hay unit) và vì sao, hoặc "không viết test" kèm lý do.
