@@ -82,9 +82,12 @@ def test_a_head_that_was_never_closed_does_not_swallow_the_page() -> None:
     assert (page.title, page.text) == ("T", "Real text")
 
 
-def test_a_page_of_unclosed_tags_is_read_in_linear_time() -> None:
-    nasty = "<nav><div><script " * 40_000 + "<p>tail</p>"
-
+@pytest.mark.parametrize(
+    "nasty",
+    ["<nav><div><script " * 40_000 + "<p>tail</p>", "<a " * 100_000, "<!--" * 100_000],
+    ids=["skipped", "attributes", "comments"],
+)
+def test_a_page_of_unclosed_tags_is_read_in_linear_time(nasty: str) -> None:
     started = time.perf_counter()
     html_to_text(nasty)
 

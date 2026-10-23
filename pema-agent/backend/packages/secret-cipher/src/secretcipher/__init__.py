@@ -47,6 +47,6 @@ def mask_secret(value: str) -> str:
     """``sk-ab...wxyz``: enough to tell WHICH key it is, not enough to reuse it."""
     if not value:
         return "chưa cấu hình"
-    if len(value) <= 8:
+    if len(value) < 18:  # the 9 characters shown would be most of a shorter secret
         return "***"
     return f"{value[:5]}...{value[-4:]}"

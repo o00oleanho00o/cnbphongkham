@@ -340,12 +340,14 @@ async def test_the_list_keeps_several_models_each_with_its_own_masked_key() -> N
     admin = ModelAdmin(PROFILE, InMemoryModelSettingsStore(), tenant_id="t", secret_key=KEY)
 
     first = await admin.add_entry(DEEPSEEK)
-    second = await admin.add_entry({**DEEPSEEK, "label": "DeepSeek dự phòng", "api_key": "sk-other-12345678"})
+    second = await admin.add_entry(
+        {**DEEPSEEK, "label": "DeepSeek dự phòng", "api_key": "sk-other-123456789"}
+    )
     third = await admin.add_entry({"label": "Ollama", "provider": "openai-compatible", "model": "llama3"})
     listed = (await admin.entries())["entries"]
 
     assert [e["label"] for e in listed] == ["DeepSeek công ty", "DeepSeek dự phòng", "Ollama"]
-    assert (first["api_key"], second["api_key"], third["has_key"]) == ("sk-de...efgh", "sk-ot...5678", False)
+    assert (first["api_key"], second["api_key"], third["has_key"]) == ("sk-de...efgh", "sk-ot...6789", False)
     assert "sk-deepseek-abcdefgh" not in str(listed)
     assert [e["active"] for e in listed] == [False, False, False]
 

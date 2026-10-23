@@ -46,4 +46,5 @@ def test_a_wrong_key_a_tampered_payload_and_a_short_key_are_refused() -> None:
 def test_a_masked_secret_names_the_key_without_revealing_it() -> None:
     assert mask_secret("sk-abcdefghijklmnop") == "sk-ab...mnop"
     assert mask_secret("short") == "***"
+    assert mask_secret("x" * 17) == "***"
     assert mask_secret("") == "chưa cấu hình"

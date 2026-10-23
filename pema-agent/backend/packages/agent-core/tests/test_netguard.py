@@ -226,18 +226,24 @@ async def test_a_body_of_exactly_the_limit_is_not_cut() -> None:
     assert (len(page.data), page.truncated) == (1000, False)
 
 
-async def test_the_limit_counts_what_a_compressed_body_unpacks_to() -> None:
-    bomb = gzip.compress(b"a" * 5_000_000)
+@pytest.mark.parametrize("encoding", ["gzip", "br"])
+async def test_a_compressed_body_is_refused_unread(encoding: str) -> None:
+    seen: list[httpx.Request] = []
 
-    page = await fetch(
-        "https://site.example/",
-        max_bytes=2000,
-        resolver=_dns({"site.example": ["93.184.216.34"]}),
-        transport=_mock(lambda r: httpx.Response(200, content=bomb, headers={"content-encoding": "gzip"})),
-    )
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen.append(request)
+        bomb = gzip.compress(b"a" * 5_000_000)  # the bytes are never unpacked, whatever the header says
+        return httpx.Response(200, content=bomb, headers={"content-encoding": encoding})
 
-    assert (len(page.data), page.truncated) == (2000, True)
-    assert len(bomb) < 20_000
+    with pytest.raises(FetchError) as refused:
+        await fetch(
+            "https://site.example/",
+            resolver=_dns({"site.example": ["93.184.216.34"]}),
+            transport=_mock(handler),
+        )
+
+    assert refused.value.kind == "network"
+    assert seen[0].headers["accept-encoding"] == "identity"
 
 
 async def test_a_slow_site_is_given_up_on_at_the_deadline() -> None:

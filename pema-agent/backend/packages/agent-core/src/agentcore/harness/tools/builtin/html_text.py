@@ -1,6 +1,7 @@
 """Readable text out of an HTML page, and the results out of a DuckDuckGo results page. Standard library
-only: the parser reads the page once from start to end, so a 3 MB page of unclosed tags costs no more than any
-other.
+only. ``html.parser`` is quadratic on tags that never close, so comments are dropped and a ``<`` with no
+``>`` before the next ``<`` is turned into text first; a 3 MB page of unclosed tags then costs about as much
+as any other.
 
 shortcut: no filter for link-dense lists (menus) beyond dropping nav, header, footer and aside; add one if
 pages show only their menu to the model.
@@ -62,6 +63,7 @@ BREAK: frozenset[str] = frozenset(
 )
 SPACES = re.compile(r"[ \t\r\f\v ]+")
 BLANK_LINES = re.compile(r"\n{3,}")
+UNCLOSED = re.compile(r"<(?![^<>]{1,20000}>)")
 SEARCH_HOST = "duckduckgo.com"
 
 
@@ -111,9 +113,22 @@ class _Reader(HTMLParser):
             self.parts.append(data)
 
 
+def _untangle(html: str) -> str:
+    """Comments out (an unclosed one hides the rest, as in a browser), then a ``<`` with no ``>`` before the
+    next ``<`` as text. Comments go first, or the markup inside one would be read as the page."""
+    parts: list[str] = []
+    at = 0
+    while (start := html.find("<!--", at)) != -1:
+        parts.append(html[at:start])
+        end = html.find("-->", start + 4)
+        at = len(html) if end == -1 else end + 3
+    parts.append(html[at:])
+    return UNCLOSED.sub("&lt;", "".join(parts))
+
+
 def html_to_text(html: str) -> Page:
     reader = _Reader()
-    reader.feed(html)
+    reader.feed(_untangle(html))
     reader.close()
     lines = (SPACES.sub(" ", line).strip() for line in "".join(reader.parts).split("\n"))
     text = BLANK_LINES.sub("\n\n", "\n".join(lines)).strip()
@@ -167,7 +182,7 @@ def parse_results(html: str, limit: int) -> list[SearchResult]:
     """The first ``limit`` results with an http(s) address of their own (ads and the search engine's own
     pages are left out)."""
     parser = _Results()
-    parser.feed(html)
+    parser.feed(_untangle(html))
     parser.close()
     kept = [
         result

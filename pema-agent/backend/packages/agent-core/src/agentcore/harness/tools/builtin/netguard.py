@@ -10,7 +10,8 @@ address. What this module does about it:
   still checks the certificate;
 - every redirect is checked again from the start, at most ``MAX_REDIRECTS`` of them;
 - no proxy from the environment, no cookies sent, GET only;
-- the body is read as a stream and cut at ``max_bytes`` of decoded data (a compressed bomb stops there too);
+- only an uncompressed body is accepted (httpx unpacks a whole chunk before the cut, so a few hundred bytes of
+  brotli could become hundreds of MB); it is read as a stream and cut at ``max_bytes``;
 - one hard deadline for the whole fetch.
 """
 
@@ -173,7 +174,12 @@ async def fetch(
         transport=transport or _pinned_transport(backend),
         follow_redirects=False,
         trust_env=False,
-        headers={"User-Agent": USER_AGENT, "Accept": ACCEPT, "Accept-Language": ACCEPT_LANGUAGE},
+        headers={
+            "User-Agent": USER_AGENT,
+            "Accept": ACCEPT,
+            "Accept-Language": ACCEPT_LANGUAGE,
+            "Accept-Encoding": "identity",
+        },
         timeout=timeout_s,
     )
     try:
@@ -213,6 +219,9 @@ async def _follow(
             if response.status_code in REDIRECT_STATUSES and location:
                 current = urljoin(str(response.url), location)
                 continue
+            encoding = response.headers.get("content-encoding", "").strip().lower()
+            if encoding not in ("", "identity"):
+                raise FetchError("network", f"the site sent a compressed body ({encoding})")
             data, truncated = await _read(response, max_bytes)
             content_type = response.headers.get("content-type", "")
             return Fetched(str(response.url), response.status_code, content_type, data, truncated)

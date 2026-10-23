@@ -34,7 +34,7 @@ from agentcore.harness.model.types import (
     StreamSink,
     ToolSchema,
 )
-from agentcore.harness.store.base import SessionStore
+from agentcore.harness.store.base import CompactionRecord, SessionStore
 from agentcore.harness.tools.executor import (
     DEFAULT_MAX_CALLS_PER_STEP,
     DEFAULT_MAX_PARALLEL,
@@ -200,14 +200,21 @@ async def run_turn(
     loop_guard = LoopGuard(limits.guard)
     notes: list[str] = []
     """Loop guard reminders for the next model call; they ride in the context block and are never stored."""
+    history: list[Message] = []
+    """The stored history, kept in step with every append so a model step does not load it again."""
+    compaction: CompactionRecord | None = None
+
+    async def reload() -> None:
+        nonlocal history, compaction
+        history = await store.load(tenant_id, session_id)
+        compaction = await store.load_compaction(tenant_id, session_id)
 
     async def record(message: Message) -> None:
         await store.append(tenant_id, session_id, message)
+        history.append(message)
         new_messages.append(message)
 
     async def build(step: StepInfo, offered: list[ToolSchema]) -> LlmRequest:
-        history = await store.load(tenant_id, session_id)
-        compaction = await store.load_compaction(tenant_id, session_id)
         visible = history[compaction.first_kept :] if compaction else history
         return LlmRequest(
             system=system,
@@ -272,6 +279,7 @@ async def run_turn(
         compactions += 1
         usage = usage + outcome.usage
         system = await prompt.system(store, tenant_id, session_id, user_id=user_id, refresh=True)
+        await reload()
         return True
 
     async def call_model(step: StepInfo, offered: list[ToolSchema]) -> AssistantResult:
@@ -371,7 +379,7 @@ async def run_turn(
     async def turn() -> TurnResult:
         nonlocal system, turn_start, usage
         system = await prompt.system(store, tenant_id, session_id, user_id=user_id)
-        history = await store.load(tenant_id, session_id)
+        await reload()
         repairs = missing_tool_results(history)
         if repairs:
             logger.warning(
@@ -379,8 +387,9 @@ async def run_turn(
             )
             for message in repairs:
                 await store.append(tenant_id, session_id, message)
+                history.append(message)
             events.append(TraceEvent("repair", 0, 0.0, detail={"tool_calls": len(repairs)}))
-        turn_start = len(history) + len(repairs)
+        turn_start = len(history)
         await record(Message.user(user_text))
         if collected > 1:
             events.append(TraceEvent("inbox", 0, 0.0, detail={"mode": "collect", "messages": collected}))
