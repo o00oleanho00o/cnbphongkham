@@ -556,3 +556,94 @@ async def test_the_run_now_route_wakes_a_live_case_and_refuses_the_others() -> N
     assert (refused.status_code, refused.json()["error"]["kind"]) == (409, "not_live")
     assert missing.status_code == 404
     assert anonymous.status_code == 401
+
+
+# --- send a test now, by an admin ---
+
+
+async def _waiting_a_day(s: Setup) -> CaseRecord:
+    case = await s.open()
+    later = (NOW + timedelta(days=1)).isoformat()
+    s.chat.calls = [("case_wait_until", {"wait_for": "clock", "until": later, "why": "call back"})]
+    await s.engine.pass_once()
+    before = await s.store.get(case.id)
+    assert before is not None
+    return before
+
+
+async def test_a_test_send_writes_once_now_and_leaves_the_case_as_it_was() -> None:
+    s = Setup(_spec(Judge()))
+    before = await _waiting_a_day(s)
+
+    outcome = await s.engine.try_now(before.id)
+
+    assert outcome is not None
+    assert (outcome.sent, outcome.why) == (True, "")
+    assert s.chat.turns[-1]["message_id"].startswith(f"case-try:{before.id}:")
+    after = await s.store.get(before.id)
+    assert after is not None
+    fields = ("status", "node", "wait_for", "wake_at", "state", "turns", "proactive_sent", "version")
+    assert [getattr(after, f) for f in fields] == [getattr(before, f) for f in fields]
+    assert (await s.store.events(before.id))[-1]["detail"]["by"] == "admin_try"
+
+
+async def test_a_test_turn_cannot_steer_the_case() -> None:
+    s = Setup(_spec(Judge()))
+    before = await _waiting_a_day(s)
+    s.chat.calls = [("case_done", {"reason": "booked"})]
+
+    await s.engine.try_now(before.id)
+
+    assert s.chat.outputs[-1].is_error
+    after = await s.store.get(before.id)
+    assert after is not None
+    assert after.status == "waiting"
+
+
+async def test_a_test_send_keeps_the_shared_limits_and_counts_in_the_daily_cap() -> None:
+    s = Setup(_spec(Judge()), config=CasesConfig(enabled=True, per_person_per_day=2))
+    before = await _waiting_a_day(s)  # one message sent today
+
+    first = await s.engine.try_now(before.id)
+    second = await s.engine.try_now(before.id)
+    s.config = CasesConfig(enabled=False)
+    third = await s.engine.try_now(before.id)
+
+    assert [(o.sent, o.why) if o else None for o in (first, second, third)] == [
+        (True, ""),
+        (False, "person_daily_cap"),
+        (False, "disabled"),
+    ]
+    assert len(s.chat.turns) == 2
+
+
+async def test_the_test_send_route_answers_what_happened() -> None:
+    import httpx
+
+    from agent_app.gateway import GatewaySettings, create_app
+    from agent_app.profile import load_profile
+    from agent_app.runtime import build_runtime
+
+    s = Setup(_spec(Judge()))
+    live = await _waiting_a_day(s)
+    closed = await s.open(key="c2")
+    done = await s.store.get(closed.id)
+    assert done is not None
+    await s.store.save(replace(done, status="done"))
+    admin = "a" * 40
+    runtime = build_runtime(load_profile(DEV_PROFILE), fake=True, env={}, db=None)
+    dispatcher = runtime.dispatcher()
+    app = create_app(dispatcher, GatewaySettings(token="t" * 40, admin_token=admin), cases=s.engine)
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=app),
+        base_url="http://agent",
+        headers={"Authorization": f"Bearer {admin}"},
+    ) as client:
+        tried = await client.post(f"/v1/admin/cases/{live.id}/try")
+        refused = await client.post(f"/v1/admin/cases/{closed.id}/try")
+        missing = await client.post("/v1/admin/cases/999/try")
+    await dispatcher.close(grace_s=1.0)
+
+    assert (tried.status_code, tried.json()) == (200, {"sent": True, "why": ""})
+    assert (refused.status_code, refused.json()["error"]["kind"]) == (409, "not_live")
+    assert missing.status_code == 404

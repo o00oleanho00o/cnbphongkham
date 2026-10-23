@@ -332,3 +332,26 @@ async def test_with_short_waits_a_quiet_chat_is_written_to_within_minutes() -> N
     await w.at(w.now + timedelta(minutes=1))
     await w.at(w.now + timedelta(minutes=2))
     assert len(w.outbox.sent) == 1
+
+
+async def test_a_test_send_skips_the_waits_and_the_hours_and_the_follow_up_stays_as_it_was() -> None:
+    w = World(
+        '{"state": "hesitant", "after_h": 24, "reason": "hỏi giá rồi im"}',
+        "Dạ chị còn quan tâm gói khám không ạ?",
+        now=vn(21),
+    )
+    await w.answered()
+    before = await w.case()
+
+    outcome = await w.engine.try_now(before.id)
+
+    assert outcome is not None
+    assert outcome.sent
+    assert len(w.outbox.sent) == 1
+    after = await w.case()
+    assert (after.status, after.node, after.wake_at, after.state) == (
+        before.status,
+        before.node,
+        before.wake_at,
+        before.state,
+    )
