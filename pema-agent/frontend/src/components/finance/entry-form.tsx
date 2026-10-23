@@ -4,7 +4,7 @@
 // to 100 % and the rates to at most 100 %. Percent boxes are converted to basis points, the service decides the
 // price and the rate to start from, and the rate is frozen on the entry by the BE (a later change of policy moves
 // nothing). The patient comes from the patients API (search by name or code).
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 
 import { Notice, PrimaryButton } from "@/components/ops/ops-ui";
 import { useToast } from "@/components/ops/toast";
@@ -22,6 +22,7 @@ import {
   type EntryForm,
   type InvoiceRow,
 } from "@/lib/finance/finance-view";
+import { useLoad } from "@/lib/use-load";
 import { Field, FIELD_CONTROL_CLASS } from "@/ui/field";
 
 type PatientRow = Schemas["PatientOut"];
@@ -38,19 +39,44 @@ function useDebounced(value: string): string {
   return settled;
 }
 
-/** One select of patients fed by a search box (name or code); the chosen one stays in the list. */
-function PatientPicker({
+/**
+ * One select of patients fed by a server search box (name or code); the chosen one stays in the list. A `value`
+ * set from outside (a draft, a preset patient) is read by id so its name shows. `required={false}` makes the
+ * empty choice mean "every patient".
+ */
+export function PatientPicker({
   value,
   onChange,
+  disabled = false,
+  required = true,
 }: {
   value: string;
-  onChange: (patientId: string) => void;
+  onChange: (patientId: string, patient: PatientRow | null) => void;
+  disabled?: boolean;
+  required?: boolean;
 }) {
   const [query, setQuery] = useState("");
   const [found, setFound] = useState<PatientRow[]>([]);
   const [chosen, setChosen] = useState<PatientRow | null>(null);
   const [problem, setProblem] = useState("");
   const search = useDebounced(query.trim());
+  const chosenId = chosen?.id;
+
+  useEffect(() => {
+    if (value === "" || chosenId === value) return;
+    const controller = new AbortController();
+    unwrap(
+      http.GET("/api/v1/patients/{patient_id}", {
+        params: { path: { patient_id: value } },
+        signal: controller.signal,
+      }),
+    )
+      .then(setChosen)
+      .catch((error: unknown) => {
+        if (!controller.signal.aborted) setProblem(financeErrorMessage(error));
+      });
+    return () => controller.abort();
+  }, [value, chosenId]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -87,6 +113,7 @@ function PatientPicker({
             placeholder="Tên hoặc mã hồ sơ"
             className={FIELD_CONTROL_CLASS}
             autoComplete="off"
+            disabled={disabled}
           />
         )}
       </Field>
@@ -94,7 +121,7 @@ function PatientPicker({
         label="Hồ sơ"
         hint="Một lựa chọn cho mỗi hồ sơ"
         error={problem === "" ? undefined : problem}
-        required
+        required={required}
       >
         {(control) => (
           <select
@@ -103,11 +130,12 @@ function PatientPicker({
             onChange={(e) => {
               const next = options.find((p) => p.id === e.target.value) ?? null;
               setChosen(next);
-              onChange(e.target.value);
+              onChange(e.target.value, next);
             }}
             className={FIELD_CONTROL_CLASS}
+            disabled={disabled}
           >
-            <option value="">Chọn hồ sơ</option>
+            <option value="">{required ? "Chọn hồ sơ" : "Tất cả hồ sơ"}</option>
             {options.map((patient) => (
               <option key={patient.id} value={patient.id}>
                 {patient.full_name} · {patient.code}
@@ -187,14 +215,12 @@ export function EntryFormPanel({
   today,
   services,
   doctors,
-  invoices,
   defaultOpen,
   onSaved,
 }: {
   today: string;
   services: readonly ServiceRow[];
   doctors: readonly Doctor[];
-  invoices: readonly InvoiceRow[];
   defaultOpen: boolean;
   onSaved: () => void;
 }) {
@@ -205,7 +231,24 @@ export function EntryFormPanel({
   );
   const [problem, setProblem] = useState("");
   const [busy, setBusy] = useState(false);
-  const attachable = invoices.filter((invoice) => invoice.patient_id === form.patientId);
+  const patientId = form.patientId;
+  const loadInvoices = useCallback(
+    async (signal: AbortSignal): Promise<InvoiceRow[]> => {
+      if (patientId === "") return [];
+      const page = await unwrap(
+        http.GET("/api/v1/finance/invoices", {
+          params: { query: { patient_id: patientId, limit: 200 } },
+          signal,
+        }),
+      );
+      return page.items;
+    },
+    [patientId],
+  );
+  // useLoad keeps the previous patient's list while the next one loads: filter so it never shows.
+  const attachable = (useLoad(loadInvoices).data ?? []).filter(
+    (invoice) => invoice.patient_id === patientId,
+  );
 
   function chooseService(serviceId: string) {
     const service = services.find((s) => s.id === serviceId);

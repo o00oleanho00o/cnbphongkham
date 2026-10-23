@@ -26,7 +26,6 @@ import {
   periodAction,
   type FinanceEntries,
   type FinanceRow,
-  type InvoiceRow,
 } from "@/lib/finance/finance-view";
 import { useLoad } from "@/lib/use-load";
 import { Button } from "@/ui/button";
@@ -35,7 +34,6 @@ import { Card } from "@/ui/card";
 type EntriesData = {
   table: FinanceEntries;
   services: ServiceRow[];
-  invoices: InvoiceRow[];
 };
 
 type Dialog = { kind: "void"; row: FinanceRow } | { kind: "close" } | { kind: "pay" } | null;
@@ -55,13 +53,12 @@ function FinanceEntriesPage() {
         http.GET("/api/v1/finance/entries", { params: { query: { month, scope } }, signal }),
       );
       if (!table.can_write || table.period.status !== "open") {
-        return { table, services: [], invoices: [] };
+        return { table, services: [] };
       }
-      const [services, invoices] = await Promise.all([
-        unwrap(http.GET("/api/v1/services", { params: { query: { active: true } }, signal })),
-        unwrap(http.GET("/api/v1/finance/invoices", { params: { query: { limit: 200 } }, signal })),
-      ]);
-      return { table, services, invoices: invoices.items };
+      const services = await unwrap(
+        http.GET("/api/v1/services", { params: { query: { active: true } }, signal }),
+      );
+      return { table, services };
     },
     [month, scope, refreshKey],
   );
@@ -115,7 +112,6 @@ function FinanceEntriesPage() {
               today={table.today}
               services={data.services}
               doctors={table.doctors}
-              invoices={data.invoices}
               defaultOpen={params.get("form") === "open"}
               onSaved={reload}
             />

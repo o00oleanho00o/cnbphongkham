@@ -6,6 +6,7 @@
 // from the draft's own snapshot: they are never typed here. The page then opens the review of the two sheets.
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 
+import { PatientPicker } from "@/components/finance/entry-form";
 import { Notice, PrimaryButton, SecondaryButton } from "@/components/ops/ops-ui";
 import { Sheet } from "@/components/ops/sheet";
 import { useToast } from "@/components/ops/toast";
@@ -44,7 +45,8 @@ const SEARCH_DELAY_MS = 200;
 const PRODUCT_PAGE = 200;
 
 type Lists = {
-  patients: PatientRow[];
+  /** the preset patient, read for its doctor in charge */
+  preset: PatientRow | null;
   doctors: DoctorChoice[];
   summary: Schemas["CatalogSummaryOut"];
 };
@@ -85,30 +87,22 @@ export function QuickOrderDialog({
 
   const loadLists = useCallback(
     async (signal: AbortSignal): Promise<Lists> => {
-      const [patients, resources, summary] = await Promise.all([
-        unwrap(http.GET("/api/v1/patients", { params: { query: { limit: 200 } }, signal })),
-        unwrap(http.GET("/api/v1/resources", { signal })),
-        unwrap(http.GET("/api/v1/catalog/summary", { signal })),
-      ]);
-      const wanted = editing?.patient_id ?? presetPatientId;
-      const known = patients.items.some((p) => p.id === wanted);
-      const extra =
-        wanted && !known
-          ? await unwrap(
+      const [preset, resources, summary] = await Promise.all([
+        presetPatientId && !editing
+          ? unwrap(
               http.GET("/api/v1/patients/{patient_id}", {
-                params: { path: { patient_id: wanted } },
+                params: { path: { patient_id: presetPatientId } },
                 signal,
               }),
             ).catch(() => null)
-          : null;
+          : null,
+        unwrap(http.GET("/api/v1/resources", { signal })),
+        unwrap(http.GET("/api/v1/catalog/summary", { signal })),
+      ]);
       const doctors = resources.doctors
         .filter((d) => d.active)
         .map((d) => ({ id: d.user_id, name: d.name }));
-      return {
-        patients: extra ? [extra, ...patients.items] : patients.items,
-        doctors,
-        summary,
-      };
+      return { preset, doctors, summary };
     },
     [editing, presetPatientId],
   );
@@ -132,20 +126,18 @@ export function QuickOrderDialog({
     return [{ id: editing.doctor_id, name: editing.doctor_name }, ...base];
   }, [lists.data, editing]);
 
-  // The first patient and doctor of a new order: the preset one, else the first in the list.
+  // The doctor of a new order: the preset patient's doctor in charge, else the first in the list. The patient is
+  // never picked for the user.
   useEffect(() => {
     if (editing || !lists.data) return;
     setDraft((current) => {
-      const patientId = current.patientId || lists.data?.patients[0]?.id || "";
-      const patient = lists.data?.patients.find((p) => p.id === patientId);
+      const patient = lists.data?.preset;
       const doctorId =
         current.doctorId ||
         doctors.find((d) => d.id === patient?.doctor_id)?.id ||
         doctors[0]?.id ||
         "";
-      return patientId === current.patientId && doctorId === current.doctorId
-        ? current
-        : { ...current, patientId, doctorId };
+      return doctorId === current.doctorId ? current : { ...current, doctorId };
     });
   }, [editing, lists.data, doctors]);
 
@@ -153,8 +145,7 @@ export function QuickOrderDialog({
     setDraft((current) => ({ ...current, [key]: value }));
   const setLines = (next: DraftLine[]) => set("lines", next);
 
-  function changePatient(patientId: string) {
-    const patient = lists.data?.patients.find((p) => p.id === patientId);
+  function changePatient(patientId: string, patient: PatientRow | null) {
     const doctorId = doctors.find((d) => d.id === patient?.doctor_id)?.id ?? draft.doctorId;
     setDraft((current) => ({ ...current, patientId, doctorId }));
   }
@@ -219,23 +210,13 @@ export function QuickOrderDialog({
     >
       <form id="quick-order-form" onSubmit={(e) => void save(e)} noValidate>
         <div className="grid grid-cols-1 gap-x-4 sm:grid-cols-2">
-          <Field label="Bệnh nhân">
-            {(control) => (
-              <select
-                {...control}
-                value={draft.patientId}
-                onChange={(e) => changePatient(e.target.value)}
-                disabled={editing !== null}
-                className={FIELD_CONTROL_CLASS}
-              >
-                {(lists.data?.patients ?? []).map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.full_name} · {p.code}
-                  </option>
-                ))}
-              </select>
-            )}
-          </Field>
+          <div>
+            <PatientPicker
+              value={draft.patientId}
+              onChange={changePatient}
+              disabled={editing !== null}
+            />
+          </div>
           <Field label="Bác sĩ phụ trách">
             {(control) => (
               <select

@@ -5,13 +5,13 @@
 import { useMemo, useState, type FormEvent } from "react";
 import { Link } from "@/lib/link";
 
+import { PatientPicker } from "@/components/finance/entry-form";
 import { Notice } from "@/components/ops/ops-ui";
 import { Sheet } from "@/components/ops/sheet";
 import { useToast } from "@/components/ops/toast";
 import type { Schemas } from "@/lib/api";
 import { ApiError, errorMessage, http, unwrap } from "@/lib/api/client";
 import { APPOINTMENT_STATUS_LABEL } from "@/lib/ops/labels";
-import type { PatientIndex } from "@/lib/ops/use-patient-names";
 import { fetchFreeSlot, runTransition } from "@/lib/ops/schedule-api";
 import {
   ACTION_DONE,
@@ -80,7 +80,6 @@ export function AppointmentSheet({
   target,
   doctors,
   rooms = [],
-  patients,
   onClose,
   onSaved,
 }: {
@@ -88,7 +87,6 @@ export function AppointmentSheet({
   doctors: readonly Doctor[];
   /** Rooms of the clinic; without any the room field is not shown. */
   rooms?: readonly Room[];
-  patients: PatientIndex;
   onClose: () => void;
   /** Called after the BE accepted a change; the page reloads the board. */
   onSaved: () => void;
@@ -117,10 +115,6 @@ export function AppointmentSheet({
   const [hint, setHint] = useState("");
   const [busy, setBusy] = useState(false);
 
-  const patientOptions = useMemo(
-    () => [...patients.values()].toSorted((a, b) => a.full_name.localeCompare(b.full_name, "vi")),
-    [patients],
-  );
   const doctorChoices = ownDoctorOnly ? doctors.filter((d) => d.id === user.id) : doctors;
   // A paused room is still shown when the visit already holds it, so the form never silently drops it.
   const roomChoices = rooms.filter((r) => r.active || r.id === initial.roomId);
@@ -295,25 +289,7 @@ export function AppointmentSheet({
       )}
 
       <form id="appointment-form" onSubmit={(e) => void save(e)}>
-        {editing === null && (
-          <Field label="Bệnh nhân" required>
-            {(control) => (
-              <select
-                {...control}
-                className={FIELD_CONTROL_CLASS}
-                value={patientId}
-                onChange={(e) => setPatientId(e.target.value)}
-              >
-                <option value="">Chọn bệnh nhân…</option>
-                {patientOptions.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.full_name} · {p.code}
-                  </option>
-                ))}
-              </select>
-            )}
-          </Field>
-        )}
+        {editing === null && <PatientPicker value={patientId} onChange={setPatientId} />}
         <div className="grid grid-cols-1 gap-x-3 sm:grid-cols-2">
           <Field label="Bác sĩ">
             {(control) => (

@@ -45,7 +45,6 @@ import {
   type ScheduleAction,
   type ScheduleItem,
 } from "@/lib/ops/schedule-view";
-import { usePatientIndex } from "@/lib/ops/use-patient-names";
 import { useSession } from "@/lib/session/session-context";
 import { useLoad } from "@/lib/use-load";
 import { errorMessage } from "@/lib/api/client";
@@ -83,7 +82,6 @@ const LIVE_TYPES: readonly LiveEventType[] = ["appointments.changed"];
 function SchedulePage() {
   const { user, can } = useSession();
   const toast = useToast();
-  const patients = usePatientIndex();
   const [day, setDay] = useState(() => clinicDateKey());
   const [view, setView] = useState<View>("day");
   const [doctorId, setDoctorId] = useState("");
@@ -382,7 +380,6 @@ function SchedulePage() {
           target={sheet}
           doctors={doctors}
           rooms={rooms}
-          patients={patients}
           onClose={() => setSheet(null)}
           onSaved={onSaved}
         />

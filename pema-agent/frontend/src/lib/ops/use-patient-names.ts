@@ -34,8 +34,8 @@ export function usePatientIndex(): PatientIndex {
   return index;
 }
 
-/** "Nguyễn Thu Hà" when known, otherwise the code. */
+/** "Nguyễn Thu Hà" when known, otherwise the code; a linked patient beyond the loaded page keeps a neutral label. */
 export function displayName(index: PatientIndex, id: string | null, code: string | null): string {
-  const known = id ? index.get(id)?.full_name : undefined;
-  return known ?? code ?? "Chưa gắn hồ sơ";
+  if (!id) return code ?? "Chưa gắn hồ sơ";
+  return index.get(id)?.full_name ?? code ?? `Bệnh nhân #${id.slice(0, 8)}`;
 }

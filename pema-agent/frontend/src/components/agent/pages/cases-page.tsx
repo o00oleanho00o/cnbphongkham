@@ -252,6 +252,7 @@ function CaseRow({
               variant="secondary"
               aria-label={`Chạy ngay ca #${item.id}`}
               busy={busy === `wake-${item.id}`}
+              disabled={busy !== ""}
               onClick={onWake}
             >
               Chạy ngay
@@ -262,6 +263,7 @@ function CaseRow({
               variant="secondary"
               aria-label={`Gửi thử ngay ca #${item.id}`}
               busy={busy === `try-${item.id}`}
+              disabled={busy !== ""}
               onClick={onTry}
             >
               Gửi thử ngay
@@ -271,6 +273,7 @@ function CaseRow({
             variant="ghost"
             aria-label={`${events ? "Ẩn" : "Xem"} nhật ký ca #${item.id}`}
             busy={busy === `log-${item.id}`}
+            disabled={busy !== ""}
             onClick={onLog}
           >
             {events ? "Ẩn nhật ký" : "Nhật ký"}

@@ -7,6 +7,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useMemo, useState } from "react";
 
 import { BillableOrders } from "@/components/finance/billable-orders";
+import { PatientPicker } from "@/components/finance/entry-form";
 import { useFinance } from "@/components/finance/finance-context";
 import { LoadState } from "@/components/finance/finance-ui";
 import { PaymentFields } from "@/components/finance/payment-dialog";
@@ -53,9 +54,31 @@ function CollectCard({
 }) {
   const toast = useToast();
   const [invoiceId, setInvoiceId] = useState("");
-  const chosen = due.find((i) => i.id === invoiceId) ?? due[0];
+  const [patientId, setPatientId] = useState("");
+  // The page lists the newest due invoices only; a chosen patient's are asked of the server, so none is out of reach.
+  const loadPatientDue = useCallback(
+    async (signal: AbortSignal): Promise<InvoiceRow[]> => {
+      if (patientId === "") return [];
+      const page = await unwrap(
+        http.GET("/api/v1/finance/invoices", {
+          params: { query: { due_only: true, patient_id: patientId, limit: 200 } },
+          signal,
+        }),
+      );
+      return page.items;
+    },
+    [patientId],
+  );
+  const patientDue = useLoad(loadPatientDue);
+  const shown =
+    patientId === ""
+      ? due
+      : (patientDue.data ?? []).filter((invoice) => invoice.patient_id === patientId);
+  const chosen = shown.find((i) => i.id === invoiceId) ?? shown[0];
   return (
     <Card title="Thu tiền khách hàng">
+      <PatientPicker value={patientId} onChange={setPatientId} required={false} />
+      {patientDue.error !== "" && <Notice tone="error">{patientDue.error}</Notice>}
       <Field label="Hóa đơn còn nợ">
         {(control) => (
           <select
@@ -63,9 +86,9 @@ function CollectCard({
             value={chosen?.id ?? ""}
             onChange={(e) => setInvoiceId(e.target.value)}
             className={FIELD_CONTROL_CLASS}
-            disabled={due.length === 0}
+            disabled={shown.length === 0}
           >
-            {due.map((invoice) => (
+            {shown.map((invoice) => (
               <option key={invoice.id} value={invoice.id}>
                 {dueChoiceLabel(invoice)}
               </option>
@@ -81,6 +104,7 @@ function CollectCard({
           submitLabel="Xác nhận thu"
           onPaid={() => {
             toast.push("success", "Đã ghi phiếu thu và cập nhật hóa đơn");
+            patientDue.reload();
             onPaid();
           }}
         />

@@ -300,7 +300,6 @@ export function ReceptionTable({ patients }: { patients: PatientIndex }) {
           target={sheet}
           doctors={doctors}
           rooms={rooms}
-          patients={patients}
           onClose={() => setSheet(null)}
           onSaved={onSaved}
         />
