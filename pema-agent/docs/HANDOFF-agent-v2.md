@@ -26,6 +26,9 @@ revision files `0001_agent_rt` … `0012_*` or plugin files `0002_*`/`0003_*`, t
   **Reminders now need `cases_enabled` on** (`infra/README.md` step 5).
 - **Not done:** `case_need_human` with resume/close; the frontend page for cases and for the token budget
   settings.
+- **Run a case now (2026-10-23, plan section 9):** `POST /v1/admin/cases/{id}/wake` (`CaseEngine.wake_by_hand`) wakes a
+  live case; its checks still run. Tab Ca of the dashboard lists the cases, their log and the button. Plugin
+  `follow_up` takes its waits as settings in minutes (`quiet_after_min`, `min_after_min`, `max_after_min`).
 - **Limits from the dashboard (2026-10-23, plan section 8):** ten limits of a turn and of compaction
   (`LIMIT_FIELDS` in `agent_settings.py`: `max_steps`, `max_output_tokens`, `max_turn_s`, `max_turn_tokens`,
   `stop_after_repeats`, `error_streak_stop`, `compact_at`, `keep_recent_ratio`, `max_parallel_tools`,

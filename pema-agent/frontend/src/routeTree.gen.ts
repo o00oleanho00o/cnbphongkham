@@ -39,6 +39,7 @@ import { Route as AdminFinancePeriodsIndexRouteImport } from './routes/_admin/fi
 import { Route as AdminFinanceRatesIndexRouteImport } from './routes/_admin/finance/rates/index'
 import { Route as AdminOrdersIdIndexRouteImport } from './routes/_admin/orders/$id/index'
 import { Route as AdminPatientsIdIndexRouteImport } from './routes/_admin/patients/$id/index'
+import { Route as AdminAdminAgentCasesIndexRouteImport } from './routes/_admin/admin/agent/cases/index'
 import { Route as AdminAdminAgentModelIndexRouteImport } from './routes/_admin/admin/agent/model/index'
 import { Route as AdminAdminAgentOverviewIndexRouteImport } from './routes/_admin/admin/agent/overview/index'
 import { Route as AdminAdminAgentPluginsIndexRouteImport } from './routes/_admin/admin/agent/plugins/index'
@@ -202,6 +203,12 @@ const AdminPatientsIdIndexRoute = AdminPatientsIdIndexRouteImport.update({
   path: '/patients/$id/',
   getParentRoute: () => AdminRouteRoute,
 } as any)
+const AdminAdminAgentCasesIndexRoute =
+  AdminAdminAgentCasesIndexRouteImport.update({
+    id: '/cases/',
+    path: '/cases/',
+    getParentRoute: () => AdminAdminAgentRouteRoute,
+  } as any)
 const AdminAdminAgentModelIndexRoute =
   AdminAdminAgentModelIndexRouteImport.update({
     id: '/model/',
@@ -292,6 +299,7 @@ export interface FileRoutesByFullPath {
   '/finance/rates/': typeof AdminFinanceRatesIndexRoute
   '/orders/$id/': typeof AdminOrdersIdIndexRoute
   '/patients/$id/': typeof AdminPatientsIdIndexRoute
+  '/admin/agent/cases/': typeof AdminAdminAgentCasesIndexRoute
   '/admin/agent/model/': typeof AdminAdminAgentModelIndexRoute
   '/admin/agent/overview/': typeof AdminAdminAgentOverviewIndexRoute
   '/admin/agent/plugins/': typeof AdminAdminAgentPluginsIndexRoute
@@ -331,6 +339,7 @@ export interface FileRoutesByTo {
   '/finance/rates': typeof AdminFinanceRatesIndexRoute
   '/orders/$id': typeof AdminOrdersIdIndexRoute
   '/patients/$id': typeof AdminPatientsIdIndexRoute
+  '/admin/agent/cases': typeof AdminAdminAgentCasesIndexRoute
   '/admin/agent/model': typeof AdminAdminAgentModelIndexRoute
   '/admin/agent/overview': typeof AdminAdminAgentOverviewIndexRoute
   '/admin/agent/plugins': typeof AdminAdminAgentPluginsIndexRoute
@@ -374,6 +383,7 @@ export interface FileRoutesById {
   '/_admin/finance/rates/': typeof AdminFinanceRatesIndexRoute
   '/_admin/orders/$id/': typeof AdminOrdersIdIndexRoute
   '/_admin/patients/$id/': typeof AdminPatientsIdIndexRoute
+  '/_admin/admin/agent/cases/': typeof AdminAdminAgentCasesIndexRoute
   '/_admin/admin/agent/model/': typeof AdminAdminAgentModelIndexRoute
   '/_admin/admin/agent/overview/': typeof AdminAdminAgentOverviewIndexRoute
   '/_admin/admin/agent/plugins/': typeof AdminAdminAgentPluginsIndexRoute
@@ -417,6 +427,7 @@ export interface FileRouteTypes {
     | '/finance/rates/'
     | '/orders/$id/'
     | '/patients/$id/'
+    | '/admin/agent/cases/'
     | '/admin/agent/model/'
     | '/admin/agent/overview/'
     | '/admin/agent/plugins/'
@@ -456,6 +467,7 @@ export interface FileRouteTypes {
     | '/finance/rates'
     | '/orders/$id'
     | '/patients/$id'
+    | '/admin/agent/cases'
     | '/admin/agent/model'
     | '/admin/agent/overview'
     | '/admin/agent/plugins'
@@ -498,6 +510,7 @@ export interface FileRouteTypes {
     | '/_admin/finance/rates/'
     | '/_admin/orders/$id/'
     | '/_admin/patients/$id/'
+    | '/_admin/admin/agent/cases/'
     | '/_admin/admin/agent/model/'
     | '/_admin/admin/agent/overview/'
     | '/_admin/admin/agent/plugins/'
@@ -731,6 +744,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminPatientsIdIndexRouteImport
       parentRoute: typeof AdminRouteRoute
     }
+    '/_admin/admin/agent/cases/': {
+      id: '/_admin/admin/agent/cases/'
+      path: '/cases'
+      fullPath: '/admin/agent/cases/'
+      preLoaderRoute: typeof AdminAdminAgentCasesIndexRouteImport
+      parentRoute: typeof AdminAdminAgentRouteRoute
+    }
     '/_admin/admin/agent/model/': {
       id: '/_admin/admin/agent/model/'
       path: '/model'
@@ -827,6 +847,7 @@ const AdminFinanceRouteRouteWithChildren =
 
 interface AdminAdminAgentRouteRouteChildren {
   AdminAdminAgentIndexRoute: typeof AdminAdminAgentIndexRoute
+  AdminAdminAgentCasesIndexRoute: typeof AdminAdminAgentCasesIndexRoute
   AdminAdminAgentModelIndexRoute: typeof AdminAdminAgentModelIndexRoute
   AdminAdminAgentOverviewIndexRoute: typeof AdminAdminAgentOverviewIndexRoute
   AdminAdminAgentPluginsIndexRoute: typeof AdminAdminAgentPluginsIndexRoute
@@ -840,6 +861,7 @@ interface AdminAdminAgentRouteRouteChildren {
 
 const AdminAdminAgentRouteRouteChildren: AdminAdminAgentRouteRouteChildren = {
   AdminAdminAgentIndexRoute: AdminAdminAgentIndexRoute,
+  AdminAdminAgentCasesIndexRoute: AdminAdminAgentCasesIndexRoute,
   AdminAdminAgentModelIndexRoute: AdminAdminAgentModelIndexRoute,
   AdminAdminAgentOverviewIndexRoute: AdminAdminAgentOverviewIndexRoute,
   AdminAdminAgentPluginsIndexRoute: AdminAdminAgentPluginsIndexRoute,

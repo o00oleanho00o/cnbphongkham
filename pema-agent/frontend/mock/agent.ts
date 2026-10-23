@@ -8,6 +8,7 @@ import { existsSync, readFileSync } from "node:fs";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { fileURLToPath } from "node:url";
 
+import { registerAgentCases } from "./agent-cases";
 import { registerAgentSettings } from "./agent-settings";
 import { registerKnowledge } from "./knowledge";
 import {
@@ -817,6 +818,7 @@ export function buildAgentRouter(): Router {
     },
   }));
   registerAgentSettings(r);
+  registerAgentCases(r);
   registerKnowledge(r);
   return r;
 }

@@ -11,6 +11,8 @@ from datetime import UTC, datetime, timedelta
 from typing import Any
 from zoneinfo import ZoneInfo
 
+import pytest
+
 from agent_app.cases import CaseEngine, CasesConfig, InMemoryCaseStore
 from agent_app.plugins import Cases, ProactiveSent
 from agentcore import Message, TextBlock
@@ -294,3 +296,39 @@ async def test_jev_judges_when_it_is_sure_and_the_chat_model_only_when_it_is_not
         assert len(world.model.requests) == 1
         assert (await world.case()).state["state"] == "hesitant"
     assert off.jev.asked == []  # type: ignore[union-attr]
+
+
+def test_the_waits_are_settings_in_minutes_within_their_bounds() -> None:
+    default = FollowUpSettings.of({}).policy
+    assert (default.quiet_after, default.min_after, default.max_after) == (
+        timedelta(hours=2),
+        timedelta(hours=1),
+        timedelta(days=14),
+    )
+    quick = FollowUpSettings.of({"quiet_after_min": 1, "min_after_min": 1, "max_after_min": 2}).policy
+    assert (quick.quiet_after, quick.min_after, quick.max_after) == (
+        timedelta(minutes=1),
+        timedelta(minutes=1),
+        timedelta(minutes=2),
+    )
+    for wrong in (
+        {"quiet_after_min": 0},
+        {"max_after_min": 20_161},
+        {"min_after_min": 30, "max_after_min": 10},
+    ):
+        with pytest.raises(ValueError, match="must"):
+            FollowUpSettings.of(wrong)
+
+
+async def test_with_short_waits_a_quiet_chat_is_written_to_within_minutes() -> None:
+    w = World(
+        '{"state": "hesitant", "after_h": 24, "reason": "hỏi giá rồi im"}',
+        "Dạ chị còn quan tâm gói khám không ạ?",
+        settings=FollowUpSettings.of(
+            {"channels": CHANNEL, "quiet_after_min": 1, "min_after_min": 1, "max_after_min": 2}
+        ),
+    )
+    await w.answered()
+    await w.at(w.now + timedelta(minutes=1))
+    await w.at(w.now + timedelta(minutes=2))
+    assert len(w.outbox.sent) == 1

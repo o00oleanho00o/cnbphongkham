@@ -181,6 +181,17 @@ class CaseEngine:
         cap = min(spec.budget.per_person_per_day, self._config().per_person_per_day)
         return max(0, cap - await self._sent_today(channel, user_id, self._clock()))
 
+    # --- an admin ---
+
+    async def wake_by_hand(self, case_id: int) -> bool:
+        """An admin's "run now": the case runs at the next pass, every check before its nodes as usual. False
+        when there is no such live case, or its plugin is off."""
+        record = await self._store.get(case_id)
+        found = None if record is None else self._specs().get(record.kind)
+        if record is None or found is None or record.status not in ("open", "waiting"):
+            return False
+        return await self._wake(found[1], record, {}, "admin")
+
     async def _wake(self, spec: CaseSpec, record: CaseRecord, patch: dict[str, Any], why: str) -> bool:
         now = self._clock()
         try:

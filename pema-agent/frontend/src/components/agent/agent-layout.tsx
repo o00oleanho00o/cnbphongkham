@@ -1,4 +1,4 @@
-// Điều khiển agent: the agent's own pages (overview, chat sessions, trace, model, settings, tools, plugins) as tabs, and one tab for
+// Điều khiển agent: the agent's own pages (overview, chat sessions, trace, cases, model, settings, tools, plugins) as tabs, and one tab for
 // each plugin that declares a `section` (the knowledge store). Each plugin's page, and the pages the plugin ships,
 // open from the Plugins list (`/admin/agent/plugins/<name>`); the layout installs the plugin SDK once for them. The
 // agent answers every call of a role without `admin.agents` with 403.
@@ -16,6 +16,7 @@ const BEFORE_SECTIONS: readonly SubNavItem[] = [
   { href: "/admin/agent/overview", label: "Tổng quan" },
   { href: "/admin/agent/sessions", label: "Phiên chat" },
   { href: "/admin/agent/traces", label: "Trace" },
+  { href: "/admin/agent/cases", label: "Ca" },
 ];
 
 function AgentTabs() {

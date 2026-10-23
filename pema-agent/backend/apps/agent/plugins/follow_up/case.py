@@ -21,7 +21,7 @@ from __future__ import annotations
 import logging
 from collections.abc import Awaitable, Callable, Mapping
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Any, Final
 
 from pydantic import BaseModel
@@ -77,12 +77,31 @@ class FollowUpSettings:
         confidence = float(config.get("jev_min_confidence", 0.6))
         if not 0.0 <= confidence <= 1.0:
             raise ValueError("jev_min_confidence must be between 0 and 1")
+        quiet = _minutes(config, "quiet_after_min", DEFAULT_POLICY.quiet_after, 1, 1_440)
+        least = _minutes(config, "min_after_min", DEFAULT_POLICY.min_after, 1, 1_440)
+        most = _minutes(config, "max_after_min", DEFAULT_POLICY.max_after, 1, 20_160)
+        if least > most:
+            raise ValueError("min_after_min must not be over max_after_min")
         return cls(
             channels=channels,
-            policy=FollowUpPolicy(timezone=str(config.get("timezone") or DEFAULT_POLICY.timezone)),
+            policy=FollowUpPolicy(
+                timezone=str(config.get("timezone") or DEFAULT_POLICY.timezone),
+                quiet_after=quiet,
+                min_after=least,
+                max_after=most,
+            ),
             judge_with_jev=bool(config.get("judge_with_jev", True)),
             jev_min_confidence=confidence,
         )
+
+
+def _minutes(config: Mapping[str, Any], name: str, default: timedelta, low: int, high: int) -> timedelta:
+    value = config.get(name)
+    if value is None:
+        return default
+    if not low <= int(value) <= high:
+        raise ValueError(f"{name} must be between {low} and {high}")
+    return timedelta(minutes=int(value))
 
 
 class FollowUpCase(BaseModel):

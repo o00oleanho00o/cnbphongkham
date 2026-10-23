@@ -35,6 +35,7 @@ from agentcore.channels import PROACTIVE, InboundMessage
 NOW = datetime(2026, 10, 22, 3, 0, tzinfo=UTC)
 ZONE = ZoneInfo("Asia/Ho_Chi_Minh")
 ON = CasesConfig(enabled=True, per_person_per_day=2)
+DEV_PROFILE = Path(__file__).resolve().parents[1] / "agents" / "dev"
 
 
 class Quiet(BaseModel):
@@ -486,3 +487,72 @@ def test_the_steering_tools_come_only_with_a_plugin_that_declares_cases(tmp_path
     assert steering <= set(runtime.agent.tools.names())
     host.disable("a")
     assert not steering & set(runtime.agent.tools.names())
+
+
+# --- run now, by an admin ---
+
+
+async def test_an_admin_runs_a_waiting_case_now_and_its_checks_still_run() -> None:
+    judge = Judge()
+    s = Setup(_spec(judge))
+    case = await s.open()
+    later = (NOW + timedelta(days=1)).isoformat()
+    s.chat.calls = [("case_wait_until", {"wait_for": "clock", "until": later, "why": "call back"})]
+    await s.engine.pass_once()
+    assert await s.engine.pass_once() == 0  # not due yet
+
+    assert await s.engine.wake_by_hand(case.id)
+
+    woken = await s.store.get(case.id)
+    assert woken is not None
+    assert woken.wake_at == NOW
+    assert (await s.store.events(case.id))[-1]["detail"]["by"] == "admin"
+    assert await s.engine.pass_once() == 1
+    assert len(judge.seen) == 2  # the code node ran again before the turn
+
+
+async def test_run_now_refuses_a_closed_case_an_unknown_one_and_one_whose_plugin_is_off() -> None:
+    s = Setup(_spec(Judge()))
+    case = await s.open()
+    s.chat.calls = [("case_done", {"reason": "booked"})]
+    await s.engine.pass_once()
+    other = await s.open(key="c2")
+
+    assert not await s.engine.wake_by_hand(case.id)
+    assert not await s.engine.wake_by_hand(999)
+    s.specs = {}
+    assert not await s.engine.wake_by_hand(other.id)
+
+
+async def test_the_run_now_route_wakes_a_live_case_and_refuses_the_others() -> None:
+    import httpx
+
+    from agent_app.gateway import GatewaySettings, create_app
+    from agent_app.profile import load_profile
+    from agent_app.runtime import build_runtime
+
+    s = Setup(_spec(Judge()))
+    live = await s.open()
+    closed = await s.open(key="c2")
+    done = await s.store.get(closed.id)
+    assert done is not None
+    await s.store.save(replace(done, status="done"))
+    admin = "a" * 40
+    runtime = build_runtime(load_profile(DEV_PROFILE), fake=True, env={}, db=None)
+    dispatcher = runtime.dispatcher()
+    app = create_app(dispatcher, GatewaySettings(token="t" * 40, admin_token=admin), cases=s.engine)
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=app),
+        base_url="http://agent",
+        headers={"Authorization": f"Bearer {admin}"},
+    ) as client:
+        woken = await client.post(f"/v1/admin/cases/{live.id}/wake")
+        refused = await client.post(f"/v1/admin/cases/{closed.id}/wake")
+        missing = await client.post("/v1/admin/cases/999/wake")
+        anonymous = await client.post(f"/v1/admin/cases/{live.id}/wake", headers={"Authorization": ""})
+    await dispatcher.close(grace_s=1.0)
+
+    assert (woken.status_code, woken.json()["id"]) == (200, live.id)
+    assert (refused.status_code, refused.json()["error"]["kind"]) == (409, "not_live")
+    assert missing.status_code == 404
+    assert anonymous.status_code == 401

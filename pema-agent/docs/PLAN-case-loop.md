@@ -601,3 +601,18 @@ nó đọc). Trước khi có giao diện, đặt được qua `PATCH` hoặc CL
 
 - `/diagram-design`: cột mới trên `pema-system-design.html`; ERD archify `agent_rt`.
 - HANDOFF, `infra/README.md`; bàn giao cho phiên frontend (8.5).
+
+## 9. "Chạy ngay" một ca và giờ chờ của `follow_up` ra cài đặt (ghi và làm 2026-10-23, chủ chọn phương án đề xuất)
+
+Chủ muốn thử ca chủ động trên demo mà không đợi giờ thật.
+
+1. Động cơ: `CaseEngine.wake_by_hand(case_id)` gọi `_wake` có sẵn (lý do `admin` trong nhật ký): ca sống chạy ở lượt
+   quét tới; ca đã đóng, không có hay plugin đang tắt thì từ chối. Không bỏ qua bước kiểm nào (H4, H5): ca vẫn qua
+   `blocked` và nút kiểm của plugin, nên có thể chờ tiếp mà chưa nhắn.
+2. Route admin `POST /v1/admin/cases/{id}/wake` (404 không có, 409 `not_live`).
+3. `follow_up`: ba cài đặt plugin (phút): `quiet_after_min` (1-1440, mặc định 120), `min_after_min` (1-1440, 60),
+   `max_after_min` (1-20160, 14 ngày); `min` không lớn hơn `max`. Giờ do code quyết theo dữ liệu (H2), model không đổi
+   được. Thử nhanh trên demo: 1, 1, 2.
+4. Frontend: tab **Ca** trong Điều khiển agent (danh sách, nhật ký từng ca, nút Chạy ngay cho ca sống).
+5. Test: `test_cases_engine.py` (chạy ngay, từ chối, route), `follow_up/test_follow_up_case.py` (cài đặt, giờ ngắn
+   thì nhắn trong vài phút), `cases-page.test.tsx`.

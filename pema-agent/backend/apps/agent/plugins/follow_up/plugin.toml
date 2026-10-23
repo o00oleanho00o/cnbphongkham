@@ -26,3 +26,21 @@ type = "number"
 title = "Jev's least confidence"
 description = "Under this confidence (0-1) Jev's judgement is not used and the chat model judges."
 default = 0.6
+
+[user_config.quiet_after_min]
+type = "integer"
+title = "Minutes of silence before judging"
+description = "How long (1-1440 minutes) the customer is silent after the agent's answer before the conversation is judged. Lower it only to try the follow-up out."
+default = 120
+
+[user_config.min_after_min]
+type = "integer"
+title = "Least minutes before writing"
+description = "After a judgement, the follow-up waits at least this long (1-1440 minutes), whatever the judge says."
+default = 60
+
+[user_config.max_after_min]
+type = "integer"
+title = "Most minutes before writing"
+description = "After a judgement, the follow-up waits at most this long (1-20160 minutes, 14 days by default), whatever the judge says. Lower it only to try the follow-up out."
+default = 20160
