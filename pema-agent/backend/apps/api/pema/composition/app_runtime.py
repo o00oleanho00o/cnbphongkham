@@ -31,7 +31,6 @@ from pema.clinic.crm_rules.admin import SqlCrmRuleAdminService
 from pema.clinic.crm_rules.runner import CrmRulesRunner
 from pema.clinic.crm_rules.sql_store import SqlCrmRuleStore
 from pema.composition.agent_events_worker import AgentEventWorker
-from pema.composition.auth_bridge import resolve_staff_context
 from pema.config.env import Settings
 from pema.core.db import ClinicDatabase, get_installation_clinic_id
 from pema.live.publisher import install_live_publisher, installed_live_publisher
@@ -103,7 +102,6 @@ def wire_app(app: FastAPI, rt: AppRuntime) -> None:
     state.runtime = rt
     state.clinic_db = rt.db
     state.live = rt.live
-    state.staff_context_resolver = resolve_staff_context
     rules_admin = SqlCrmRuleAdminService(rt.db)
     app.dependency_overrides[admin_crm_rules.get_action_context] = dashboard_auth.action_context
     app.dependency_overrides[admin_crm_rules.get_rules_admin] = lambda: rules_admin

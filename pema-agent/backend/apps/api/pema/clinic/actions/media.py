@@ -185,25 +185,22 @@ async def store_content(
             raise DomainError(ErrorCode.VALIDATION_FAILED, "Dung lượng ảnh không khớp với khai báo.")
         if not matches_signature(row.mime, data[:16]):
             raise DomainError(ErrorCode.VALIDATION_FAILED, "Nội dung tệp không khớp định dạng ảnh đã chọn.")
-        digest = hashlib.sha256(data).hexdigest()
-        await storage.put(row.storage_key, data)
-        row.sha256 = digest
+        row.sha256 = hashlib.sha256(data).hexdigest()
         row.status = MediaStatus.UPLOADED.value
         row.uploaded_at = now()
-        try:
-            with lost_race_is_conflict():
-                await session.flush()
-            await audit.record(
-                session,
-                ctx,
-                "media.upload",
-                "media",
-                row.id,
-                {"patient_id": str(row.patient_id), "mime": row.mime, "size_bytes": row.size_bytes},
-            )
-        except Exception:
-            await storage.delete(row.storage_key)
-            raise
+        with lost_race_is_conflict():
+            await session.flush()
+        await audit.record(
+            session,
+            ctx,
+            "media.upload",
+            "media",
+            row.id,
+            {"patient_id": str(row.patient_id), "mime": row.mime, "size_bytes": row.size_bytes},
+        )
+        # Written last, inside the transaction: a database or audit failure writes no file, and a failed write
+        # rolls the row back to pending.
+        await storage.put(row.storage_key, data)
         names = await names_of(session, ctx, [row.uploaded_by])
         return media_out(row, names.get(row.uploaded_by) if row.uploaded_by else None, consent_active=True)
 
