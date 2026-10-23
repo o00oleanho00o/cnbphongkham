@@ -390,7 +390,7 @@ async def test_the_gateway_reports_delivery_and_channels(tmp_path: Path) -> None
     await _until(hub, dispatcher, 1, "sent")
 
     async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://agent") as client:
-        message = await client.get("/v1/ingress/1", headers={"Authorization": f"Bearer {TOKEN}"})
+        message = await client.get("/v1/ingress/1", headers={"Authorization": f"Bearer {ADMIN}"})
         listed = await client.get("/v1/admin/channels", headers={"Authorization": f"Bearer {ADMIN}"})
 
     assert message.json()["delivery"] == {"status": "sent", "attempts": 1, "parts_sent": 1, "error": None}

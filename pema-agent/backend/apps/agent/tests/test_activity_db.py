@@ -20,8 +20,10 @@ from sqlalchemy import Engine, create_engine
 from sqlalchemy import text as sql
 
 from agent_app.activity import PAGE_SIZE, Activity
+from agent_app.ingress_store import PostgresIngressStore
 from agent_app.storage import AgentDatabase, PostgresSessionStore, PostgresTracer
 from agentcore import Message, TextBlock, ToolUseBlock, TraceEvent, TurnTrace, Usage
+from agentcore.channels import InboundMessage
 
 pytestmark = pytest.mark.db
 
@@ -56,7 +58,10 @@ def migrated() -> Iterator[tuple[str, Engine]]:
 def db_url(migrated: tuple[str, Engine]) -> str:
     with migrated[1].begin() as conn:
         conn.execute(
-            sql("TRUNCATE agent_rt.agent_session, agent_rt.agent_message, agent_rt.agent_turn CASCADE")
+            sql(
+                "TRUNCATE agent_rt.agent_session, agent_rt.agent_message, agent_rt.agent_turn, "
+                "agent_rt.agent_ingress CASCADE"
+            )
         )
     return migrated[0]
 
@@ -194,6 +199,35 @@ def test_deleting_many_sessions_removes_only_those_of_this_agent_and_counts_them
         assert await activity.session("dev:zalo-a:u1:0") is None
         assert await activity.session("dev:zalo-a:u2:0") is None
         assert await activity.session("dev:zalo-a:u3:0") is not None
+
+    _run(db_url, check)
+
+
+def test_deleting_a_chat_deletes_its_inbound_texts_but_not_a_message_still_queued(db_url: str) -> None:
+    async def check(db: AgentDatabase) -> None:
+        ingress = PostgresIngressStore(db, agent="dev")
+        await _chat(db, "dev:zalo-a:u1:0", "zalo-a", "u1")
+        await _chat(db, "dev:zalo-a:u2:0", "zalo-a", "u2")
+        answered, _ = await ingress.accept(
+            TENANT, InboundMessage("zalo-a", "u1", "u1", "m1", "giá laser"), "dev:zalo-a:u1:0"
+        )
+        await ingress.fail(answered.id, "x")
+        queued, _ = await ingress.accept(
+            TENANT, InboundMessage("zalo-a", "u1", "u1", "m2", "còn nữa"), "dev:zalo-a:u1:0"
+        )
+        other, _ = await ingress.accept(
+            TENANT, InboundMessage("zalo-a", "u2", "u2", "m3", "chào"), "dev:zalo-a:u2:0"
+        )
+        await ingress.fail(other.id, "x")
+
+        await _activity(db, "other").delete_sessions(["dev:zalo-a:u1:0"])
+        assert await ingress.get(TENANT, answered.id) is not None
+        await _activity(db).delete_sessions(["dev:zalo-a:u1:0"])
+        await _activity(db).delete_session("dev:zalo-a:u2:0")
+
+        assert await ingress.get(TENANT, answered.id) is None
+        assert await ingress.get(TENANT, queued.id) is not None
+        assert await ingress.get(TENANT, other.id) is None
 
     _run(db_url, check)
 

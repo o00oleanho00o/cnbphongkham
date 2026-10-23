@@ -351,6 +351,9 @@ class AgentSettings:
         self._seen: int | None = None
         self._checked = -math.inf
         self._lock = asyncio.Lock()
+        # One read-modify-write at a time, so two saves at once cannot lose one; not ``_lock``, which
+        # ``_save`` takes to refresh.
+        self._writing = asyncio.Lock()
         self._live: LiveAgent | None = None
 
     def attach(self, live: LiveAgent) -> None:
@@ -421,18 +424,20 @@ class AgentSettings:
     async def update(self, changes: Mapping[str, Any], *, by: str | None = None) -> dict[str, Any]:
         """``changes`` holds only the fields to change: a value sets it, None gives it back to the profile.
         ``variables`` maps a name to its value (None: the profile's again), or is None for all of them."""
-        current = await self._store.get(self._tenant_id) or StoredAgentSettings()
-        updates: dict[str, Any] = {name: changes[name] for name in SCALAR_FIELDS if name in changes}
-        for name, value in updates.items():
-            _check_scalar(name, value)
-        if "variables" in changes:
-            updates["variables"] = _merged_variables(current.variables, changes["variables"])
-        changed = list(updates)
-        await self._save(replace(current, **updates, updated_by=by), changed)
+        async with self._writing:
+            current = await self._store.get(self._tenant_id) or StoredAgentSettings()
+            updates: dict[str, Any] = {name: changes[name] for name in SCALAR_FIELDS if name in changes}
+            for name, value in updates.items():
+                _check_scalar(name, value)
+            if "variables" in changes:
+                updates["variables"] = _merged_variables(current.variables, changes["variables"])
+            changed = list(updates)
+            await self._save(replace(current, **updates, updated_by=by), changed)
         return await self.show()
 
     async def clear(self, *, by: str | None = None) -> dict[str, Any]:
-        await self._save(StoredAgentSettings(updated_by=by), ["all"])
+        async with self._writing:
+            await self._save(StoredAgentSettings(updated_by=by), ["all"])
         return await self.show()
 
     # --- tools ---
@@ -481,17 +486,18 @@ class AgentSettings:
 
     async def set_tool(self, name: str, enabled: bool | None, *, by: str | None = None) -> dict[str, Any]:
         """Switches a tool on or off; None gives it back to the profile (core) or to on (plugin)."""
-        current = await self._store.get(self._tenant_id) or StoredAgentSettings()
-        if name == MEMORY_TOOL:
-            await self._save(replace(current, memory_enabled=enabled, updated_by=by), [f"tool {name}"])
-            return await self.tools()
-        known = {*core_tool_names(), *current.tools, *(spec.name for spec in self._plugin_tools())}
-        if name not in known:
-            raise SettingsError("unknown_tool", f"no tool {name!r} (is its plugin on?)")
-        flags = {n: on for n, on in current.tools.items() if n != name}
-        if enabled is not None:
-            flags[name] = enabled
-        await self._save(replace(current, tools=flags, updated_by=by), [f"tool {name}"])
+        async with self._writing:
+            current = await self._store.get(self._tenant_id) or StoredAgentSettings()
+            if name == MEMORY_TOOL:
+                await self._save(replace(current, memory_enabled=enabled, updated_by=by), [f"tool {name}"])
+                return await self.tools()
+            known = {*core_tool_names(), *current.tools, *(spec.name for spec in self._plugin_tools())}
+            if name not in known:
+                raise SettingsError("unknown_tool", f"no tool {name!r} (is its plugin on?)")
+            flags = {n: on for n, on in current.tools.items() if n != name}
+            if enabled is not None:
+                flags[name] = enabled
+            await self._save(replace(current, tools=flags, updated_by=by), [f"tool {name}"])
         return await self.tools()
 
     def _plugin_tools(self) -> list[ToolSpec[Any]]:

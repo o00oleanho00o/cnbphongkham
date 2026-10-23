@@ -423,9 +423,9 @@ def create_app(
         )
 
     @app.get("/v1/ingress/{ingress_id}", dependencies=[authorized])
-    async def ingress(ingress_id: int) -> Response:
+    async def ingress(ingress_id: int, request: Request) -> Response:
         record = await dispatcher.ingress.get(dispatcher.tenant_id, ingress_id)
-        if record is None:
+        if record is None or (record.channel != CHANNEL and not _admin(request)):
             return _error(404, "not_found", "no such message")
         return JSONResponse(_status(record))
 
@@ -469,9 +469,10 @@ def create_app(
             return RedirectResponse(f"{UI_PREFIX.lstrip('/')}/{name}/", status_code=307)
 
     @app.get("/v1/sessions/{session_id}", dependencies=[authorized])
-    async def session(session_id: str) -> Response:
+    async def session(session_id: str, request: Request) -> Response:
+        own = session_id.startswith(f"{dispatcher.agent.profile.agent.name}:{CHANNEL}:")
         messages = await dispatcher.store.load(dispatcher.tenant_id, session_id)
-        if not messages:
+        if not messages or not (own or _admin(request)):
             return _error(404, "not_found", "no such session")
         return JSONResponse(
             {
@@ -488,6 +489,11 @@ def create_app(
         )
 
     return app
+
+
+def _admin(request: Request) -> bool:
+    """A chat-scope caller (the web chat) sees only this gateway's own channel, never Zalo or the others."""
+    return ADMIN in request.state.principal.scopes
 
 
 def _challenge(status: int) -> dict[str, str] | None:

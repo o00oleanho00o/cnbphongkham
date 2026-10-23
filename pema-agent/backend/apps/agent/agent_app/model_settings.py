@@ -310,6 +310,8 @@ class ModelAdmin:
         self._dynamic = dynamic
         self._factory = factory
         self._lister = lister
+        # One read-modify-write of the stored settings at a time, so two saves at once cannot lose one.
+        self._writing = asyncio.Lock()
 
     async def resolved(self) -> ResolvedModel:
         stored = await self._store.get(self._tenant_id)
@@ -337,23 +339,25 @@ class ModelAdmin:
     async def update(self, changes: Mapping[str, Any]) -> dict[str, Any]:
         """``changes`` holds only the fields to change: a value sets it, None clears it (back to the profile).
         ``api_key``: a non-empty value is stored encrypted, "" keeps the stored one, None removes it."""
-        current = await self._store.get(self._tenant_id) or StoredModelSettings()
-        updates: dict[str, Any] = {name: changes[name] for name in SETTING_FIELDS if name in changes}
-        updates["entry_id"] = None
-        if "api_key" in changes:
-            key = cast(str | None, changes["api_key"])
-            if key is None:
-                updates["api_key_enc"] = None
-            elif key:
-                if self._secret_key is None:
-                    raise SecretKeyMissingError(NO_SECRET_KEY)
-                updates["api_key_enc"] = encrypt_with(self._secret_key, key)
-        await self._save(replace(current, **updates), [name for name in updates if name != "entry_id"])
+        async with self._writing:
+            current = await self._store.get(self._tenant_id) or StoredModelSettings()
+            updates: dict[str, Any] = {name: changes[name] for name in SETTING_FIELDS if name in changes}
+            updates["entry_id"] = None
+            if "api_key" in changes:
+                key = cast(str | None, changes["api_key"])
+                if key is None:
+                    updates["api_key_enc"] = None
+                elif key:
+                    if self._secret_key is None:
+                        raise SecretKeyMissingError(NO_SECRET_KEY)
+                    updates["api_key_enc"] = encrypt_with(self._secret_key, key)
+            await self._save(replace(current, **updates), [name for name in updates if name != "entry_id"])
         return await self.show()
 
     async def clear(self) -> dict[str, Any]:
-        current = await self._store.get(self._tenant_id) or StoredModelSettings()
-        await self._save(StoredModelSettings(version=current.version), ["all"])
+        async with self._writing:
+            current = await self._store.get(self._tenant_id) or StoredModelSettings()
+            await self._save(StoredModelSettings(version=current.version), ["all"])
         return await self.show()
 
     async def test(self) -> dict[str, Any]:
@@ -442,9 +446,10 @@ class ModelAdmin:
         """Removes the model from the list; if it was in use the agent keeps its settings, now detached."""
         await self._entry(entry_id)
         await self._entries.delete(self._tenant_id, entry_id)
-        stored = await self._store.get(self._tenant_id)
-        if stored is not None and stored.entry_id == entry_id:
-            await self._save(replace(stored, entry_id=None), ["entry"])
+        async with self._writing:
+            stored = await self._store.get(self._tenant_id)
+            if stored is not None and stored.entry_id == entry_id:
+                await self._save(replace(stored, entry_id=None), ["entry"])
         logger.info("model %s removed from the list", entry_id)
 
     async def use_entry(self, entry_id: str) -> dict[str, Any]:
@@ -504,19 +509,20 @@ class ModelAdmin:
         }
 
     async def _apply(self, entry: ModelEntry) -> None:
-        current = await self._store.get(self._tenant_id) or StoredModelSettings()
-        applied = replace(
-            current,
-            provider=entry.provider,
-            model=entry.model,
-            base_url=entry.base_url,
-            reasoning=entry.reasoning,
-            dialect=entry.dialect,
-            window_tokens=entry.window_tokens,
-            api_key_enc=entry.api_key_enc,
-            entry_id=entry.id,
-        )
-        await self._save(applied, ["entry"])
+        async with self._writing:
+            current = await self._store.get(self._tenant_id) or StoredModelSettings()
+            applied = replace(
+                current,
+                provider=entry.provider,
+                model=entry.model,
+                base_url=entry.base_url,
+                reasoning=entry.reasoning,
+                dialect=entry.dialect,
+                window_tokens=entry.window_tokens,
+                api_key_enc=entry.api_key_enc,
+                entry_id=entry.id,
+            )
+            await self._save(applied, ["entry"])
 
     async def _save(self, settings: StoredModelSettings, changed: list[str]) -> None:
         saved = await self._store.save(self._tenant_id, settings)

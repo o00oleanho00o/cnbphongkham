@@ -12,7 +12,7 @@ import asyncio
 import logging
 import time
 from collections.abc import Awaitable, Callable, Mapping
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import Any, Final
 
 from agent_app.assembly import Agent
@@ -212,6 +212,7 @@ class Dispatcher:
     ) -> tuple[IngressRecord, bool]:
         """Stores the message and starts its session's drain; returns the record and whether it is new. With
         ``deliver`` the reply goes out through the message's channel once the turn is over."""
+        inbound = _without_nul(inbound)
         session_id = await self.session_for(inbound.channel, inbound.conversation_id)
         self._typing_until.pop(
             (inbound.channel, inbound.conversation_id), None
@@ -440,6 +441,22 @@ class Dispatcher:
         for task in pending:
             task.cancel()
         await asyncio.gather(*pending, return_exceptions=True)
+
+
+def _without_nul(inbound: InboundMessage) -> InboundMessage:
+    """Postgres text and jsonb refuse NUL, so a message carrying one could never be stored nor answered."""
+
+    def clean(value: str) -> str:
+        return value.replace("\x00", "")
+
+    return replace(
+        inbound,
+        conversation_id=clean(inbound.conversation_id),
+        user_id=clean(inbound.user_id),
+        message_id=clean(inbound.message_id),
+        text=clean(inbound.text),
+        metadata={clean(key): clean(value) for key, value in inbound.metadata.items()},
+    )
 
 
 def _proactive(record: IngressRecord) -> bool:

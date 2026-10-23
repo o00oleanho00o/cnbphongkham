@@ -13,7 +13,7 @@ import pytest
 
 from agent_app.dispatcher import Dispatcher, DispatchSettings, StreamObserver
 from agent_app.gateway import GatewaySettings, create_app
-from agent_app.ingress import InMemorySessionLocks, SessionBusyError
+from agent_app.ingress import IngressRecord, InMemorySessionLocks, SessionBusyError
 from agent_app.profile import load_profile
 from agent_app.runtime import build_runtime
 from agentcore import (
@@ -32,6 +32,8 @@ from agentcore.loop.run_turn import RetryObserver
 DEV_PROFILE = Path(__file__).resolve().parents[1] / "agents" / "dev"
 TOKEN = "t" * 40
 AUTH = {"Authorization": f"Bearer {TOKEN}"}
+ADMIN_TOKEN = "a" * 40
+ADMIN_AUTH = {"Authorization": f"Bearer {ADMIN_TOKEN}"}
 
 
 class GateModel:
@@ -165,6 +167,47 @@ async def test_a_slow_reply_is_answered_with_202_and_can_be_fetched_later(client
     assert pending.json()["status"] in {"queued", "processing"}
     assert (done.json()["status"], done.json()["reply"]["text"]) == ("done", "reply:hi")
     assert (await client.get("/v1/ingress/999", headers=AUTH)).status_code == 404
+
+
+async def _zalo_message(client_for: ClientFor) -> tuple[httpx.AsyncClient, IngressRecord]:
+    """A gateway with an admin token, and a finished message that came in on another channel than http."""
+    dispatcher = _dispatcher(GateModel())
+    app = create_app(dispatcher, GatewaySettings(token=TOKEN, admin_token=ADMIN_TOKEN))
+    client = httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://agent")
+    client_for.opened.append((client, dispatcher))
+    record, _ = await dispatcher.accept(InboundMessage("zalo-a", "c1", "u1", "z1", "hi"))
+    return client, await dispatcher.wait(record.id, 2.0)
+
+
+async def test_a_chat_token_cannot_read_a_message_of_another_channel(client_for: ClientFor) -> None:
+    client, record = await _zalo_message(client_for)
+
+    as_chat = await client.get(f"/v1/ingress/{record.id}", headers=AUTH)
+    as_admin = await client.get(f"/v1/ingress/{record.id}", headers=ADMIN_AUTH)
+
+    assert (as_chat.status_code, as_admin.status_code) == (404, 200)
+
+
+async def test_a_chat_token_cannot_read_a_session_of_another_channel(client_for: ClientFor) -> None:
+    client, record = await _zalo_message(client_for)
+
+    as_chat = await client.get(f"/v1/sessions/{record.session_id}", headers=AUTH)
+    as_admin = await client.get(f"/v1/sessions/{record.session_id}", headers=ADMIN_AUTH)
+
+    assert record.session_id == "dev:zalo-a:c1:0"
+    assert (as_chat.status_code, as_admin.status_code) == (404, 200)
+
+
+async def test_nul_characters_are_dropped_before_a_message_is_stored() -> None:
+    dispatcher = _dispatcher(GateModel())
+
+    record, _ = await dispatcher.accept(
+        InboundMessage("http", "c\x001", "u\x001", "m\x001", "h\x00i", {"k\x00": "v\x00"})
+    )
+
+    assert (record.conversation_id, record.user_id, record.external_id) == ("c1", "u1", "m1")
+    assert (record.text, record.session_id, dict(record.metadata)) == ("hi", "dev:http:c1:0", {"k": "v"})
+    await dispatcher.close()
 
 
 async def test_one_conversation_runs_in_order_while_others_run_alongside() -> None:

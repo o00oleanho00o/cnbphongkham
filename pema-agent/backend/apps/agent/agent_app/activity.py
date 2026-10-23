@@ -49,6 +49,11 @@ _DELETE_SESSIONS = sql(
     "DELETE FROM agent_rt.agent_session "
     "WHERE tenant_id = :tenant_id AND agent = :agent AND session_id = ANY(:session_ids)"
 )
+# The inbound queue keeps the customer's words too; a message still queued or running stays so it is answered.
+_DELETE_INGRESS = sql(
+    "DELETE FROM agent_rt.agent_ingress WHERE tenant_id = :tenant_id AND agent = :agent "
+    "AND session_id = ANY(:session_ids) AND status NOT IN ('queued', 'processing')"
+)
 _TURNS = sql(
     "SELECT turn_id, session_id, channel, user_id, model, started_at, duration_ms, stop, steps, error_kind, "
     "input_tokens, output_tokens FROM agent_rt.agent_turn "
@@ -143,7 +148,7 @@ class Activity:
         return await retrying("load session", work)
 
     async def delete_session(self, session_id: str) -> bool:
-        """True when the session existed; its messages go with it, its trace stays."""
+        """True when the session existed; its messages and inbound texts go with it, its trace stays."""
         if self._engine is None:
             return False
         engine = self._engine
@@ -151,6 +156,7 @@ class Activity:
 
         async def work() -> bool:
             async with engine.begin() as conn:
+                await conn.execute(_DELETE_INGRESS, {**self._key(), "session_ids": [session_id]})
                 return (await conn.execute(_DELETE_SESSION, params)).rowcount > 0
 
         return await retrying("delete session", work)
@@ -164,6 +170,7 @@ class Activity:
 
         async def work() -> int:
             async with engine.begin() as conn:
+                await conn.execute(_DELETE_INGRESS, params)
                 return (await conn.execute(_DELETE_SESSIONS, params)).rowcount
 
         return await retrying("delete sessions", work)
