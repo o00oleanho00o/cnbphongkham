@@ -11,9 +11,10 @@ Permissions come from ``pema.clinic.rbac.matrix`` (the matrix of ARCH-PB01): not
 
 Default deny (package G, SECURITY-REVIEW-AI01 SEC-13): once the application is wired, EVERY route under
 ``/api/v1`` refuses a call without a session cookie (401) except the ones that authenticate in another way
-(``PUBLIC_API_PREFIXES``: the login and the two signed webhooks). A route added later with a forgotten
-guard is therefore closed, not open. Admin routes also verify the cookie here; the other staff routes verify
-it in their own dependency (``dashboard_auth.current_user``), so a valid cookie costs one lookup, not two.
+(``PUBLIC_API_PREFIXES``: the login, the public keys and the agent gateway). A route added later with a
+forgotten guard is therefore closed, not open. Admin routes also verify the cookie here; the other staff
+routes verify it in their own dependency (``dashboard_auth.current_user``), so a valid cookie costs one
+lookup, not two.
 
 Audit (same review, SEC-23): a successful change made through the families of ``AUDITED_FAMILIES`` (knowledge
 base, MCP servers, schedules, tool settings) writes one ``clinic.audit_log`` row of its own, with the method
@@ -45,12 +46,11 @@ API_PREFIX = "/api/v1/"
 ADMIN_PREFIX = "/api/v1/admin/"
 PUBLIC_API_PREFIXES: tuple[str, ...] = (
     "/api/v1/auth/login",
-    "/api/v1/webhooks/",
     "/api/v1/.well-known/",
     "/api/v1/agent-gateway/",
 )
-"""Routes that authenticate in another way: the login itself and the webhooks (secret token / HMAC), the
-public key set of the agent tokens, and the agent gateway (its routes verify the token of crm-signer)."""
+"""Routes that authenticate in another way: the login itself, the public key set of the agent tokens, and the
+agent gateway (its routes verify the token of crm-signer)."""
 AUDITED_FAMILIES: frozenset[str] = frozenset({"kb", "mcp", "schedules", "tools"})
 """Admin families whose services write no audit row of their own."""
 UNSAFE_METHODS: frozenset[str] = frozenset({"POST", "PUT", "PATCH", "DELETE"})

@@ -1,7 +1,7 @@
 """Ceiling on the size of a request body (package G, SECURITY-REVIEW-AI01 SEC-17; no zalo-agent source).
 
-The two webhooks are public: they parse a JSON body BEFORE they can check a secret or a signature, and uvicorn
-puts no ceiling on a body, so one anonymous client could make the API process gather gigabytes. A pure
+The login is public: it parses a JSON body BEFORE it can check anything, and uvicorn puts no ceiling on a
+body, so one anonymous client could make the API process gather gigabytes. A pure
 ASGI middleware cuts the body at the reading layer, the moment the ceiling is crossed (a declared
 ``Content-Length`` is refused without reading a byte; a chunked body is counted as it arrives).
 

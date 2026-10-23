@@ -74,7 +74,7 @@ def test_every_admin_and_clinic_route_requires_the_session_cookie(schema: dict[s
     """...and the agent gateway the agent's key, never a cookie (T6, rule L2)"""
     unsecured: list[str] = []
     for path, item in schema["paths"].items():
-        if path in OPEN_PATHS or "/webhooks/" in path:
+        if path in OPEN_PATHS:
             continue
         wanted = "AgentGatewayToken" if path.startswith(AGENT_GATEWAY) else "SessionCookie"
         for method, op in item.items():
@@ -115,14 +115,7 @@ def _fill_path(path: str) -> str:
 # A bare ``create_app()`` (no lifespan, no composition root) has no service behind the routes of these packages:
 # they answer 501 ``not_implemented`` until ``wire_api`` installs the service. Everything else is already
 # guarded by the session and answers 401 to an anonymous caller. Nothing answers 200 with data.
-UNWIRED_WHEN_BARE_PREFIXES = (
-    "/api/v1/admin/accounts",
-    "/api/v1/admin/channels",
-    "/api/v1/admin/friends",
-    "/api/v1/admin/policy",
-    "/api/v1/admin/rules",
-    "/api/v1/webhooks/",
-)
+UNWIRED_WHEN_BARE_PREFIXES = ("/api/v1/admin/rules",)
 
 
 # The application log needs no clinic, so on a bare app (no composition root, no middleware enforcement) it
