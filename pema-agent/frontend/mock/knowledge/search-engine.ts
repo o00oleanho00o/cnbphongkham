@@ -184,25 +184,18 @@ function chunksOf(
     }));
 }
 
-type Reason = "staff" | "unapproved" | "outdated";
+type Reason = "staff" | "outdated";
 
-const REASONS: readonly Reason[] = ["staff", "unapproved", "outdated"];
+const REASONS: readonly Reason[] = ["staff", "outdated"];
 const REASON_TEXT: Record<Reason, string> = {
   staff: "đoạn nội bộ",
-  unapproved: "đoạn chưa duyệt",
   outdated: "đoạn hết hiệu lực hoặc ngoài ngày hỏi",
 };
 
 /** Why a question may not see a source, or null when it may. Every channel shares one store for now (user,
  * 2026-10-12), so internal sources are not hidden; pass `split` to bring the patient/staff split back. */
-export function hiddenReason(
-  source: Source,
-  asOf: string,
-  onlyApproved: boolean,
-  split = false,
-): Reason | null {
+export function hiddenReason(source: Source, asOf: string, split = false): Reason | null {
   if (split && source.audience === "staff") return "staff";
-  if (onlyApproved && !source.approved) return "unapproved";
   const outside =
     source.lifecycle !== "active" ||
     (source.effective_from !== null && source.effective_from > asOf) ||
@@ -250,8 +243,7 @@ export function runSearch(store: Store, query: SearchDebugQuery): SearchDebug {
   const relevant = store.sources.filter(
     (source) => source.processing === "ready" && source.chunk_count > 0 && relevance(source) > 0,
   );
-  const reasonOf = (source: Source): Reason | null =>
-    hiddenReason(source, query.as_of, settings.search.patient_only_approved);
+  const reasonOf = (source: Source): Reason | null => hiddenReason(source, query.as_of);
   const filterText = REASONS.map((reason) => ({
     reason,
     count: relevant

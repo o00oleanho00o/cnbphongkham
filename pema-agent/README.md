@@ -197,7 +197,7 @@ PEMA_TEST_DATABASE_URL=postgresql+psycopg://... uv run pytest -c pyproject.toml 
 |---|---|---|
 | Mô hình | nhiều phòng khám trong một CSDL, RLS theo `clinic_id` | MỘT phòng khám mỗi bản cài, không RLS; `clinic.clinic` đúng một dòng |
 | Đăng nhập | phòng khám (slug) + email + mật khẩu | email + mật khẩu |
-| Webhook Zalo | `/api/v1/webhooks/zalo-bot/{clinic}/{account}` | `/api/v1/webhooks/zalo-bot/{account}` (cầu nối tương tự) |
+| Webhook Zalo | `/api/v1/webhooks/zalo-bot/{clinic}/{account}` | không còn ở API: Zalo do agent nhận (plugin `zalo`) |
 | Cấu hình | không có biến phòng khám | `PEMA_CLINIC_NAME`, `PEMA_CLINIC_ID` (tùy chọn) |
 | Phòng khám thứ hai | thêm dòng trong cùng CSDL | một bộ hạ tầng mới hoàn toàn |
 

@@ -2,7 +2,6 @@
 // the store only remembers whether one was saved.
 import type {
   EmbeddingSettings,
-  KnowledgeSettings,
   SettingsPatch,
 } from "../../../backend/apps/agent/plugins/knowledge/ui/src/types";
 import {
@@ -26,11 +25,6 @@ const PROFILE_EMBEDDING: Omit<EmbeddingSettings, "chunks_without_vector"> = {
   has_key: false,
   origin: "profile",
 };
-const PROFILE_PARSER: KnowledgeSettings["parser"] = {
-  kind: "simple",
-  docling_url: "",
-  origin: "profile",
-};
 
 const refuse = (detail: string): Reply => ({ status: 422, body: { detail } });
 
@@ -39,7 +33,7 @@ const totalChunks = (): number =>
 
 /** The first reason a patch cannot be applied, or null. */
 function problemOf(patch: SettingsPatch): string | null {
-  const { embedding, parser, search } = patch;
+  const { embedding, search } = patch;
   const checks = [
     embedding?.dimensions === undefined
       ? null
@@ -48,9 +42,6 @@ function problemOf(patch: SettingsPatch): string | null {
     embedding?.model === undefined || embedding.model.trim() !== ""
       ? null
       : "Model: nhập tên model.",
-    parser?.docling_url === undefined
-      ? null
-      : urlProblem(parser.docling_url, "Địa chỉ Docling", false),
     search?.results === undefined ? null : numberProblem(String(search.results), RANGES.results),
     search?.min_score === undefined
       ? null
@@ -90,7 +81,6 @@ function resetGroups(groups: NonNullable<SettingsChange["reset"]>): void {
     embedding: groups.includes("embedding")
       ? { ...PROFILE_EMBEDDING, chunks_without_vector: totalChunks() }
       : settings.embedding,
-    parser: groups.includes("parser") ? PROFILE_PARSER : settings.parser,
   };
 }
 
@@ -103,10 +93,6 @@ function applyPatch(change: SettingsChange): Reply {
   store.settings = {
     ...store.settings,
     embedding: patch.embedding ? patchEmbedding(patch.embedding) : store.settings.embedding,
-    parser: patch.parser
-      ? { ...store.settings.parser, ...patch.parser, origin: "saved" }
-      : store.settings.parser,
-    labelling: { ...settings.labelling, ...patch.labelling },
     judging: { ...settings.judging, ...patch.judging },
     search: { ...settings.search, ...patch.search },
     benchmark_mode: patch.benchmark_mode ?? settings.benchmark_mode,
@@ -124,15 +110,6 @@ function testEmbedding(): Reply {
   return { body: { ok: true, dimensions, normalised: true, ms: 1840, message: "Kết nối tốt" } };
 }
 
-function testParser(): Reply {
-  const { kind, docling_url: url } = store.settings.parser;
-  if (kind === "simple")
-    return { body: { ok: true, ms: null, message: "Bộ đọc đơn giản không cần kết nối" } };
-  if (url.trim() === "")
-    return { body: { ok: false, ms: null, message: "Chưa có địa chỉ Docling" } };
-  return { body: { ok: true, ms: 220, message: "Docling trả lời" } };
-}
-
 function reembed(): Reply {
   const queued = totalChunks();
   store.settings = {
@@ -147,5 +124,4 @@ export function registerSettings(router: Router): void {
   router.patch(BASE, null, (ctx): Reply => applyPatch(bodyOf<SettingsChange>(ctx)));
   router.post(`${BASE}/test-embedding`, null, testEmbedding);
   router.post(`${BASE}/reembed`, null, reembed);
-  router.post(`${BASE}/test-parser`, null, testParser);
 }

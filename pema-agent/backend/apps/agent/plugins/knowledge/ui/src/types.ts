@@ -322,16 +322,8 @@ export interface JevState {
 
 export interface KnowledgeSettings {
   embedding: EmbeddingSettings;
-  parser: { kind: "simple" | "docling"; docling_url: string; origin: SettingOrigin };
-  labelling: { enabled: boolean; model_entry: string | null };
   judging: { enabled: boolean; level: JudgeLevel };
-  search: {
-    results: number;
-    min_score: number;
-    char_budget: number;
-    patient_channel_prefix: string;
-    patient_only_approved: boolean;
-  };
+  search: { results: number; min_score: number; char_budget: number };
   benchmark_mode: boolean;
 }
 
@@ -340,13 +332,11 @@ export type SettingsPatch = {
     /** Replaces the stored key; an empty string removes it. */
     api_key?: string;
   };
-  parser?: Partial<KnowledgeSettings["parser"]>;
-  labelling?: Partial<KnowledgeSettings["labelling"]>;
   judging?: Partial<KnowledgeSettings["judging"]>;
   search?: Partial<KnowledgeSettings["search"]>;
   benchmark_mode?: boolean;
   /** Groups to put back to the profile's values ("Về mặc định"); the server clears their `origin`. */
-  reset?: ("embedding" | "parser")[];
+  reset?: "embedding"[];
 };
 
 export interface EmbeddingTest {

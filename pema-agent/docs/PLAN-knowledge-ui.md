@@ -159,7 +159,7 @@ Tài liệu `.md` có thể mang phần đầu YAML. Khi có, hệ thống đọ
 | `GET/POST/PATCH/DELETE /services` | danh mục dịch vụ và tên gọi khác |
 | `POST /search/debug` | Thử tìm theo từng tầng |
 | `GET /gaps` · `PATCH /gaps/{id}` | câu hỏi chưa có tài liệu |
-| `GET/PATCH /settings` · `POST /settings/test-embedding` · `POST /settings/reembed` · `POST /settings/test-parser` | cài đặt, kiểm tra kết nối, nhúng lại |
+| `GET/PATCH /settings` · `POST /settings/test-embedding` · `POST /settings/reembed` | cài đặt, kiểm tra kết nối, nhúng lại |
 | `GET /status` | số liệu đầu trang, hàng đợi, cảnh báo |
 
 Giới hạn thân request: kiểm `limit_body` của gateway và proxy của clinic web (hiện chặn thân lớn); tải tệp lớn gửi từng tệp

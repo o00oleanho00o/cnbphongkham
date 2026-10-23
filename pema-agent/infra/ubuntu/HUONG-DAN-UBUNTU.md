@@ -157,13 +157,10 @@ Ollama nằm trong *profile* và **chỉ bật khi gói tương ứng đã có m
 | `bridge` | `--profile bridge` | gói C2 (và chấp nhận rủi ro khóa tài khoản Zalo) |
 | `ollama` | `make up-ollama` | NVIDIA Container Toolkit (mục 3) |
 
-**Zalo Bot API cần địa chỉ HTTPS công khai nếu dùng webhook.** Stack này không mở cổng ra internet. Cách ít rủi ro
-nhất cho giai đoạn đầu là dùng chế độ **polling** của gói C1 (chỉ gọi ra ngoài, không cần cổng vào). Nếu bắt buộc
-webhook: mô hình C (cloud VN) với reverse proxy HTTPS chỉ chuyển tiếp đường `/api/v1/webhooks/*`, hoặc Tailscale
-Funnel cho đúng đường dẫn đó. Việc chọn là quyết định của chủ phòng khám (xem mục "Việc mở" trong báo cáo).
-
-Đường webhook không còn đoạn tên phòng khám: `/api/v1/webhooks/zalo-bot/<account_id>` (đặt qua `PEMA_ZALO_BOT_WEBHOOK_BASE_URL`;
-nếu trước đây đã đăng ký đường cũ có đoạn phòng khám thì đăng ký lại sau khi nâng cấp).
+**Zalo Bot nghe bằng long polling** (agent chỉ gọi ra ngoài, không cần cổng vào): đó là mặc định khi ô "Public
+address" trong cài đặt plugin Zalo để trống. Webhook chỉ dùng khi điền ô đó; Zalo khi ấy gọi
+`<địa chỉ>/v1/hooks/zalo/bot/<account_id>` của agent, mà Caddy của stack này không chuyển tới agent, nên phải tự
+thêm proxy HTTPS cho đúng đường đó. Việc chọn là quyết định của chủ phòng khám.
 
 **Phòng khám thứ hai = một bộ mới hoàn toàn.** Ưu tiên máy chủ khác. Cùng một máy Docker thì mọi thứ dưới đây phải khác bộ
 đầu: một bản sao `infra/.env` mới (`make infra-secrets`, mật khẩu và `PEMA_JWT_SECRET` mới,
@@ -383,9 +380,8 @@ sudo ufw status verbose
    (`PEMA_TRUSTED_PROXIES`, mặc định `PEMA_PROXY_IP`), nên giới hạn đăng nhập theo IP không bị giả mạo. Có thêm proxy hay CDN
    đứng trước Caddy thì phải thêm dải của nó vào `PEMA_TRUSTED_PROXIES` **và** cấu hình `trusted_proxies` của Caddy.
    Cookie phiên `Secure` nên đăng nhập chỉ chạy qua https (trừ chế độ `off`).
-6. **Webhook Zalo Bot:** đặt `PEMA_ZALO_BOT_WEBHOOK_BASE_URL=https://clinic.example.com` (không có dấu `/` cuối) nếu dùng chế độ
-   `webhook`; đường `/api/v1/webhooks/zalo-bot/<account_id>` đi qua (không có đoạn phòng khám). Cổng agent
-   (`/api/v1/agent-gateway/*`) bị chặn từ ngoài: chỉ `crm-signer` gọi nó trong mạng compose.
+6. **Agent không đi qua Caddy:** Zalo Bot dùng long polling (xem trên). Cổng agent (`/api/v1/agent-gateway/*`) bị
+   chặn từ ngoài: chỉ `crm-signer` gọi nó trong mạng compose.
 
 Chưa kiểm: Let's Encrypt thật (chế độ `auto`) chưa được thử; chế độ `internal` đã chạy thử trên máy dev.
 

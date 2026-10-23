@@ -145,10 +145,9 @@ then import it as a trusted root on each device (the file is the public certific
 stays in the `caddy-data` volume). Volumes `caddy-data` (certificates, CA, ACME account) and `caddy-config` persist
 across restarts; back up `caddy-data` or accept a new certificate request after a loss.
 
-**Webhook.** In mode `auto`, set `PEMA_ZALO_BOT_WEBHOOK_BASE_URL=https://<PEMA_PUBLIC_DOMAIN>` (no trailing slash) if the
-Zalo Bot runs in `webhook` mode; the Bot webhook route is `/api/v1/webhooks/zalo-bot/<account_id>` (no clinic segment
-since `feat/single-tenant`; the path is owned by the Zalo channel package) and passes through. If a webhook was registered
-at Zalo with the old path (`.../zalo-bot/<clinic>/<account_id>`), re-register it (restart the account) after the upgrade.
+**Zalo.** Zalo no longer calls the API: the agent's Zalo plugin receives it. Bots long-poll by default (the
+plugin's "Public address" left empty), which needs no inbound port. A webhook needs that address set and a proxy
+to the agent's `/v1/hooks/zalo/bot/<account_id>`; this Caddy does not route to the agent.
 
 **Changing the API address of the dashboard** (it is a runtime variable): set `PEMA_API_INTERNAL_URL` in `.env`, then
 `docker compose ... up -d frontend`. No rebuild. Without a proxy it is the only place the dashboard learns where the API is.

@@ -239,17 +239,8 @@ function seedSettings(): KnowledgeSettings {
       origin: "profile",
       chunks_without_vector: 76,
     },
-    parser: { kind: "simple", docling_url: "", origin: "profile" },
-    labelling: { enabled: true, model_entry: null },
     judging: { enabled: false, level: "medium" },
-    search: {
-      results: 8,
-      min_score: 0.2,
-      char_budget: 6000,
-      patient_channel_prefix: "zalo-",
-      // The approval step is hidden for now (user, 2026-10-12): every source is used once it is ready.
-      patient_only_approved: false,
-    },
+    search: { results: 8, min_score: 0.2, char_budget: 6000 },
     benchmark_mode: false,
   };
 }
