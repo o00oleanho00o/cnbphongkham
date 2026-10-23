@@ -1,12 +1,12 @@
 // ported from: web/src/shared/ui-bits.tsx
 
-import type { ReactNode, SVGProps } from "react";
+import type { ReactNode } from "react";
 import { IconSearch } from "@/components/admin/shared/dashboard-icons";
 import { Badge as KitBadge, type BadgeTone as KitBadgeTone } from "@/ui/badge";
 import { Card } from "@/ui/card";
 import { FIELD_CONTROL_CLASS } from "@/ui/field";
 
-/** Mảnh UI dùng chung theo mẫu GoClaw: badge chấm màu, stat card + sparkline, tile, bảng */
+/** Mảnh UI dùng chung theo mẫu GoClaw: badge chấm màu, bảng */
 
 /**
  * Núm gạt bật/tắt - phần hình của mọi toggle (drawer account, trang Tools).
@@ -52,71 +52,6 @@ export function Badge({
   );
 }
 
-/** Sparkline SVG thuần từ 1 dãy số - đường mảnh + fill nhạt như mẫu */
-export function Sparkline({ values, className }: { values: number[]; className?: string }) {
-  const w = 120;
-  const h = 28;
-  if (values.length < 2 || values.every((v) => v === 0)) {
-    return (
-      <svg viewBox={`0 0 ${w} ${h}`} className={className} preserveAspectRatio="none">
-        <line x1="0" y1={h - 1} x2={w} y2={h - 1} stroke="currentColor" strokeOpacity="0.25" />
-      </svg>
-    );
-  }
-  const max = Math.max(...values);
-  const pts = values.map((v, i) => ({
-    x: (i / (values.length - 1)) * w,
-    y: h - 2 - (v / max) * (h - 6),
-  }));
-  const line = pts
-    .map((p, i) => `${i === 0 ? "M" : "L"}${p.x.toFixed(1)},${p.y.toFixed(1)}`)
-    .join(" ");
-  return (
-    <svg viewBox={`0 0 ${w} ${h}`} className={className} preserveAspectRatio="none">
-      <path
-        d={`${line} L${w},${h} L0,${h} Z`}
-        fill="currentColor"
-        fillOpacity="0.1"
-        stroke="none"
-      />
-      <path d={line} fill="none" stroke="currentColor" strokeWidth="1.6" />
-    </svg>
-  );
-}
-
-/** Stat card theo mẫu: icon box 32px góc trên, label nhỏ, số to, sparkline đáy */
-export function StatCard({
-  icon: Icon,
-  label,
-  value,
-  sub,
-  series,
-}: {
-  icon: (p: SVGProps<SVGSVGElement> & { size?: number }) => ReactNode;
-  label: string;
-  value: string;
-  sub?: ReactNode;
-  series?: number[];
-}) {
-  return (
-    <div className="flex min-w-0 flex-col rounded-card border border-line bg-surface p-4 shadow-card sm:p-5">
-      <div className="flex items-start gap-3">
-        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-control bg-tile text-ink">
-          <Icon size={17} />
-        </span>
-        <div className="min-w-0">
-          <div className="text-small leading-tight text-ink-soft">{label}</div>
-          <div className="mt-1 flex items-baseline gap-2">
-            <span className="text-metric leading-none font-semibold text-ink">{value}</span>
-            {sub}
-          </div>
-        </div>
-      </div>
-      {series && <Sparkline values={series} className="mt-4 h-7 w-full text-brand-500" />}
-    </div>
-  );
-}
-
 /** Panel lớn có header title (+ subtitle) + slot phải: the kit's `Card` (old `.panel`). */
 export function SectionCard({
   title,
@@ -134,37 +69,6 @@ export function SectionCard({
     <Card title={title} subtitle={subtitle} aside={aside}>
       {children}
     </Card>
-  );
-}
-
-/**
- * Tile nhỏ trong panel: icon + label + value (+ mô tả phụ).
- *
- * Giá trị đứng TRÊN mô tả: đọc lướt một bảng số thì mắt bắt số trước, câu giải
- * thích chỉ cần khi người ta dừng lại ở đúng ô đó.
- */
-export function InfoTile({
-  icon: Icon,
-  label,
-  value,
-  hint,
-}: {
-  icon: (p: SVGProps<SVGSVGElement> & { size?: number }) => ReactNode;
-  label: string;
-  value: ReactNode;
-  hint?: string;
-}) {
-  return (
-    <div className="flex items-center gap-3 rounded-tile border border-line bg-tile/40 p-3">
-      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-tile bg-surface text-brand-500">
-        <Icon size={17} />
-      </span>
-      <div className="min-w-0">
-        <div className="text-label text-ink-soft">{label}</div>
-        <div className="truncate text-body-lg font-semibold text-ink">{value}</div>
-        {hint && <div className="truncate text-micro text-ink-soft/80">{hint}</div>}
-      </div>
-    </div>
   );
 }
 
@@ -326,18 +230,4 @@ export function formatTime(iso: string | null | undefined): string {
   if (Number.isNaN(d.getTime())) return "-";
   const pad = (n: number) => String(n).padStart(2, "0");
   return `${pad(d.getDate())}/${pad(d.getMonth() + 1)} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
-}
-
-export function formatNumber(n: number): string {
-  return n.toLocaleString("vi-VN");
-}
-
-/** "120d 1h 48m" từ giây */
-export function formatUptime(seconds: number): string {
-  const d = Math.floor(seconds / 86400);
-  const h = Math.floor((seconds % 86400) / 3600);
-  const m = Math.floor((seconds % 3600) / 60);
-  if (d > 0) return `${d}d ${h}h ${m}m`;
-  if (h > 0) return `${h}h ${m}m`;
-  return `${m}m ${seconds % 60}s`;
 }

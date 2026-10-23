@@ -276,11 +276,6 @@ export function allowAttempt(kind: string, userId: string): boolean {
   return entry.count <= ATTEMPT_LIMIT;
 }
 
-/** Forget every attempt (tests share one minute; the dev mock never calls it). */
-export function resetAttempts(): void {
-  attempts.clear();
-}
-
 /** End every session of a user (a lock, a role change, a password reset). */
 export function revokeSessionsOf(userId: string): void {
   for (const [id, other] of sessions) {

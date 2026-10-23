@@ -437,7 +437,6 @@ export function rateChanged(
 
 // ---------------------------------------------------------------------------------------------- receipts
 export const PAYMENT_PROBLEM = "Số tiền phải lớn hơn 0 và không vượt số còn lại.";
-export const OVERPAYMENT = "Số thu vượt công nợ";
 
 /** The amount typed in the receipt form, or null when it is not a whole number above zero. */
 export function paymentAmount(text: string): number | null {

@@ -90,10 +90,6 @@ function emptyStored(): Stored {
   return { scalars: {}, variables: {}, tools: {}, version: 0, updated_by: null };
 }
 
-export function resetAgentSettings(): void {
-  stored = emptyStored();
-}
-
 const refuse = (status: number, kind: string, message: string): Reply => ({
   status,
   body: { error: { kind, message } },

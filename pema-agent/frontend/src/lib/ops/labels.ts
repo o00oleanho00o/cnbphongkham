@@ -102,12 +102,6 @@ export const PLAN_STATUS_LABEL: Record<S["PlanStatus"], string> = {
   cancelled: "Đã hủy",
 };
 
-export const SESSION_STATUS_LABEL: Record<string, string> = {
-  scheduled: "Đã ghi, chưa hoàn tất",
-  completed: "Đã hoàn tất",
-  cancelled: "Đã hủy",
-};
-
 export const MEDIA_STAGE_LABEL: Record<S["MediaStage"], string> = {
   before: "Trước điều trị",
   after: "Sau điều trị",

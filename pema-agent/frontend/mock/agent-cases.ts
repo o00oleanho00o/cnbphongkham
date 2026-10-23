@@ -84,10 +84,6 @@ function seed(): { cases: Case[]; events: Map<number, Event[]> } {
 
 let store = seed();
 
-export function resetAgentCases(): void {
-  store = seed();
-}
-
 const notFound: Reply = {
   status: 404,
   body: { error: { kind: "not_found", message: "no such case" } },

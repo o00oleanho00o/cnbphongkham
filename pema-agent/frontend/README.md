@@ -65,7 +65,6 @@ src/lib/admin/<area>/                 ported pure logic and its tests (vitest, s
 src/lib/api/                          client.ts (typed openapi-fetch + ApiError), schema.d.ts (generated)
 src/lib/session/, src/lib/nav.tsx     session context, menu and permission filter
 mock/                                 mock backend
-scripts/port-web-file.mjs             mechanical first pass of the port (see below)
 ```
 
 Tokens: primary `brand-500` #0B4F94, navy `brand-600`, sky `brand-400` #3CAAE5 (graphics only, never small white text), `canvas` #F4F8FB, `ink` #17324D, `ink-soft` #5D7184, `line` #D9E5EE. The original `zalo-*` colour scale is `brand-*`; `gc-card`, `gc-tile`, `gc-input` keep their names. Light/dark follows the original `use-theme`.
@@ -74,11 +73,11 @@ Tokens: primary `brand-500` #0B4F94, navy `brand-600`, sky `brand-400` #3CAAE5 (
 
 Reference clone (read only): `E:\Desktop\zalo-agent-ref\web\src`. Target paths of every file: `docs/PORT-MAP.md`, rows owned by `E`. Route pages go at the route given in the layout comment above (one route per original page), not at the single `page.tsx` PORT-MAP lists for several originals.
 
-1. `node scripts/port-web-file.mjs <path under web/src> ...` writes the target with the `// ported from:` header, `"use client"`, the `brand-*` rename and `@/` imports, and prints what is left to do by hand.
+1. Start the target with the `// ported from:` header, rename `zalo-*` colours to `brand-*` and use `@/` imports.
 2. Keep names, constants, thresholds and the reason comments of the original (they are the specification). Record forced deviations in a comment under the header.
 3. API: use `http` and `unwrap` from `@/lib/api/client` and DTO types from `Schemas` in `@/lib/api` (snake_case, English names; the original's Vietnamese-named DTOs no longer exist). Errors arrive as `ApiError` with the BE's Vietnamese message. Never invent an endpoint: if the contract lacks one, show the control disabled or hide it, and list it as an open item.
 4. react-router becomes `next/link`, `useRouter`, `usePathname`, `useParams`, `useSearchParams` (wrap in `<Suspense>` in the page). Vite globals (`__APP_VERSION__`, `import.meta`) become `process.env.NEXT_PUBLIC_*`.
-5. Tests: `node:test` to vitest with the same titles (`describe`/`it` from `vitest`, `node:assert/strict` may stay); fake timers via `vi.useFakeTimers()`. A screen test is `page.test.tsx` next to the page with `// @vitest-environment jsdom` on its first line (Testing Library, the typed client replaced by a fake).
+5. Tests: `node:test` to vitest with the same titles (`describe`/`it` from `vitest`, `node:assert/strict` may stay); fake timers via `vi.useFakeTimers()`. Screens get no unit test: they are checked end to end (`e2e/`).
 6. Quality: no `any`, no `console.*`, named imports, hoist constant objects and wrap handlers passed to children in `useCallback`, clean timers and listeners in `useEffect`. Never log or render secrets: keys come back masked (`api_key_masked`), tokens only go up.
 7. Mobile first: 390x844 must work with no document-level horizontal scroll (tables scroll inside their card), touch targets of at least 44px on phone widths, text readable without zoom. Desktop uses the width (1920x1020, 1440x900, 1280x720, 1024x768).
 8. Mock: add the area's handlers under `mock/handlers/` with fictional Vietnamese data (no real name, phone, token, photo).

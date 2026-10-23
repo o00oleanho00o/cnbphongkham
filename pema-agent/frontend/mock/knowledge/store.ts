@@ -268,11 +268,6 @@ function seed(): Store {
 
 export const store: Store = seed();
 
-/** Back to the seed (tests). */
-export function resetStore(): void {
-  Object.assign(store, seed());
-}
-
 let counter = 0;
 export function nextId(prefix: string): string {
   counter += 1;

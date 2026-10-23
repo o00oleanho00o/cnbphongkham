@@ -3,7 +3,7 @@
 // catalog is not synthetic. The full list is loaded into the real database by `pema catalog import`; the mock
 // keeps a sample of it, with the same fields and the same rules for the sheet a code goes to (Thuốc is Đơn thuốc,
 // any other type is Phiếu tư vấn, no type is "Cần phân loại"). Patients, doctors and the orders are fictional.
-import { DOCTOR_AN, DOCTOR_MAI, DOCTOR_TAM, patientRef } from "./clinic";
+import { DOCTOR_MAI, DOCTOR_TAM, patientRef } from "./clinic";
 import { uuid, isoFromNow, DAY, type Schemas } from "../core";
 
 type S = Schemas;
@@ -204,5 +204,3 @@ export const orders: OrderRecord[] = [
     version: 3,
   },
 ];
-
-export const DOCTOR_IDS = { tam: DOCTOR_TAM, an: DOCTOR_AN, mai: DOCTOR_MAI } as const;

@@ -14,3 +14,5 @@ kb-samples
 evals
 docs
 .git
+**/test-results
+**/visual-ref
