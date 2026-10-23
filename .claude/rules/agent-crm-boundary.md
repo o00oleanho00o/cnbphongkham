@@ -38,25 +38,13 @@ của nó, và chỉ cho người đang chat với nó.
   TypeSafe, Zalo Bot) ra internet qua proxy `egress`, giai đoạn 1 chỉ ghi log mọi đích. **Chưa làm (bước 8 giai đoạn
   2):** agent chỉ ở mạng nội bộ, `web_*` và cầu nối Zalo cũng qua proxy, chỉ cho đích trong danh sách chủ duyệt.
 - **L7. Danh sách tool và plugin của profile `clinic` là danh sách chủ đã duyệt.** Thêm tool, plugin, tiến trình con hay biến
-  môi trường cho agent, hoặc bật `agent_writes`, là đổi kế hoạch, chủ duyệt; test giữ danh sách đỏ cho tới khi được sửa có chủ
-  ý. Không bao giờ có tool đọc file, chạy lệnh hay chạy mã trong tiến trình agent.
+  môi trường cho agent, hoặc bật `agent_writes`, là đổi kế hoạch, chủ duyệt. Không bao giờ có tool đọc file, chạy lệnh hay chạy mã trong tiến trình agent.
 
-Test giữ luật, đỏ là không merge:
-
-| Test | Luật | Ở đâu |
-|---|---|---|
-| T1 (db) role agent không vào được `pema` | L1 | `apps/agent/tests/test_crm_boundary.py` |
-| T2 (db) database CRM không có gì cho agent | L1, L3 | `apps/api/tests/test_database.py` |
-| T3 token `aud = pema-agent` không mở phiên CRM | L2 | `apps/api/tests/api/test_agent_token.py` |
-| T4 profile chỉ giữ JWKS và `crm-signer`, không chuỗi giống khóa | L2 | `apps/agent/tests/test_crm_boundary.py` |
-| T5 URL vào mạng nội bộ bị từ chối | L6 | `apps/agent/tests/test_crm_boundary.py` |
-| T6 cổng chỉ nhận JWT của `crm-signer`, cookie nhân viên không mở cổng, token cổng không mở route nhân viên | L2 | `apps/api/tests/clinic/test_agent_gateway.py` |
-| T7 sáu quyền `agent.*`, không vai trò nhân viên nào có | L2 | `apps/api/tests/clinic/test_rbac_matrix.py` |
-| T8 người A không xem, đổi được lịch của người B (404) | L4 | `apps/api/tests/clinic/test_agent_gateway.py` |
-| T9 tool, plugin, tiến trình, biến môi trường, container agent đúng danh sách | L6, L7 | `apps/agent/tests/test_tool_allowlist.py` |
-| `crm-signer`: chỉ 8 route, đúng quyền mỗi route, khớp router của CRM | L2 | `apps/crm-signer/tests/test_signer.py` |
-| sự kiện: chỉ `aud = pema-agent-events`, `sso` từ chối nó; tool lịch từ chối trong nhóm, không có tham số chỉ người | L2, L4 | `apps/agent/tests/crm/` |
-
-Khi thêm plugin, tool, route cổng, loại sự kiện hay biến môi trường cho agent, chạy lại chúng.
+**Không còn test tự động cho L1–L7.** Chủ quyết (2026-10-23) bỏ hết unit test, kể cả T1–T9 (role agent không vào được
+`pema`, token `aud = pema-agent` không mở phiên CRM, cổng chỉ nhận JWT của `crm-signer`, sáu quyền `agent.*` không vai trò
+nào có, người A không đổi được lịch của người B, danh sách tool/plugin/biến môi trường của agent) và test của `crm-signer`
+và của sự kiện. Các luật trên **vẫn bắt buộc**; không còn gì tự báo đỏ khi vi phạm, nên khi đụng tới plugin, tool, route
+cổng, loại sự kiện, biến môi trường, role DB hay quyền thì tự đối chiếu với L1–L7 trước khi làm xong. Lịch sử các test: trong
+git trước commit xóa test của ngày 2026-10-23.
 
 Kế hoạch: `pema-agent/docs/PLAN-db-baseline.md` (L1–L5 gốc), `pema-agent/docs/PLAN-crm-plugin.md` (L2–L4, L6, L7 mục 3.8).

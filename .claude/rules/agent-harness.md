@@ -63,21 +63,15 @@ Rà toàn bộ code theo H1–H11 ngày 2026-10-22. Agent sau gặp chỗ này t
 
 1. State là `BaseModel`; khóa ca (`key`) xác định "một lần" theo nghĩa nghiệp vụ (ví dụ một mốc của một lịch).
 2. Đồ thị: nút kiểm (`CodeNode`) trước mỗi nút gửi (`TurnNode`); cạnh lỗi từ nút gửi về nút kiểm, có bộ đếm.
-3. Mọi lý do bỏ qua là hàm thuần có test riêng; nút kiểm đọc lại dữ liệu mới nhất, không tin state cũ.
+3. Mọi lý do bỏ qua là hàm thuần; nút kiểm đọc lại dữ liệu mới nhất, không tin state cũ.
 4. `StopRules`, `Budget` đặt chặt nhất có thể; chống trùng sau khi ca đã đóng phải có chốt riêng (động cơ chỉ chống
    trùng ca còn sống).
-5. Test trên động cơ thật với `InMemoryCaseStore`: gửi đúng một lần, chờ đúng giờ, sự kiện kết thúc ca, gửi lỗi rồi
-   kiểm lại, trần mỗi ngày, công tắc tắt.
+5. Kiểm trên stack thật bằng e2e qua màn Ca (`frontend/e2e/agent-cases.spec.ts`): "Chạy ngay", "Gửi thử ngay", nhật ký ca.
 
 ## Test giữ luật
 
-| Test | Luật | Ở đâu |
-|---|---|---|
-| harness không import plugin | H1 | `apps/agent/tests/test_tool_allowlist.py::test_the_harness_never_imports_what_plugs_into_it` |
-| plugin không import plugin khác; `plugin_kit` không import harness hay plugin | H1 | `apps/agent/tests/test_tool_allowlist.py::test_a_plugin_never_imports_another_plugin_and_the_kit_imports_neither_side` |
-| spec sai luật bị từ chối (cạnh lùi không bộ đếm, cạnh lỗi có điều kiện…) | H2, H3 | `packages/agent-core/tests/test_cases.py` |
-| tool điều khiển chỉ khi có plugin khai báo ca; lượt khách không điều khiển ca; quyết định sống qua khởi động lại; `room_today` khớp `blocked` | H4, H6, H7, H8, H9 | `apps/agent/tests/test_cases_engine.py` |
-| tin chủ động không gộp lượt | H8 | `apps/agent/tests/test_queue_modes.py` |
-| trần token | H6 | `apps/agent/tests/test_token_budget.py` |
-| ca nhắc lịch: kiểm trước gửi, gửi lỗi quay về kiểm, sự kiện kết thúc ca | H4, H5 | `apps/agent/tests/crm/test_crm_reminders.py` |
-| ca chăm sóc lại: phán đoán một lần, kiểm trước gửi, khách nhắn trước thì về chờ im, hai tin không trả lời thì dừng, Jev trước model | H4, H5, H6 | `apps/agent/tests/follow_up/test_follow_up_case.py` |
+**Không còn.** Chủ quyết (2026-10-23) bỏ hết unit test, kể cả test của H1–H11 (harness không import plugin, plugin không
+import plugin, spec ca sai luật bị từ chối, động cơ ca, tin chủ động không gộp lượt, trần token, ca nhắc lịch, ca chăm sóc
+lại). Các luật **vẫn bắt buộc** nhưng không còn gì tự báo đỏ: khi đụng tới harness, động cơ, plugin hay ca thì tự đối chiếu
+với H1–H11, đặc biệt H1 (import một chiều) và H3 (mọi vòng dừng được, kiểm `_check` của `CaseSpec` còn nguyên). Lịch sử
+các test: trong git trước commit xóa test của ngày 2026-10-23.
