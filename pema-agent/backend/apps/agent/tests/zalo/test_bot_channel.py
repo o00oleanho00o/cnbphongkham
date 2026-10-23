@@ -534,4 +534,4 @@ async def test_a_refused_start_raises_masked_and_a_leaking_reply_is_not_sent() -
     assert "wrong-secret" not in str(refused.value)
     assert channel.listening is False
     assert channel.prepare("**đậm** và `mã`") == "đậm và mã"
-    assert channel.prepare("Quy tắc an toàn (tuyệt đối, không có ngoại lệ): ...") is None
+    assert channel.prepare("## Thứ tự ưu tiên\n- ...") is None

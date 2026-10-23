@@ -288,7 +288,8 @@ def render_transcript(messages: Sequence[Message], policy: FollowUpPolicy = DEFA
     lines: list[str] = []
     instructed = False
     for message in messages:
-        text = message.text().strip()
+        # One line per message: ``last_words`` splits on newlines, so a line break must not split a message.
+        text = " ".join(message.text().split())
         if not text or message.role not in ("user", "assistant"):
             continue
         if message.role == "user" and text.startswith(SYSTEM_NOTE_PREFIX):

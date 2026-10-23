@@ -492,7 +492,7 @@ def create_app(
 
 
 def _admin(request: Request) -> bool:
-    """A chat-scope caller (the web chat) sees only this gateway's own channel, never Zalo or the others."""
+    """A chat-scope caller (the web chat) sees only this gateway's own channel, never another."""
     return ADMIN in request.state.principal.scopes
 
 

@@ -4,7 +4,10 @@ save and a failing node each hold; and plugins declare cases through ``ctx.regis
 
 from __future__ import annotations
 
+import contextlib
 import textwrap
+from collections.abc import AsyncGenerator, Callable
+from contextlib import AbstractAsyncContextManager
 from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -15,6 +18,7 @@ import pytest
 from pydantic import BaseModel
 
 from agent_app.cases import MOVED_ON, NO_CASE, CaseEngine, CasesConfig, InMemoryCaseStore
+from agent_app.ingress import SessionBusyError
 from agent_app.plugins import PluginError, PluginHost, ProactiveSent, discover
 from agentcore import ToolContext, ToolOutput, ToolSpec
 from agentcore.cases import (
@@ -108,7 +112,13 @@ class FakeChat:
 
 
 class Setup:
-    def __init__(self, *specs: CaseSpec, config: CasesConfig = ON, counted: bool = True) -> None:
+    def __init__(
+        self,
+        *specs: CaseSpec,
+        config: CasesConfig = ON,
+        counted: bool = True,
+        lock: Callable[[str], AbstractAsyncContextManager[None]] | None = None,
+    ) -> None:
         self.store = InMemoryCaseStore()
         self.now = NOW
         self.config = config
@@ -119,6 +129,7 @@ class Setup:
             config=lambda: self.config,
             zone=lambda: ZONE,
             clock=lambda: self.now,
+            lock=lock,
         )
         self.chat = FakeChat(self.engine.tools(), counted)
 
@@ -163,6 +174,28 @@ async def test_a_case_runs_its_code_node_then_writes_and_waits_for_the_customer(
     assert turn["message_id"] == f"case:{case.id}:0"
     assert turn["instruction"].startswith("[Case · follow_up] Goal: the customer books or says no")
     assert await s.events(case.id) == ["opened", "decision", "sent", "decision"]
+
+
+async def test_a_pass_is_skipped_while_another_process_holds_the_lock() -> None:
+    taken: list[str] = []
+    busy = [True]
+
+    @contextlib.asynccontextmanager
+    async def lock(name: str) -> AsyncGenerator[None]:
+        if busy[0]:
+            raise SessionBusyError(name)
+        taken.append(name)
+        yield
+
+    s = Setup(_spec(Judge()), lock=lock)
+    await s.open()
+
+    assert await s.engine.pass_once() == 0
+    assert s.chat.turns == []
+
+    busy[0] = False
+    assert await s.engine.pass_once() == 1
+    assert (taken, len(s.chat.turns)) == (["cases"], 1)
 
 
 async def test_opening_the_same_case_twice_keeps_one() -> None:

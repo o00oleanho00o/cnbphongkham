@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import re
 import time
+from pathlib import Path
 
 from plugins.zalo.format.prompt_leak_markers import DAU_HIEU_RO_PROMPT
 from plugins.zalo.format.sanitize_reply_text import (
@@ -268,7 +269,15 @@ def test_lam_sach_tra_loi_prompt_leak_is_checked_on_the_original_text_markdown_i
     """kiểm trên chữ GỐC - markdown xen vào không lách được"""
     # Bỏ định dạng TRƯỚC rồi mới kiểm thì dấu hiệu đã đổi hình dạng và bộ canh trượt đúng ca người ta cố tình
     # lách
-    assert lam_sach_tra_loi("**Quy tắc an toàn (tuyệt đối, không có ngoại lệ):**").chan is True
+    assert lam_sach_tra_loi("**## Thứ tự ưu tiên**").chan is True
+
+
+def test_every_prompt_leak_marker_is_still_in_the_clinic_profile() -> None:
+    """(port) một tiêu đề của profile bị đổi tên thì test này đỏ, không để bộ canh âm thầm hết tác dụng"""
+    profile = Path(__file__).parents[2] / "agents" / "clinic"
+    prompt = "\n".join((profile / name).read_text(encoding="utf-8") for name in ("AGENTS.md", "SOUL.md"))
+    for dau in DAU_HIEU_RO_PROMPT:
+        assert dau in prompt, dau
 
 
 def test_lam_sach_tra_loi_prompt_leak_normal_reply_mentioning_an_toan_is_not_blocked_by_mistake() -> None:
@@ -277,32 +286,20 @@ def test_lam_sach_tra_loi_prompt_leak_normal_reply_mentioning_an_toan_is_not_blo
     assert kq.chan is False
 
 
-def test_lam_sach_tra_loi_prompt_leak_kha_nang_cua_ban_in_a_plain_sentence_is_not_blocked_marker_must_be_the_full_sentence() -> (
-    None
-):
-    """'Khả năng của bạn lúc này' trong câu THƯỜNG không bị chặn - dấu hiệu phải là câu ĐẦY ĐỦ"""
-    # Vòng rà soát bắt được: dấu hiệu cũ chỉ là mẩu tiếng Việt thường ngày. Chặn oan ở đây rất nặng và KHÔNG
-    # TỰ KHỎI - hỏi lại vẫn y hệt vì model sinh lại đúng cách diễn đạt đó; ở scheduler còn tiêu suất chạy của
-    # job.
+def test_lam_sach_tra_loi_prompt_leak_heading_words_in_a_plain_sentence_are_not_blocked() -> None:
+    """(port) chữ của tiêu đề trong câu THƯỜNG không bị chặn - dấu hiệu phải kèm ``## ``"""
+    # Chặn oan rất nặng và KHÔNG TỰ KHỎI: hỏi lại vẫn y hệt vì model sinh lại đúng cách diễn đạt đó.
     for cau in [
-        "Khả năng của bạn lúc này đã đủ để thi B1 rồi ạ.",
-        "Khả năng của bạn lúc này vay được khoảng 300 triệu.",
+        "Thứ tự ưu tiên là khám trước rồi mới làm liệu trình ạ.",
+        "Em ghi chú và báo bác sĩ nhé chị.",
     ]:
         assert lam_sach_tra_loi(cau).chan is False, cau
-
-
-def test_lam_sach_tra_loi_prompt_leak_but_the_full_sentence_produced_by_the_persona_is_still_blocked() -> (
-    None
-):
-    """nhưng câu ĐẦY ĐỦ do persona sinh ra thì vẫn chặn"""
-    assert lam_sach_tra_loi("Khả năng của bạn lúc này (đúng những công cụ đang bật, không hơn):").chan is True
-    assert lam_sach_tra_loi("Khả năng của bạn lúc này: KHÔNG có công cụ nào được bật").chan is True
 
 
 def test_lam_sach_tra_loi_prompt_leak_co_dau_hieu_ro_prompt_is_usable_on_its_own() -> None:
     """coDauHieuRoPrompt dùng được độc lập"""
     assert co_dau_hieu_ro_prompt("bình thường") is False
-    assert co_dau_hieu_ro_prompt("<noi_dung_ngoai nguon=...") is True
+    assert co_dau_hieu_ro_prompt("## Trả lời từ đâu\n- Chỉ trả lời...") is True
 
 
 def test_cac_chu_so_huu_khong_con_ban_sao_dau_hieu_va_sentinel_cung_mot_nguon() -> None:
@@ -431,7 +428,7 @@ def test_lam_sach_giu_dinh_dang_keeps_markdown_and_only_applies_the_two_shields(
     kq = lam_sach_giu_dinh_dang("**đậm** `code`\n[SILENT]\u0000")
     assert kq.text == "**đậm** `code`"
     assert kq.da_sua == ["nhãn [SILENT]"]
-    assert lam_sach_giu_dinh_dang("<noi_dung_ngoai x").chan is True
+    assert lam_sach_giu_dinh_dang("## Cách viết trên Zalo").chan is True
 
 
 def test_la_dong_sentinel_uses_the_js_whitespace_set() -> None:

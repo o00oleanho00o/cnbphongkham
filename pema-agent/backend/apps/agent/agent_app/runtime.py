@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
+from contextlib import AbstractAsyncContextManager
 from dataclasses import dataclass
 from datetime import datetime, time
 from pathlib import Path
@@ -76,6 +77,15 @@ PLUGIN_DIR_ENV: Final = "AGENT_PLUGIN_DIR"
 environment."""
 BUNDLED_PLUGINS: Final = Path(agent_app.__file__).resolve().parents[1] / "plugins"
 """``apps/agent/plugins``: the plugins shipped with the service."""
+
+
+def background_lock(
+    locks: SessionLocks, tenant_id: str, agent: str
+) -> Callable[[str], AbstractAsyncContextManager[None]]:
+    """(work) -> the session locks' advisory lock, tried once (``SessionBusyError`` when another process
+    holds it), under a name no session id takes (``agent:work``). Plugin jobs take none: several keep a
+    cache of their own process fresh, and each would hold a pooled connection for as long as it runs."""
+    return lambda work: locks.hold(tenant_id, f"{agent}:{work}", timeout_s=0)
 
 
 class TraceLog(Protocol):
@@ -268,11 +278,15 @@ def build_runtime(
     case_store: CaseStore = (
         InMemoryCaseStore() if db is None else PostgresCaseStore(db, tenant_id=tenant_id, agent=name)
     )
+    locks: SessionLocks = InMemorySessionLocks() if db is None else PostgresSessionLocks(db)
+    # in one process (no database) every pass and job runs there: no lock to take
+    background = None if db is None else background_lock(locks, tenant_id, name)
     cases = CaseEngine(
         case_store,
         lambda: {spec.kind: (plugin, spec) for plugin, spec in live.host.contributions().cases},
         config=lambda: agent_settings.effective.cases,
         zone=lambda: ZoneInfo(agent_settings.effective.profile.agent.timezone),
+        lock=background,
     )
 
     def dynamic_window() -> int | None:
@@ -313,7 +327,7 @@ def build_runtime(
             live=live,
             store=InMemorySessionStore(),
             tracer=InMemoryTracer(),
-            locks=InMemorySessionLocks(),
+            locks=locks,
             ingress=InMemoryIngressStore(),
             conversations=InMemoryConversationStore(),
             sessions=None,
@@ -330,7 +344,7 @@ def build_runtime(
         live=live,
         store=sessions,
         tracer=PostgresTracer(db, agent=name, model=model_name),
-        locks=PostgresSessionLocks(db),
+        locks=locks,
         ingress=PostgresIngressStore(db, agent=name),
         conversations=PostgresConversationStore(db, agent=name),
         sessions=sessions,

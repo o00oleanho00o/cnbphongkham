@@ -220,12 +220,17 @@ def test_old_messages_are_purged_and_the_counts_and_empty_chats_follow(db_url: s
         await mine.add(_said("cũ", thread="r-old", message_id="m1", at=old))
         await mine.add(_said("cũ", thread="r-mixed", message_id="m2", at=old))
         await mine.add(_said("mới", thread="r-mixed", message_id="m3", at=NOW))
+        await mine.add(_said("cũ", thread="r-left-out", message_id="m4", at=old))
+        await mine.set_excluded(conversation_id(CHANNEL, "r-left-out"), True)
         await theirs.add(_said("cũ của người khác", thread="r-old", message_id="m1", at=old))
 
         gone = await mine.purge_before(NOW - timedelta(days=365))
 
-        assert gone >= 2
+        assert gone >= 3
         assert await mine.get(conversation_id(CHANNEL, "r-old")) is None
+        left_out = await mine.get(conversation_id(CHANNEL, "r-left-out"))
+        assert left_out is not None
+        assert left_out.excluded
         mixed = await mine.get(conversation_id(CHANNEL, "r-mixed"))
         assert mixed is not None
         assert (mixed.message_count, mixed.first_at) == (1, NOW)

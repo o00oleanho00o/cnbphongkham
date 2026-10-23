@@ -182,17 +182,19 @@ class PluginManager:
 
     async def _install(self, stage: Callable[[], Staged], *, enable: bool) -> dict[str, Any]:
         installer = self._need_installer()
+        # Downloading and pip run outside the lock (each in its own staging folder), so a slow install does
+        # not hold up every refresh before a turn; only the swap and loading take the lock.
+        staged = await asyncio.to_thread(stage)
+        name = staged.manifest.name
+        try:
+            known = self._live.host.sources.get(name)
+            if known is not None and known.origin != "installed":
+                raise PluginError(name, f"a {known.origin} plugin has this name")
+            await asyncio.to_thread(installer.install_requirements, staged)
+        except BaseException:
+            installer.discard(staged)
+            raise
         async with self._lock:
-            staged = await asyncio.to_thread(stage)
-            name = staged.manifest.name
-            try:
-                known = self._live.host.sources.get(name)
-                if known is not None and known.origin != "installed":
-                    raise PluginError(name, f"a {known.origin} plugin has this name")
-                await asyncio.to_thread(installer.install_requirements, staged)
-            except BaseException:
-                installer.discard(staged)
-                raise
             self._unload(name)
             await asyncio.to_thread(installer.commit, staged)
             row = await self._store.get(self._tenant_id, name) or PluginState(name)

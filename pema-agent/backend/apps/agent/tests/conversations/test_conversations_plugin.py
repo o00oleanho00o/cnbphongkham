@@ -191,6 +191,22 @@ async def test_old_messages_are_deleted_after_the_retention_and_empty_chats_go()
     assert total == 1
 
 
+async def test_a_conversation_left_out_stays_left_out_when_its_messages_are_deleted() -> None:
+    plugin = _plugin(now=NOW)
+    await _switch_on(plugin, days=30)
+    await plugin.hear(_said("cũ", at=NOW - timedelta(days=40)))
+    cid = conversation_id(CHANNEL, "t1")
+    await plugin.store.set_excluded(cid, True)
+
+    assert await plugin.clean() == 1
+
+    left_out = await plugin.store.get(cid)
+    assert left_out is not None
+    assert left_out.excluded
+    await plugin.hear(_said("mới", message_id="m2"))
+    assert await _kept(plugin) == []
+
+
 async def test_without_a_retention_nothing_is_deleted() -> None:
     plugin = _plugin()
     await _switch_on(plugin, days=0)

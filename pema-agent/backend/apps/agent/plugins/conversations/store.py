@@ -178,11 +178,14 @@ class InMemoryConversationStore:
             rows = self._messages.get(conversation_id, [])
             kept = [m for m in rows if m.at >= cutoff]
             gone += len(rows) - len(kept)
-            if not kept:
+            # An excluded conversation stays, even empty: dropping it would forget the admin's choice.
+            if not kept and not self._conversations[conversation_id].excluded:
                 self._conversations.pop(conversation_id, None)
                 self._messages.pop(conversation_id, None)
                 continue
             self._messages[conversation_id] = kept
+            if not kept:
+                continue
             self._conversations[conversation_id] = replace(
                 self._conversations[conversation_id],
                 message_count=len(kept),
@@ -310,7 +313,7 @@ _RECOUNT = text(
 )
 _DROP_EMPTY = text(
     "DELETE FROM agent_rt.cv_conversation c WHERE c.tenant_id = :tenant_id AND c.agent = :agent "
-    "AND NOT EXISTS (SELECT 1 FROM agent_rt.cv_message m WHERE m.tenant_id = c.tenant_id "
+    "AND NOT c.excluded AND NOT EXISTS (SELECT 1 FROM agent_rt.cv_message m WHERE m.tenant_id = c.tenant_id "
     "AND m.agent = c.agent AND m.conversation_id = c.id)"
 )
 _PEOPLE = text(

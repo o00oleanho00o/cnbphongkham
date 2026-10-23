@@ -29,6 +29,7 @@ from zoneinfo import ZoneInfo
 from pydantic import BaseModel, ValidationError
 
 from agent_app.cases.store import CaseStore
+from agent_app.ingress import SessionBusyError
 from agent_app.plugins.host import Proactive
 from agentcore import ToolContext, ToolSpec
 from agentcore.cases import (
@@ -99,13 +100,17 @@ class CaseEngine:
         zone: Callable[[], ZoneInfo],
         clock: Callable[[], datetime] = lambda: datetime.now(UTC),
         settings: EngineSettings | None = None,
+        lock: Callable[[str], contextlib.AbstractAsyncContextManager[None]] | None = None,
     ) -> None:
+        """``lock(name)`` is tried before each pass (``SessionBusyError`` when another process holds it), so
+        one process of the agent runs the passes; None (one process) runs every pass."""
         self._store = store
         self._specs = specs
         self._config = config
         self._zone = zone
         self._clock = clock
         self.settings = settings or EngineSettings()
+        self._lock = lock
         self._proactive: Proactive | None = None
         self._session_for: SessionFor | None = None
         self._nudge = asyncio.Event()
@@ -322,6 +327,13 @@ class CaseEngine:
         config = self._config()
         if not config.enabled or self._proactive is None:
             return 0
+        try:
+            async with self._lock("cases") if self._lock is not None else contextlib.nullcontext():
+                return await self._run_due(config)
+        except SessionBusyError:  # another process of the agent is running this pass
+            return 0
+
+    async def _run_due(self, config: CasesConfig) -> int:
         due = await self._store.due(self._clock(), self.settings.per_pass)
         # shortcut: one case after the other, so one turn at a time; run per chat in parallel if it is slow.
         for record in due:

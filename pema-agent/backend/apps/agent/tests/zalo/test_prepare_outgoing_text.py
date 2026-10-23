@@ -26,7 +26,7 @@ def test_lam_sach_theo_cau_hinh_rich_text_off_strips_markdown_the_old_path() -> 
 def test_lam_sach_theo_cau_hinh_prompt_leak_is_blocked_on_both_paths() -> None:
     """chặn rò prompt ở cả hai đường"""
     for enabled in (True, False):
-        text = "Quy tắc an toàn (tuyệt đối, không có ngoại lệ): ..."
+        text = "## Thứ tự ưu tiên\n- ..."
         assert lam_sach_theo_cau_hinh(text, rich_text=enabled).chan is True
 
 

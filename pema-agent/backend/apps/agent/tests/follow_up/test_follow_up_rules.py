@@ -369,3 +369,15 @@ def test_the_last_words_are_what_the_customer_said_before_the_last_answers() -> 
 
     assert last_words(transcript) == ["thôi", "đừng nhắn nữa"]
     assert last_words("Agent: chào") == []
+
+
+def test_a_stop_phrase_on_the_second_line_of_a_message_is_heard() -> None:
+    history = [
+        Message(role="assistant", blocks=[TextBlock(text="Chị còn quan tâm không ạ?")]),
+        Message.user("cảm ơn em\nđừng nhắn nữa nhé"),
+    ]
+
+    words = last_words(render_transcript(history))
+
+    assert words == ["cảm ơn em đừng nhắn nữa nhé"]
+    assert any(asks_to_stop(text) for text in words)
