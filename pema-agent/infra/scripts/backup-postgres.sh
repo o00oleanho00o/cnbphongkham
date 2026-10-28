@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Logical backup of the Pema databases: one custom-format dump of `pema` (the clinic), one of `pema_agent` (the
-# agent, when it exists) + the cluster's roles (globals) + the clinic photos (from the api container),
-# verified, encrypted, with simple retention. One installation = one clinic = one database, so the dump is the
+# agent, when it exists) + the cluster's roles (globals) + the clinic photos (from the api container) + the Zalo
+# connector's /data (from the zalo container, when it runs), verified, encrypted, with simple retention. One installation = one clinic = one database, so the dump is the
 # WHOLE clinic (every patient, message and credential it has); treat it with that weight. A second clinic has its
 # own stack and must use its own PEMA_BACKUP_DIR and its own age key. Run from the host that runs docker compose
 # (cron or the systemd timer in infra/ubuntu/systemd).
@@ -21,6 +21,8 @@
 #   PEMA_BACKUP_DB              database (default pema)
 #   PEMA_BACKUP_AGENT_DB        the agent's database (default pema_agent; skipped when the server has none)
 #   PEMA_BACKUP_API_SERVICE     compose service name of the API, which holds the clinic photos (default api)
+#   PEMA_BACKUP_ZALO_SERVICE    compose service name of the Zalo connector, which holds /data/zalo.db (accounts, sealed
+#                               tokens, the inbound outbox; default zalo; skipped when that service is not running)
 #   PEMA_BACKUP_HOOK            command run with the finished file path as $1 (rsync/rclone to the second site)
 #
 # Exit codes: 0 ok; non-zero on any failure (cron mails stderr). Nothing is printed except file names and sizes.
@@ -34,8 +36,11 @@ SERVICE="${PEMA_BACKUP_SERVICE:-postgres}"
 DB="${PEMA_BACKUP_DB:-pema}"
 AGENT_DB="${PEMA_BACKUP_AGENT_DB:-pema_agent}"
 API_SERVICE="${PEMA_BACKUP_API_SERVICE:-api}"
+ZALO_SERVICE="${PEMA_BACKUP_ZALO_SERVICE:-zalo}"
 # the photos of the Ảnh trước / sau tab: <PEMA_DATA_DIR>/clinic-media on the pema-data volume (docker-compose.yml)
 MEDIA_DIR=/var/lib/pema/clinic-media
+# the Zalo connector's volume (docker-compose.yml, service zalo)
+ZALO_DATA_DIR=/data
 read -r -a COMPOSE <<<"${PEMA_BACKUP_COMPOSE:-docker compose -f $INFRA/docker-compose.yml --env-file $INFRA/.env}"
 
 encrypt() { # stdin -> stdout
@@ -84,6 +89,16 @@ fi
 "${COMPOSE[@]}" exec -T "$API_SERVICE" mkdir -p "$MEDIA_DIR"
 "${COMPOSE[@]}" exec -T "$API_SERVICE" tar -C "$MEDIA_DIR" -czf - . >"$TMP/media.tar.gz"
 FILES+=(media.tar.gz)
+# The Zalo connector's data (zalo.db: accounts, sealed tokens, the inbound outbox). A stack without the connector (no
+# profile `agent`, or not started) is fine: skip with a line, never fail. shortcut: tar of the live /data, so a
+# write during the second of the copy can leave zalo.db a few rows behind (the outbox is retried by the connector);
+# upgrade to a sqlite3 .backup snapshot if that ever matters.
+if [ -n "$("${COMPOSE[@]}" ps --status running --services 2>/dev/null | grep -Fx "$ZALO_SERVICE" || true)" ]; then
+  "${COMPOSE[@]}" exec -T "$ZALO_SERVICE" tar -C "$ZALO_DATA_DIR" -czf - . >"$TMP/zalo-data.tar.gz"
+  FILES+=(zalo-data.tar.gz)
+else
+  echo "zalo service '$ZALO_SERVICE' is not running: its data is not in this backup"
+fi
 
 # 2. Verify before trusting it: pg_restore must be able to list the archive and it must contain the schemas.
 "${COMPOSE[@]}" exec -T "$SERVICE" pg_restore --list <"$TMP/db.dump" >"$TMP/db.list"

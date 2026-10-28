@@ -1,5 +1,5 @@
-# Pema clinic stack (branch feat/agent-v2: the agent layer, its worker and the Zalo bridge were removed):
-# postgres, redis, migrate, api, frontend.
+# Pema clinic stack: postgres, redis, migrate, api, frontend; profile `agent` adds the agent, crm-signer, egress and
+# the Zalo connector.
 # ONE STACK = ONE CLINIC (single tenant, branch feat/single-tenant): its own postgres, redis, secrets, Zalo accounts and
 # domain. A second clinic is a second, completely separate stack (other `name:`/-p project, other .env, other host
 # ports, other volumes); see infra/README.md "One system, one clinic".
@@ -17,10 +17,11 @@
 #   profile agent         the general agent (apps/agent): agent-migrate (database pema_agent, role agent_rt_app,
 #                         schema agent_rt) and agent, running the profile `agents/clinic`. Staff sign in ONCE on the clinic web: its
 #                         server asks the clinic API for a short token and calls the agent through /agent/...
-#                         (PEMA_AGENT_INTERNAL_URL), so the pages "Điều khiển agent" and the Zalo pages live in
-#                         the clinic web. The agent publishes no port (`expose` only) and has no dashboard of its own
-#                         in this profile. Model, key, plugins and Zalo accounts are kept in Postgres and the
-#                         agent-home volume (its secret key: back it up with the database).
+#                         (PEMA_AGENT_INTERNAL_URL), so the pages "Điều khiển agent" live in the clinic web. The agent
+#                         publishes no port (`expose` only) and has no dashboard of its own in this profile. Model, key
+#                         and plugins are kept in Postgres and the agent-home volume (its secret key: back it up with
+#                         the database). The same profile starts `zalo`, the Zalo connector (own image, own volume
+#                         zalo-data; its pages are served through the clinic web at /connectors/zalo).
 #
 # Run from pema-agent/ (the Makefile does this):
 #   docker compose -f infra/docker-compose.yml --env-file infra/.env up -d
@@ -227,8 +228,8 @@ services:
     command: ["sh", "-c", "agent db bootstrap-role && alembic -c alembic.ini upgrade head && agent db migrate-plugins"]
 
   # The clinic's agent (profile agents/clinic: plugin sso trusts the tokens of the clinic API, which it reads the public
-  # keys of at http://api:8000). Its only setting from here is the database; the bridge of personal Zalo accounts runs
-  # inside this container once installed from the Zalo pages. The frontend reaches it at http://agent:8088.
+  # keys of at http://api:8000). Its only setting from here is the database. Zalo is not in it: the connector service
+  # `zalo` talks to it through the connector protocol. The frontend reaches it at http://agent:8088.
   agent:
     profiles: ["agent"]
     build: *agent-build
@@ -242,10 +243,10 @@ services:
     environment:
       AGENT_DATABASE_URL: postgresql+psycopg://agent_rt_app:${PEMA_AGENT_RT_APP_PASSWORD:-}@postgres:5432/pema_agent
       # The model, embedding, TypeSafe and Zalo Bot clients go out through egress, which logs every destination
-      # (phase 1: nothing blocked). web_search/web_fetch (netguard) and the Zalo bridge still go out directly.
+      # (phase 1: nothing blocked). web_search/web_fetch (netguard) still go out directly.
       HTTPS_PROXY: http://egress:3128
       HTTP_PROXY: http://egress:3128
-      NO_PROXY: localhost,127.0.0.1,api,crm-signer,postgres,frontend,agent
+      NO_PROXY: localhost,127.0.0.1,api,crm-signer,postgres,frontend,agent,zalo
     command: ["agent", "serve", "--profile", "agents/clinic", "--home", "/data", "--host", "0.0.0.0", "--port", "8088"]
     # Only the compose network reaches it (the frontend, as http://agent:8088). To look at it from the host, use
     # `docker compose exec agent ...` or add a `ports` entry in a local override file.
@@ -254,8 +255,8 @@ services:
     volumes:
       - agent-home:/data
     # Hardened (docs/PLAN-crm-plugin.md 3.10b, test T9): it talks with people outside, so it may one day be talked
-    # into anything; then it can write only its own /data (plugins, their data, the Zalo bridge's log) and /tmp
-    # (tsx's cache of the bridge, pip while an admin installs a plugin), and gains no privilege.
+    # into anything; then it can write only its own /data (plugins and their data) and /tmp
+    # (pip while an admin installs a plugin), and gains no privilege.
     read_only: true
     tmpfs:
       - /tmp:size=256m
@@ -264,6 +265,62 @@ services:
       - no-new-privileges:true
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8088/health', timeout=3).status == 200 else 1)"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 15s
+
+  # The Zalo connector (docs/PLAN-zalo-service.md, docs/CONNECTOR-PROTOCOL.md): its own service and image, built from
+  # connectors/zalo/ alone (no code of backend/). It talks to the agent only through the connector protocol, signed
+  # with CONNECTOR_KEY: issue the key on the agent's Connectors page (Điều khiển agent > Connectors > Thêm), paste it
+  # into infra/.env as ZALO_CONNECTOR_KEY, then `docker compose up -d zalo`. Empty key: it idles and logs that it has
+  # none. Zalo accounts, sealed tokens and the inbound outbox are in the zalo-data volume (back it up: backup-postgres.sh).
+  # Staff reach its pages through the clinic web (/connectors/zalo, PEMA_CONNECTOR_URLS). Internal only.
+  zalo:
+    profiles: ["agent"]
+    build:
+      context: ../connectors/zalo
+      dockerfile: Dockerfile
+    image: pema-agent-zalo:${PEMA_IMAGE_TAG:-local}
+    restart: unless-stopped
+    environment:
+      AGENT_URL: http://agent:8088
+      CALLBACK_URL: http://zalo:8089
+      CONNECTOR_NAME: zalo
+      CONNECTOR_KEY: ${ZALO_CONNECTOR_KEY:-}
+      # Seals the Zalo tokens kept in /data/zalo.db. Lose it and every token must be entered again.
+      ZALO_SECRET_KEY: ${PEMA_ZALO_SECRET_KEY:?set it in infra/.env (see .env.example)}
+      # Same trust as the agent's plugin sso (agents/clinic/agent.toml): staff tokens of the clinic API.
+      CRM_JWKS_URL: http://api:8000/api/v1/.well-known/jwks.json
+      SSO_ISSUER: pema-clinic
+      SSO_AUDIENCE: pema-agent
+      # Webhook mode of Zalo Bot; empty = long polling. Needs a proxy route to /v1/hooks/zalo/bot/<account> (README).
+      PUBLIC_URL: ${ZALO_PUBLIC_URL:-}
+      # Zalo goes out through egress like the agent's clients; the stack's own services are not proxied.
+      HTTPS_PROXY: http://egress:3128
+      HTTP_PROXY: http://egress:3128
+      NO_PROXY: localhost,127.0.0.1,api,agent,zalo,postgres,frontend
+    depends_on:
+      egress:
+        condition: service_started
+    expose:
+      - "8089"
+    volumes:
+      - zalo-data:/data
+    # Hardened like the agent: it talks with people outside, so it writes only its own /data and /tmp.
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8089/ready', timeout=3).status == 200 else 1)"]
       interval: 10s
       timeout: 5s
       retries: 6
@@ -339,6 +396,9 @@ services:
       # Where the server forwards /agent/v1 and /agent/ui (the agent service, profile `agent`; with the profile off,
       # those calls answer 502 and the rest of the web is unaffected). Read on every request, like the API address.
       PEMA_AGENT_INTERNAL_URL: ${PEMA_AGENT_INTERNAL_URL:-http://agent:8088}
+      # Where the server forwards /connectors/<name> (name=url, comma separated; today the Zalo connector, profile
+      # `agent`). Read on every request, like the agent address.
+      PEMA_CONNECTOR_URLS: ${PEMA_CONNECTOR_URLS:-zalo=http://zalo:8089}
     networks:
       - default
       - edge
@@ -352,7 +412,7 @@ services:
       start_period: 10s
 
   # The one public door (TLS, security headers, body ceiling). Attached ONLY to `edge`, where only api and frontend
-  # are, so it cannot reach Postgres, Redis or the Zalo bridge even by mistake. Config: infra/caddy/ (the TLS mode
+  # are, so it cannot reach Postgres, Redis or the Zalo connector even by mistake. Config: infra/caddy/ (the TLS mode
   # file is chosen by PEMA_PROXY_TLS: auto | internal | off).
   caddy:
     profiles: ["proxy"]
@@ -463,6 +523,7 @@ volumes:
   redis-data:
   pema-data:
   agent-home:
+  zalo-data:
   crm-signer-keys:
   caddy-data:
   caddy-config:

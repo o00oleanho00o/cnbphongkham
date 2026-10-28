@@ -145,7 +145,7 @@ mật khẩu từ biến môi trường, `alembic upgrade heads` tạo MỘT ph�
 `clinic.clinic` đúng một dòng và in tên), rồi `api`. Xem tên đã tạo: `docker compose -f infra/docker-compose.yml
 --env-file infra/.env logs migrate | grep clinic` (dòng `migrate: clinic '...' (id ...), exactly one row`). Chạy lại
 `make db-migrate` an toàn: không đổi tên và không đổi mã của phòng khám đã có. `PEMA_CLINIC_ID` (UUID, tùy chọn) chỉ cần khi
-muốn cố định mã cài đặt, ví dụ dựng lại hệ thống từ bản sao lưu. Worker, frontend, bridge Zalo cá nhân và
+muốn cố định mã cài đặt, ví dụ dựng lại hệ thống từ bản sao lưu. Worker, frontend, agent (kèm dịch vụ Zalo) và
 Ollama nằm trong *profile* và **chỉ bật khi gói tương ứng đã có mã**:
 
 | Profile | Lệnh | Phụ thuộc |
@@ -154,13 +154,24 @@ Ollama nằm trong *profile* và **chỉ bật khi gói tương ứng đã có m
 | `frontend` | `--profile frontend` | ứng dụng TanStack Start của gói E (chạy bằng bun) |
 | `app` | `make up-app` | worker + frontend |
 | `proxy` | `make up-proxy` | Caddy (TLS) đứng trước api và dashboard; xem mục 8a |
-| `bridge` | `--profile bridge` | gói C2 (và chấp nhận rủi ro khóa tài khoản Zalo) |
+| `agent` | `--profile agent` | agent, `crm-signer`, `egress` và connector Zalo `zalo` (chấp nhận rủi ro khóa tài khoản Zalo cá nhân) |
 | `ollama` | `make up-ollama` | NVIDIA Container Toolkit (mục 3) |
 
-**Zalo Bot nghe bằng long polling** (agent chỉ gọi ra ngoài, không cần cổng vào): đó là mặc định khi ô "Public
-address" trong cài đặt plugin Zalo để trống. Webhook chỉ dùng khi điền ô đó; Zalo khi ấy gọi
-`<địa chỉ>/v1/hooks/zalo/bot/<account_id>` của agent, mà Caddy của stack này không chuyển tới agent, nên phải tự
-thêm proxy HTTPS cho đúng đường đó. Việc chọn là quyết định của chủ phòng khám.
+**Zalo là một dịch vụ riêng (connector `zalo`)**, chạy cùng profile `agent`, không nằm trong tiến trình agent. Cấp
+khóa và bật (làm một lần, sau khi stack đã chạy):
+
+1. `infra/.env` có `PEMA_ZALO_SECRET_KEY` (`make infra-secrets` tạo sẵn; khóa niêm phong token Zalo, cất bản sao ngoại tuyến).
+2. Trong web phòng khám: Điều khiển agent > Connectors > Thêm, tên `zalo`. Khóa chỉ hiện **một lần**.
+3. Dán vào `infra/.env` dòng `ZALO_CONNECTOR_KEY=<khóa>`, rồi `docker compose -f infra/docker-compose.yml --env-file
+   infra/.env --profile agent up -d zalo`. Chưa có khóa thì `zalo` vẫn chạy nhưng im lặng và ghi log là chưa có khóa.
+   Thu hồi khóa trên trang Connectors là connector câm ngay.
+4. Nhập tài khoản Zalo (token bot, đăng nhập cá nhân) ở các trang Zalo trong web phòng khám.
+
+**Zalo Bot nghe bằng long polling** (connector chỉ gọi ra ngoài qua `egress`, không cần cổng vào): đó là mặc định khi
+`ZALO_PUBLIC_URL` trong `infra/.env` để trống. Chế độ webhook chỉ dùng khi điền biến đó; Zalo khi ấy gọi
+`<địa chỉ>/v1/hooks/zalo/bot/<account>` của connector (cổng 8089 của `zalo`), mà Caddy của stack này **không** có đường
+tới connector (Caddy chỉ nối mạng `edge`, `zalo` không ở đó), nên phải tự thêm proxy HTTPS cho đúng đường đó. Việc chọn là
+quyết định của chủ phòng khám.
 
 **Phòng khám thứ hai = một bộ mới hoàn toàn.** Ưu tiên máy chủ khác. Cùng một máy Docker thì mọi thứ dưới đây phải khác bộ
 đầu: một bản sao `infra/.env` mới (`make infra-secrets`, mật khẩu và `PEMA_JWT_SECRET` mới,
@@ -380,7 +391,7 @@ sudo ufw status verbose
    (`PEMA_TRUSTED_PROXIES`, mặc định `PEMA_PROXY_IP`), nên giới hạn đăng nhập theo IP không bị giả mạo. Có thêm proxy hay CDN
    đứng trước Caddy thì phải thêm dải của nó vào `PEMA_TRUSTED_PROXIES` **và** cấu hình `trusted_proxies` của Caddy.
    Cookie phiên `Secure` nên đăng nhập chỉ chạy qua https (trừ chế độ `off`).
-6. **Agent không đi qua Caddy:** Zalo Bot dùng long polling (xem trên). Cổng agent (`/api/v1/agent-gateway/*`) bị
+6. **Agent và connector Zalo không đi qua Caddy:** Zalo Bot dùng long polling (xem trên). Cổng agent (`/api/v1/agent-gateway/*`) bị
    chặn từ ngoài: chỉ `crm-signer` gọi nó trong mạng compose.
 
 Chưa kiểm: Let's Encrypt thật (chế độ `auto`) chưa được thử; chế độ `internal` đã chạy thử trên máy dev.
@@ -419,7 +430,8 @@ Các unit này **chưa được chạy thử** trong gói F.
 ## 10. Sao lưu Postgres
 
 Dữ liệu cần giữ: database `pema` (CRM) và `pema_agent` (agent, kho tri thức), tệp `infra/.env`, volume `agent-home`
-(khóa bí mật của agent; mất nó thì API key model và thông tin Zalo trong DB không đọc lại được), và ảnh lâm sàng (tab Ảnh
+(khóa bí mật của agent; mất nó thì API key model trong DB không đọc lại được), volume `zalo-data` của connector Zalo
+(`zalo.db`: tài khoản, token niêm phong, hàng đợi tin đến; mất `PEMA_ZALO_SECRET_KEY` thì phải nhập lại token), và ảnh lâm sàng (tab Ảnh
 trước / sau) nằm ở `/var/lib/pema/clinic-media` trong volume `pema-data` của container `api`. Mô hình Ollama tải lại được,
 không cần sao lưu.
 
@@ -438,8 +450,9 @@ sudo systemctl start pema-backup.service && journalctl -u pema-backup.service -n
 
 `backup-postgres.sh` làm: `pg_dump -Fc` + `pg_dumpall --globals-only` (role và hash mật khẩu), kiểm tra bằng
 `pg_restore --list` và sự có mặt của các schema `clinic`, `ctx` (và `agent_rt` trong `pema_agent`), nén thư mục ảnh
-`/var/lib/pema/clinic-media` từ container `api` (`media.tar.gz`; `api` phải đang chạy, không thì bản sao lưu báo lỗi), gói tất cả
-vào một tệp (ảnh và các dòng trỏ tới ảnh cùng một thời điểm), **mã hóa bằng
+`/var/lib/pema/clinic-media` từ container `api` (`media.tar.gz`; `api` phải đang chạy, không thì bản sao lưu báo lỗi), nén thư mục `/data` của connector Zalo từ container `zalo`
+(`zalo-data.tar.gz`; tên dịch vụ đặt bằng `PEMA_BACKUP_ZALO_SERVICE`, mặc định `zalo`; chưa chạy thì bỏ qua và ghi một dòng, không báo lỗi), gói tất cả
+vào một tệp (ảnh, dữ liệu Zalo và các dòng trỏ tới chúng cùng một thời điểm), **mã hóa bằng
 age (hoặc gpg)**, xóa tệp quá `PEMA_BACKUP_KEEP_DAYS`, rồi gọi `PEMA_BACKUP_HOOK` để chép ra nơi khác. Script từ
 chối ghi bản không mã hóa, trừ khi `PEMA_BACKUP_ALLOW_PLAINTEXT=true` (chỉ để thử). Vì một CSDL là một phòng khám, một tệp
 sao lưu là TOÀN BỘ dữ liệu phòng khám đó (bệnh nhân, tin nhắn, thông tin đăng nhập Zalo đã mã hóa): thư mục sao lưu và khóa
@@ -451,11 +464,13 @@ Quy tắc:
   ngoài phòng khám (cloud VN hoặc ổ rời mang về). Bản sao nằm cùng phòng với máy chủ không chống được cháy, trộm.
 - **Diễn tập khôi phục mỗi quý** và sau mỗi lần đổi phiên bản Postgres:
   `make restore-verify FILE=/mnt/backup-disk/pema/pema-YYYYmmdd-HHMMSS.tar.age`
-  (đặt `PEMA_RESTORE_AGE_IDENTITY=/đường/dẫn/pema-backup.key`; khôi phục vào CSDL tạm rồi xóa, đọc hết tệp ảnh và đếm số ảnh,
-  không đụng CSDL hay ảnh đang chạy).
+  (đặt `PEMA_RESTORE_AGE_IDENTITY=/đường/dẫn/pema-backup.key`; khôi phục vào CSDL tạm rồi xóa, đọc hết tệp ảnh và dữ liệu Zalo, đếm số tệp,
+  không đụng CSDL, ảnh hay dữ liệu Zalo đang chạy).
   Khôi phục thật: `restore-postgres.sh --restore <tệp>` vào `pema_restored`, ảnh vào thư mục mới
   `/var/lib/pema/clinic-media.pema_restored` (thư mục đã có thì script dừng, không ghi đè), kiểm tra, rồi khi dừng api/worker đổi tên
   CSDL và đổi `clinic-media` thành `clinic-media.old`, `clinic-media.pema_restored` thành `clinic-media`.
+  Dữ liệu Zalo (`zalo-data.tar.gz`) được giải vào thư mục mới `/data/restored.pema_restored` trong container `zalo`
+  (cũng không ghi đè; thư mục đã có thì script dừng): dừng `zalo`, chép `zalo.db` từ thư mục đó ra `/data`, bật lại `zalo`.
 - Điểm mất dữ liệu tối đa (RPO) của cách này là **một ngày**. Nếu chủ phòng khám cần ngắn hơn, chuyển sang lưu WAL liên tục
   (pgBackRest hoặc WAL-G) là bước kế tiếp, chưa làm.
 - Thời hạn lưu bản sao là quyết định của chủ phòng khám (bản sao chứa dữ liệu bệnh nhân; Nghị định 13/2023). Mặc định 14 ngày.

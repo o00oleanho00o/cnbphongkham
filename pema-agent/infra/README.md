@@ -8,11 +8,12 @@ Branch `feat/single-tenant`: **one system = one clinic** (section below).
 
 ```
 infra/
-  docker-compose.yml        postgres+pgvector, redis, migrate, api  | profiles: worker, frontend, proxy, bridge, app (ollama paused)
+  docker-compose.yml        postgres+pgvector, redis, migrate, api  | profiles: worker, frontend, proxy, agent, app (ollama paused)
   docker-compose.proxy.yml  override for "behind the proxy": api and frontend stop publishing ports (see Reverse proxy)
   caddy/                    Caddyfile (one host) + modes/{auto,internal,off}.caddy (TLS mode, chosen by PEMA_PROXY_TLS)
   .env.example              every variable, placeholders only (copy to .env, never commit it)
-  docker/                   api.Dockerfile (api + worker + migrate), frontend.Dockerfile, bridge.Dockerfile
+  docker/                   api.Dockerfile (api + worker + migrate), frontend.Dockerfile, agent.Dockerfile
+                            (the Zalo connector builds from connectors/zalo/, its own Dockerfile)
                             (+ <name>.Dockerfile.dockerignore, BuildKit picks them up)
   scripts/                  gen-secrets.sh  bootstrap-roles.sh  migrate.sh  backup-postgres.sh
                             restore-postgres.sh  pull-models.sh
@@ -80,9 +81,9 @@ Without `make` (Windows): the recipes are plain `docker compose -f infra/docker-
 | `frontend` | `frontend`, `app`, `proxy` | TanStack Start server run by bun (Nitro `.output`); server routes forward `/api/v1` and `/healthz` to `PEMA_API_INTERNAL_URL`, an ordinary runtime variable read on every request (no build argument, no rebuild to change it), healthcheck `/login` | api |
 | `caddy` | `proxy` | Reverse proxy, the only service that publishes 80/443, attached only to the `edge` network (api and frontend); see "Reverse proxy" | api, frontend |
 | `agent-migrate`, `agent` | `agent` | The clinic's agent (`agent serve --profile agents/clinic`), its own database `pema_agent`; internal only (`expose` 8088) | postgres |
-| `egress` | `agent` | Squid (`infra/egress/squid.conf`): the agent's model, embedding, TypeSafe and Zalo Bot clients go out through it (`HTTPS_PROXY`). Phase 1 logs every destination and blocks none: `docker compose logs egress` (time, client, result, bytes, method, host). `web_*` and the Zalo bridge still go out directly. Internal only, read-only | |
+| `egress` | `agent` | Squid (`infra/egress/squid.conf`): the model, embedding and TypeSafe clients of the agent and everything the `zalo` connector sends to Zalo go out through it (`HTTPS_PROXY`). Phase 1 logs every destination and blocks none: `docker compose logs egress` (time, client, result, bytes, method, host). `web_*` still go out directly. Internal only, read-only | |
 | `crm-signer` | `agent` | Holds the Ed25519 key that signs the agent's calls to the CRM gateway; the agent process holds no CRM key. Internal only (`expose` 8090), read-only container, `cap_drop ALL`. First run: `docker compose --profile agent run --rm crm-signer crm-signer keygen` prints `PEMA_AGENT_GATEWAY_PUBLIC_KEYS=...` for `.env`; the private key stays in the `crm-signer-keys` volume. Key change: `keygen` into a fresh volume, add the new public key beside the old one in `.env` (comma), restart `api`, switch the volume, drop the old key | api |
-| `zalo-personal-bridge` | `bridge` | Node 22 + zca-js run by tsx (no build step; tsx is a runtime dependency), internal only (`expose`, never published; listens on 0.0.0.0 inside the container so the API can reach it), healthcheck `/health`, risk of Zalo account lock. Disabled unless `PEMA_ZALO_PERSONAL_ENABLED=true` | |
+| `zalo` | `agent` | The Zalo connector (`connectors/zalo/`, its own image built from that folder alone, no code of `backend/`): Zalo Bot and personal accounts, its own pages. Talks to the agent only through the connector protocol (`docs/CONNECTOR-PROTOCOL.md`), signed with `ZALO_CONNECTOR_KEY`. Internal only (`expose` 8089), read-only container, `cap_drop ALL`, goes out to Zalo through `egress`, healthcheck `/health`. Data (SQLite `zalo.db`: accounts, sealed tokens, the inbound outbox) in the `zalo-data` volume; `PEMA_ZALO_SECRET_KEY` seals the tokens. See "Zalo connector" below | egress |
 | `ollama`, `ollama-pull` | `ollama` | **TẠM TẮT LLM LOCAL (2026-10-02)**: commented out in `docker-compose.yml`; the agent uses a third-party LLM API (`LLM_*` in `.env`). When re-enabled: GPU container + model download; needs the NVIDIA Container Toolkit | |
 
 One image serves `api`, `worker` and `migrate` (`pema-agent-api:${PEMA_IMAGE_TAG}`): multi-stage, uv
@@ -118,7 +119,7 @@ it); add `--profile worker` for the agent worker.
 
 Routing: `/api/v1/*` and `/healthz` go to `api:8000`, everything else to `frontend:3000`. The agent gateway
 (`/api/v1/agent-gateway/*`) is answered 404 from outside: only `crm-signer` calls it, over the compose network.
-`/docs`, `/openapi.json` and every other path never reach the API. Postgres, Redis and the bridge cannot be routed:
+`/docs`, `/openapi.json` and every other path never reach the API. Postgres, Redis and the Zalo connector cannot be routed:
 Caddy is attached only to the `edge` network (fixed subnet `PEMA_PROXY_SUBNET`, default `172.29.80.0/24`; Caddy is
 `PEMA_PROXY_IP`, default `.2`), where only `api` and `frontend` live. Change the subnet and the IP together if the
 subnet collides with one of yours (a running stack needs `down` first, networks cannot change subnet in place).
@@ -145,9 +146,10 @@ then import it as a trusted root on each device (the file is the public certific
 stays in the `caddy-data` volume). Volumes `caddy-data` (certificates, CA, ACME account) and `caddy-config` persist
 across restarts; back up `caddy-data` or accept a new certificate request after a loss.
 
-**Zalo.** Zalo no longer calls the API: the agent's Zalo plugin receives it. Bots long-poll by default (the
-plugin's "Public address" left empty), which needs no inbound port. A webhook needs that address set and a proxy
-to the agent's `/v1/hooks/zalo/bot/<account_id>`; this Caddy does not route to the agent.
+**Zalo.** Zalo is a connector service, `zalo` (see "Zalo connector" below), not a part of the agent. Bots long-poll by
+default (`ZALO_PUBLIC_URL` empty), which needs no inbound port. Webhook mode (`ZALO_PUBLIC_URL` set) needs a proxy
+route from the internet to the connector's `/v1/hooks/zalo/bot/<account>` (port 8089 of `zalo`); the Caddy of this stack
+provides none (it is attached only to `edge`, where `zalo` is not), so that route is yours to add.
 
 **Changing the API address of the dashboard** (it is a runtime variable): set `PEMA_API_INTERNAL_URL` in `.env`, then
 `docker compose ... up -d frontend`. No rebuild. Without a proxy it is the only place the dashboard learns where the API is.
@@ -184,7 +186,8 @@ to the agent's `/v1/hooks/zalo/bot/<account_id>`; this Caddy does not route to t
   matching `PEMA_*_BIND` to that machine's Tailscale IP. Docker publishes ports around ufw, so the bind address,
   not the firewall, is the control that counts.
 * `.env` is git-ignored; `gen-secrets.sh` creates it with mode 600: keep an offline copy. The agent's secret key
-  (model keys, Zalo credentials) is in the agent-home volume and has no recovery: back it up with the databases.
+  (model keys) is in the agent-home volume and has no recovery: back it up with the databases. The Zalo seal key
+  `PEMA_ZALO_SECRET_KEY` is in `.env` (and the sealed tokens in the `zalo-data` volume): keep the offline copy.
 * Inside the compose network the services get their URLs composed from the passwords (host names `postgres`,
   `redis`); the `localhost` URLs in `.env` are for tools run on the host.
 
@@ -213,9 +216,26 @@ Key change without downtime: `keygen` into a fresh volume, put the new public ke
 
 ## Backups
 
+### Zalo connector
+
+Zalo runs as its own service (`zalo`, profile `agent`, started with the agent). It registers its channels with the agent
+and exchanges messages through the signed connector protocol; staff open its pages in the clinic web (`/connectors/zalo`,
+the web forwards to `PEMA_CONNECTOR_URLS=zalo=http://zalo:8089`).
+
+1. Set `PEMA_ZALO_SECRET_KEY` in `infra/.env` (`gen-secrets.sh` does it; the demo file has a fake one). It is required
+   by every `docker compose` command of this file, even without the profile.
+2. Start the stack with the profile `agent`; `zalo` starts without a key and logs that it has none (it idles).
+3. In the clinic web: Điều khiển agent > Connectors > Thêm, name `zalo`. The key is shown ONCE.
+4. Paste it into `infra/.env` as `ZALO_CONNECTOR_KEY=...`, then `docker compose -f infra/docker-compose.yml --env-file
+   infra/.env --profile agent up -d zalo`. Revoking the key on the Connectors page silences the connector at once.
+5. Enter the Zalo accounts (bot token, personal login) on the Zalo pages. `ZALO_PUBLIC_URL` stays empty for long
+   polling; see "Zalo" under Reverse proxy for webhook mode.
+
+
 `scripts/backup-postgres.sh` (verified dump + globals + the clinic photos of `/var/lib/pema/clinic-media` from the api
-container, encrypted with age or gpg, retention, off-site hook) and
-`scripts/restore-postgres.sh --verify|--restore` (never overwrites the live database or photos; it also checks that the restored
+container and the Zalo connector's `/data` (`zalo.db`) as `zalo-data.tar.gz`, skipped with a log line when `zalo` is not
+running, encrypted with age or gpg, retention, off-site hook) and
+`scripts/restore-postgres.sh --verify|--restore` (never overwrites the live database, photos or Zalo data; it also checks that the restored
 database holds exactly one clinic and prints its name). With one clinic per database a dump is the whole clinic: every
 patient, message and stored credential. Because there is no row level security to fall back on, who may read the backup
 directory and the age private key is as important as who holds the `be_app` password. Plaintext is refused unless

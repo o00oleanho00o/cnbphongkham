@@ -6,8 +6,9 @@
 #
 # Passwords are lowercase hex on purpose: they are embedded in connection URLs, so no character may need
 # escaping. The same placeholder gets the same value everywhere (the URLs and the plain variables agree).
-# Back the resulting file up OFFLINE (password manager). The agent's own secret key (model keys, Zalo
-# credentials) lives in the agent-home volume: back that up with the database.
+# Back the resulting file up OFFLINE (password manager). The agent's own secret key (model keys) lives in the
+# agent-home volume: back that up with the database. PEMA_ZALO_SECRET_KEY (Zalo tokens) is in this file.
+# ZALO_CONNECTOR_KEY is not generated: the agent issues it (Connectors page).
 set -euo pipefail
 
 INFRA="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -26,6 +27,9 @@ umask 077
 cp "$SRC" "$DST"
 
 # `|| true`: grep exits 1 when the file has no placeholder left.
+# The Zalo seal key is a Fernet-style key (32 random bytes, urlsafe base64), not hex: set it first, the placeholder
+# loop below would otherwise turn it into hex.
+sed -i "s|^PEMA_ZALO_SECRET_KEY=.*|PEMA_ZALO_SECRET_KEY=$(openssl rand -base64 32 | tr '+/' '-_')|" "$DST"
 for token in $(grep -o 'change-me-[a-z0-9-]*' "$SRC" | sort -u || true); do
   sed -i "s|${token}|$(rand_hex 24)|g" "$DST"
 done
