@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "31594924-ea23-4bbb-8edb-2183dbafe9b9",
+  "status": "current",
+  "command": "deliver",
+  "type": "architecture",
+  "input": "E:\\Desktop\\cnbphongkham\\.archify\\architecture-zalo-connector-20261024-002300\\candidate.json",
+  "output": "E:\\Desktop\\cnbphongkham\\.archify\\architecture-zalo-connector-20261024-002300\\zalo-connector.html",
+  "specification": {
+    "sha256": "2a396aeec00d23b9ecb8ec46795489eb4e47bc264e07eb1505a987f564d63686",
+    "bytes": 3755
+  },
+  "artifact": {
+    "sha256": "033820e75375fd4755bbd6bfb0700b252118b885084de4b62e27b9db5a6dc134",
+    "bytes": 826875
+  }
+}

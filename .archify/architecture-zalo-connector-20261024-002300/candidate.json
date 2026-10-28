@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Zalo là connector riêng, agent chỉ biết giao thức",
+    "locale": "vi",
+    "output": ".archify/architecture-zalo-connector-20261024-002300/zalo-connector.html",
+    "quality_profile": "showcase"
+  },
+  "components": [
+    { "id": "staff", "type": "external", "label": "Nhân viên", "sublabel": "trình duyệt", "pos": [40, 190], "size": [120, 60] },
+    { "id": "web", "type": "backend", "label": "Web phòng khám", "sublabel": "proxy /agent và /connectors/<tên>", "pos": [290, 190], "size": [150, 60], "tag": "token SSO ngắn" },
+    { "id": "agent", "type": "backend", "label": "Agent", "sublabel": "plugin connectors: kênh zalo-*", "pos": [560, 40], "size": [150, 60], "tag": "không biết nền tảng" },
+    { "id": "agentdb", "type": "database", "label": "pema_agent", "sublabel": "khóa niêm phong, kênh", "pos": [830, 40], "size": [140, 60] },
+    { "id": "zalo", "type": "backend", "label": "Connector Zalo", "sublabel": ":8089 /send /typing, giao diện quản trị", "pos": [560, 320], "size": [170, 60], "tag": "khóa riêng, thu hồi được" },
+    { "id": "zdb", "type": "database", "label": "zalo.db", "sublabel": "token niêm phong, hàng chờ", "pos": [560, 480], "size": [150, 60] },
+    { "id": "bridge", "type": "backend", "label": "Cầu nối Bun", "sublabel": "Zalo cá nhân, 127.0.0.1", "pos": [830, 480], "size": [150, 60] },
+    { "id": "zaloapi", "type": "external", "label": "Zalo", "sublabel": "Bot API và Zalo cá nhân", "pos": [1090, 320], "size": [130, 60] }
+  ],
+  "boundaries": [
+    { "kind": "security-group", "label": "Agent: không có khóa CRM, không có Zalo", "wraps": ["agent", "agentdb"] },
+    { "kind": "region", "label": "Connector Zalo: một container riêng", "wraps": ["zalo", "zdb", "bridge"] }
+  ],
+  "connections": [
+    { "id": "staff-to-web", "from": "staff", "to": "web", "label": "HTTPS", "variant": "emphasis" },
+    { "id": "web-to-agent", "from": "web", "to": "agent", "label": "/agent", "fromSide": "top", "toSide": "left" },
+    { "id": "web-to-zalo", "from": "web", "to": "zalo", "label": "/connectors/zalo", "fromSide": "bottom", "toSide": "left" },
+    { "id": "zalo-to-agent", "from": "zalo", "to": "agent", "label": "tin khách (HMAC)", "variant": "security" },
+    { "id": "agent-to-zalo", "from": "agent", "to": "zalo", "label": "/send (HMAC)", "variant": "security" },
+    { "id": "agent-to-agentdb", "from": "agent", "to": "agentdb", "label": "KV" },
+    { "id": "zalo-to-zdb", "from": "zalo", "to": "zdb", "label": "ghi trước" },
+    { "id": "zalo-to-bridge", "from": "zalo", "to": "bridge", "label": "lệnh", "variant": "dashed" },
+    { "id": "zalo-to-zaloapi", "from": "zalo", "to": "zaloapi", "label": "Bot API", "variant": "emphasis" },
+    { "id": "bridge-to-zaloapi", "from": "bridge", "to": "zaloapi", "label": "Zalo cá nhân", "variant": "dashed" }
+  ],
+  "cards": [
+    { "dot": "rose", "title": "Khóa và chữ ký", "items": ["Khóa 32 byte cấp ở trang Connectors, hiện một lần", "Hai chiều ký HMAC-SHA256 + thời điểm, lệch quá 300 giây bị từ chối", "Thu hồi khóa là connector bị khóa ngay"] },
+    { "dot": "emerald", "title": "Không mất tin", "items": ["Connector ghi tin vào hàng chờ trước, đẩy sau, thử lại khi agent bận", "Agent trả lời cả câu một lần; connector tách, gửi, chống gửi trùng theo mã gửi"] },
+    { "dot": "cyan", "title": "Ranh giới", "items": ["Connector không có DB agent, không có khóa CRM", "Chỉ trang quản trị đi qua web phòng khám, không qua agent", "Hình vẽ theo thiết kế và mã trong working tree, chưa commit"] }
+  ]
+}

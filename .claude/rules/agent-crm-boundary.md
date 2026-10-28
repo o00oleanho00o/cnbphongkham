@@ -35,10 +35,15 @@ của nó, và chỉ cho người đang chat với nó.
   mỗi lần chuyển hướng kiểm lại. Plugin không tự gọi ra internet cho model; plugin `crm` chỉ gọi `crm-signer` trong mạng của
   stack. Hạ tầng như gọi model, embedding không phải tool nên không thuộc luật này. Container agent chỉ đọc
   (`read_only`, `cap_drop: [ALL]`, `no-new-privileges`), chỉ ghi `/data` và `/tmp`. Client HTTP của agent (model, embedding,
-  TypeSafe, Zalo Bot) ra internet qua proxy `egress`, giai đoạn 1 chỉ ghi log mọi đích. **Chưa làm (bước 8 giai đoạn
-  2):** agent chỉ ở mạng nội bộ, `web_*` và cầu nối Zalo cũng qua proxy, chỉ cho đích trong danh sách chủ duyệt.
+  TypeSafe) và của connector Zalo (Zalo Bot, cầu nối) ra internet qua proxy `egress`, giai đoạn 1 chỉ ghi log mọi đích.
+  **Chưa làm (bước 8 giai đoạn 2):** agent chỉ ở mạng nội bộ, `web_*` và connector cũng qua proxy, chỉ cho đích trong
+  danh sách chủ duyệt.
 - **L7. Danh sách tool và plugin của profile `clinic` là danh sách chủ đã duyệt.** Thêm tool, plugin, tiến trình con hay biến
   môi trường cho agent, hoặc bật `agent_writes`, là đổi kế hoạch, chủ duyệt. Không bao giờ có tool đọc file, chạy lệnh hay chạy mã trong tiến trình agent.
+  **Kênh chat ngoài (Zalo…) là connector, dịch vụ riêng ngoài agent** (`pema-agent/connectors/<tên>`, giao thức
+  `pema-agent/docs/CONNECTOR-PROTOCOL.md`): agent chỉ có plugin `connectors` chung, không biết nền tảng nào; connector
+  không có DB agent, không có khóa CRM, chỉ có khóa riêng của nó do trang Connectors cấp (thu hồi được). Thêm connector
+  mới là cấp khóa mới, không phải thêm tool; kênh của nó chịu L4 như mọi kênh.
 
 **Không còn test tự động cho L1–L7.** Chủ quyết (2026-10-23) bỏ hết unit test, kể cả T1–T9 (role agent không vào được
 `pema`, token `aud = pema-agent` không mở phiên CRM, cổng chỉ nhận JWT của `crm-signer`, sáu quyền `agent.*` không vai trò
