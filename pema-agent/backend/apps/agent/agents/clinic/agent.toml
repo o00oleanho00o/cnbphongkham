@@ -69,7 +69,7 @@ queue_typing_max_wait_s = 30.0
 # follow_up: writes once more to a customer whose one-to-one chat went quiet, as a case on the case engine; it
 # watches no channel until its setting "channels" names some, and runs only while cases_enabled is on
 # (docs/PLAN-case-loop.md 7)
-enabled = ["sso", "knowledge", "skills", "conversations", "jev", "crm", "follow_up"]
+enabled = ["sso", "knowledge", "skills", "conversations", "jev", "crm", "follow_up", "connectors"]
 
 [plugins.sso]
 issuer = "pema-clinic"

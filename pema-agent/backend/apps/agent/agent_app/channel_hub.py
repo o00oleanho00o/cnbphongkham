@@ -302,12 +302,16 @@ class ChannelHub:
             logger.warning("a listener failed on a reply of %s (%s)", record.channel, type(err).__name__)
 
     def _receiver(self, name: str, adapter: ChannelAdapter) -> Receive:
-        async def receive(inbound: InboundMessage) -> None:
+        """What a channel calls with each message it hears. It also gives back the stored message's ingress id
+        (the same id for a message seen twice; None when the message was dropped), for a channel that must tell
+        its source which message was kept; the channels that ignore it are unaffected."""
+
+        async def receive(inbound: InboundMessage) -> int | None:  # type: ignore[reportReturnType]
             if not inbound.message_id or not inbound.conversation_id or not inbound.user_id:
                 logger.warning("channel %s handed over a message without ids; dropped", name)
-                return
+                return None
             if not inbound.text.strip():
-                return
+                return None
             # A channel speaks only for itself, and long texts are cut like at the HTTP gateway.
             inbound = replace(inbound, channel=name, text=inbound.text[:MAX_INBOUND_CHARS])
             record, created = await self._dispatcher.accept(inbound, deliver=True)
@@ -318,8 +322,9 @@ class ChannelHub:
                     await self._heard(inbound)
                 except Exception as err:  # the message is stored and answered whatever a listener does
                     logger.warning("a listener of %s failed (%s)", name, type(err).__name__)
+            return record.id
 
-        return receive
+        return receive  # type: ignore[reportReturnType]
 
     def _finished(self, record: IngressRecord) -> None:
         self._typing.get((record.channel, record.conversation_id), set()).discard(record.id)

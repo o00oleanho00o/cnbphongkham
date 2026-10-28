@@ -1,11 +1,9 @@
 # syntax=docker/dockerfile:1
-# The general agent (apps/agent): gateway, dashboard (plugin web), bundled plugins, and bun for the plugins'
-# helper processes. The Zalo bridge's packages are installed here, in the plugin's own `bridge` folder, so the bridge
-# is ready from the start (nobody installs it from the dashboard); it runs only while a personal account needs it.
+# The general agent (apps/agent): gateway, dashboard (plugin web) and bundled plugins. No Bun in the runtime
+# image: chat platforms (Zalo ...) are separate connector services that plug in through the `connectors` plugin.
 # Build context: pema-agent/ (see docker-compose.yml). Ignore rules: agent.Dockerfile.dockerignore.
 #
-# Stages: bun -> ui (builds the plugins' browser halves), bridge (the Zalo bridge's production
-# packages) ; builder (uv) -> runtime (non-root).
+# Stages: bun -> ui (builds the plugins' browser halves; bun is only here); builder (uv) -> runtime (non-root).
 # The agent app is installed editable on purpose: it finds its bundled plugins next to its package folder.
 
 FROM oven/bun:1-slim AS bun
@@ -14,36 +12,30 @@ FROM oven/bun:1-slim AS bun
 FROM bun AS ui
 WORKDIR /build/plugins
 COPY backend/apps/agent/plugins/web/ui/package.json backend/apps/agent/plugins/web/ui/bun.lock web/ui/
-COPY backend/apps/agent/plugins/zalo/ui/package.json backend/apps/agent/plugins/zalo/ui/bun.lock zalo/ui/
 COPY backend/apps/agent/plugins/knowledge/ui/package.json backend/apps/agent/plugins/knowledge/ui/bun.lock knowledge/ui/
 COPY backend/apps/agent/plugins/skills/ui/package.json backend/apps/agent/plugins/skills/ui/bun.lock skills/ui/
 COPY backend/apps/agent/plugins/conversations/ui/package.json backend/apps/agent/plugins/conversations/ui/bun.lock conversations/ui/
 COPY backend/apps/agent/plugins/jev/ui/package.json backend/apps/agent/plugins/jev/ui/bun.lock jev/ui/
+COPY backend/apps/agent/plugins/connectors/ui/package.json backend/apps/agent/plugins/connectors/ui/bun.lock connectors/ui/
 RUN --mount=type=cache,target=/root/.bun/install/cache \
     cd web/ui && bun install --frozen-lockfile \
-    && cd ../../zalo/ui && bun install --frozen-lockfile \
     && cd ../../knowledge/ui && bun install --frozen-lockfile \
     && cd ../../skills/ui && bun install --frozen-lockfile \
     && cd ../../conversations/ui && bun install --frozen-lockfile \
-    && cd ../../jev/ui && bun install --frozen-lockfile
+    && cd ../../jev/ui && bun install --frozen-lockfile \
+    && cd ../../connectors/ui && bun install --frozen-lockfile
 COPY backend/apps/agent/plugins/web/ui web/ui
-COPY backend/apps/agent/plugins/zalo/ui zalo/ui
 COPY backend/apps/agent/plugins/knowledge/ui knowledge/ui
 COPY backend/apps/agent/plugins/skills/ui skills/ui
 COPY backend/apps/agent/plugins/conversations/ui conversations/ui
 COPY backend/apps/agent/plugins/jev/ui jev/ui
+COPY backend/apps/agent/plugins/connectors/ui connectors/ui
 # plugins first: the dashboard's stylesheet scans the other plugins' sources, their builds read the SDK types.
-RUN cd zalo/ui && bun run build && cd ../../knowledge/ui && bun run build && cd ../../skills/ui && bun run build \
+RUN cd knowledge/ui && bun run build && cd ../../skills/ui && bun run build \
     && cd ../../conversations/ui && bun run build \
     && cd ../../jev/ui && bun run build \
+    && cd ../../connectors/ui && bun run build \
     && cd ../../web/ui && bun run build
-
-
-FROM bun AS bridge
-WORKDIR /build/bridge
-COPY backend/apps/agent/plugins/zalo/bridge/package.json backend/apps/agent/plugins/zalo/bridge/bun.lock ./
-RUN --mount=type=cache,target=/root/.bun/install/cache \
-    bun install --frozen-lockfile --production
 
 
 FROM python:3.12-slim-bookworm AS builder
@@ -85,7 +77,6 @@ ENV PATH="/opt/venv/bin:${PATH}" \
     PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1
 
-COPY --from=bun /usr/local/bin/bun /usr/local/bin/bun
 
 RUN groupadd --system --gid 10001 agent \
     && useradd --system --uid 10001 --gid agent --home-dir /home/agent --create-home --shell /usr/sbin/nologin agent \
@@ -97,12 +88,11 @@ COPY --from=builder /app/backend/packages/agent-core /app/backend/packages/agent
 COPY --from=builder /app/backend/packages/secret-cipher /app/backend/packages/secret-cipher
 COPY --from=builder /app/backend/apps/agent /app/backend/apps/agent
 COPY --from=ui /build/plugins/web/ui/dist /app/backend/apps/agent/plugins/web/ui/dist
-COPY --from=ui /build/plugins/zalo/ui/dist /app/backend/apps/agent/plugins/zalo/ui/dist
 COPY --from=ui /build/plugins/knowledge/ui/dist /app/backend/apps/agent/plugins/knowledge/ui/dist
 COPY --from=ui /build/plugins/skills/ui/dist /app/backend/apps/agent/plugins/skills/ui/dist
 COPY --from=ui /build/plugins/conversations/ui/dist /app/backend/apps/agent/plugins/conversations/ui/dist
 COPY --from=ui /build/plugins/jev/ui/dist /app/backend/apps/agent/plugins/jev/ui/dist
-COPY --from=bridge /build/bridge/node_modules /app/backend/apps/agent/plugins/zalo/bridge/node_modules
+COPY --from=ui /build/plugins/connectors/ui/dist /app/backend/apps/agent/plugins/connectors/ui/dist
 
 USER agent
 WORKDIR /app/backend/apps/agent

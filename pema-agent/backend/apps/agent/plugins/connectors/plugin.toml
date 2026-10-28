@@ -1,0 +1,8 @@
+name = "connectors"
+version = "0.1.0"
+description = "The one door for external connectors (Zalo, Facebook, Telegram ...): a connector gets a key here, registers its chat channels over the signed HTTP protocol of docs/CONNECTOR-PROTOCOL.md, pushes what it hears and carries out the replies. Knows no chat platform by name."
+api = 1
+
+[ui]
+dir = "ui/dist"
+entry = "client.js"
