@@ -8,6 +8,7 @@ import { createServer, type IncomingMessage, type ServerResponse } from "node:ht
 import { fileURLToPath } from "node:url";
 
 import { answerAgent, buildAgentRouter, isAgentPath } from "./agent";
+import { buildZaloConnectorRouter } from "./connector-zalo";
 import { register as registerAuth, sessionFromRequest } from "./auth";
 import { announceChange } from "./live-bus";
 import { HttpError, Router, errorBody, parseJson, readBody, type Ctx, type Reply } from "./core";
@@ -49,7 +50,7 @@ function openEventStream(
 
 export async function startMockServer(port: number) {
   const router = await buildRouter();
-  const agentRouter = buildAgentRouter();
+  const agentRouters = { agent: buildAgentRouter(), zalo: buildZaloConnectorRouter() };
 
   const server = createServer((req, res) => {
     void (async () => {
@@ -74,7 +75,7 @@ export async function startMockServer(port: number) {
 
       try {
         if (isAgentPath(url.pathname)) {
-          send(await answerAgent(agentRouter, req, res, url));
+          send(await answerAgent(agentRouters, req, res, url));
           return;
         }
         const found = router.match(req.method ?? "GET", url.pathname);

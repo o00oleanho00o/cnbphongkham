@@ -58,12 +58,15 @@ function safeJson(text: string): unknown {
 }
 
 export interface AgentApiOptions {
+  /** Where the calls go: `/agent` (default) or `/connectors/<name>`. */
+  prefix?: string;
   fetcher?: typeof fetch;
   /** A 401: the clinic session ended (the proxy found no session or the API refused it). */
   onUnauthorized?: () => void;
 }
 
 export function createAgentApi({
+  prefix = AGENT_PREFIX,
   fetcher = (...args) => fetch(...args),
   onUnauthorized = redirectToLogin,
 }: AgentApiOptions = {}): Api {
@@ -72,7 +75,7 @@ export function createAgentApi({
     if (body !== undefined) headers["Content-Type"] = "application/json";
     let response: Response;
     try {
-      response = await fetcher(`${AGENT_PREFIX}${path}`, {
+      response = await fetcher(`${prefix}${path}`, {
         method,
         headers,
         credentials: "same-origin",
@@ -98,3 +101,10 @@ export function createAgentApi({
 }
 
 export const agentApi = createAgentApi();
+
+export const CONNECTORS_PREFIX = "/connectors";
+
+/** The `api` for the script of one connector: same contract, calls go to `/connectors/<name><path>`. */
+export function connectorApi(name: string): Api {
+  return createAgentApi({ prefix: `${CONNECTORS_PREFIX}/${name}` });
+}

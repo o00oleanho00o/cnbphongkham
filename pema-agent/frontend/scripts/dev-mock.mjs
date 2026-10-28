@@ -1,5 +1,6 @@
 // `bun run dev:mock`: the mock backend plus `vite dev` pointed at it (cross-platform: sets the env var
-// itself, so it works on Windows and Ubuntu). The mock also plays the agent service (mock/agent.ts).
+// itself, so it works on Windows and Ubuntu). The mock also plays the agent service (mock/agent.ts)
+// and the Zalo connector (mock/connector-zalo.ts).
 import { spawn } from "node:child_process";
 
 const port = process.env.MOCK_PORT ?? "4010";
@@ -9,6 +10,8 @@ const env = {
   MOCK_PORT: port,
   PEMA_API_URL: mockUrl,
   PEMA_AGENT_INTERNAL_URL: mockUrl,
+  // The fake Zalo connector (mock/connector-zalo.ts) answers under this path of the same server.
+  PEMA_CONNECTOR_URLS: `zalo=${mockUrl}/connectors/zalo`,
 };
 
 const children = [

@@ -4,6 +4,7 @@
 import { Link } from "@/lib/link";
 import { useCallback, useEffect, useState } from "react";
 
+import { useAgentPlugins } from "@/components/agent/agent-plugins";
 import { Button, Card, Empty, Input, Notice, PageHeader } from "@/components/agent/plugin-kit";
 import { agentApi as api } from "@/lib/agent/api";
 import {
@@ -99,6 +100,7 @@ export function PluginsPage() {
           )}
         </Card>
       )}
+      <ConnectorList search={search} />
       {broken.length > 0 && (
         <div className="mt-6">
           <Card title="Plugin không đọc được">
@@ -112,6 +114,42 @@ export function PluginsPage() {
           </Card>
         </div>
       )}
+    </div>
+  );
+}
+
+/** The connectors whose pages loaded (Zalo): services of their own, so they are not in the agent's plugin list. */
+function ConnectorList({ search }: { search: string }) {
+  const { registered } = useAgentPlugins();
+  const query = search.trim().toLowerCase();
+  const shown = [...registered].filter(
+    ([name, contribution]) => contribution.connector && name.toLowerCase().includes(query),
+  );
+  if (shown.length === 0) return null;
+  return (
+    <div className="mt-6">
+      <Card title="Connector">
+        <ul aria-label="Danh sách connector" className="divide-y divide-line">
+          {shown.map(([name, contribution]) => (
+            <li key={name}>
+              <Link
+                href={pluginHref(name)}
+                className="grid min-h-14 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-control px-3 py-3 hover:bg-row-hover"
+              >
+                <span className="min-w-0">
+                  <span className="block font-semibold text-ink">{name}</span>
+                  <span className="block truncate text-small text-ink-soft">
+                    {contribution.pages?.length ?? 0} trang quản trị
+                  </span>
+                </span>
+                <span aria-hidden className="text-ink-soft">
+                  ›
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </Card>
     </div>
   );
 }

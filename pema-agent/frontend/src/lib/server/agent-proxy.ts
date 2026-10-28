@@ -52,9 +52,19 @@ export function resolveAgentUpstream(
   search: string,
   base: string,
 ): AgentUpstream {
+  return resolveUnder(AGENT_PREFIX, pathname, search, base);
+}
+
+/** The same for any service the clinic web fronts: `<prefix>/v1/x` → `<base>/v1/x` (connectors reuse it). */
+export function resolveUnder(
+  prefixPath: string,
+  pathname: string,
+  search: string,
+  base: string,
+): AgentUpstream {
   const baseUrl = parseHttpUrl(base);
   if (!baseUrl) return BAD_CONFIG;
-  const rest = pathname.startsWith(`${AGENT_PREFIX}/`) ? pathname.slice(AGENT_PREFIX.length) : "";
+  const rest = pathname.startsWith(`${prefixPath}/`) ? pathname.slice(prefixPath.length) : "";
   if (!FORWARDED.some((prefix) => rest.startsWith(prefix))) return NOT_FOUND;
 
   const segments = rest.split("/").slice(1).map(decodeSegment);
@@ -170,7 +180,7 @@ export class AgentTokens {
   }
 }
 
-const sharedTokens = new AgentTokens();
+export const sharedTokens = new AgentTokens();
 
 export interface AgentForwardOptions {
   env?: Env;
@@ -183,12 +193,27 @@ export async function forwardToAgent(
   request: Request,
   options: AgentForwardOptions = {},
 ): Promise<Response> {
+  const base = agentBaseUrl(options.env ?? process.env);
+  const incoming = new URL(request.url);
+  const resolved = resolveAgentUpstream(incoming.pathname, incoming.search, base);
+  return forwardResolved(request, resolved, { base, prefixPath: AGENT_PREFIX }, options);
+}
+
+/**
+ * Forward a request whose upstream is resolved: the clinic session becomes the short agent token (the sign-in and
+ * permission check), the cookie is dropped and the answer streams back. `prefixPath` is what the browser sees in
+ * front of the upstream's own paths (a relative `Location` gets it back).
+ */
+export async function forwardResolved(
+  request: Request,
+  resolved: AgentUpstream,
+  where: { base: string; prefixPath: string; label?: string },
+  options: AgentForwardOptions = {},
+): Promise<Response> {
   const env = options.env ?? process.env;
   const fetchImpl = options.fetchImpl ?? fetch;
   const tokens = options.tokens ?? sharedTokens;
-  const base = agentBaseUrl(env);
-  const incoming = new URL(request.url);
-  const resolved = resolveAgentUpstream(incoming.pathname, incoming.search, base);
+  const { base, prefixPath } = where;
   if (!resolved.ok) {
     const code =
       resolved.status === 404
@@ -223,7 +248,7 @@ export async function forwardToAgent(
   try {
     upstream = await fetchImpl(resolved.url, init);
   } catch {
-    return errorResponse(502, "internal", "Không kết nối được dịch vụ agent.");
+    return errorResponse(502, "internal", `Không kết nối được ${where.label ?? "dịch vụ agent"}.`);
   }
   if (upstream.status === 401) tokens.forget(session);
 
@@ -231,7 +256,7 @@ export async function forwardToAgent(
   out.delete("set-cookie");
   const location = out.get("location");
   if (location?.startsWith("/") && !location.startsWith("//")) {
-    out.set("location", `${AGENT_PREFIX}${location}`);
+    out.set("location", `${prefixPath}${location}`);
   }
   return new Response(upstream.body, {
     status: upstream.status,

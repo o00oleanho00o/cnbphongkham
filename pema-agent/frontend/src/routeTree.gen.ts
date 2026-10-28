@@ -15,6 +15,8 @@ import { Route as HealthzRouteImport } from './routes/healthz'
 import { Route as AdminFinanceRouteRouteImport } from './routes/_admin/finance/route'
 import { Route as AgentSplatRouteImport } from './routes/agent/$'
 import { Route as ApiSplatRouteImport } from './routes/api/$'
+import { Route as ConnectorsIndexRouteImport } from './routes/connectors/index'
+import { Route as ConnectorsSplatRouteImport } from './routes/connectors/$'
 import { Route as LoginIndexRouteImport } from './routes/login/index'
 import { Route as AdminAdminAgentRouteRouteImport } from './routes/_admin/admin/agent/route'
 import { Route as AdminAskIndexRouteImport } from './routes/_admin/ask/index'
@@ -78,6 +80,16 @@ const AgentSplatRoute = AgentSplatRouteImport.update({
 const ApiSplatRoute = ApiSplatRouteImport.update({
   id: '/api/$',
   path: '/api/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConnectorsIndexRoute = ConnectorsIndexRouteImport.update({
+  id: '/connectors/',
+  path: '/connectors/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConnectorsSplatRoute = ConnectorsSplatRouteImport.update({
+  id: '/connectors/$',
+  path: '/connectors/$',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginIndexRoute = LoginIndexRouteImport.update({
@@ -275,6 +287,8 @@ export interface FileRoutesByFullPath {
   '/finance': typeof AdminFinanceRouteRouteWithChildren
   '/agent/$': typeof AgentSplatRoute
   '/api/$': typeof ApiSplatRoute
+  '/connectors/$': typeof ConnectorsSplatRoute
+  '/connectors/': typeof ConnectorsIndexRoute
   '/login/': typeof LoginIndexRoute
   '/admin/agent': typeof AdminAdminAgentRouteRouteWithChildren
   '/ask/': typeof AdminAskIndexRoute
@@ -316,6 +330,8 @@ export interface FileRoutesByTo {
   '/healthz': typeof HealthzRoute
   '/agent/$': typeof AgentSplatRoute
   '/api/$': typeof ApiSplatRoute
+  '/connectors/$': typeof ConnectorsSplatRoute
+  '/connectors': typeof ConnectorsIndexRoute
   '/login': typeof LoginIndexRoute
   '/ask': typeof AdminAskIndexRoute
   '/cashier': typeof AdminCashierIndexRoute
@@ -359,6 +375,8 @@ export interface FileRoutesById {
   '/_admin/finance': typeof AdminFinanceRouteRouteWithChildren
   '/agent/$': typeof AgentSplatRoute
   '/api/$': typeof ApiSplatRoute
+  '/connectors/$': typeof ConnectorsSplatRoute
+  '/connectors/': typeof ConnectorsIndexRoute
   '/login/': typeof LoginIndexRoute
   '/_admin/admin/agent': typeof AdminAdminAgentRouteRouteWithChildren
   '/_admin/ask/': typeof AdminAskIndexRoute
@@ -403,6 +421,8 @@ export interface FileRouteTypes {
     | '/finance'
     | '/agent/$'
     | '/api/$'
+    | '/connectors/$'
+    | '/connectors/'
     | '/login/'
     | '/admin/agent'
     | '/ask/'
@@ -444,6 +464,8 @@ export interface FileRouteTypes {
     | '/healthz'
     | '/agent/$'
     | '/api/$'
+    | '/connectors/$'
+    | '/connectors'
     | '/login'
     | '/ask'
     | '/cashier'
@@ -486,6 +508,8 @@ export interface FileRouteTypes {
     | '/_admin/finance'
     | '/agent/$'
     | '/api/$'
+    | '/connectors/$'
+    | '/connectors/'
     | '/login/'
     | '/_admin/admin/agent'
     | '/_admin/ask/'
@@ -529,6 +553,8 @@ export interface RootRouteChildren {
   HealthzRoute: typeof HealthzRoute
   AgentSplatRoute: typeof AgentSplatRoute
   ApiSplatRoute: typeof ApiSplatRoute
+  ConnectorsSplatRoute: typeof ConnectorsSplatRoute
+  ConnectorsIndexRoute: typeof ConnectorsIndexRoute
   LoginIndexRoute: typeof LoginIndexRoute
 }
 
@@ -574,6 +600,20 @@ declare module '@tanstack/react-router' {
       path: '/api/$'
       fullPath: '/api/$'
       preLoaderRoute: typeof ApiSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/connectors/': {
+      id: '/connectors/'
+      path: '/connectors'
+      fullPath: '/connectors/'
+      preLoaderRoute: typeof ConnectorsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/connectors/$': {
+      id: '/connectors/$'
+      path: '/connectors/$'
+      fullPath: '/connectors/$'
+      preLoaderRoute: typeof ConnectorsSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login/': {
@@ -929,6 +969,8 @@ const rootRouteChildren: RootRouteChildren = {
   HealthzRoute: HealthzRoute,
   AgentSplatRoute: AgentSplatRoute,
   ApiSplatRoute: ApiSplatRoute,
+  ConnectorsSplatRoute: ConnectorsSplatRoute,
+  ConnectorsIndexRoute: ConnectorsIndexRoute,
   LoginIndexRoute: LoginIndexRoute,
 }
 export const routeTree = rootRouteImport

@@ -9,7 +9,14 @@ import * as jsxRuntime from "react/jsx-runtime";
 
 import { type Kit, pluginKit } from "@/components/agent/plugin-kit";
 
-import { AGENT_PREFIX, type Api, agentApi } from "./api";
+import {
+  AGENT_PREFIX,
+  type Api,
+  agentApi,
+  CONNECTORS_PREFIX,
+  connectorApi,
+  createAgentApi,
+} from "./api";
 
 export interface PluginPage {
   /** Part of the address: `/admin/agent/plugins/<plugin>/<id>`. */
@@ -26,6 +33,9 @@ export interface Contribution {
   /** Display names of the people of a channel (chat lists), `{ <user id>: <name> }` for the ones it knows; a plugin
    * answers `{}` for a channel that is not its own. */
   personNames?: (channel: string, userIds: readonly string[]) => Promise<Record<string, string>>;
+  /** Set by the host, never by a script: the connector whose script registered this (its pages are the connector's
+   * own, not an agent plugin's: no agent plugin page, no switch). */
+  connector?: string;
 }
 
 export interface Sdk {
@@ -33,6 +43,9 @@ export interface Sdk {
   React: typeof React;
   jsxRuntime: typeof jsxRuntime;
   api: Api;
+  /** Only in a connector's script: the agent's own `api`, for the agent routes its pages show beside its own (the
+   * tools an account may switch off, the skills bound to a channel). Same session, same permissions. */
+  agentApi?: Api;
   ui: Kit;
   register(plugin: string, contribution: Contribution): void;
 }
@@ -109,11 +122,74 @@ function addStyle(href: string): void {
   document.head.append(link);
 }
 
+interface ConnectorUi {
+  name: string;
+  script: string;
+  styles: string[];
+}
+
+/** Connector name -> the script loaded for it. */
+const loadedConnectors = new Map<string, string>();
+
+/** The SDK a connector's script sees: the same host, but its `api` goes to `/connectors/<name>` and what it registers
+ * is marked with the connector. A script keeps the `sdk` it found when it ran, so its pages keep this `api`. */
+function sdkFor(base: Sdk, connector: string): Sdk {
+  return {
+    ...base,
+    api: connectorApi(connector),
+    agentApi: base.api,
+    register: (plugin, contribution) => register(plugin, { ...contribution, connector }),
+  };
+}
+
+function forgetConnector(name: string): void {
+  loadedConnectors.delete(name);
+  [...registered]
+    .filter(([, contribution]) => contribution.connector === name)
+    .forEach(([plugin]) => forget(plugin));
+}
+
+/** Loads one connector's script; a connector that is down or answers an error just shows no pages. True when it ran. */
+async function loadConnector(base: Sdk, name: string): Promise<boolean> {
+  const prefix = `${CONNECTORS_PREFIX}/${name}`;
+  try {
+    const ui = await connectorApi(name).get<ConnectorUi>("/v1/admin/ui");
+    if (loadedConnectors.get(name) === ui.script) return true;
+    (ui.styles ?? []).forEach((href) => addStyle(`${prefix}${href}`));
+    window.__PEMA_AGENT__ = sdkFor(base, name);
+    try {
+      await addScript(`${prefix}${ui.script}`);
+    } finally {
+      window.__PEMA_AGENT__ = base;
+    }
+    loadedConnectors.set(name, ui.script);
+    return true;
+  } catch {
+    forgetConnector(name);
+    return false;
+  }
+}
+
+/** One after the other: a script reads `window.__PEMA_AGENT__` while it runs, so only one may be loading at a time. */
+async function loadConnectors(): Promise<string[]> {
+  const base = window.__PEMA_AGENT__;
+  const listing = await createAgentApi({ prefix: CONNECTORS_PREFIX })
+    .get<{ connectors: string[] }>("")
+    .catch(() => ({ connectors: [] as string[] }));
+  const names = listing.connectors.filter((name) => /^[a-z0-9_-]+$/.test(name));
+  [...loadedConnectors.keys()].filter((name) => !names.includes(name)).forEach(forgetConnector);
+  if (!base) return [];
+  return names.reduce<Promise<string[]>>(
+    async (failed, name) => [...(await failed), ...((await loadConnector(base, name)) ? [] : [name])],
+    Promise.resolve([]),
+  );
+}
+
 async function load(api: Api): Promise<string[]> {
   const listing = await api.get<UiListing>("/v1/admin/ui");
   const enabled = new Set(listing.plugins.map((p) => p.name));
   [...new Set([...registered.keys(), ...loaded.keys()])]
-    .filter((name) => !enabled.has(name))
+    .filter((name) => !enabled.has(name) && registered.get(name)?.connector === undefined)
     .forEach(forget);
   const fresh = listing.plugins.filter((plugin) => loaded.get(plugin.name) !== plugin.script);
   const outcomes = await Promise.all(
@@ -128,7 +204,9 @@ async function load(api: Api): Promise<string[]> {
       }
     }),
   );
-  return outcomes.filter((name): name is string => name !== null);
+  // After the agent's scripts have all run, so none of them can see a connector's SDK.
+  const connectorsFailed = await loadConnectors();
+  return [...outcomes.filter((name): name is string => name !== null), ...connectorsFailed];
 }
 
 /**
