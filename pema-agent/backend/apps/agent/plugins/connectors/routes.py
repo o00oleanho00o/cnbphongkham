@@ -1,7 +1,8 @@
 """The routes of the connectors plugin.
 
 Admin (under ``/v1/plugins/connectors``, admin token): list the connectors and their channels, add one (its key
-shows once), revoke one.
+shows once), switch one off and on (``/enable``, ``/disable``: the key stays), revoke one, remove one that is off
+or revoked (``/remove``).
 
 Hooks (under ``/v1/hooks/connectors``, open): what a connector pushes, as ``docs/CONNECTOR-PROTOCOL.md`` section 3
 says. Every call is signed with the connector's key; the signature is checked before the body is read, a failure
@@ -11,6 +12,7 @@ named like itself or starting with ``<connector>-``.
 
 from __future__ import annotations
 
+from collections.abc import Awaitable
 from datetime import UTC, datetime
 from typing import Annotated, Any, Final, Literal, TypeVar
 
@@ -93,6 +95,27 @@ def connector_admin_routes(plugin: ConnectorsPlugin) -> APIRouter:
         if not await plugin.revoke(name):
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Không có connector này.")
         return {"revoked": name}
+
+    async def change(name: str, work: Awaitable[bool]) -> dict[str, str]:
+        try:
+            found = await work
+        except ConnectorError as err:
+            raise HTTPException(err.status, str(err)) from err
+        if not found:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "Không có connector này.")
+        return {"name": name}
+
+    @router.post("/{name}/enable")
+    async def enable_connector(name: str) -> dict[str, str]:
+        return await change(name, plugin.set_enabled(name, True))
+
+    @router.post("/{name}/disable")
+    async def disable_connector(name: str) -> dict[str, str]:
+        return await change(name, plugin.set_enabled(name, False))
+
+    @router.post("/{name}/remove")
+    async def remove_connector(name: str) -> dict[str, str]:
+        return await change(name, plugin.remove(name))
 
     return router
 

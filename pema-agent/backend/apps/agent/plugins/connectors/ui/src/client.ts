@@ -8,6 +8,9 @@ export const connectors = {
   list: () => api.get<{ connectors: Connector[] }>(`${BASE}/`).then((found) => found.connectors),
   create: (name: string) => api.post<Created>(`${BASE}/`, { name }),
   revoke: (name: string) => api.del<{ revoked: string }>(`${BASE}/${encodeURIComponent(name)}`),
+  setEnabled: (name: string, enabled: boolean) =>
+    api.post<{ name: string }>(`${BASE}/${encodeURIComponent(name)}/${enabled ? "enable" : "disable"}`),
+  remove: (name: string) => api.post<{ name: string }>(`${BASE}/${encodeURIComponent(name)}/remove`),
 };
 
 export function messageOf(err: unknown): string {

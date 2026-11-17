@@ -15,6 +15,8 @@ export interface Connector {
   created_at: string | null;
   revoked: boolean;
   revoked_at: string | null;
+  disabled: boolean;
+  disabled_at: string | null;
   channels: ConnectorChannel[];
 }
 

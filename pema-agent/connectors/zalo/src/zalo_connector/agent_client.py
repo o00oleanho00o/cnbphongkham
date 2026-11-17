@@ -36,6 +36,8 @@ FIRST_RETRY_S: Final = 2.0
 LAST_RETRY_S: Final = 60.0
 IDLE_S: Final = 5.0
 """How long the loop sleeps when nothing woke it (a retry that comes due ends it earlier)."""
+MAX_INBOUND_AGE_S: Final = 3600.0
+"""A message to answer that has waited this long for the agent is dropped, not answered hours late."""
 REQUEST_TIMEOUT_S: Final = 15.0
 TYPING_TIMEOUT_S: Final = 5.0
 
@@ -212,6 +214,7 @@ class AgentClient:
                 "body": body,
                 "attempts": 0,
                 "next_at": 0.0,
+                "queued_at": self._clock(),
             },
         )
         self._wake.set()
@@ -243,6 +246,12 @@ class AgentClient:
         for key, entry in await self._store.list(OUTBOX):
             conversation = (entry["channel"], entry["conversation_id"])
             if conversation in blocked:
+                continue
+            if entry["kind"] == "inbound" and self._clock() - entry.get("queued_at", self._clock()) > MAX_INBOUND_AGE_S:
+                # The agent was off or unreachable for longer than this: answering such an old message would
+                # only confuse the person. (Observed events are kept: they are history, not a request.)
+                logger.warning("inbound of %s older than %.0f s dropped", entry["channel"], MAX_INBOUND_AGE_S)
+                await self._store.delete(key)
                 continue
             if entry["next_at"] > self._clock() or not await self._push(key, entry):
                 blocked.add(conversation)

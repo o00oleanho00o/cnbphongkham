@@ -30,3 +30,26 @@ test("the connector proxy refuses a caller who is not signed in", async ({ reque
     expect([401, 403], `${path} answered ${answer.status()}`).toContain(answer.status());
   }
 });
+
+test("a connector is switched off and on and removed from the Connectors page", async ({ page }) => {
+  const name = `e2e-${Date.now().toString(36)}`;
+  await signIn(page);
+  await page.goto("/admin/agent/overview");
+  await page.getByRole("navigation", { name: "Trang quản trị agent" }).getByRole("link", { name: "Connectors", exact: true }).click();
+
+  await page.locator("main").getByRole("textbox").first().fill(name);
+  await page.getByRole("button", { name: "Thêm và cấp khóa" }).click();
+  const card = page.locator("section, div").filter({ hasText: `Cấp lúc` }).filter({ has: page.getByText(name, { exact: true }) }).last();
+  await expect(card.getByText("Đang dùng", { exact: true })).toBeVisible();
+
+  await card.getByRole("button", { name: "Tắt", exact: true }).click();
+  await expect(card.getByText("Đã tắt", { exact: true })).toBeVisible();
+  await card.getByRole("button", { name: "Bật", exact: true }).click();
+  await expect(card.getByText("Đang dùng", { exact: true })).toBeVisible();
+
+  await card.getByRole("button", { name: "Tắt", exact: true }).click();
+  await expect(card.getByText("Đã tắt", { exact: true })).toBeVisible();
+  await card.getByRole("button", { name: "Xóa", exact: true }).click();
+  await card.getByRole("button", { name: "Xóa", exact: true }).click();
+  await expect(page.getByText(name, { exact: true })).toHaveCount(0);
+});

@@ -85,16 +85,16 @@ function AddCard({ onCreated }: { onCreated: (created: Created) => void }) {
 }
 
 function ConnectorCard({ connector, onChanged }: { connector: Connector; onChanged: () => void }) {
-  const [asking, setAsking] = useState(false);
+  const [asking, setAsking] = useState<"revoke" | "remove" | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
-  async function revoke() {
+  async function act(work: () => Promise<unknown>) {
     setBusy(true);
     setError("");
     try {
-      await connectors.revoke(connector.name);
-      setAsking(false);
+      await work();
+      setAsking(null);
       onChanged();
     } catch (err) {
       setError(messageOf(err));
@@ -103,20 +103,29 @@ function ConnectorCard({ connector, onChanged }: { connector: Connector; onChang
     }
   }
 
+  const off = connector.revoked || connector.disabled;
+  const state = connector.revoked
+    ? { tone: "danger" as const, label: "Đã thu hồi" }
+    : connector.disabled
+      ? { tone: "warning" as const, label: "Đã tắt" }
+      : { tone: "success" as const, label: "Đang dùng" };
+
   return (
-    <ui.Card
-      title={connector.name}
-      aside={
-        <ui.Badge tone={connector.revoked ? "danger" : "success"}>{connector.revoked ? "Đã thu hồi" : "Đang dùng"}</ui.Badge>
-      }
-    >
+    <ui.Card title={connector.name} aside={<ui.Badge tone={state.tone}>{state.label}</ui.Badge>}>
       <div className="space-y-3">
         <p className="text-small text-ink-soft">
           Cấp lúc {when(connector.created_at)}
+          {connector.disabled && !connector.revoked && `, tắt lúc ${when(connector.disabled_at)}`}
           {connector.revoked && `, thu hồi lúc ${when(connector.revoked_at)}`}
         </p>
         {connector.channels.length === 0 ? (
-          <ui.Empty>{connector.revoked ? "Các kênh đã gỡ khi thu hồi." : "Chưa đăng ký kênh nào."}</ui.Empty>
+          <ui.Empty>
+            {connector.revoked
+              ? "Các kênh đã gỡ khi thu hồi."
+              : connector.disabled
+                ? "Đã tắt: connector chờ, tin khách giữ ở phía connector đến khi bật lại."
+                : "Chưa đăng ký kênh nào."}
+          </ui.Empty>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-small">
@@ -143,26 +152,53 @@ function ConnectorCard({ connector, onChanged }: { connector: Connector; onChang
             </table>
           </div>
         )}
-        {!connector.revoked &&
-          (asking ? (
-            <ui.Notice tone="danger">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <span>Thu hồi {connector.name}? Connector im ngay và các kênh của nó bị gỡ.</span>
-                <span className="flex gap-2">
-                  <ui.Button variant="danger" busy={busy} onClick={() => void revoke()}>
-                    Thu hồi
-                  </ui.Button>
-                  <ui.Button variant="secondary" disabled={busy} onClick={() => setAsking(false)}>
-                    Giữ lại
-                  </ui.Button>
-                </span>
-              </div>
-            </ui.Notice>
-          ) : (
-            <ui.Button variant="danger" onClick={() => setAsking(true)}>
-              Thu hồi khóa
-            </ui.Button>
-          ))}
+        {asking ? (
+          <ui.Notice tone="danger">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <span>
+                {asking === "revoke"
+                  ? `Thu hồi ${connector.name}? Khóa mất hiệu lực vĩnh viễn và các kênh của nó bị gỡ.`
+                  : `Xóa ${connector.name}? Connector và các kênh của nó bị xóa khỏi agent; thêm lại được cùng tên.`}
+              </span>
+              <span className="flex gap-2">
+                <ui.Button
+                  variant="danger"
+                  busy={busy}
+                  onClick={() =>
+                    void act(() => (asking === "revoke" ? connectors.revoke(connector.name) : connectors.remove(connector.name)))
+                  }
+                >
+                  {asking === "revoke" ? "Thu hồi" : "Xóa"}
+                </ui.Button>
+                <ui.Button variant="secondary" disabled={busy} onClick={() => setAsking(null)}>
+                  Giữ lại
+                </ui.Button>
+              </span>
+            </div>
+          </ui.Notice>
+        ) : (
+          <div className="flex flex-wrap gap-2">
+            {!connector.revoked && (
+              <ui.Button
+                variant="secondary"
+                busy={busy}
+                onClick={() => void act(() => connectors.setEnabled(connector.name, connector.disabled))}
+              >
+                {connector.disabled ? "Bật" : "Tắt"}
+              </ui.Button>
+            )}
+            {off && (
+              <ui.Button variant="danger" onClick={() => setAsking("remove")}>
+                Xóa
+              </ui.Button>
+            )}
+            {!connector.revoked && (
+              <ui.Button variant="danger" onClick={() => setAsking("revoke")}>
+                Thu hồi khóa
+              </ui.Button>
+            )}
+          </div>
+        )}
         {error && <ui.Notice tone="danger">{error}</ui.Notice>}
       </div>
     </ui.Card>
@@ -196,7 +232,7 @@ export function ConnectorsPage() {
     <div className="space-y-4">
       <ui.PageHeader
         title="Connectors"
-        subtitle="Dịch vụ ngoài (Zalo, Facebook, Telegram...) nối vào agent bằng khóa. Mỗi connector tự đăng ký kênh chat của nó; thu hồi khóa là connector đó im ngay."
+        subtitle="Dịch vụ ngoài (Zalo, Facebook, Telegram...) nối vào agent bằng khóa. Mỗi connector tự đăng ký kênh chat của nó; tắt hoặc thu hồi khóa là connector đó im ngay."
       />
       {created && <KeyNotice created={created} onDone={() => setCreated(null)} />}
       {error && (

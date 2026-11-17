@@ -2,8 +2,9 @@
 
 Everything is kept in ``ctx.storage``:
 
-* ``connector:<name>``: ``{key_sealed, created_at, revoked_at}``; a revoked connector keeps its row, so its name
-  is not given out again by mistake;
+* ``connector:<name>``: ``{key_sealed, created_at, revoked_at, disabled_at}``; a revoked connector keeps its row,
+  so its name is not given out again by mistake; a switched-off one keeps its key and its channel rows; only
+  ``remove`` deletes the row;
 * ``channel:<name>``: ``{connector, callback_url, max_text_chars, markdown, rules, disabled_tools, seen_at}``.
 
 The channels live in the hub as ``ConnectorChannel`` adapters. A background job registers the stored ones when the
@@ -89,9 +90,9 @@ class ConnectorsPlugin:
         return key
 
     async def key(self, name: str) -> str | None:
-        """The connector's key; None when it is unknown or revoked."""
+        """The connector's key; None when it is unknown, revoked or switched off."""
         row = await self._storage.get(f"connector:{name}")
-        if not isinstance(row, dict) or row.get("revoked_at"):
+        if not isinstance(row, dict) or row.get("revoked_at") or row.get("disabled_at"):
             return None
         try:
             return self._ctx.decrypt(str(row["key_sealed"]))
@@ -111,6 +112,42 @@ class ConnectorsPlugin:
                 if settings.get("connector") == name:
                     self._drop(channel)
                     await self._storage.delete(f"channel:{channel}")
+        return True
+
+    async def set_enabled(self, name: str, enabled: bool) -> bool:
+        """Switches a connector off or on, keeping its key and its registered channels. Off: its channels leave the
+        hub and its calls get a 401 (it keeps its messages and tries again); on: the channels come back at once.
+        False when there is no such connector; a revoked one cannot be switched on."""
+        async with self._lock:
+            row = await self._storage.get(f"connector:{name}")
+            if not isinstance(row, dict):
+                return False
+            if row.get("revoked_at"):
+                raise ConnectorError(409, "Connector đã thu hồi, không bật lại được.")
+            await self._storage.put(f"connector:{name}", {**row, "disabled_at": None if enabled else _now()})
+            for channel, settings in await self._channel_rows():
+                if settings.get("connector") != name:
+                    continue
+                if not enabled:
+                    self._drop(channel)
+                elif channel not in self._channels and owns_channel(name, channel):
+                    self._install(channel, _settings_of(settings))
+        return True
+
+    async def remove(self, name: str) -> bool:
+        """Deletes a connector that is switched off or revoked, with its channels; its name can be used again.
+        False when there is no such connector."""
+        async with self._lock:
+            row = await self._storage.get(f"connector:{name}")
+            if not isinstance(row, dict):
+                return False
+            if not (row.get("revoked_at") or row.get("disabled_at")):
+                raise ConnectorError(409, "Tắt hoặc thu hồi connector trước khi xóa.")
+            for channel, settings in await self._channel_rows():
+                if settings.get("connector") == name:
+                    self._drop(channel)
+                    await self._storage.delete(f"channel:{channel}")
+            await self._storage.delete(f"connector:{name}")
         return True
 
     async def connectors(self) -> list[dict[str, Any]]:
@@ -136,6 +173,8 @@ class ConnectorsPlugin:
                     "created_at": row.get("created_at"),
                     "revoked": bool(row.get("revoked_at")),
                     "revoked_at": row.get("revoked_at"),
+                    "disabled": bool(row.get("disabled_at")),
+                    "disabled_at": row.get("disabled_at"),
                     "channels": channels,
                 }
             )
