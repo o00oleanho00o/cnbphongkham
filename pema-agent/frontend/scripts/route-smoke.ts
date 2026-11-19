@@ -27,19 +27,11 @@ type Expectation = {
 
 /** Redirect-only pages: where they must land. */
 const REDIRECTS: Readonly<Record<string, string>> = {
-  "/": "/today",
+  "/": "/admin/agent",
   "/admin/agent": "/admin/agent/overview",
 };
 
 const EXPECTATIONS: Readonly<Record<string, Expectation>> = {
-  "/today": { heading: "Việc hôm nay", action: { role: "button", name: "Việc của tôi" } },
-  "/dashboard": { heading: "Tổng quan", action: { role: "button", name: "Tuần này" } },
-  "/schedule": { heading: "Điều phối lịch", action: { role: "button", name: "7 ngày" } },
-  "/patients": { heading: "Hồ sơ bệnh nhân", action: { role: "textbox", name: "Tìm bệnh nhân" } },
-  "/patients/[id]": { heading: "", action: { role: "link", name: "Danh sách hồ sơ" } },
-  "/ask": { heading: "Hỏi Pema", action: { role: "textbox", name: "Câu hỏi" } },
-  "/guide": { heading: "Hướng dẫn sử dụng", action: { role: "searchbox", name: "Tìm chủ đề" } },
-  "/crm": { heading: "Vòng đời khách hàng", action: { role: "button", name: "Đang điều trị" } },
   "/admin/auth": {
     heading: "Tài khoản của tôi",
     action: { role: "button", name: "Đổi mật khẩu" },
@@ -67,36 +59,6 @@ const EXPECTATIONS: Readonly<Record<string, Expectation>> = {
     heading: "zalo",
     action: { role: "button", name: "Thêm tài khoản" },
   },
-  "/cashier": { heading: "Thu ngân", action: { role: "button", name: "Lên đơn nhanh" } },
-  "/orders/[id]": { heading: "Tách đơn", action: { role: "link", name: "Về thu ngân" } },
-  "/orders/[id]/print": { heading: "", action: { role: "button", name: "In tất cả" } },
-  "/finance": {
-    heading: "Tài chính & tiền thủ thuật",
-    action: { role: "link", name: "Mở bảng tiền thủ thuật" },
-  },
-  "/finance/entries": {
-    heading: "Tài chính & tiền thủ thuật",
-    action: { role: "button", name: "Xuất CSV cho Excel" },
-  },
-  "/finance/rates": {
-    heading: "Tài chính & tiền thủ thuật",
-    action: { role: "button", name: "Lưu tỷ lệ" },
-  },
-  "/finance/payments": {
-    heading: "Tài chính & tiền thủ thuật",
-    action: { role: "button", name: "Xác nhận thu" },
-  },
-  "/finance/periods": {
-    heading: "Tài chính & tiền thủ thuật",
-    action: { role: "link", name: "Mở bảng" },
-  },
-  "/finance/export": {
-    heading: "Tài chính & tiền thủ thuật",
-    action: { role: "button", name: "Tải CSV cho Excel" },
-  },
-  "/services": { heading: "Danh mục dịch vụ", action: { role: "button", name: "Thêm dịch vụ" } },
-  "/resources": { heading: "Bác sĩ & phòng", action: { role: "button", name: "Khóa phòng" } },
-  "/studio": { heading: "Ảnh trước / sau", action: { role: "textbox", name: "Tìm bệnh nhân" } },
 };
 
 /** Routes the smoke test does not open: sign-in has its own form, the kit examples are development only. */

@@ -1,13 +1,12 @@
 # pema-agent
 
-> **Hiện trạng (2026-10-16).** Lớp agent kiểu zalo-agent mô tả trong phần lớn file này đã bị gỡ (nhánh `feat/agent-v2`).
-> Nay có hai app riêng: `backend/apps/api` (CRM phòng khám, database `pema`, schema `ctx` + `clinic`, role `be_app`) và
-> `backend/apps/agent` (agent tổng quát, plugin Zalo/web/kho tri thức, database riêng `pema_agent`, schema `agent_rt`,
-> role `agent_rt_app`). Agent không đọc được DB của CRM và không giữ khóa nào của CRM: nó chỉ tải khóa công khai JWKS
-> (kiểm token SSO và sự kiện CRM gửi sang) và gọi một cổng hẹp `/api/v1/agent-gateway` qua dịch vụ `crm-signer` (giữ
-> khóa, ký từng yêu cầu), chỉ cho chính người đang chat: [luật ranh giới](../.claude/rules/agent-crm-boundary.md),
-> [kế hoạch DB](docs/PLAN-db-baseline.md), [kế hoạch plugin CRM](docs/PLAN-crm-plugin.md),
-> [handoff](docs/HANDOFF-agent-v2.md). Mỗi app có một migration gốc `0001_baseline`.
+> **Hiện trạng (2026-11-18): nhánh `split/agent`, agent không có CRM.** CRM phòng khám đã tách thành sản phẩm riêng ở
+> nhánh `split/crm` (cả hai tách từ tag `split-base`). Ở đây còn: lõi `packages/agent-core`, dịch vụ agent và plugin
+> (`apps/agent`, profile mặc định `agents/rag`), `crm-signer` (chỉ dùng khi nối với một CRM, compose profile `crm`),
+> connector Zalo (`connectors/zalo`) và dashboard TanStack Start (chỉ các màn agent). Nhân viên đăng nhập bằng tài
+> khoản của chính agent (plugin `web`, tạo ở lần đăng nhập đầu); server của dashboard giữ token trong cookie httpOnly.
+> Mục tiêu: agentic RAG. Luật: [harness](../.claude/rules/agent-harness.md), [ranh giới](../.claude/rules/agent-crm-boundary.md).
+> Phần dưới đây là lịch sử, còn nhắc tới CRM cũ.
 
 Agent chăm sóc khách hàng (CSKH) bằng chữ qua Zalo cho Pema Digital Clinic, và CRM phòng khám phía server, trong một codebase:
 

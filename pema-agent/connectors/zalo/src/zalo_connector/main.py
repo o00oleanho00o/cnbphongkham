@@ -27,7 +27,7 @@ from fastapi.staticfiles import StaticFiles
 from starlette.types import Scope
 
 from .agent_client import AgentClient
-from .auth import KeySet, StaffTokens, require_admin
+from .auth import AgentLogins, KeySet, StaffTokens, require_admin
 from .bot.client import BotApiClient, tao_zalo_bot_client
 from .callback import Sender, callback_router
 from .config import Config, ConfigError
@@ -76,7 +76,12 @@ def create_app(
     service = ZaloService(config, store, Seal(config.secret_key), agent, bot_client=bot_client, bridge=bridge)
     sender = Sender(config, service, store)
     keys = KeySet(config.crm_jwks_url, transport=jwks_transport) if config.crm_jwks_url else None
-    tokens = StaffTokens(config.sso_issuer, config.sso_audience, config.crm_jwks_url, keys=keys)
+    # With a CRM: its staff tokens. Without one (CRM_JWKS_URL empty): the agent's own dashboard logins.
+    tokens = (
+        StaffTokens(config.sso_issuer, config.sso_audience, config.crm_jwks_url, keys=keys)
+        if config.crm_jwks_url
+        else AgentLogins(config.agent_url, transport=agent_transport)
+    )
     admin = Depends(require_admin(tokens))
 
     @contextlib.asynccontextmanager
@@ -84,7 +89,7 @@ def create_app(
         if not config.connector_key:
             logger.error("CONNECTOR_KEY is not set: this service cannot talk to the agent (messages wait here)")
         if not config.crm_jwks_url:
-            logger.error("CRM_JWKS_URL is not set: the admin routes answer 503")
+            logger.info("CRM_JWKS_URL is not set: the admin routes accept the agent's dashboard logins")
         service.start()
         jobs = [
             asyncio.create_task(agent.run(), name="outbox pusher"),

@@ -1,62 +1,22 @@
-# Override used ONLY by the root docker-compose.yml (`include`), to start the whole project with one command.
-# infra/docker-compose.yml on its own (make up, make up-app, make up-proxy) is unchanged.
+# Override used ONLY by the root docker-compose.yml (`include`), to start the whole stack with one command.
+# infra/docker-compose.yml on its own (make up, make up-proxy) is unchanged.
 #
-#   - worker, frontend, the general agent and the Zalo connector start without a profile, so a plain `docker compose up --build` runs
-#     everything;
-#   - `seed` is a one-shot that creates the fictional demo clinic (users of every role, patients, conversations).
-#     Login: PEMA_SEED_OWNER_EMAIL / PEMA_SEED_PASSWORD from infra/.env.local-demo (admin@gmail.com / Admin@123;
-#     the shell wins). With PEMA_SEED_PASSWORD empty a random one is generated and printed ONCE:
-#     `docker compose logs seed`. The other accounts keep manager@example.test, doctor.mai@example.test,
-#     cs.maianh@example.test, reception.lan@example.test, ... with the same password.
-#     A second run finds the data and changes nothing.
-#   - crm-signer starts too, but only works once its key exists and the API has the public half: see infra/README.md
-#     "Agent ↔ CRM" (keygen once, then PEMA_AGENT_GATEWAY_PUBLIC_KEYS in the shell or .env.local-demo, not committed);
+#   - every service of the default stack starts (postgres, agent-migrate, agent, egress, zalo, frontend);
+#   - sign in at http://localhost:3000: the first sign-in creates the agent's admin account (plugin web);
 #   - nothing restarts by itself: a container runs only after `docker compose up`, never when Docker starts with
 #     Windows (restart: "no"); `docker compose stop` ends it for good.
 services:
   postgres:
     restart: "no"
 
-  redis:
+  agent:
     restart: "no"
 
-  api:
+  zalo:
     restart: "no"
 
-  crm-signer:
-    profiles: !reset []
+  egress:
     restart: "no"
 
   frontend:
-    profiles: !reset []
     restart: "no"
-
-  agent-migrate:
-    profiles: !reset []
-
-  agent:
-    profiles: !reset []
-    restart: "no"
-
-  # The Zalo connector starts with the agent; it idles until ZALO_CONNECTOR_KEY is set (README "Zalo connector").
-  zalo:
-    profiles: !reset []
-    restart: "no"
-
-  # The agent depends on it, so it starts with the agent.
-  egress:
-    profiles: !reset []
-    restart: "no"
-
-  seed:
-    extends:
-      file: docker-compose.yml
-      service: migrate
-    depends_on:
-      migrate:
-        condition: service_completed_successfully
-    environment: !override
-      PEMA_DATABASE_URL: postgresql+psycopg://be_app:${PEMA_BE_APP_PASSWORD:?set it in infra/.env.local-demo}@postgres:5432/pema
-      PEMA_SEED_PASSWORD: ${PEMA_SEED_PASSWORD:-}
-      PEMA_SEED_OWNER_EMAIL: ${PEMA_SEED_OWNER_EMAIL:-}
-    command: ["python", "-m", "pema.clinic.actions.seed_demo"]

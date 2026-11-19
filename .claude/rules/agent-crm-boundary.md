@@ -1,7 +1,11 @@
 # Ranh giới agent ↔ CRM — luật bất biến
 
-Áp cho mọi thay đổi trong `pema-agent/` (backend `apps/agent`, `apps/api`, `apps/crm-signer`, `infra/`), kể cả do subagent
-làm. Agent nói chuyện với người ngoài (Zalo, chat web) nên **coi như có ngày bị jailbreak**: khi đó nó chỉ được phá trong vùng
+Nhánh này là agent không có CRM (`split/agent`, tách từ tag `split-base` ngày 2026-11-18); CRM ở nhánh `split/crm`. Profile
+mặc định `agents/rag` không bật `sso` và `crm`, `crm-signer` chỉ chạy với compose profile `crm`; các luật dưới đây vẫn áp
+nguyên vẹn cho ngày agent nối lại với một CRM, và L1, L6, L7 áp ngay cả khi không nối.
+
+Áp cho mọi thay đổi trong `pema-agent/` (backend `apps/agent`, `apps/crm-signer`, `connectors/`, `infra/`), kể cả do
+subagent làm. Agent nói chuyện với người ngoài (Zalo, chat web) nên **coi như có ngày bị jailbreak**: khi đó nó chỉ được phá trong vùng
 của nó, và chỉ cho người đang chat với nó.
 
 - **L1. Agent không đọc ghi được DB của CRM.** Agent dùng database riêng `pema_agent`; role `agent_rt_app` không có CONNECT vào
@@ -38,7 +42,8 @@ của nó, và chỉ cho người đang chat với nó.
   TypeSafe) và của connector Zalo (Zalo Bot, cầu nối) ra internet qua proxy `egress`, giai đoạn 1 chỉ ghi log mọi đích.
   **Chưa làm (bước 8 giai đoạn 2):** agent chỉ ở mạng nội bộ, `web_*` và connector cũng qua proxy, chỉ cho đích trong
   danh sách chủ duyệt.
-- **L7. Danh sách tool và plugin của profile `clinic` là danh sách chủ đã duyệt.** Thêm tool, plugin, tiến trình con hay biến
+- **L7. Danh sách tool và plugin của profile `clinic` và `rag` là danh sách chủ đã duyệt** (`rag`: `web`, `knowledge`,
+  `jev`, `skills`, `conversations`, `follow_up`, `connectors`; chủ duyệt 2026-11-18). Thêm tool, plugin, tiến trình con hay biến
   môi trường cho agent, hoặc bật `agent_writes`, là đổi kế hoạch, chủ duyệt. Không bao giờ có tool đọc file, chạy lệnh hay chạy mã trong tiến trình agent.
   **Kênh chat ngoài (Zalo…) là connector, dịch vụ riêng ngoài agent** (`pema-agent/connectors/<tên>`, giao thức
   `pema-agent/docs/CONNECTOR-PROTOCOL.md`): agent chỉ có plugin `connectors` chung, không biết nền tảng nào; connector

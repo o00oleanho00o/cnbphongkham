@@ -12,35 +12,15 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminRouteRouteImport } from './routes/_admin/route'
 import { Route as HealthzRouteImport } from './routes/healthz'
-import { Route as AdminFinanceRouteRouteImport } from './routes/_admin/finance/route'
 import { Route as AgentSplatRouteImport } from './routes/agent/$'
 import { Route as ApiSplatRouteImport } from './routes/api/$'
 import { Route as ConnectorsIndexRouteImport } from './routes/connectors/index'
 import { Route as ConnectorsSplatRouteImport } from './routes/connectors/$'
 import { Route as LoginIndexRouteImport } from './routes/login/index'
 import { Route as AdminAdminAgentRouteRouteImport } from './routes/_admin/admin/agent/route'
-import { Route as AdminAskIndexRouteImport } from './routes/_admin/ask/index'
-import { Route as AdminCashierIndexRouteImport } from './routes/_admin/cashier/index'
-import { Route as AdminCrmIndexRouteImport } from './routes/_admin/crm/index'
-import { Route as AdminDashboardIndexRouteImport } from './routes/_admin/dashboard/index'
-import { Route as AdminFinanceIndexRouteImport } from './routes/_admin/finance/index'
-import { Route as AdminGuideIndexRouteImport } from './routes/_admin/guide/index'
-import { Route as AdminPatientsIndexRouteImport } from './routes/_admin/patients/index'
-import { Route as AdminResourcesIndexRouteImport } from './routes/_admin/resources/index'
-import { Route as AdminScheduleIndexRouteImport } from './routes/_admin/schedule/index'
-import { Route as AdminServicesIndexRouteImport } from './routes/_admin/services/index'
-import { Route as AdminStudioIndexRouteImport } from './routes/_admin/studio/index'
-import { Route as AdminTodayIndexRouteImport } from './routes/_admin/today/index'
 import { Route as AdminAdminAgentIndexRouteImport } from './routes/_admin/admin/agent/index'
 import { Route as AdminAdminAuthIndexRouteImport } from './routes/_admin/admin/auth/index'
 import { Route as AdminDevKitIndexRouteImport } from './routes/_admin/dev/kit/index'
-import { Route as AdminFinanceEntriesIndexRouteImport } from './routes/_admin/finance/entries/index'
-import { Route as AdminFinanceExportIndexRouteImport } from './routes/_admin/finance/export/index'
-import { Route as AdminFinancePaymentsIndexRouteImport } from './routes/_admin/finance/payments/index'
-import { Route as AdminFinancePeriodsIndexRouteImport } from './routes/_admin/finance/periods/index'
-import { Route as AdminFinanceRatesIndexRouteImport } from './routes/_admin/finance/rates/index'
-import { Route as AdminOrdersIdIndexRouteImport } from './routes/_admin/orders/$id/index'
-import { Route as AdminPatientsIdIndexRouteImport } from './routes/_admin/patients/$id/index'
 import { Route as AdminAdminAgentCasesIndexRouteImport } from './routes/_admin/admin/agent/cases/index'
 import { Route as AdminAdminAgentModelIndexRouteImport } from './routes/_admin/admin/agent/model/index'
 import { Route as AdminAdminAgentOverviewIndexRouteImport } from './routes/_admin/admin/agent/overview/index'
@@ -49,7 +29,6 @@ import { Route as AdminAdminAgentSessionsIndexRouteImport } from './routes/_admi
 import { Route as AdminAdminAgentSettingsIndexRouteImport } from './routes/_admin/admin/agent/settings/index'
 import { Route as AdminAdminAgentToolsIndexRouteImport } from './routes/_admin/admin/agent/tools/index'
 import { Route as AdminAdminAgentTracesIndexRouteImport } from './routes/_admin/admin/agent/traces/index'
-import { Route as AdminOrdersIdPrintIndexRouteImport } from './routes/_admin/orders/$id/print/index'
 import { Route as AdminAdminAgentPluginsNameIndexRouteImport } from './routes/_admin/admin/agent/plugins/$name/index'
 import { Route as AdminAdminAgentPluginsNamePageIndexRouteImport } from './routes/_admin/admin/agent/plugins/$name/$page/index'
 
@@ -66,11 +45,6 @@ const HealthzRoute = HealthzRouteImport.update({
   id: '/healthz',
   path: '/healthz',
   getParentRoute: () => rootRouteImport,
-} as any)
-const AdminFinanceRouteRoute = AdminFinanceRouteRouteImport.update({
-  id: '/finance',
-  path: '/finance',
-  getParentRoute: () => AdminRouteRoute,
 } as any)
 const AgentSplatRoute = AgentSplatRouteImport.update({
   id: '/agent/$',
@@ -102,66 +76,6 @@ const AdminAdminAgentRouteRoute = AdminAdminAgentRouteRouteImport.update({
   path: '/admin/agent',
   getParentRoute: () => AdminRouteRoute,
 } as any)
-const AdminAskIndexRoute = AdminAskIndexRouteImport.update({
-  id: '/ask/',
-  path: '/ask/',
-  getParentRoute: () => AdminRouteRoute,
-} as any)
-const AdminCashierIndexRoute = AdminCashierIndexRouteImport.update({
-  id: '/cashier/',
-  path: '/cashier/',
-  getParentRoute: () => AdminRouteRoute,
-} as any)
-const AdminCrmIndexRoute = AdminCrmIndexRouteImport.update({
-  id: '/crm/',
-  path: '/crm/',
-  getParentRoute: () => AdminRouteRoute,
-} as any)
-const AdminDashboardIndexRoute = AdminDashboardIndexRouteImport.update({
-  id: '/dashboard/',
-  path: '/dashboard/',
-  getParentRoute: () => AdminRouteRoute,
-} as any)
-const AdminFinanceIndexRoute = AdminFinanceIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => AdminFinanceRouteRoute,
-} as any)
-const AdminGuideIndexRoute = AdminGuideIndexRouteImport.update({
-  id: '/guide/',
-  path: '/guide/',
-  getParentRoute: () => AdminRouteRoute,
-} as any)
-const AdminPatientsIndexRoute = AdminPatientsIndexRouteImport.update({
-  id: '/patients/',
-  path: '/patients/',
-  getParentRoute: () => AdminRouteRoute,
-} as any)
-const AdminResourcesIndexRoute = AdminResourcesIndexRouteImport.update({
-  id: '/resources/',
-  path: '/resources/',
-  getParentRoute: () => AdminRouteRoute,
-} as any)
-const AdminScheduleIndexRoute = AdminScheduleIndexRouteImport.update({
-  id: '/schedule/',
-  path: '/schedule/',
-  getParentRoute: () => AdminRouteRoute,
-} as any)
-const AdminServicesIndexRoute = AdminServicesIndexRouteImport.update({
-  id: '/services/',
-  path: '/services/',
-  getParentRoute: () => AdminRouteRoute,
-} as any)
-const AdminStudioIndexRoute = AdminStudioIndexRouteImport.update({
-  id: '/studio/',
-  path: '/studio/',
-  getParentRoute: () => AdminRouteRoute,
-} as any)
-const AdminTodayIndexRoute = AdminTodayIndexRouteImport.update({
-  id: '/today/',
-  path: '/today/',
-  getParentRoute: () => AdminRouteRoute,
-} as any)
 const AdminAdminAgentIndexRoute = AdminAdminAgentIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -175,44 +89,6 @@ const AdminAdminAuthIndexRoute = AdminAdminAuthIndexRouteImport.update({
 const AdminDevKitIndexRoute = AdminDevKitIndexRouteImport.update({
   id: '/dev/kit/',
   path: '/dev/kit/',
-  getParentRoute: () => AdminRouteRoute,
-} as any)
-const AdminFinanceEntriesIndexRoute =
-  AdminFinanceEntriesIndexRouteImport.update({
-    id: '/entries/',
-    path: '/entries/',
-    getParentRoute: () => AdminFinanceRouteRoute,
-  } as any)
-const AdminFinanceExportIndexRoute = AdminFinanceExportIndexRouteImport.update({
-  id: '/export/',
-  path: '/export/',
-  getParentRoute: () => AdminFinanceRouteRoute,
-} as any)
-const AdminFinancePaymentsIndexRoute =
-  AdminFinancePaymentsIndexRouteImport.update({
-    id: '/payments/',
-    path: '/payments/',
-    getParentRoute: () => AdminFinanceRouteRoute,
-  } as any)
-const AdminFinancePeriodsIndexRoute =
-  AdminFinancePeriodsIndexRouteImport.update({
-    id: '/periods/',
-    path: '/periods/',
-    getParentRoute: () => AdminFinanceRouteRoute,
-  } as any)
-const AdminFinanceRatesIndexRoute = AdminFinanceRatesIndexRouteImport.update({
-  id: '/rates/',
-  path: '/rates/',
-  getParentRoute: () => AdminFinanceRouteRoute,
-} as any)
-const AdminOrdersIdIndexRoute = AdminOrdersIdIndexRouteImport.update({
-  id: '/orders/$id/',
-  path: '/orders/$id/',
-  getParentRoute: () => AdminRouteRoute,
-} as any)
-const AdminPatientsIdIndexRoute = AdminPatientsIdIndexRouteImport.update({
-  id: '/patients/$id/',
-  path: '/patients/$id/',
   getParentRoute: () => AdminRouteRoute,
 } as any)
 const AdminAdminAgentCasesIndexRoute =
@@ -263,11 +139,6 @@ const AdminAdminAgentTracesIndexRoute =
     path: '/traces/',
     getParentRoute: () => AdminAdminAgentRouteRoute,
   } as any)
-const AdminOrdersIdPrintIndexRoute = AdminOrdersIdPrintIndexRouteImport.update({
-  id: '/orders/$id/print/',
-  path: '/orders/$id/print/',
-  getParentRoute: () => AdminRouteRoute,
-} as any)
 const AdminAdminAgentPluginsNameIndexRoute =
   AdminAdminAgentPluginsNameIndexRouteImport.update({
     id: '/plugins/$name/',
@@ -284,35 +155,15 @@ const AdminAdminAgentPluginsNamePageIndexRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/healthz': typeof HealthzRoute
-  '/finance': typeof AdminFinanceRouteRouteWithChildren
   '/agent/$': typeof AgentSplatRoute
   '/api/$': typeof ApiSplatRoute
   '/connectors/$': typeof ConnectorsSplatRoute
   '/connectors/': typeof ConnectorsIndexRoute
   '/login/': typeof LoginIndexRoute
   '/admin/agent': typeof AdminAdminAgentRouteRouteWithChildren
-  '/ask/': typeof AdminAskIndexRoute
-  '/cashier/': typeof AdminCashierIndexRoute
-  '/crm/': typeof AdminCrmIndexRoute
-  '/dashboard/': typeof AdminDashboardIndexRoute
-  '/finance/': typeof AdminFinanceIndexRoute
-  '/guide/': typeof AdminGuideIndexRoute
-  '/patients/': typeof AdminPatientsIndexRoute
-  '/resources/': typeof AdminResourcesIndexRoute
-  '/schedule/': typeof AdminScheduleIndexRoute
-  '/services/': typeof AdminServicesIndexRoute
-  '/studio/': typeof AdminStudioIndexRoute
-  '/today/': typeof AdminTodayIndexRoute
   '/admin/agent/': typeof AdminAdminAgentIndexRoute
   '/admin/auth/': typeof AdminAdminAuthIndexRoute
   '/dev/kit/': typeof AdminDevKitIndexRoute
-  '/finance/entries/': typeof AdminFinanceEntriesIndexRoute
-  '/finance/export/': typeof AdminFinanceExportIndexRoute
-  '/finance/payments/': typeof AdminFinancePaymentsIndexRoute
-  '/finance/periods/': typeof AdminFinancePeriodsIndexRoute
-  '/finance/rates/': typeof AdminFinanceRatesIndexRoute
-  '/orders/$id/': typeof AdminOrdersIdIndexRoute
-  '/patients/$id/': typeof AdminPatientsIdIndexRoute
   '/admin/agent/cases/': typeof AdminAdminAgentCasesIndexRoute
   '/admin/agent/model/': typeof AdminAdminAgentModelIndexRoute
   '/admin/agent/overview/': typeof AdminAdminAgentOverviewIndexRoute
@@ -321,7 +172,6 @@ export interface FileRoutesByFullPath {
   '/admin/agent/settings/': typeof AdminAdminAgentSettingsIndexRoute
   '/admin/agent/tools/': typeof AdminAdminAgentToolsIndexRoute
   '/admin/agent/traces/': typeof AdminAdminAgentTracesIndexRoute
-  '/orders/$id/print/': typeof AdminOrdersIdPrintIndexRoute
   '/admin/agent/plugins/$name/': typeof AdminAdminAgentPluginsNameIndexRoute
   '/admin/agent/plugins/$name/$page/': typeof AdminAdminAgentPluginsNamePageIndexRoute
 }
@@ -333,28 +183,9 @@ export interface FileRoutesByTo {
   '/connectors/$': typeof ConnectorsSplatRoute
   '/connectors': typeof ConnectorsIndexRoute
   '/login': typeof LoginIndexRoute
-  '/ask': typeof AdminAskIndexRoute
-  '/cashier': typeof AdminCashierIndexRoute
-  '/crm': typeof AdminCrmIndexRoute
-  '/dashboard': typeof AdminDashboardIndexRoute
-  '/finance': typeof AdminFinanceIndexRoute
-  '/guide': typeof AdminGuideIndexRoute
-  '/patients': typeof AdminPatientsIndexRoute
-  '/resources': typeof AdminResourcesIndexRoute
-  '/schedule': typeof AdminScheduleIndexRoute
-  '/services': typeof AdminServicesIndexRoute
-  '/studio': typeof AdminStudioIndexRoute
-  '/today': typeof AdminTodayIndexRoute
   '/admin/agent': typeof AdminAdminAgentIndexRoute
   '/admin/auth': typeof AdminAdminAuthIndexRoute
   '/dev/kit': typeof AdminDevKitIndexRoute
-  '/finance/entries': typeof AdminFinanceEntriesIndexRoute
-  '/finance/export': typeof AdminFinanceExportIndexRoute
-  '/finance/payments': typeof AdminFinancePaymentsIndexRoute
-  '/finance/periods': typeof AdminFinancePeriodsIndexRoute
-  '/finance/rates': typeof AdminFinanceRatesIndexRoute
-  '/orders/$id': typeof AdminOrdersIdIndexRoute
-  '/patients/$id': typeof AdminPatientsIdIndexRoute
   '/admin/agent/cases': typeof AdminAdminAgentCasesIndexRoute
   '/admin/agent/model': typeof AdminAdminAgentModelIndexRoute
   '/admin/agent/overview': typeof AdminAdminAgentOverviewIndexRoute
@@ -363,7 +194,6 @@ export interface FileRoutesByTo {
   '/admin/agent/settings': typeof AdminAdminAgentSettingsIndexRoute
   '/admin/agent/tools': typeof AdminAdminAgentToolsIndexRoute
   '/admin/agent/traces': typeof AdminAdminAgentTracesIndexRoute
-  '/orders/$id/print': typeof AdminOrdersIdPrintIndexRoute
   '/admin/agent/plugins/$name': typeof AdminAdminAgentPluginsNameIndexRoute
   '/admin/agent/plugins/$name/$page': typeof AdminAdminAgentPluginsNamePageIndexRoute
 }
@@ -372,35 +202,15 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_admin': typeof AdminRouteRouteWithChildren
   '/healthz': typeof HealthzRoute
-  '/_admin/finance': typeof AdminFinanceRouteRouteWithChildren
   '/agent/$': typeof AgentSplatRoute
   '/api/$': typeof ApiSplatRoute
   '/connectors/$': typeof ConnectorsSplatRoute
   '/connectors/': typeof ConnectorsIndexRoute
   '/login/': typeof LoginIndexRoute
   '/_admin/admin/agent': typeof AdminAdminAgentRouteRouteWithChildren
-  '/_admin/ask/': typeof AdminAskIndexRoute
-  '/_admin/cashier/': typeof AdminCashierIndexRoute
-  '/_admin/crm/': typeof AdminCrmIndexRoute
-  '/_admin/dashboard/': typeof AdminDashboardIndexRoute
-  '/_admin/finance/': typeof AdminFinanceIndexRoute
-  '/_admin/guide/': typeof AdminGuideIndexRoute
-  '/_admin/patients/': typeof AdminPatientsIndexRoute
-  '/_admin/resources/': typeof AdminResourcesIndexRoute
-  '/_admin/schedule/': typeof AdminScheduleIndexRoute
-  '/_admin/services/': typeof AdminServicesIndexRoute
-  '/_admin/studio/': typeof AdminStudioIndexRoute
-  '/_admin/today/': typeof AdminTodayIndexRoute
   '/_admin/admin/agent/': typeof AdminAdminAgentIndexRoute
   '/_admin/admin/auth/': typeof AdminAdminAuthIndexRoute
   '/_admin/dev/kit/': typeof AdminDevKitIndexRoute
-  '/_admin/finance/entries/': typeof AdminFinanceEntriesIndexRoute
-  '/_admin/finance/export/': typeof AdminFinanceExportIndexRoute
-  '/_admin/finance/payments/': typeof AdminFinancePaymentsIndexRoute
-  '/_admin/finance/periods/': typeof AdminFinancePeriodsIndexRoute
-  '/_admin/finance/rates/': typeof AdminFinanceRatesIndexRoute
-  '/_admin/orders/$id/': typeof AdminOrdersIdIndexRoute
-  '/_admin/patients/$id/': typeof AdminPatientsIdIndexRoute
   '/_admin/admin/agent/cases/': typeof AdminAdminAgentCasesIndexRoute
   '/_admin/admin/agent/model/': typeof AdminAdminAgentModelIndexRoute
   '/_admin/admin/agent/overview/': typeof AdminAdminAgentOverviewIndexRoute
@@ -409,7 +219,6 @@ export interface FileRoutesById {
   '/_admin/admin/agent/settings/': typeof AdminAdminAgentSettingsIndexRoute
   '/_admin/admin/agent/tools/': typeof AdminAdminAgentToolsIndexRoute
   '/_admin/admin/agent/traces/': typeof AdminAdminAgentTracesIndexRoute
-  '/_admin/orders/$id/print/': typeof AdminOrdersIdPrintIndexRoute
   '/_admin/admin/agent/plugins/$name/': typeof AdminAdminAgentPluginsNameIndexRoute
   '/_admin/admin/agent/plugins/$name/$page/': typeof AdminAdminAgentPluginsNamePageIndexRoute
 }
@@ -418,35 +227,15 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/healthz'
-    | '/finance'
     | '/agent/$'
     | '/api/$'
     | '/connectors/$'
     | '/connectors/'
     | '/login/'
     | '/admin/agent'
-    | '/ask/'
-    | '/cashier/'
-    | '/crm/'
-    | '/dashboard/'
-    | '/finance/'
-    | '/guide/'
-    | '/patients/'
-    | '/resources/'
-    | '/schedule/'
-    | '/services/'
-    | '/studio/'
-    | '/today/'
     | '/admin/agent/'
     | '/admin/auth/'
     | '/dev/kit/'
-    | '/finance/entries/'
-    | '/finance/export/'
-    | '/finance/payments/'
-    | '/finance/periods/'
-    | '/finance/rates/'
-    | '/orders/$id/'
-    | '/patients/$id/'
     | '/admin/agent/cases/'
     | '/admin/agent/model/'
     | '/admin/agent/overview/'
@@ -455,7 +244,6 @@ export interface FileRouteTypes {
     | '/admin/agent/settings/'
     | '/admin/agent/tools/'
     | '/admin/agent/traces/'
-    | '/orders/$id/print/'
     | '/admin/agent/plugins/$name/'
     | '/admin/agent/plugins/$name/$page/'
   fileRoutesByTo: FileRoutesByTo
@@ -467,28 +255,9 @@ export interface FileRouteTypes {
     | '/connectors/$'
     | '/connectors'
     | '/login'
-    | '/ask'
-    | '/cashier'
-    | '/crm'
-    | '/dashboard'
-    | '/finance'
-    | '/guide'
-    | '/patients'
-    | '/resources'
-    | '/schedule'
-    | '/services'
-    | '/studio'
-    | '/today'
     | '/admin/agent'
     | '/admin/auth'
     | '/dev/kit'
-    | '/finance/entries'
-    | '/finance/export'
-    | '/finance/payments'
-    | '/finance/periods'
-    | '/finance/rates'
-    | '/orders/$id'
-    | '/patients/$id'
     | '/admin/agent/cases'
     | '/admin/agent/model'
     | '/admin/agent/overview'
@@ -497,7 +266,6 @@ export interface FileRouteTypes {
     | '/admin/agent/settings'
     | '/admin/agent/tools'
     | '/admin/agent/traces'
-    | '/orders/$id/print'
     | '/admin/agent/plugins/$name'
     | '/admin/agent/plugins/$name/$page'
   id:
@@ -505,35 +273,15 @@ export interface FileRouteTypes {
     | '/'
     | '/_admin'
     | '/healthz'
-    | '/_admin/finance'
     | '/agent/$'
     | '/api/$'
     | '/connectors/$'
     | '/connectors/'
     | '/login/'
     | '/_admin/admin/agent'
-    | '/_admin/ask/'
-    | '/_admin/cashier/'
-    | '/_admin/crm/'
-    | '/_admin/dashboard/'
-    | '/_admin/finance/'
-    | '/_admin/guide/'
-    | '/_admin/patients/'
-    | '/_admin/resources/'
-    | '/_admin/schedule/'
-    | '/_admin/services/'
-    | '/_admin/studio/'
-    | '/_admin/today/'
     | '/_admin/admin/agent/'
     | '/_admin/admin/auth/'
     | '/_admin/dev/kit/'
-    | '/_admin/finance/entries/'
-    | '/_admin/finance/export/'
-    | '/_admin/finance/payments/'
-    | '/_admin/finance/periods/'
-    | '/_admin/finance/rates/'
-    | '/_admin/orders/$id/'
-    | '/_admin/patients/$id/'
     | '/_admin/admin/agent/cases/'
     | '/_admin/admin/agent/model/'
     | '/_admin/admin/agent/overview/'
@@ -542,7 +290,6 @@ export interface FileRouteTypes {
     | '/_admin/admin/agent/settings/'
     | '/_admin/admin/agent/tools/'
     | '/_admin/admin/agent/traces/'
-    | '/_admin/orders/$id/print/'
     | '/_admin/admin/agent/plugins/$name/'
     | '/_admin/admin/agent/plugins/$name/$page/'
   fileRoutesById: FileRoutesById
@@ -580,13 +327,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/healthz'
       preLoaderRoute: typeof HealthzRouteImport
       parentRoute: typeof rootRouteImport
-    }
-    '/_admin/finance': {
-      id: '/_admin/finance'
-      path: '/finance'
-      fullPath: '/finance'
-      preLoaderRoute: typeof AdminFinanceRouteRouteImport
-      parentRoute: typeof AdminRouteRoute
     }
     '/agent/$': {
       id: '/agent/$'
@@ -630,90 +370,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAdminAgentRouteRouteImport
       parentRoute: typeof AdminRouteRoute
     }
-    '/_admin/ask/': {
-      id: '/_admin/ask/'
-      path: '/ask'
-      fullPath: '/ask/'
-      preLoaderRoute: typeof AdminAskIndexRouteImport
-      parentRoute: typeof AdminRouteRoute
-    }
-    '/_admin/cashier/': {
-      id: '/_admin/cashier/'
-      path: '/cashier'
-      fullPath: '/cashier/'
-      preLoaderRoute: typeof AdminCashierIndexRouteImport
-      parentRoute: typeof AdminRouteRoute
-    }
-    '/_admin/crm/': {
-      id: '/_admin/crm/'
-      path: '/crm'
-      fullPath: '/crm/'
-      preLoaderRoute: typeof AdminCrmIndexRouteImport
-      parentRoute: typeof AdminRouteRoute
-    }
-    '/_admin/dashboard/': {
-      id: '/_admin/dashboard/'
-      path: '/dashboard'
-      fullPath: '/dashboard/'
-      preLoaderRoute: typeof AdminDashboardIndexRouteImport
-      parentRoute: typeof AdminRouteRoute
-    }
-    '/_admin/finance/': {
-      id: '/_admin/finance/'
-      path: '/'
-      fullPath: '/finance/'
-      preLoaderRoute: typeof AdminFinanceIndexRouteImport
-      parentRoute: typeof AdminFinanceRouteRoute
-    }
-    '/_admin/guide/': {
-      id: '/_admin/guide/'
-      path: '/guide'
-      fullPath: '/guide/'
-      preLoaderRoute: typeof AdminGuideIndexRouteImport
-      parentRoute: typeof AdminRouteRoute
-    }
-    '/_admin/patients/': {
-      id: '/_admin/patients/'
-      path: '/patients'
-      fullPath: '/patients/'
-      preLoaderRoute: typeof AdminPatientsIndexRouteImport
-      parentRoute: typeof AdminRouteRoute
-    }
-    '/_admin/resources/': {
-      id: '/_admin/resources/'
-      path: '/resources'
-      fullPath: '/resources/'
-      preLoaderRoute: typeof AdminResourcesIndexRouteImport
-      parentRoute: typeof AdminRouteRoute
-    }
-    '/_admin/schedule/': {
-      id: '/_admin/schedule/'
-      path: '/schedule'
-      fullPath: '/schedule/'
-      preLoaderRoute: typeof AdminScheduleIndexRouteImport
-      parentRoute: typeof AdminRouteRoute
-    }
-    '/_admin/services/': {
-      id: '/_admin/services/'
-      path: '/services'
-      fullPath: '/services/'
-      preLoaderRoute: typeof AdminServicesIndexRouteImport
-      parentRoute: typeof AdminRouteRoute
-    }
-    '/_admin/studio/': {
-      id: '/_admin/studio/'
-      path: '/studio'
-      fullPath: '/studio/'
-      preLoaderRoute: typeof AdminStudioIndexRouteImport
-      parentRoute: typeof AdminRouteRoute
-    }
-    '/_admin/today/': {
-      id: '/_admin/today/'
-      path: '/today'
-      fullPath: '/today/'
-      preLoaderRoute: typeof AdminTodayIndexRouteImport
-      parentRoute: typeof AdminRouteRoute
-    }
     '/_admin/admin/agent/': {
       id: '/_admin/admin/agent/'
       path: '/'
@@ -733,55 +389,6 @@ declare module '@tanstack/react-router' {
       path: '/dev/kit'
       fullPath: '/dev/kit/'
       preLoaderRoute: typeof AdminDevKitIndexRouteImport
-      parentRoute: typeof AdminRouteRoute
-    }
-    '/_admin/finance/entries/': {
-      id: '/_admin/finance/entries/'
-      path: '/entries'
-      fullPath: '/finance/entries/'
-      preLoaderRoute: typeof AdminFinanceEntriesIndexRouteImport
-      parentRoute: typeof AdminFinanceRouteRoute
-    }
-    '/_admin/finance/export/': {
-      id: '/_admin/finance/export/'
-      path: '/export'
-      fullPath: '/finance/export/'
-      preLoaderRoute: typeof AdminFinanceExportIndexRouteImport
-      parentRoute: typeof AdminFinanceRouteRoute
-    }
-    '/_admin/finance/payments/': {
-      id: '/_admin/finance/payments/'
-      path: '/payments'
-      fullPath: '/finance/payments/'
-      preLoaderRoute: typeof AdminFinancePaymentsIndexRouteImport
-      parentRoute: typeof AdminFinanceRouteRoute
-    }
-    '/_admin/finance/periods/': {
-      id: '/_admin/finance/periods/'
-      path: '/periods'
-      fullPath: '/finance/periods/'
-      preLoaderRoute: typeof AdminFinancePeriodsIndexRouteImport
-      parentRoute: typeof AdminFinanceRouteRoute
-    }
-    '/_admin/finance/rates/': {
-      id: '/_admin/finance/rates/'
-      path: '/rates'
-      fullPath: '/finance/rates/'
-      preLoaderRoute: typeof AdminFinanceRatesIndexRouteImport
-      parentRoute: typeof AdminFinanceRouteRoute
-    }
-    '/_admin/orders/$id/': {
-      id: '/_admin/orders/$id/'
-      path: '/orders/$id'
-      fullPath: '/orders/$id/'
-      preLoaderRoute: typeof AdminOrdersIdIndexRouteImport
-      parentRoute: typeof AdminRouteRoute
-    }
-    '/_admin/patients/$id/': {
-      id: '/_admin/patients/$id/'
-      path: '/patients/$id'
-      fullPath: '/patients/$id/'
-      preLoaderRoute: typeof AdminPatientsIdIndexRouteImport
       parentRoute: typeof AdminRouteRoute
     }
     '/_admin/admin/agent/cases/': {
@@ -840,13 +447,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAdminAgentTracesIndexRouteImport
       parentRoute: typeof AdminAdminAgentRouteRoute
     }
-    '/_admin/orders/$id/print/': {
-      id: '/_admin/orders/$id/print/'
-      path: '/orders/$id/print'
-      fullPath: '/orders/$id/print/'
-      preLoaderRoute: typeof AdminOrdersIdPrintIndexRouteImport
-      parentRoute: typeof AdminRouteRoute
-    }
     '/_admin/admin/agent/plugins/$name/': {
       id: '/_admin/admin/agent/plugins/$name/'
       path: '/plugins/$name'
@@ -863,27 +463,6 @@ declare module '@tanstack/react-router' {
     }
   }
 }
-
-interface AdminFinanceRouteRouteChildren {
-  AdminFinanceIndexRoute: typeof AdminFinanceIndexRoute
-  AdminFinanceEntriesIndexRoute: typeof AdminFinanceEntriesIndexRoute
-  AdminFinanceExportIndexRoute: typeof AdminFinanceExportIndexRoute
-  AdminFinancePaymentsIndexRoute: typeof AdminFinancePaymentsIndexRoute
-  AdminFinancePeriodsIndexRoute: typeof AdminFinancePeriodsIndexRoute
-  AdminFinanceRatesIndexRoute: typeof AdminFinanceRatesIndexRoute
-}
-
-const AdminFinanceRouteRouteChildren: AdminFinanceRouteRouteChildren = {
-  AdminFinanceIndexRoute: AdminFinanceIndexRoute,
-  AdminFinanceEntriesIndexRoute: AdminFinanceEntriesIndexRoute,
-  AdminFinanceExportIndexRoute: AdminFinanceExportIndexRoute,
-  AdminFinancePaymentsIndexRoute: AdminFinancePaymentsIndexRoute,
-  AdminFinancePeriodsIndexRoute: AdminFinancePeriodsIndexRoute,
-  AdminFinanceRatesIndexRoute: AdminFinanceRatesIndexRoute,
-}
-
-const AdminFinanceRouteRouteWithChildren =
-  AdminFinanceRouteRoute._addFileChildren(AdminFinanceRouteRouteChildren)
 
 interface AdminAdminAgentRouteRouteChildren {
   AdminAdminAgentIndexRoute: typeof AdminAdminAgentIndexRoute
@@ -918,45 +497,15 @@ const AdminAdminAgentRouteRouteWithChildren =
   AdminAdminAgentRouteRoute._addFileChildren(AdminAdminAgentRouteRouteChildren)
 
 interface AdminRouteRouteChildren {
-  AdminFinanceRouteRoute: typeof AdminFinanceRouteRouteWithChildren
   AdminAdminAgentRouteRoute: typeof AdminAdminAgentRouteRouteWithChildren
-  AdminAskIndexRoute: typeof AdminAskIndexRoute
-  AdminCashierIndexRoute: typeof AdminCashierIndexRoute
-  AdminCrmIndexRoute: typeof AdminCrmIndexRoute
-  AdminDashboardIndexRoute: typeof AdminDashboardIndexRoute
-  AdminGuideIndexRoute: typeof AdminGuideIndexRoute
-  AdminPatientsIndexRoute: typeof AdminPatientsIndexRoute
-  AdminResourcesIndexRoute: typeof AdminResourcesIndexRoute
-  AdminScheduleIndexRoute: typeof AdminScheduleIndexRoute
-  AdminServicesIndexRoute: typeof AdminServicesIndexRoute
-  AdminStudioIndexRoute: typeof AdminStudioIndexRoute
-  AdminTodayIndexRoute: typeof AdminTodayIndexRoute
   AdminAdminAuthIndexRoute: typeof AdminAdminAuthIndexRoute
   AdminDevKitIndexRoute: typeof AdminDevKitIndexRoute
-  AdminOrdersIdIndexRoute: typeof AdminOrdersIdIndexRoute
-  AdminPatientsIdIndexRoute: typeof AdminPatientsIdIndexRoute
-  AdminOrdersIdPrintIndexRoute: typeof AdminOrdersIdPrintIndexRoute
 }
 
 const AdminRouteRouteChildren: AdminRouteRouteChildren = {
-  AdminFinanceRouteRoute: AdminFinanceRouteRouteWithChildren,
   AdminAdminAgentRouteRoute: AdminAdminAgentRouteRouteWithChildren,
-  AdminAskIndexRoute: AdminAskIndexRoute,
-  AdminCashierIndexRoute: AdminCashierIndexRoute,
-  AdminCrmIndexRoute: AdminCrmIndexRoute,
-  AdminDashboardIndexRoute: AdminDashboardIndexRoute,
-  AdminGuideIndexRoute: AdminGuideIndexRoute,
-  AdminPatientsIndexRoute: AdminPatientsIndexRoute,
-  AdminResourcesIndexRoute: AdminResourcesIndexRoute,
-  AdminScheduleIndexRoute: AdminScheduleIndexRoute,
-  AdminServicesIndexRoute: AdminServicesIndexRoute,
-  AdminStudioIndexRoute: AdminStudioIndexRoute,
-  AdminTodayIndexRoute: AdminTodayIndexRoute,
   AdminAdminAuthIndexRoute: AdminAdminAuthIndexRoute,
   AdminDevKitIndexRoute: AdminDevKitIndexRoute,
-  AdminOrdersIdIndexRoute: AdminOrdersIdIndexRoute,
-  AdminPatientsIdIndexRoute: AdminPatientsIdIndexRoute,
-  AdminOrdersIdPrintIndexRoute: AdminOrdersIdPrintIndexRoute,
 }
 
 const AdminRouteRouteWithChildren = AdminRouteRoute._addFileChildren(

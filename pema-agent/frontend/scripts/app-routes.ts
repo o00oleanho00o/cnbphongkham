@@ -34,9 +34,6 @@ export const isDynamicRoute = (route: string): boolean => route.includes("[");
 
 /** Sample values (ids of the mock backend data) for the dynamic segments of the routes. */
 export const SAMPLE_PARAMS: Readonly<Record<string, string>> = {
-  "/patients/[id]": "/patients/00000000-0000-4000-8002-000000000001",
-  "/orders/[id]": "/orders/00000000-0000-4000-8041-000000000001",
-  "/orders/[id]/print": "/orders/00000000-0000-4000-8041-000000000002/print",
   "/admin/agent/plugins/[name]": "/admin/agent/plugins/zalo",
   "/admin/agent/plugins/[name]/[page]": "/admin/agent/plugins/zalo/accounts",
 };
@@ -63,14 +60,8 @@ export const EXTRA_VISUAL_ROUTES: readonly string[] = [
   ),
   // The cashier: the order dialog of a patient (WF3), the review of a draft (WF5) and of an approved order (WF6),
   // the print page of a draft (blocked, WF19) and one sheet of an approved order.
-  "/cashier?patient=00000000-0000-4000-8002-000000000001",
-  "/orders/00000000-0000-4000-8041-000000000002",
-  "/orders/00000000-0000-4000-8041-000000000001/print",
-  "/orders/00000000-0000-4000-8041-000000000002/print?sheet=CONSULTATION",
   // Finance (U6): the entry form open (WG3), a closed month (WG13) and a paid one (WG14), the personal view of the
   // owner (WG6); the other tabs are routes of their own. A doctor's views (WG6, WG7) need `VISUAL_ROLE=doctor`.
-  "/finance/entries?form=open",
   `/finance/entries?month=${monthsAgo(2)}`,
   `/finance/entries?month=${monthsAgo(3)}`,
-  "/finance?scope=own",
 ];

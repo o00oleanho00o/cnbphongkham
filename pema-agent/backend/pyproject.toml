@@ -1,7 +1,7 @@
 [project]
 name = "pema-agent-backend"
 version = "0.1.0"
-description = "Pema Digital Clinic CSKH agent: uv workspace root (not a package)."
+description = "Agent: uv workspace root (not a package)."
 requires-python = ">=3.12"
 dependencies = []
 
@@ -26,7 +26,7 @@ dev = [
 [tool.ruff]
 line-length = 110
 target-version = "py312"
-src = ["packages/contracts/src", "packages/agent-core/src", "packages/secret-cipher/src", "apps/api", "apps/agent", "apps/crm-signer", ".."]
+src = ["packages/agent-core/src", "packages/secret-cipher/src", "apps/agent", "apps/crm-signer", ".."]
 extend-exclude = [".venv"]
 
 [tool.ruff.lint]
@@ -41,7 +41,7 @@ ignore = [
 "**/alembic/env.py" = ["S608"]
 
 [tool.ruff.lint.isort]
-known-first-party = ["pema_contracts", "pema", "agentcore", "agent_app", "secretcipher", "crm_signer"]
+known-first-party = ["agentcore", "agent_app", "secretcipher", "crm_signer"]
 known-third-party = ["alembic"]
 
 # ------------------------------------------------------------- pyright
@@ -53,73 +53,26 @@ exclude = ["**/.venv", "**/__pycache__", "**/node_modules"]
 venvPath = "."
 venv = ".venv"
 extraPaths = [
-    "packages/contracts/src",
     "packages/agent-core/src",
     "packages/secret-cipher/src",
-    "apps/api",
     "apps/agent",
     "apps/crm-signer",
     "..",
 ]
 
 # ------------------------------------------------------- import-linter
-# Architecture rules of PLAN-AI01 section 3. Package-level ownership is in docs/CONTRACTS-AI01.md.
 [tool.importlinter]
-root_packages = ["pema_contracts", "pema", "agentcore", "agent_app", "secretcipher"]
+root_packages = ["agentcore", "agent_app", "secretcipher"]
 include_external_packages = true
 
 [[tool.importlinter.contracts]]
-name = "the secret cipher is a leaf shared by the clinic app and the agent service"
+name = "the secret cipher is a leaf"
 type = "forbidden"
 source_modules = ["secretcipher"]
-forbidden_modules = ["pema", "pema_contracts", "agentcore", "agent_app"]
+forbidden_modules = ["agentcore", "agent_app"]
 
 [[tool.importlinter.contracts]]
-name = "the agent core is general: it never imports the clinic app, its contracts or the agent service"
+name = "the agent core is general: it never imports the agent service"
 type = "forbidden"
 source_modules = ["agentcore"]
-forbidden_modules = ["pema", "pema_contracts", "agent_app"]
-
-[[tool.importlinter.contracts]]
-name = "the agent service does not import the clinic app"
-type = "forbidden"
-source_modules = ["agent_app"]
-forbidden_modules = ["pema"]
-
-[[tool.importlinter.contracts]]
-name = "contracts is a leaf: it never imports the application"
-type = "forbidden"
-source_modules = ["pema_contracts"]
-forbidden_modules = ["pema"]
-
-[[tool.importlinter.contracts]]
-name = "clinic domain and actions never import the api or the composition root"
-type = "forbidden"
-source_modules = ["pema.clinic.domain", "pema.clinic.actions"]
-forbidden_modules = ["pema.api", "pema.composition", "pema.bootstrap"]
-
-[[tool.importlinter.contracts]]
-name = "support packages reach the clinic only through pema.clinic.actions"
-type = "forbidden"
-source_modules = ["pema.retention", "pema.live"]
-forbidden_modules = [
-    "pema.clinic.models",
-    "pema.clinic.domain",
-    "pema.clinic.rbac",
-    "pema.clinic.audit",
-    "pema.clinic.crm_rules",
-]
-allow_indirect_imports = true
-
-[[tool.importlinter.contracts]]
-name = "only the composition layer imports pema.api and pema.bootstrap"
-type = "forbidden"
-source_modules = [
-    "pema.clinic",
-    "pema.config",
-    "pema.core",
-    "pema.live",
-    "pema.retention",
-    "pema.shared",
-]
-forbidden_modules = ["pema.api", "pema.bootstrap"]
+forbidden_modules = ["agent_app"]

@@ -29,7 +29,7 @@ import {
 const PLUGINS_DIR = fileURLToPath(new URL("../../backend/apps/agent/plugins/", import.meta.url));
 /** Plugins with a browser script, as `GET /v1/admin/ui` lists them. */
 const UI_PLUGINS = ["knowledge"] as const;
-const TOKEN_TTL_MS = 2 * MIN;
+const TOKEN_TTL_MS = 12 * HOUR;
 const AGENT_PATHS = ["/v1/", "/ui/", `${ZALO_BASE}/`];
 
 const tokens = new Map<string, number>();
@@ -38,11 +38,33 @@ export function isAgentPath(pathname: string): boolean {
   return AGENT_PATHS.some((prefix) => pathname.startsWith(prefix));
 }
 
-/** A short agent token, like the clinic API's (`POST /auth/agent-token`). */
-export function issueAgentToken(): { token: string; expires_at: string } {
+/** A dashboard login of the plugin `web` (`POST /v1/hooks/web/login`): any email and password sign in here. */
+function issueAgentToken(): { token: string; expires_at: string } {
   const token = `mock-agent-${randomUUID()}`;
   tokens.set(token, Date.now() + TOKEN_TTL_MS);
   return { token, expires_at: isoFromNow(TOKEN_TTL_MS) };
+}
+
+const MOCK_EMAIL = "admin@agent.test";
+
+/** The plugin `web`'s open routes (no token): the frontend server signs in through them. */
+function answerWebHooks(method: string, path: string): Reply | null {
+  if (method === "GET" && path === "/v1/hooks/web/state") return { body: { needs_setup: false } };
+  if (method === "POST" && (path === "/v1/hooks/web/login" || path === "/v1/hooks/web/setup")) {
+    return { body: { ...issueAgentToken(), email: MOCK_EMAIL } };
+  }
+  return null;
+}
+
+/** The plugin `web`'s routes for a signed-in admin. */
+function answerWebAdmin(method: string, path: string): Reply | null {
+  if (method === "GET" && path === "/v1/plugins/web/me") {
+    return { body: { email: MOCK_EMAIL, created_at: isoFromNow(-30 * 24 * HOUR) } };
+  }
+  if (method === "POST" && path === "/v1/plugins/web/password") {
+    return { body: { ...issueAgentToken(), email: MOCK_EMAIL } };
+  }
+  return null;
 }
 
 function tokenValid(authorization: string | undefined): boolean {
@@ -664,9 +686,13 @@ export async function answerAgent(
   res: ServerResponse,
   url: URL,
 ): Promise<Reply> {
+  const open = answerWebHooks(req.method ?? "GET", url.pathname);
+  if (open) return open;
   if (!tokenValid(req.headers.authorization)) {
     return gatewayError(401, "unauthorized", "Thiếu hoặc sai mã truy cập agent.");
   }
+  const web = answerWebAdmin(req.method ?? "GET", url.pathname);
+  if (web) return web;
   const toZalo = url.pathname.startsWith(`${ZALO_BASE}/`);
   const router = toZalo ? routers.zalo : routers.agent;
   const path = toZalo ? url.pathname.slice(ZALO_BASE.length) : url.pathname;

@@ -2,7 +2,7 @@
   "name": "pema-agent-frontend",
   "version": "0.1.0",
   "private": true,
-  "description": "Pema CSKH agent dashboard (Next.js App Router): clinic operations plus AI administration (port of the zalo-agent dashboard).",
+  "description": "Agent dashboard (TanStack Start): the agent's pages and the pages its plugins and connectors ship.",
   "type": "module",
   "scripts": {
     "dev": "vite dev",
@@ -14,7 +14,6 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "typecheck": "tsc --noEmit",
-    "gen:types": "openapi-typescript ../backend/apps/api/openapi.json -o src/lib/api/schema.d.ts",
     "check:types": "tsc --noEmit",
     "shots": "bun scripts/viewport-shots.ts",
     "tokens": "bun scripts/export-tokens.ts",

@@ -21,9 +21,6 @@ const VIEWPORTS = [
 ] as const;
 
 const ROUTES = [
-  "/today",
-  "/patients",
-  "/patients/00000000-0000-4000-8002-000000000001",
   "/admin/agent/sessions",
   "/admin/agent/traces",
   "/admin/agent/plugins",

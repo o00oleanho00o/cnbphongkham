@@ -2,21 +2,21 @@
 # Restore a backup made by backup-postgres.sh.
 #
 #   restore-postgres.sh --verify  <file>            restore into a scratch database, count tables, drop it
-#   restore-postgres.sh --restore <file>            restore into a NEW database (name: PEMA_RESTORE_DB)
-#                                                   and the agent's into <that name>_agent, the photos into
-#                                                   /var/lib/pema/clinic-media.<that name> (api container) and
-#                                                   the Zalo connector's data into /data/restored.<that name> (zalo container;
-#                                                   inside its volume because its root filesystem is read-only)
+#   restore-postgres.sh --restore <file>            restore into a NEW database (name: PEMA_RESTORE_DB, default
+#                                                   pema_agent_restored), the agent's home into /data/restored.<that name>
+#                                                   (agent container) and the Zalo connector's data into
+#                                                   /data/restored.<that name> (zalo container; inside the volumes
+#                                                   because their root filesystems are read-only)
 #
-# It never overwrites the live database or the live photos. To go live after a disaster: stop api/worker, run
-# --restore into `pema_restored`, check it, then `ALTER DATABASE pema RENAME TO pema_old; ALTER DATABASE
-# pema_restored RENAME TO pema;` (nobody connected), the same for `pema_agent` and `pema_restored_agent`, move
-# clinic-media to clinic-media.old and clinic-media.pema_restored to clinic-media, stop `zalo` and do the same
-# with the files of /data/restored.pema_restored (zalo.db into /data), start the services. Run
-# --verify at least once a quarter: a backup that was never restored is a hope, not a backup.
+# It never overwrites the live database or the live files. To go live after a disaster: stop agent and zalo, run
+# --restore, check it, then `ALTER DATABASE pema_agent RENAME TO pema_agent_old; ALTER DATABASE pema_agent_restored
+# RENAME TO pema_agent;` (nobody connected), move the files of /data/restored.<name> into /data in the agent and the
+# zalo containers, start the services. Run --verify at least once a quarter: a backup that was never restored is a
+# hope, not a backup.
 #
 # Decryption: PEMA_RESTORE_AGE_IDENTITY (path of the age private key) for *.age; gpg uses its own keyring.
-# Same PEMA_BACKUP_COMPOSE / PEMA_BACKUP_SERVICE / PEMA_BACKUP_API_SERVICE / PEMA_BACKUP_ZALO_SERVICE variables as backup-postgres.sh.
+# Same PEMA_BACKUP_COMPOSE / PEMA_BACKUP_SERVICE / PEMA_BACKUP_AGENT_SERVICE / PEMA_BACKUP_ZALO_SERVICE variables as
+# backup-postgres.sh.
 set -euo pipefail
 umask 077
 
@@ -26,12 +26,12 @@ MODE="${1:-}"; FILE="${2:-}"
 
 INFRA="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SERVICE="${PEMA_BACKUP_SERVICE:-postgres}"
-API_SERVICE="${PEMA_BACKUP_API_SERVICE:-api}"
+AGENT_SERVICE="${PEMA_BACKUP_AGENT_SERVICE:-agent}"
 ZALO_SERVICE="${PEMA_BACKUP_ZALO_SERVICE:-zalo}"
-MEDIA_DIR=/var/lib/pema/clinic-media
+AGENT_HOME=/data
 ZALO_DATA_DIR=/data
 read -r -a COMPOSE <<<"${PEMA_BACKUP_COMPOSE:-docker compose -f $INFRA/docker-compose.yml --env-file $INFRA/.env}"
-if [ "$MODE" = "--verify" ]; then TARGET="pema_verify_$$"; else TARGET="${PEMA_RESTORE_DB:-pema_restored}"; fi
+if [ "$MODE" = "--verify" ]; then TARGET="agent_verify_$$"; else TARGET="${PEMA_RESTORE_DB:-pema_agent_restored}"; fi
 
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
@@ -41,48 +41,29 @@ case "$FILE" in
   *.gpg) gpg --batch --decrypt "$FILE" | tar -C "$TMP" -xf - ;;
   *)     tar -C "$TMP" -xf "$FILE" ;;
 esac
-[ -f "$TMP/db.dump" ] || { echo "not a Pema backup (db.dump missing)" >&2; exit 2; }
+[ -f "$TMP/agent.dump" ] || { echo "not an agent backup (agent.dump missing)" >&2; exit 2; }
 
 psql_in() { "${COMPOSE[@]}" exec -T "$SERVICE" psql -U postgres -v ON_ERROR_STOP=1 "$@"; }
 
-# Roles first (be_app and the agent's role with their password hashes). "already exists" for postgres is expected.
+# Roles first (the agent's role with its password hash). "already exists" for postgres is expected.
 psql_in -d postgres <"$TMP/globals.sql" >/dev/null 2>&1 || true
 
 psql_in -d postgres -c "CREATE DATABASE \"$TARGET\"" >/dev/null
 # --no-owner is NOT used: owners and GRANTs come back as dumped.
-"${COMPOSE[@]}" exec -T "$SERVICE" pg_restore -U postgres -d "$TARGET" --exit-on-error <"$TMP/db.dump"
+"${COMPOSE[@]}" exec -T "$SERVICE" pg_restore -U postgres -d "$TARGET" --exit-on-error <"$TMP/agent.dump"
+AGENT_TABLES="$(psql_in -d "$TARGET" -At -c "SELECT count(*) FROM information_schema.tables WHERE table_schema = 'agent_rt'")"
+echo "restored the agent into $TARGET: $AGENT_TABLES tables in agent_rt"
 
-TABLES="$(psql_in -d "$TARGET" -At -c "SELECT count(*) FROM information_schema.tables WHERE table_schema IN ('clinic','ctx')")"
-REV="$(psql_in -d "$TARGET" -At -c "SELECT string_agg(version_num, ',') FROM public.alembic_version_pema")"
-echo "restored into $TARGET: $TABLES tables/views in clinic/ctx, alembic revision(s): $REV"
-
-# One installation = one clinic: a restored database must hold exactly one clinic row.
-CLINICS="$(psql_in -d "$TARGET" -At -c "SELECT count(*) FROM clinic.clinic")"
-if [ "$CLINICS" != "1" ]; then
-  echo "restore check failed: clinic.clinic holds $CLINICS row(s), expected exactly 1" >&2
-  exit 2
-fi
-CLINIC_NAME="$(psql_in -d "$TARGET" -At -c "SELECT name FROM clinic.clinic")"
-echo "restored clinic: $CLINIC_NAME (exactly one row)"
-
-if [ -f "$TMP/agent.dump" ]; then
-  psql_in -d postgres -c "CREATE DATABASE \"${TARGET}_agent\"" >/dev/null
-  "${COMPOSE[@]}" exec -T "$SERVICE" pg_restore -U postgres -d "${TARGET}_agent" --exit-on-error <"$TMP/agent.dump"
-  AGENT_TABLES="$(psql_in -d "${TARGET}_agent" -At -c "SELECT count(*) FROM information_schema.tables WHERE table_schema = 'agent_rt'")"
-  echo "restored the agent into ${TARGET}_agent: $AGENT_TABLES tables in agent_rt"
-fi
-
-if [ -f "$TMP/media.tar.gz" ]; then
-  # reading the whole archive checks it; --verify stops there, like the scratch database it drops
-  tar -tzf "$TMP/media.tar.gz" >"$TMP/media.list"
-  PHOTOS="$(grep -vc '/$' "$TMP/media.list" || true)"
+if [ -f "$TMP/agent-home.tar.gz" ]; then
+  tar -tzf "$TMP/agent-home.tar.gz" >"$TMP/home.list"
+  HOME_FILES="$(grep -vc '/$' "$TMP/home.list" || true)"
   if [ "$MODE" = "--restore" ]; then
-    # mkdir without -p fails when the folder exists: a restore never writes over photos already there
-    "${COMPOSE[@]}" exec -T "$API_SERVICE" mkdir "$MEDIA_DIR.$TARGET"
-    "${COMPOSE[@]}" exec -T "$API_SERVICE" tar -C "$MEDIA_DIR.$TARGET" -xzf - <"$TMP/media.tar.gz"
-    echo "restored $PHOTOS photo file(s) into $MEDIA_DIR.$TARGET"
+    # a NEW folder inside the volume (mkdir without -p fails when it exists), never over the live secret key
+    "${COMPOSE[@]}" exec -T "$AGENT_SERVICE" mkdir "$AGENT_HOME/restored.$TARGET"
+    "${COMPOSE[@]}" exec -T "$AGENT_SERVICE" tar -C "$AGENT_HOME/restored.$TARGET" -xzf - <"$TMP/agent-home.tar.gz"
+    echo "restored $HOME_FILES agent home file(s) into $AGENT_HOME/restored.$TARGET (agent container)"
   else
-    echo "photo archive readable: $PHOTOS file(s)"
+    echo "agent home archive readable: $HOME_FILES file(s)"
   fi
 fi
 
@@ -101,6 +82,5 @@ fi
 
 if [ "$MODE" = "--verify" ]; then
   psql_in -d postgres -c "DROP DATABASE \"$TARGET\"" >/dev/null
-  psql_in -d postgres -c "DROP DATABASE IF EXISTS \"${TARGET}_agent\"" >/dev/null
-  echo "verify ok; scratch databases dropped"
+  echo "verify ok; scratch database dropped"
 fi

@@ -1,72 +1,19 @@
-# The Pema clinic stack (backend, frontend) with ONE command, from the repo root:
+# The agent stack with ONE command, from the repo root:
 #
 #   docker compose up --build
 #
-# (`docker compose build` alone only builds the images; `up --build` builds and starts everything.)
+#   http://localhost:3000   the agent dashboard; the first sign-in creates the agent's admin account (plugin web)
+#   (the agent and the Zalo connector publish no port: staff reach them through the dashboard)
 #
-#   http://localhost:3000   Pema staff web (Next.js)           demo accounts: see the `seed` service
-#   http://localhost:8000   Pema API (FastAPI, /healthz)
-#   (the general agent, profile agents/clinic, publishes no port: staff reach it through the web at :3000, menu
-#   Quản trị agent > Điều khiển agent and the Zalo pages)
-#
-# The stack (postgres, redis, migrate, api, frontend, seed) comes from pema-agent/infra: its compose file
-# plus docker-compose.local.yml, with the demo values of infra/.env.local-demo (local use only, ports on 127.0.0.1).
-# Login (owner): admin@gmail.com / Admin@123, set in infra/.env.local-demo (PEMA_SEED_OWNER_EMAIL, PEMA_SEED_PASSWORD;
-# the shell wins; with the password empty a random one is printed once by `docker compose logs seed`).
-# Stop: `docker compose down` (add -v to also drop data; the seed only runs on an empty database).
-# Development: add `-f pema-agent/infra/docker-compose.dev.yml` to run the backend sources of this checkout (the api
-# reloads by itself, the agent with `docker compose restart agent`; no image build for a code change).
-#
-#   http://localhost:4190   design canvas of the app (Pema App)
-#   http://localhost:4191   design canvas of the web (dropdown: Web cũ / Màn mới / Cả hai)
-#   http://localhost:4192   design system (folder listing of design-system/)
-#   http://localhost:4173   old prototype (Clinic Web, Patient Mobile, Finance), reference only
+# The stack (postgres, agent-migrate, agent, egress, zalo, frontend) comes from pema-agent/infra: its compose file plus
+# docker-compose.local.yml, with the demo values of infra/.env.local-demo (local use only, ports on 127.0.0.1).
+# Stop: `docker compose down` (add -v to also drop data).
+# Development: add `-f pema-agent/infra/docker-compose.dev.yml` to run the agent sources of this checkout
+# (`docker compose restart agent` after a change; no image build).
+name: rag-agent
+
 include:
   - path:
       - pema-agent/infra/docker-compose.yml
       - pema-agent/infra/docker-compose.local.yml
     env_file: pema-agent/infra/.env.local-demo
-
-services: {}
-  # Design/reference services, commented out so `up --build` builds only the clinic stack.
-  # To use them: change `services: {}` above to `services:` and uncomment the ones you want.
-  # pema-design-viewer:
-  #   build:
-  #     context: .
-  #     dockerfile: design-viewer/Dockerfile
-  #   container_name: pema-design-viewer
-  #   ports:
-  #     - "4190:80"
-  #   restart: unless-stopped
-
-  # pema-web-design-viewer:
-  #   build:
-  #     context: .
-  #     dockerfile: design-viewer/Dockerfile
-  #     args:
-  #       CANVAS_DIR: "Pema Web redesign canvas"
-  #   container_name: pema-web-design-viewer
-  #   ports:
-  #     - "4191:80"
-  #   restart: unless-stopped
-
-  # Static folder listing of design-system/ (preview/*.html cards render, the .md pages open as text).
-  # pema-design-system:
-  #   image: python:3.12-alpine
-  #   container_name: pema-design-system
-  #   command: ["python", "-m", "http.server", "80", "--bind", "0.0.0.0", "--directory", "/site"]
-  #   volumes:
-  #     - ./design-system:/site:ro
-  #   ports:
-  #     - "4192:80"
-  #   restart: unless-stopped
-
-  # Old prototype of the web (reference for the design packages; the app itself does not use it).
-  # pema-prototype:
-  #   build:
-  #     context: .
-  #     dockerfile: Dockerfile
-  #   container_name: pema-prototype
-  #   ports:
-  #     - "4173:4173"
-  #   restart: unless-stopped

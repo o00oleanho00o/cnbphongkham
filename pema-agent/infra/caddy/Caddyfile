@@ -1,16 +1,10 @@
-# Pema Agent: the one public door (compose profile `proxy`). Reads {$PEMA_PUBLIC_DOMAIN} (the site address) and
+# The one public door (compose profile `proxy`). Reads {$PEMA_PUBLIC_DOMAIN} (the site address) and
 # imports /etc/caddy/mode.caddy (the TLS mode: auto | internal | off, see infra/caddy/modes/ and infra/README.md).
 #
-# What is routed, and what never is:
-#   /api/v1/*   -> api:8000        (except the agent gateway, see below)
-#   /healthz    -> api:8000
-#   everything else -> frontend:3000 (the TanStack Start dashboard)
-#   Postgres, Redis and the Zalo bridge are NOT routed and cannot be: Caddy is attached only to the `edge` network,
-#   where only api and frontend live. /docs, /openapi.json and every other API path fall to the frontend (404).
-#
-# Caddy is the only container that publishes 80/443. It overwrites X-Forwarded-For with the address it sees (no
-# trusted_proxies is configured: nothing sits in front of it), and the API believes that header only from this
-# container's fixed address (PEMA_TRUSTED_PROXIES, see client_ip.py), so a client cannot forge its rate-limit key.
+# Everything goes to the dashboard (frontend:3000): its server answers the sign-in (/api/v1/auth, /api/v1/me), forwards
+# /agent/... to the agent and /connectors/<name>/... to the connectors. Postgres, the agent and the connectors are NOT
+# routed and cannot be: Caddy is attached only to the `edge` network, where only the frontend lives. Caddy is the only
+# container that publishes 80/443.
 {
 	# No admin API: nothing reconfigures this server at runtime, and port 2019 is one less thing to protect.
 	admin off
@@ -26,24 +20,10 @@
 
 import mode.caddy
 
-# Reverse proxy to the API. A short retry window hides a container restart (deploy) instead of answering 502
-# at once. flush_interval -1: stream the answer as the API writes it (no buffering of long responses).
-(to_api) {
-	reverse_proxy api:8000 {
-		lb_try_duration 15s
-		lb_try_interval 250ms
-		flush_interval -1
-	}
-}
-
 {$PEMA_PUBLIC_DOMAIN:localhost} {
 	import pema_tls
 
-	# Compression never touches the live-update stream: a gzip/zstd writer holds bytes back until a block is
-	# full, and the browser would see events late or in a lump. (/api/v1/events is a server-sent events stream:
-	# no body ceiling, no response timeout in this file, `flush_interval -1` in `to_api` pushes every write.)
-	@compressible not path /api/v1/events
-	encode @compressible zstd gzip
+	encode zstd gzip
 
 	header {
 		# hide what runs behind (Caddy, TanStack Start)
@@ -75,36 +55,9 @@ import mode.caddy
 		}
 	}
 
-	# Only crm-signer calls the agent gateway, over the compose network (L2); it is never reachable from outside.
-	handle /api/v1/agent-gateway/* {
-		respond "Not found" 404
-	}
-
-	# The photo upload sends raw bytes that the API cuts at MEDIA_MAX_BYTES (8 MiB): this ceiling only needs to be
-	# above it. Every other request body is small JSON and gets the API's own 4 MiB (BodyLimitMiddleware,
-	# MAX_BODY_BYTES); Caddy refuses a larger body with 413 before the API reads it. The photo handle is nested:
-	# at the top level a named matcher sorts after `handle /api/v1/*` and would never match.
-	@photo {
-		method PUT
-		path_regexp ^/api/v1/media/[0-9a-f-]{36}/content$
-	}
-	handle /api/v1/* {
-		handle @photo {
-			request_body {
-				max_size 9MiB
-			}
-			import to_api
-		}
-		handle {
-			request_body {
-				max_size 4MiB
-			}
-			import to_api
-		}
-	}
-
-	handle /healthz {
-		import to_api
+	# The largest body is a document uploaded to the knowledge store (plugin knowledge: max_body_kb 12288).
+	request_body {
+		max_size 13MiB
 	}
 
 	handle {

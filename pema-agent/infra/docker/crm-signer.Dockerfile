@@ -21,10 +21,8 @@ WORKDIR /app/backend
 # Layer 1: third-party dependencies only. Every workspace member's manifest is copied so `--locked` sees the
 # workspace the lock was made for (see api.Dockerfile).
 COPY backend/pyproject.toml backend/uv.lock backend/.python-version ./
-COPY backend/packages/contracts/pyproject.toml packages/contracts/pyproject.toml
 COPY backend/packages/agent-core/pyproject.toml packages/agent-core/pyproject.toml
 COPY backend/packages/secret-cipher/pyproject.toml packages/secret-cipher/pyproject.toml
-COPY backend/apps/api/pyproject.toml apps/api/pyproject.toml
 COPY backend/apps/agent/pyproject.toml apps/agent/pyproject.toml
 COPY backend/apps/crm-signer/pyproject.toml apps/crm-signer/pyproject.toml
 RUN --mount=type=cache,target=/root/.cache/uv \

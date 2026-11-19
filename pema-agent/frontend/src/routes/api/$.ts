@@ -1,11 +1,9 @@
-// Pema addition: runtime proxy of `/api/v1/**` to the API (replaces the build-time `rewrites()` of the Next.js config).
-// The logic and its reasons live in `@/lib/server/api-proxy`; this file only binds the HTTP methods.
+// `/api/v1/**`: the sign-in routes the screens call, answered here with the agent's own logins (`agent-auth.ts`).
 import { createFileRoute } from "@tanstack/react-router";
 
-import { forwardToApi } from "@/lib/server/api-proxy";
+import { answerAuth } from "@/lib/server/agent-auth";
 
-// `forwardToApi`'s second parameter is not the handler context, so wrap it.
-const handle = ({ request }: { request: Request }) => forwardToApi(request);
+const handle = ({ request }: { request: Request }) => answerAuth(request);
 
 export const Route = createFileRoute("/api/$")({
   server: {

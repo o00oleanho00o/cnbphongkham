@@ -4,8 +4,8 @@ Two things, kept apart:
 
 * the connector key (docs/CONNECTOR-PROTOCOL.md, section 1): ``sign`` for what this service sends to the agent,
   ``verify`` for what the agent sends here;
-* the staff SSO token of the clinic web (the admin routes and the UI): a JWT of the CRM checked with its public
-  keys. Modelled on backend/apps/agent/plugin_kit/jwks.py (``KeySet``) and backend/apps/agent/plugins/sso
+* the staff token of the web in front (the admin routes and the UI): a JWT of the CRM checked with its public
+  keys (``StaffTokens``), or, with no CRM, a dashboard login of the agent checked by the agent (``AgentLogins``). Modelled on backend/apps/agent/plugin_kit/jwks.py (``KeySet``) and backend/apps/agent/plugins/sso
   (the checks); copied, not imported. Only asymmetric signatures; ``scope`` must hold ``admin``; a token meant
   for another audience (the CRM's events, ``pema-agent-events``) never opens anything here.
 """
@@ -198,7 +198,55 @@ class StaffTokens:
         return subject, isinstance(scope, str) and ADMIN_SCOPE in scope.split()
 
 
-def require_admin(tokens: StaffTokens) -> Callable[[Request], Any]:
+class AgentLogins:
+    """Checks a dashboard login of the agent itself (plugin ``web``), for a stack without a CRM: the token is shown
+    to the agent's ``/v1/plugins/web/me``, which answers 200 only for an admin login. A good answer is kept for a
+    short while (by the token's hash) so a page's calls cost one check; a refused token is never kept."""
+
+    def __init__(
+        self,
+        agent_url: str,
+        *,
+        keep_s: float = 30.0,
+        clock: Callable[[], float] = time.monotonic,
+        transport: httpx.AsyncBaseTransport | None = None,
+    ) -> None:
+        self._url = f"{agent_url.rstrip('/')}/v1/plugins/web/me"
+        self._keep_s = keep_s
+        self._clock = clock
+        self._transport = transport
+        self._good: dict[str, tuple[str, float]] = {}
+
+    @property
+    def configured(self) -> bool:
+        return True
+
+    async def check(self, token: str) -> tuple[str, bool] | None:
+        digest = hashlib.sha256(token.encode()).hexdigest()
+        kept = self._good.get(digest)
+        if kept is not None and self._clock() - kept[1] < self._keep_s:
+            return kept[0], True
+        try:
+            async with httpx.AsyncClient(timeout=FETCH_TIMEOUT_S, transport=self._transport) as http:
+                answer = await http.get(self._url, headers={"Authorization": f"Bearer {token}"})
+        except httpx.HTTPError as err:
+            raise KeysUnavailableError(f"the agent at {self._url} cannot be reached") from err
+        if answer.status_code in (401, 403, 404):
+            self._good.pop(digest, None)
+            return None
+        if answer.status_code != 200:
+            raise KeysUnavailableError(f"the agent at {self._url} answered {answer.status_code}")
+        body: object = answer.json()
+        email = body.get("email") if isinstance(body, dict) else None
+        if not isinstance(email, str) or not email:
+            return None
+        if len(self._good) > 500:
+            self._good.clear()
+        self._good[digest] = (email, self._clock())
+        return email, True
+
+
+def require_admin(tokens: StaffTokens | AgentLogins) -> Callable[[Request], Any]:
     """A FastAPI dependency: 401 without a good admin token, 503 when the CRM's keys cannot be read or are not
     configured."""
 

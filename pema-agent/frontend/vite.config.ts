@@ -15,8 +15,8 @@ const { version } = JSON.parse(
 
 /**
  * The browser only ever talks to this origin. `/api/v1/**`, `/agent/**` and `/healthz` are server routes
- * (`src/routes/{api,agent}/$.ts`, `src/routes/healthz.ts`) that read `PEMA_API_INTERNAL_URL` (or `PEMA_API_URL`)
- * on EVERY request, so one image runs against any API address, set when the container starts.
+ * (`src/routes/{api,agent}/$.ts`, `src/routes/healthz.ts`) that read `PEMA_AGENT_INTERNAL_URL` on EVERY request, so
+ * one image runs against any agent address, set when the container starts. `/api/v1/**` is the sign-in (agent-auth.ts).
  * `bun run build` writes the production server to `.output/` (Nitro, preset bun): `bun .output/server/index.mjs`.
  */
 export default defineConfig({

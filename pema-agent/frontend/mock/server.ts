@@ -1,55 +1,15 @@
 // Entry of the mock backend: `bun run mock` (port 4010, override with MOCK_PORT) and
-// `PEMA_API_URL=http://127.0.0.1:4010 bun run dev`, or `bun run dev:mock` for both.
+// `PEMA_AGENT_INTERNAL_URL=http://127.0.0.1:4010 bun run dev`, or `bun run dev:mock` for both.
 //
-// Handlers live in mock/handlers/*.ts, one file per area, each exporting `register(router)`. They are
-// loaded by directory listing, so adding an area never touches this file.
-import { readdirSync } from "node:fs";
-import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
-import { fileURLToPath } from "node:url";
+// It plays the agent service (mock/agent.ts, with the sign-in of its plugin `web`) and the Zalo connector
+// (mock/connector-zalo.ts). The web's own server answers `/api/v1` (sign-in) and calls this as the agent.
+import { createServer } from "node:http";
 
 import { answerAgent, buildAgentRouter, isAgentPath } from "./agent";
 import { buildZaloConnectorRouter } from "./connector-zalo";
-import { register as registerAuth, sessionFromRequest } from "./auth";
-import { announceChange } from "./live-bus";
-import { HttpError, Router, errorBody, parseJson, readBody, type Ctx, type Reply } from "./core";
-
-export async function buildRouter(): Promise<Router> {
-  const router = new Router();
-  registerAuth(router);
-  const dir = fileURLToPath(new URL("./handlers/", import.meta.url));
-  for (const file of readdirSync(dir).filter((f) => f.endsWith(".ts") && !f.endsWith(".test.ts"))) {
-    const mod = (await import(/* @vite-ignore */ `./handlers/${file}`)) as {
-      register?: (r: Router) => void;
-    };
-    mod.register?.(router);
-  }
-  return router;
-}
-
-function openEventStream(
-  req: IncomingMessage,
-  res: ServerResponse,
-  start: NonNullable<Reply["sse"]>,
-): void {
-  res.writeHead(200, {
-    "content-type": "text/event-stream; charset=utf-8",
-    "cache-control": "no-cache, no-transform",
-    connection: "keep-alive",
-    "x-accel-buffering": "no",
-  });
-  const write = (data: string | null) => {
-    res.write(data === null ? ": ping\n\n" : `data: ${data}\n\n`);
-  };
-  write(null);
-  const stop = start(write);
-  req.on("close", () => {
-    stop();
-    res.end();
-  });
-}
+import { HttpError, errorBody, type Reply } from "./core";
 
 export async function startMockServer(port: number) {
-  const router = await buildRouter();
   const agentRouters = { agent: buildAgentRouter(), zalo: buildZaloConnectorRouter() };
 
   const server = createServer((req, res) => {
@@ -74,48 +34,15 @@ export async function startMockServer(port: number) {
       };
 
       try {
-        if (isAgentPath(url.pathname)) {
-          send(await answerAgent(agentRouters, req, res, url));
+        if (url.pathname === "/health") {
+          send({ body: { ok: true } });
           return;
         }
-        const found = router.match(req.method ?? "GET", url.pathname);
-        if (!found) {
+        if (!isAgentPath(url.pathname)) {
           send({ status: 404, body: errorBody("not_found", "Không tìm thấy đường dẫn này.") });
           return;
         }
-        const raw = await readBody(req);
-        const contentType = req.headers["content-type"] ?? "";
-        const ctx: Ctx = {
-          req,
-          res,
-          params: found.params,
-          query: url.searchParams,
-          session: sessionFromRequest(req.headers.cookie),
-          body: contentType.includes("application/json") ? parseJson(raw) : {},
-          raw,
-        };
-        const needs = found.route.permission;
-        if (needs) {
-          if (!ctx.session) {
-            send({ status: 401, body: errorBody("unauthenticated", "Bạn chưa đăng nhập.") });
-            return;
-          }
-          if (!ctx.session.permissions.includes(needs)) {
-            send({
-              status: 403,
-              body: errorBody("forbidden", "Vai trò của bạn không được phép thực hiện việc này."),
-            });
-            return;
-          }
-        }
-        const reply = await found.route.handler(ctx);
-        if (reply.sse) {
-          openEventStream(req, res, reply.sse);
-          return;
-        }
-        send(reply);
-        if ((reply.status ?? 200) < 300)
-          announceChange(req.method ?? "GET", found.route.template, found.params);
+        send(await answerAgent(agentRouters, req, res, url));
       } catch (e) {
         if (e instanceof HttpError) {
           send({ status: e.status, body: errorBody(e.code, e.message) });
