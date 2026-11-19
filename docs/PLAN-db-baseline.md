@@ -10,7 +10,7 @@ Agent nói chuyện với người ngoài (Zalo, web) nên **phải coi như có
 
 | # | Luật | Cách giữ (không dựa vào lời dặn model) |
 |---|---|---|
-| L1 | Agent không đọc ghi được DB của CRM | **Hai database riêng** trên cùng Postgres: `contete` (API) và `contete_agent` (agent). Role `agent_rt_app` chỉ có CONNECT vào `contete_agent`; Postgres không truy vấn chéo database (không cài `dblink`, `postgres_fdw`) |
+| L1 | Agent không đọc ghi được DB của CRM | **Hai database riêng** trên cùng Postgres: `contete` (API) và `pema_agent` (agent). Role `agent_rt_app` chỉ có CONNECT vào `pema_agent`; Postgres không truy vấn chéo database (không cài `dblink`, `postgres_fdw`) |
 | L2 | Agent không gọi được API của CRM | Agent không giữ khóa, mật khẩu hay tài khoản dịch vụ nào của API. API từ chối mọi token không phải phiên nhân viên của chính nó, kể cả token SSO có `aud = contete-agent` mà nhân viên mang sang agent |
 | L3 | Không có "cửa sổ cho agent" bên CRM | Bỏ schema `clinic_agent` (view và hàm làm riêng cho agent cũ), bỏ role `agent_worker`. Hàm nào API còn dùng thì chuyển về schema `clinic` |
 | L4 | Dữ liệu phòng khám vào agent chỉ theo một đường | Nhân viên tải tài liệu đã duyệt lên kho tri thức của agent. Không tool nào của agent tra bệnh nhân, lịch hẹn, đơn, tài chính |
@@ -22,7 +22,7 @@ Agent nói chuyện với người ngoài (Zalo, web) nên **phải coi như có
 **Test giữ luật** (chạy trong bộ test, hỏng là đỏ):
 
 - T1 (agent, `db`): `agent_rt_app` không CONNECT được database `contete`; không có USAGE trên schema nào ngoài `agent_rt` và `public`.
-- T2 (api, `db`): `be_app` không CONNECT được `contete_agent`; database không có extension `dblink` hay `postgres_fdw`.
+- T2 (api, `db`): `be_app` không CONNECT được `pema_agent`; database không có extension `dblink` hay `postgres_fdw`.
 - T3 (api): token có `aud = contete-agent` bị mọi route của API từ chối.
 - T4 (agent): profile `clinic` không có plugin nào cấu hình URL của API ngoài `sso.jwks_url`.
 
@@ -57,7 +57,7 @@ Agent nói chuyện với người ngoài (Zalo, web) nên **phải coi như có
 | D4 | Dữ liệu trong migration | Giữ dòng `clinic` (từ biến môi trường); `laser-co2` chuyển sang seed demo |
 | D5 | `clinic_agent`, `agent_worker` | Bỏ (L3) |
 | D6 | Test kiểm lịch sử migration | Xóa; kiểm schema cuối thì chuyển thành test schema |
-| D7 | Hai database riêng `contete` / `contete_agent` | **Có** (L1). Rẻ nhất là làm ngay lúc dựng lại DB |
+| D7 | Hai database riêng `contete` / `pema_agent` | **Có** (L1). Rẻ nhất là làm ngay lúc dựng lại DB |
 | D8 | Hộp thư, Theo dõi, mẫu tin, nhắn tin vào app | **Bỏ hết** (chủ hệ thống chốt 2026-10-16): không kênh nào đổ tin vào CRM; kết quả "chuyển bác sĩ" của CRM chỉ còn ghi ở nhật ký liên hệ; luật CRM chỉ tạo việc cho nhân viên; app bệnh nhân bỏ loại "Nhắn tin", giữ "aftercare". Danh sách ở mục 5a. FE dọn ở đợt sau |
 | D9 | Design (canvas, `design-specs/web`) | **Không động tới** trong kế hoạch này và đợt dọn FE |
 
@@ -91,8 +91,8 @@ Agent nói chuyện với người ngoài (Zalo, web) nên **phải coi như có
 **D. Baseline agent và database riêng**
 
 10. `0001_baseline` cho `agent_rt`; mỗi plugin một file `0001_*.sql`; skill mẫu thành `0002_seed_dev_skill.sql`; sửa test.
-11. ⏸ D7: compose tạo database `contete_agent`, `agent-migrate` và `agent` trỏ sang đó; `db_roles.py` chỉ cấp CONNECT trên
-    `contete_agent`; `bootstrap-roles.sh` thôi nhắc `agent_worker`; backup cả hai database. Viết test T1, T2. So sánh `pg_dump -s`.
+11. ⏸ D7: compose tạo database `pema_agent`, `agent-migrate` và `agent` trỏ sang đó; `db_roles.py` chỉ cấp CONNECT trên
+    `pema_agent`; `bootstrap-roles.sh` thôi nhắc `agent_worker`; backup cả hai database. Viết test T1, T2. So sánh `pg_dump -s`.
     Cả bộ test agent và test `db` trên DB tạm.
 
 **E. Dựng lại**

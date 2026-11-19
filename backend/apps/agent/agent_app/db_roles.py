@@ -3,7 +3,7 @@ nothing else (no DDL, no changing or deleting trace rows). Run ``agent db bootst
 (``AGENT_MIGRATION_DATABASE_URL``) before or after the migrations; it is safe to run again (it also resets the
 password). The service then connects as ``agent_rt_app`` through ``AGENT_DATABASE_URL``.
 
-The agent has a database of its own (``contete_agent`` in the compose stack), never the clinic's: bootstrap-role
+The agent has a database of its own (``pema_agent`` in the compose stack), never the clinic's: bootstrap-role
 creates it when it is missing, and only ``agent_rt_app`` (and superusers) may connect to it. The role gets
 CONNECT on that database alone (.claude/rules/agent-boundary.md, L1).
 """

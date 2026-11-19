@@ -478,7 +478,7 @@ tin chăm sóc lại tính chung vào trần mỗi người mỗi ngày với nh
 gateway (`PATCH` settings, `/v1/admin/follow-ups`, task nền `follow-ups`), `runtime.py`, `cli.py` (`--follow-up`,
 `--follow-up-channel`); `agent_follow_up` khỏi `db_roles.py`.
 
-### 7.5 Migration `0007_follow_up_plugin.{sql,py}` (`contete_agent`)
+### 7.5 Migration `0007_follow_up_plugin.{sql,py}` (`pema_agent`)
 
 1. Hẹn còn sống (`next_at` có, chưa `stopped`) → một hàng `agent_case` (`plugin='follow_up'`, `kind='follow_up'`,
    nút `check`, `waiting` đồng hồ tới `next_at`, state từ các cột cũ, `deadline = now() + 14 ngày`). Hàng khác bỏ:

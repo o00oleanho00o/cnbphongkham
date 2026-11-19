@@ -8,7 +8,7 @@ Contete Agent là sản phẩm riêng, không có CRM (tách khỏi dự án ph�
 `crm-signer` đã bỏ hẳn ngày 2026-11-19). Số luật giữ nguyên như trước để các ghi chú trong code còn khớp; L2 và L3 là luật
 của phần nối CRM nên không còn.
 
-- **L1. Agent chỉ có database của nó.** Agent dùng database riêng `contete_agent`; role `agent_rt_app` không có CONNECT vào
+- **L1. Agent chỉ có database của nó.** Agent dùng database riêng `pema_agent`; role `agent_rt_app` không có CONNECT vào
   database nào khác và không có USAGE trên schema nào ngoài `agent_rt`, `public`. Không cài `dblink`, `postgres_fdw`.
 - **L2, L3.** (Bỏ cùng CRM.) Tiến trình agent không giữ khóa, mật khẩu hay tài khoản của hệ thống nào khác.
 - **L4. Dữ liệu vào agent theo một đường:** tài liệu nhân viên đã duyệt trong kho tri thức. Người đang chat là kênh và ID

@@ -1,4 +1,4 @@
-# Agent stack: postgres (database contete_agent), agent-migrate (one-shot), agent, egress, zalo (the Zalo connector) and the
+# Agent stack: postgres (database pema_agent), agent-migrate (one-shot), agent, egress, zalo (the Zalo connector) and the
 # dashboard (frontend). Staff sign in on the dashboard with the agent's own account (plugin web, created on the first
 # sign-in); its server keeps that login in an httpOnly cookie and calls the agent (/agent/...) and the connectors
 # (/connectors/<name>/...) with it.
@@ -34,7 +34,7 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: ${CONTETE_PG_SUPERUSER_PASSWORD:?set it in infra/.env (see .env.example)}
-      POSTGRES_DB: contete_agent
+      POSTGRES_DB: pema_agent
       # data checksums catch silent disk corruption (relevant on a single clinic PC); scram for every TCP login.
       # The local socket inside the container stays `trust` (image default): whoever can `docker exec` is
       # already root on the host, and the backup/restore scripts rely on it.
@@ -55,7 +55,7 @@ services:
       - pg-data:/var/lib/postgresql/data
     shm_size: 256mb
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d contete_agent"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d pema_agent"]
       interval: 5s
       timeout: 3s
       retries: 20
@@ -71,7 +71,7 @@ services:
         condition: service_healthy
     environment:
       # the agent's own database (bootstrap-role creates it when missing)
-      AGENT_MIGRATION_DATABASE_URL: postgresql+psycopg://postgres:${CONTETE_PG_SUPERUSER_PASSWORD:?set it in infra/.env}@postgres:5432/contete_agent
+      AGENT_MIGRATION_DATABASE_URL: postgresql+psycopg://postgres:${CONTETE_PG_SUPERUSER_PASSWORD:?set it in infra/.env}@postgres:5432/pema_agent
       AGENT_RT_APP_PASSWORD: ${CONTETE_AGENT_RT_APP_PASSWORD:-}
     # then the tables of plugins that keep their own ([migrations] in plugin.toml)
     command: ["sh", "-c", "agent db bootstrap-role && alembic -c alembic.ini upgrade head && agent db migrate-plugins"]
@@ -88,7 +88,7 @@ services:
       egress:
         condition: service_started
     environment:
-      AGENT_DATABASE_URL: postgresql+psycopg://agent_rt_app:${CONTETE_AGENT_RT_APP_PASSWORD:-}@postgres:5432/contete_agent
+      AGENT_DATABASE_URL: postgresql+psycopg://agent_rt_app:${CONTETE_AGENT_RT_APP_PASSWORD:-}@postgres:5432/pema_agent
       # The model, embedding, TypeSafe and Zalo Bot clients go out through egress, which logs every destination
       # (phase 1: nothing blocked). web_search/web_fetch (netguard) still go out directly.
       HTTPS_PROXY: http://egress:3128

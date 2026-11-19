@@ -1,6 +1,6 @@
 """Alembic environment for schema ``agent_rt``: what the general agent writes itself (notes, its own skills).
 
-Separate from the clinic migrations in ``apps/api``: the agent has a database of its own (``contete_agent``) and
+Separate from the clinic migrations in ``apps/api``: the agent has a database of its own (``pema_agent``) and
 never reaches the clinic's (.claude/rules/agent-boundary.md). Runs as an owner role
 (``AGENT_MIGRATION_DATABASE_URL``).
 """
@@ -12,7 +12,7 @@ import os
 from alembic import context
 from sqlalchemy import create_engine, pool
 
-DEFAULT_URL = "postgresql+psycopg://postgres@localhost:5432/contete_agent"
+DEFAULT_URL = "postgresql+psycopg://postgres@localhost:5432/pema_agent"
 VERSION_TABLE = "alembic_version_agent_rt"
 
 config = context.config

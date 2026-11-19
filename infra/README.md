@@ -1,6 +1,6 @@
 # infra
 
-The Contete Agent stack on one machine: Postgres (database `contete_agent`), the agent, its way out to the internet
+The Contete Agent stack on one machine: Postgres (database `pema_agent`), the agent, its way out to the internet
 (`egress`), the Zalo connector and the dashboard. Compose files, Caddy, backup and restore scripts live here.
 
 ## Quick start (from the repo root)
@@ -25,7 +25,7 @@ dashboard and stored encrypted in the database; it is never in `.env`.
 
 | Service | Profile | Notes |
 |---|---|---|
-| `postgres` | default | `pgvector/pgvector:pg17`, scram, data checksums, port bound to `CONTETE_PG_BIND` (default 127.0.0.1); the only database is `contete_agent` |
+| `postgres` | default | `pgvector/pgvector:pg17`, scram, data checksums, port bound to `CONTETE_PG_BIND` (default 127.0.0.1); the only database is `pema_agent` |
 | `agent-migrate` | default | one-shot: `agent db bootstrap-role` (role `agent_rt_app`, CONNECT for it alone), the agent's Alembic, then `agent db migrate-plugins` |
 | `agent` | default | `agent serve --profile agents/rag`; internal only (`expose` 8088); read-only container, `cap_drop ALL`, writes only `/data` (volume `agent-home`, holds its secret key) and `/tmp` |
 | `egress` | default | Squid (`infra/egress/squid.conf`): the model, embedding and TypeSafe clients of the agent and everything the `zalo` connector sends to Zalo go out through it. Phase 1 logs every destination and blocks none |
@@ -64,12 +64,12 @@ this Caddyfile does not have; leave it empty for long polling.
 
 ## Database, roles and migrations
 
-* One database, `contete_agent` (schema `agent_rt`), and one runtime role, `agent_rt_app`, with CONNECT on that
+* One database, `pema_agent` (schema `agent_rt`), and one runtime role, `agent_rt_app`, with CONNECT on that
   database alone; no `dblink`, no `postgres_fdw` (.claude/rules/agent-boundary.md, L1).
 * Tables are migrations; infra never creates tables. The agent has one Alembic baseline (`backend/apps/agent/alembic`)
   and each plugin that keeps tables ships its own SQL files (`agent db migrate-plugins`).
 * The owner role is the Postgres superuser in compose. For a managed database give the owner URL a role that may
-  create the database `contete_agent` and `CREATE EXTENSION vector` in it.
+  create the database `pema_agent` and `CREATE EXTENSION vector` in it.
 
 ## Network and secrets
 
@@ -92,7 +92,7 @@ this Caddyfile does not have; leave it empty for long polling.
 
 ## Backups
 
-`scripts/backup-postgres.sh`: a verified dump of `contete_agent` plus the globals, the agent's home `/data` (its secret
+`scripts/backup-postgres.sh`: a verified dump of `pema_agent` plus the globals, the agent's home `/data` (its secret
 key) and the Zalo connector's `/data`, encrypted with age or gpg, with retention and an off-site hook. Plaintext is
 refused unless `CONTETE_BACKUP_ALLOW_PLAINTEXT=true`. `scripts/restore-postgres.sh --verify|--restore` never overwrites
 the live database or volumes. Nightly timer: `ubuntu/systemd/contete-backup.{service,timer}`.

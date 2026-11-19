@@ -279,7 +279,7 @@ bridge), nối trong `cli.py` (`send_through`). Không thêm bảng hay migratio
 | 5 (**đã làm phần repo**) | Bật `web_search`, `web_fetch` trên trang Công cụ (nếu chủ muốn) và chăm sóc lại trên trang Cài đặt theo ý chủ; sửa `AGENTS.md`; cập nhật `GUIDE-agent-harness.md`, bản ghi `project-agent-tool-rule` | chạy thử profile |
 
 Sau mỗi bước chạy lại T1, T3, T4, T5 (`.claude/rules/agent-boundary.md`). Bước 0a, 3–4 đụng migration nên không chạm cơ sở demo
-`contete` hay `contete_agent` đang chạy.
+`contete` hay `pema_agent` đang chạy.
 
 ## 7. Không làm (lần này)
 

@@ -346,7 +346,7 @@ sudo ufw enable && sudo ufw status verbose
 4. **Cloud VN:** security group/firewall của nhà cung cấp chỉ cho phép 22 (từ IP quản trị), UDP 41641 nếu dùng
    Tailscale trực tiếp, và 443 nếu có reverse proxy cho webhook; không có luật cho 5432, 6379, 11434, 8000, 3000.
 5. **Redis có mật khẩu** (`CONTETE_REDIS_PASSWORD`), **Postgres dùng scram-sha-256** và `be_app`/`agent_rt_app` không
-   phải superuser. Hai database riêng: `contete` (CRM, role `be_app`) và `contete_agent` (agent, role `agent_rt_app`); mỗi
+   phải superuser. Hai database riêng: `contete` (CRM, role `be_app`) và `pema_agent` (agent, role `agent_rt_app`); mỗi
    role chỉ CONNECT được database của mình, agent không bao giờ đọc được CRM (`.claude/rules/agent-boundary.md`).
    Không còn RLS (CSDL chỉ có một phòng khám): `be_app` đọc mọi dòng của bảng nó có quyền, nên cách ly nằm ở hạ tầng
    (CSDL, Redis, khóa riêng cho từng phòng khám) và ở quyền của hai role.
@@ -429,7 +429,7 @@ Các unit này **chưa được chạy thử** trong gói F.
 
 ## 10. Sao lưu Postgres
 
-Dữ liệu cần giữ: database `contete` (CRM) và `contete_agent` (agent, kho tri thức), tệp `infra/.env`, volume `agent-home`
+Dữ liệu cần giữ: database `contete` (CRM) và `pema_agent` (agent, kho tri thức), tệp `infra/.env`, volume `agent-home`
 (khóa bí mật của agent; mất nó thì API key model trong DB không đọc lại được), volume `zalo-data` của connector Zalo
 (`zalo.db`: tài khoản, token niêm phong, hàng đợi tin đến; mất `CONTETE_ZALO_SECRET_KEY` thì phải nhập lại token), và ảnh lâm sàng (tab Ảnh
 trước / sau) nằm ở `/var/lib/contete/clinic-media` trong volume `contete-data` của container `api`. Mô hình Ollama tải lại được,
@@ -449,7 +449,7 @@ sudo systemctl start contete-backup.service && journalctl -u contete-backup.serv
 ```
 
 `backup-postgres.sh` làm: `pg_dump -Fc` + `pg_dumpall --globals-only` (role và hash mật khẩu), kiểm tra bằng
-`pg_restore --list` và sự có mặt của các schema `clinic`, `ctx` (và `agent_rt` trong `contete_agent`), nén thư mục ảnh
+`pg_restore --list` và sự có mặt của các schema `clinic`, `ctx` (và `agent_rt` trong `pema_agent`), nén thư mục ảnh
 `/var/lib/contete/clinic-media` từ container `api` (`media.tar.gz`; `api` phải đang chạy, không thì bản sao lưu báo lỗi), nén thư mục `/data` của connector Zalo từ container `zalo`
 (`zalo-data.tar.gz`; tên dịch vụ đặt bằng `CONTETE_BACKUP_ZALO_SERVICE`, mặc định `zalo`; chưa chạy thì bỏ qua và ghi một dòng, không báo lỗi), gói tất cả
 vào một tệp (ảnh, dữ liệu Zalo và các dòng trỏ tới chúng cùng một thời điểm), **mã hóa bằng

@@ -3,14 +3,14 @@
 #
 #   restore-postgres.sh --verify  <file>            restore into a scratch database, count tables, drop it
 #   restore-postgres.sh --restore <file>            restore into a NEW database (name: CONTETE_RESTORE_DB, default
-#                                                   contete_agent_restored), the agent's home into /data/restored.<that name>
+#                                                   pema_agent_restored), the agent's home into /data/restored.<that name>
 #                                                   (agent container) and the Zalo connector's data into
 #                                                   /data/restored.<that name> (zalo container; inside the volumes
 #                                                   because their root filesystems are read-only)
 #
 # It never overwrites the live database or the live files. To go live after a disaster: stop agent and zalo, run
-# --restore, check it, then `ALTER DATABASE contete_agent RENAME TO contete_agent_old; ALTER DATABASE contete_agent_restored
-# RENAME TO contete_agent;` (nobody connected), move the files of /data/restored.<name> into /data in the agent and the
+# --restore, check it, then `ALTER DATABASE pema_agent RENAME TO pema_agent_old; ALTER DATABASE pema_agent_restored
+# RENAME TO pema_agent;` (nobody connected), move the files of /data/restored.<name> into /data in the agent and the
 # zalo containers, start the services. Run --verify at least once a quarter: a backup that was never restored is a
 # hope, not a backup.
 #
@@ -31,7 +31,7 @@ ZALO_SERVICE="${CONTETE_BACKUP_ZALO_SERVICE:-zalo}"
 AGENT_HOME=/data
 ZALO_DATA_DIR=/data
 read -r -a COMPOSE <<<"${CONTETE_BACKUP_COMPOSE:-docker compose -f $INFRA/docker-compose.yml --env-file $INFRA/.env}"
-if [ "$MODE" = "--verify" ]; then TARGET="agent_verify_$$"; else TARGET="${CONTETE_RESTORE_DB:-contete_agent_restored}"; fi
+if [ "$MODE" = "--verify" ]; then TARGET="agent_verify_$$"; else TARGET="${CONTETE_RESTORE_DB:-pema_agent_restored}"; fi
 
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT

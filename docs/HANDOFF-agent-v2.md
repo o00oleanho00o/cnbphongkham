@@ -82,7 +82,7 @@ revision files `0001_agent_rt` … `0012_*` or plugin files `0002_*`/`0003_*`, t
 
 - **Two databases on one Postgres**, never reaching each other (rules L1–L5 in
   `.claude/rules/agent-boundary.md`): `contete` = the clinic API (schemas `ctx`, `clinic`; role `be_app`) and
-  `contete_agent` = the agent (schema `agent_rt`; role `agent_rt_app`). Each role has CONNECT on its own database only;
+  `pema_agent` = the agent (schema `agent_rt`; role `agent_rt_app`). Each role has CONNECT on its own database only;
   PUBLIC on neither; no `dblink`/`postgres_fdw`. The agent holds no key of the API; it only fetches the JWKS.
 - **Migrations:** the API has one Alembic revision `apps/api/alembic/versions/0001_baseline` (+ `.sql`), the agent
   one `apps/agent/alembic/versions/0001_baseline` (+ `.sql`); plugins: `conversations/0001`, `knowledge/0001`,
@@ -100,8 +100,8 @@ revision files `0001_agent_rt` … `0012_*` or plugin files `0002_*`/`0003_*`, t
 - **Checked on the rebuilt demo (2026-10-16):** from the agent container `contete` refuses `agent_rt_app` (no CONNECT),
   `CREATE EXTENSION dblink` is refused; the API answers 401 to the SSO token (`aud = contete-agent`) on every route
   tried, also sent as the session cookie; the web reaches the agent with it; a document upload lands in
-  `contete_agent`. T1 passes against the live cluster. `agent db bootstrap-role` also revokes PUBLIC's CONNECT on
-  `postgres` and `template1`, so `agent_rt_app` reaches `contete_agent` only (T1 asserts the whole list).
+  `pema_agent`. T1 passes against the live cluster. `agent db bootstrap-role` also revokes PUBLIC's CONNECT on
+  `postgres` and `template1`, so `agent_rt_app` reaches `pema_agent` only (T1 asserts the whole list).
 - **Zalo: groups to listen to (2026-10-16):** each account has `listen_group_ids` (plugin `zalo`, page "Nhóm Zalo").
   A group not on the list is not kept: the channel does not tell `conversations` of its messages, the channel hub
   does not tell of the agent's reply there (`FiltersListening` in `agentcore.channels`), and the address book skips

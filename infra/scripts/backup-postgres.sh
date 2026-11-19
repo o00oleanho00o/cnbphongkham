@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Logical backup of the agent: one custom-format dump of `contete_agent` + the cluster's roles (globals) + the agent's
+# Logical backup of the agent: one custom-format dump of `pema_agent` + the cluster's roles (globals) + the agent's
 # home (/data of the agent container: its secret key, which seals the model keys in the database, and the installed
 # plugins) + the Zalo connector's /data (when it runs), verified, encrypted, with simple retention. Run from the host
 # that runs docker compose (cron or the systemd timer in infra/ubuntu/systemd).
@@ -16,7 +16,7 @@
 #   CONTETE_BACKUP_KEEP_DAYS       delete our files older than this (default 14)
 #   CONTETE_BACKUP_COMPOSE         the compose command (default: docker compose -f <infra>/docker-compose.yml --env-file <infra>/.env)
 #   CONTETE_BACKUP_SERVICE         compose service name of Postgres (default postgres)
-#   CONTETE_BACKUP_AGENT_DB        the agent's database (default contete_agent)
+#   CONTETE_BACKUP_AGENT_DB        the agent's database (default pema_agent)
 #   CONTETE_BACKUP_AGENT_SERVICE   compose service name of the agent, which holds its home in /data (default agent)
 #   CONTETE_BACKUP_ZALO_SERVICE    compose service name of the Zalo connector, which holds /data/zalo.db (accounts, sealed
 #                               tokens, the inbound outbox; default zalo; skipped when that service is not running)
@@ -30,7 +30,7 @@ INFRA="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 DIR="${CONTETE_BACKUP_DIR:-/var/backups/contete-agent}"
 KEEP="${CONTETE_BACKUP_KEEP_DAYS:-14}"
 SERVICE="${CONTETE_BACKUP_SERVICE:-postgres}"
-AGENT_DB="${CONTETE_BACKUP_AGENT_DB:-contete_agent}"
+AGENT_DB="${CONTETE_BACKUP_AGENT_DB:-pema_agent}"
 AGENT_SERVICE="${CONTETE_BACKUP_AGENT_SERVICE:-agent}"
 ZALO_SERVICE="${CONTETE_BACKUP_ZALO_SERVICE:-zalo}"
 # the agent's home (docker-compose.yml, volume agent-home)
