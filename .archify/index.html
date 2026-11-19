@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Pema: bản đồ sơ đồ</title>
+<title>Contete Agent: bản đồ sơ đồ</title>
 <style>
   :root { --bg: #f6f7f9; --card: #ffffff; --ink: #1c2230; --muted: #5b6577; --line: #d8dde6; --accent: #0e7490; }
   @media (prefers-color-scheme: dark) {
@@ -28,15 +28,21 @@
 </head>
 <body>
 <main>
-  <h1>Pema Digital Clinic: bản đồ sơ đồ</h1>
-  <p class="lead">Đọc từ trên xuống: tổng quan cả project, rồi lõi agent (nó là gì, vận hành ra sao), rồi stack đang chạy, rồi từng luồng. Mỗi khối trong sơ đồ có trích file và dòng mã; bấm vào khối để xem.</p>
+  <h1>Contete Agent: bản đồ sơ đồ</h1>
+  <p class="lead">Đọc từ trên xuống: stack đang chạy, rồi lõi agent (nó là gì, vận hành ra sao), rồi connector Zalo. Mỗi khối trong sơ đồ có trích file và dòng mã; bấm vào khối để xem.</p>
 
-  <h2>1. Tổng quan</h2>
-  <a class="card top" href="architecture-project-overview-20261022-093925/project-overview.html">
-    <strong>Tổng quan cả project</strong>
-    <span>Ba thế hệ giao diện (web cũ, app mobile, web nhân viên), tài liệu và thiết kế, ý tưởng CRM, và hệ thống mới pema-agent với luật giữa các phần.</span>
-    <small>Không vẽ: flutter-template, design-viewer, data, demo-assets, các dịch vụ phụ của stack.</small>
-  </a>
+  <h2>1. Stack đang chạy</h2>
+  <div class="grid">
+    <a class="card top" href="architecture-stack-overview-20261022-092501/stack-overview.html">
+      <strong>Toàn cảnh stack</strong>
+      <span>Mọi container của <code>docker compose up</code>: agent, connector Zalo, dashboard, một database <code>pema_agent</code>, và egress ra internet.</span>
+      <small>Không vẽ: caddy, agent-migrate.</small>
+    </a>
+    <a class="card" href="architecture-zalo-connector-20261024-002300/zalo-connector.html">
+      <strong>Zalo là connector riêng</strong>
+      <span>Connector Zalo là dịch vụ ngoài agent: khóa riêng, chữ ký HMAC hai chiều, hàng chờ riêng; agent chỉ biết giao thức connector.</span>
+    </a>
+  </div>
 
   <h2>2. Lõi: agent vận hành thế nào (plugin-first)</h2>
   <p class="lead">Đọc theo thứ tự: 2a nhìn toàn bộ, 2b một lượt chạy ra sao, 2c plugin cắm vào đâu, 2d vòng chủ động và dữ liệu.</p>
@@ -45,7 +51,7 @@
   <div class="grid">
     <a class="card top" href="architecture-agent-anatomy-20261022-095800/agent-anatomy.html">
       <strong>Giải phẫu agent</strong>
-      <span>Lõi harness (run_turn, prompt, tool, hook, model, nén, ghi chú), lớp lắp ráp (hàng đợi + sweeper, plugin host, lắp lại khi plugin đổi, chăm sóc lại) và bốn UI: Zalo, HTTP, agent chat, trang quản trị.</span>
+      <span>Lõi harness (run_turn, prompt, tool, hook, model, nén, ghi chú), lớp lắp ráp (hàng đợi + sweeper, plugin host, lắp lại khi plugin đổi, chăm sóc lại) và các cửa vào: kênh của connector, HTTP, agent chat, trang quản trị.</span>
     </a>
     <a class="card" href="sequence-serve-boot-20261022-112511/serve-boot.html">
       <strong>Khởi động agent serve</strong>
@@ -53,7 +59,7 @@
     </a>
     <a class="card" href="tree-code-map-20261022-112511/code-map.html">
       <strong>Bản đồ mã</strong>
-      <span>File nào làm gì trong agentcore, agent_app, plugins, agents/clinic, alembic; hướng phụ thuộc và nên đọc từ đâu.</span>
+      <span>File nào làm gì trong agentcore, agent_app, plugins, agents/rag, alembic; hướng phụ thuộc và nên đọc từ đâu.</span>
     </a>
   </div>
 
@@ -115,41 +121,12 @@
     <a class="card" href="erd-agent-rt-20261022-171500/agent-rt.html">
       <strong>Schema agent_rt</strong>
       <span>15 bảng của lõi với mọi cột: phiên và lịch sử, hàng đợi, trace, cài đặt, plugin, ca; ba FK thật, còn lại nối theo giá trị.</span>
-      <small>Vẽ ở mức standard (dày hơn) vì nhiều cột; bảng của plugin (kb_, sk_, cv_, crm_) không ở đây.</small>
-    </a>
-  </div>
-
-  <h2>3. Hệ thống mới pema-agent đang chạy</h2>
-  <div class="grid">
-    <a class="card" href="architecture-stack-overview-20261022-092501/stack-overview.html">
-      <strong>Toàn cảnh stack</strong>
-      <span>Mọi container của <code>docker compose up</code>, hai database trên một Postgres, egress ra internet, và hai chiều giữa CRM và agent.</span>
-      <small>Không vẽ: caddy, migrate, agent-migrate.</small>
-    </a>
-    <a class="card" href="architecture-agent-crm-20261022-085541/agent-crm.html">
-      <strong>Đường chính agent ↔ CRM</strong>
-      <span>Chỉ con đường đặt lịch: khách, agent, crm-signer, API, hai database, worker sự kiện. Đọc trước khi xem ba luồng bên dưới.</span>
-    </a>
-  </div>
-
-  <h2>4. Từng luồng của plugin crm</h2>
-  <div class="grid">
-    <a class="card" href="sequence-booking-20261022-091319/booking.html">
-      <strong>Một lượt đặt lịch</strong>
-      <span>Từng thông điệp từ tin nhắn Zalo đến lịch trong CRM: xem giờ trống, lưu liên hệ, đặt, rồi sự kiện đi ngược về.</span>
-    </a>
-    <a class="card" href="workflow-reminder-loop-20261022-091319/reminder-loop.html">
-      <strong>Vòng nhắc lịch</strong>
-      <span>Mỗi mốc là một ca trên động cơ: plugin mở ca, check (code, bảy lý do bỏ) rồi send (model); sự kiện CRM đánh thức ca, gửi lỗi quay về check.</span>
-    </a>
-    <a class="card" href="dataflow-agent-data-20261022-091319/agent-data.html">
-      <strong>Dữ liệu CRM vào agent</strong>
-      <span>Bốn đường được phép theo luật L4, trường nào ra ngoài, và những gì không bao giờ có đường.</span>
+      <small>Vẽ ở mức standard (dày hơn) vì nhiều cột; bảng của plugin (kb_, sk_, cv_) không ở đây.</small>
     </a>
   </div>
 
   <footer>
-    Vẽ bằng Archify từ mã tại commit <code>7d86533</code> (2026-10-22); sơ đồ ca tại <code>d9faf4d</code>, schema agent_rt và chăm sóc lại tại <code>64a3919</code>, vòng nhắc lịch tại <code>a939357</code>, hợp đồng plugin tại <code>3ca3147</code>. Giao diện của trình xem bằng tiếng Anh; nội dung sơ đồ bằng tiếng Việt. Vẽ lại: sửa <code>candidate.json</code> trong thư mục của sơ đồ rồi chạy <code>archify finalize</code>.
+    Vẽ bằng Archify từ mã. Bộ sơ đồ vẽ lần đầu ngày 2026-10-22 trong dự án phòng khám; ngày 2026-11-19 các sơ đồ về CRM bị bỏ, các sơ đồ còn lại được sửa cho Contete Agent và trích dẫn mã được chuyển sang commit <code>4be6357</code>. Giao diện của trình xem bằng tiếng Anh; nội dung sơ đồ bằng tiếng Việt. Vẽ lại: sửa <code>candidate.json</code> trong thư mục của sơ đồ rồi chạy <code>archify finalize</code>.
   </footer>
 </main>
 </body>

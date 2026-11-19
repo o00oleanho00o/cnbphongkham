@@ -9,7 +9,7 @@
     "repository": {
       "url": "git@github-personal20:o00oleanho00o/cnbphongkham.git",
       "link_mode": "local-only",
-      "revision": "7d86533840b79a213b046bf19e0de37db65f3b14"
+      "revision": "4be635745c2fc00b28fce614208432b22d50a32f"
     }
   },
   "lanes": [
@@ -76,13 +76,13 @@
       "sublabel": "prompt đóng băng, lịch sử",
       "sources": [
         {
-          "path": "pema-agent/backend/packages/agent-core/src/agentcore/loop/run_turn.py",
-          "line": 369,
-          "end_line": 372,
+          "path": "backend/packages/agent-core/src/agentcore/loop/run_turn.py",
+          "line": 379,
+          "end_line": 382,
           "label": "turn(): system, history"
         },
         {
-          "path": "pema-agent/backend/packages/agent-core/src/agentcore/prompt/builder.py",
+          "path": "backend/packages/agent-core/src/agentcore/prompt/builder.py",
           "line": 97,
           "end_line": 130,
           "label": "system()"
@@ -98,13 +98,13 @@
       "sublabel": "tool call thiếu kết quả",
       "sources": [
         {
-          "path": "pema-agent/backend/packages/agent-core/src/agentcore/loop/run_turn.py",
-          "line": 373,
-          "end_line": 381,
+          "path": "backend/packages/agent-core/src/agentcore/loop/run_turn.py",
+          "line": 383,
+          "end_line": 391,
           "label": "missing_tool_results"
         },
         {
-          "path": "pema-agent/backend/packages/agent-core/src/agentcore/loop/repair.py",
+          "path": "backend/packages/agent-core/src/agentcore/loop/repair.py",
           "line": 1,
           "end_line": 39,
           "label": "repair"
@@ -120,15 +120,15 @@
       "sublabel": "N tin gộp làm một",
       "sources": [
         {
-          "path": "pema-agent/backend/packages/agent-core/src/agentcore/loop/run_turn.py",
-          "line": 382,
-          "end_line": 384,
+          "path": "backend/packages/agent-core/src/agentcore/loop/run_turn.py",
+          "line": 393,
+          "end_line": 395,
           "label": "record user"
         },
         {
-          "path": "pema-agent/backend/apps/agent/agent_app/dispatcher.py",
-          "line": 293,
-          "end_line": 298,
+          "path": "backend/apps/agent/agent_app/dispatcher.py",
+          "line": 327,
+          "end_line": 332,
           "label": "texts gộp, steer_in"
         }
       ]
@@ -143,13 +143,13 @@
       "tag": "LlmRequest",
       "sources": [
         {
-          "path": "pema-agent/backend/packages/agent-core/src/agentcore/loop/run_turn.py",
-          "line": 206,
-          "end_line": 224,
+          "path": "backend/packages/agent-core/src/agentcore/loop/run_turn.py",
+          "line": 217,
+          "end_line": 233,
           "label": "build, request_for"
         },
         {
-          "path": "pema-agent/backend/packages/agent-core/src/agentcore/prompt/builder.py",
+          "path": "backend/packages/agent-core/src/agentcore/prompt/builder.py",
           "line": 145,
           "end_line": 172,
           "label": "context, with_context"
@@ -165,9 +165,9 @@
       "sublabel": "hook → complete → hook",
       "sources": [
         {
-          "path": "pema-agent/backend/packages/agent-core/src/agentcore/loop/run_turn.py",
-          "line": 275,
-          "end_line": 314,
+          "path": "backend/packages/agent-core/src/agentcore/loop/run_turn.py",
+          "line": 285,
+          "end_line": 324,
           "label": "call_model"
         }
       ]
@@ -181,9 +181,9 @@
       "sublabel": "ghi trước khi tool chạy",
       "sources": [
         {
-          "path": "pema-agent/backend/packages/agent-core/src/agentcore/loop/run_turn.py",
-          "line": 396,
-          "end_line": 399,
+          "path": "backend/packages/agent-core/src/agentcore/loop/run_turn.py",
+          "line": 407,
+          "end_line": 410,
           "label": "record(result.message)"
         }
       ]
@@ -198,15 +198,15 @@
       "tag": "rẽ nhánh",
       "sources": [
         {
-          "path": "pema-agent/backend/packages/agent-core/src/agentcore/loop/run_turn.py",
-          "line": 401,
-          "end_line": 407,
+          "path": "backend/packages/agent-core/src/agentcore/loop/run_turn.py",
+          "line": 412,
+          "end_line": 418,
           "label": "không tool → completed"
         },
         {
-          "path": "pema-agent/backend/packages/agent-core/src/agentcore/loop/run_turn.py",
-          "line": 352,
-          "end_line": 367,
+          "path": "backend/packages/agent-core/src/agentcore/loop/run_turn.py",
+          "line": 362,
+          "end_line": 377,
           "label": "take_steered"
         }
       ]
@@ -220,13 +220,13 @@
       "sublabel": "pre_tool chặn; song song",
       "sources": [
         {
-          "path": "pema-agent/backend/packages/agent-core/src/agentcore/harness/tools/executor.py",
+          "path": "backend/packages/agent-core/src/agentcore/harness/tools/executor.py",
           "line": 75,
           "end_line": 127,
           "label": "execute, _batches"
         },
         {
-          "path": "pema-agent/backend/packages/agent-core/src/agentcore/harness/tools/executor.py",
+          "path": "backend/packages/agent-core/src/agentcore/harness/tools/executor.py",
           "line": 140,
           "end_line": 173,
           "label": "_checked, timeout"
@@ -242,13 +242,13 @@
       "sublabel": "loop guard; tin steer",
       "sources": [
         {
-          "path": "pema-agent/backend/packages/agent-core/src/agentcore/loop/run_turn.py",
-          "line": 408,
-          "end_line": 416,
+          "path": "backend/packages/agent-core/src/agentcore/loop/run_turn.py",
+          "line": 419,
+          "end_line": 427,
           "label": "record tool, watch, steer"
         },
         {
-          "path": "pema-agent/backend/packages/agent-core/src/agentcore/loop/guard.py",
+          "path": "backend/packages/agent-core/src/agentcore/loop/guard.py",
           "line": 79,
           "end_line": 104,
           "label": "LoopGuard.observe"
@@ -264,13 +264,13 @@
       "sublabel": "flush memory rồi tóm tắt",
       "sources": [
         {
-          "path": "pema-agent/backend/packages/agent-core/src/agentcore/loop/run_turn.py",
-          "line": 226,
-          "end_line": 273,
+          "path": "backend/packages/agent-core/src/agentcore/loop/run_turn.py",
+          "line": 235,
+          "end_line": 283,
           "label": "compact"
         },
         {
-          "path": "pema-agent/backend/packages/agent-core/src/agentcore/context/policy.py",
+          "path": "backend/packages/agent-core/src/agentcore/context/policy.py",
           "line": 30,
           "end_line": 34,
           "label": "threshold, keep_budget"
@@ -286,13 +286,13 @@
       "sublabel": "≤4 lần; overflow nén mạnh",
       "sources": [
         {
-          "path": "pema-agent/backend/packages/agent-core/src/agentcore/loop/run_turn.py",
-          "line": 287,
-          "end_line": 309,
+          "path": "backend/packages/agent-core/src/agentcore/loop/run_turn.py",
+          "line": 297,
+          "end_line": 319,
           "label": "ModelError"
         },
         {
-          "path": "pema-agent/backend/packages/agent-core/src/agentcore/loop/retry.py",
+          "path": "backend/packages/agent-core/src/agentcore/loop/retry.py",
           "line": 12,
           "end_line": 38,
           "label": "RetryPolicy"
@@ -308,22 +308,22 @@
       "sublabel": "bước, giờ, token, guard",
       "sources": [
         {
-          "path": "pema-agent/backend/packages/agent-core/src/agentcore/loop/run_turn.py",
-          "line": 386,
-          "end_line": 395,
+          "path": "backend/packages/agent-core/src/agentcore/loop/run_turn.py",
+          "line": 397,
+          "end_line": 406,
           "label": "deadline, budget"
         },
         {
-          "path": "pema-agent/backend/packages/agent-core/src/agentcore/loop/guard.py",
+          "path": "backend/packages/agent-core/src/agentcore/loop/guard.py",
           "line": 32,
           "end_line": 41,
           "label": "LoopGuardPolicy"
         },
         {
-          "path": "pema-agent/backend/apps/agent/agents/clinic/agent.toml",
+          "path": "backend/apps/agent/agents/rag/agent.toml",
           "line": 44,
           "end_line": 52,
-          "label": "[loop] của clinic"
+          "label": "[loop] của rag"
         }
       ]
     },
@@ -336,15 +336,15 @@
       "sublabel": "không tool, ép trả lời",
       "sources": [
         {
-          "path": "pema-agent/backend/packages/agent-core/src/agentcore/loop/run_turn.py",
-          "line": 418,
-          "end_line": 423,
+          "path": "backend/packages/agent-core/src/agentcore/loop/run_turn.py",
+          "line": 429,
+          "end_line": 434,
           "label": "final_step"
         },
         {
-          "path": "pema-agent/backend/packages/agent-core/src/agentcore/loop/run_turn.py",
-          "line": 534,
-          "end_line": 537,
+          "path": "backend/packages/agent-core/src/agentcore/loop/run_turn.py",
+          "line": 545,
+          "end_line": 548,
           "label": "_without_tool_calls"
         }
       ]
@@ -358,19 +358,19 @@
       "sublabel": "agent_turn + event",
       "sources": [
         {
-          "path": "pema-agent/backend/packages/agent-core/src/agentcore/loop/run_turn.py",
-          "line": 442,
-          "end_line": 450,
+          "path": "backend/packages/agent-core/src/agentcore/loop/run_turn.py",
+          "line": 453,
+          "end_line": 461,
           "label": "trace cả khi lỗi"
         },
         {
-          "path": "pema-agent/backend/packages/agent-core/src/agentcore/loop/run_turn.py",
-          "line": 525,
-          "end_line": 531,
+          "path": "backend/packages/agent-core/src/agentcore/loop/run_turn.py",
+          "line": 536,
+          "end_line": 542,
           "label": "_write_trace 10 s"
         },
         {
-          "path": "pema-agent/backend/packages/agent-core/src/agentcore/trace.py",
+          "path": "backend/packages/agent-core/src/agentcore/trace.py",
           "line": 15,
           "end_line": 17,
           "label": "stop, event kinds"
@@ -520,7 +520,7 @@
     },
     {
       "dot": "rose",
-      "title": "Mode hàng đợi (profile clinic: steer)",
+      "title": "Mode hàng đợi (profile rag: steer)",
       "items": [
         "followup: mỗi tin một lượt; collect: tin dồn của một người thành một lượt sau 0,8 s im (zalo-: 5 s, tối đa 20 s, lâu hơn khi khách đang gõ)",
         "steer: như collect, và tin đến khi lượt đang chạy tool được ghi vào lịch sử trước lời gọi tiếp; trả lời đã làm xong mà khách vừa nhắn thì không gửi, model trả lời lại",
@@ -536,7 +536,7 @@
         "Gọi model: before_model hooks (vd scenario_examples) → complete (stream) → after_model; ghi tin assistant trước khi tool chạy",
         "ToolExecutor: tool lạ, JSON hỏng, pre_tool Deny, args sai schema → kết quả lỗi; ≤8 call/bước; read-only liền nhau chạy song song ≤4; timeout riêng từng tool; post_tool che bí mật, cảnh báo",
         "Thử lại: rate_limit, transient, empty_response ≤4 lần, lùi 0,5→10 s (+jitter, Retry-After thắng); context_overflow: nén mạnh 1 lần; lỗi khác: lượt lỗi",
-        "Giới hạn clinic: 10 bước, 300 s, max_turn_tokens (chưa đặt); guard: nhắc ở 3/5/8 lần lặp y hệt, dừng ở 10; nhắc ở 3 lỗi liền, dừng ở 5",
+        "Giới hạn rag: 10 bước, 300 s, max_turn_tokens (chưa đặt); guard: nhắc ở 3/5/8 lần lặp y hệt, dừng ở 10; nhắc ở 3 lỗi liền, dừng ở 5",
         "Lời gọi cuối: không tool, FINAL_TURN_NOTE; tool_use thừa bị bỏ; trace ghi agent_turn + agent_turn_event trong 10 s, lỗi cũng ghi"
       ]
     }

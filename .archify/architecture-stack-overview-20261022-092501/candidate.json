@@ -2,14 +2,14 @@
   "schema_version": 1,
   "diagram_type": "architecture",
   "meta": {
-    "title": "Toàn cảnh stack: CRM, agent và đường ra ngoài",
+    "title": "Toàn cảnh stack: agent, connector Zalo, dashboard và đường ra ngoài",
     "locale": "vi",
     "output": ".archify/architecture-stack-overview-20261022-092501/stack-overview.html",
     "quality_profile": "showcase",
     "repository": {
       "url": "git@github-personal20:o00oleanho00o/cnbphongkham.git",
       "link_mode": "local-only",
-      "revision": "7d86533840b79a213b046bf19e0de37db65f3b14"
+      "revision": "4be635745c2fc00b28fce614208432b22d50a32f"
     }
   },
   "components": [
@@ -17,7 +17,7 @@
       "id": "internet",
       "type": "external",
       "label": "Internet",
-      "sublabel": "mô hình AI, Zalo Bot API",
+      "sublabel": "mô hình AI, Zalo",
       "pos": [
         40,
         40
@@ -42,38 +42,10 @@
       ],
       "sources": [
         {
-          "path": "pema-agent/infra/docker-compose.yml",
-          "line": 306,
-          "end_line": 321,
+          "path": "infra/docker-compose.yml",
+          "line": 175,
+          "end_line": 189,
           "label": "service egress"
-        }
-      ]
-    },
-    {
-      "id": "redis",
-      "type": "database",
-      "label": "Redis",
-      "sublabel": "kênh live của trình duyệt",
-      "pos": [
-        1040,
-        40
-      ],
-      "size": [
-        130,
-        60
-      ],
-      "sources": [
-        {
-          "path": "pema-agent/infra/docker-compose.yml",
-          "line": 120,
-          "end_line": 143,
-          "label": "service redis"
-        },
-        {
-          "path": "pema-agent/backend/apps/api/pema/live/bus.py",
-          "line": 1,
-          "end_line": 12,
-          "label": "LiveEventBus"
         }
       ]
     },
@@ -92,10 +64,10 @@
       ]
     },
     {
-      "id": "agent",
+      "id": "zalo",
       "type": "backend",
-      "label": "Agent clinic",
-      "sublabel": "chỉ đọc, cap_drop ALL",
+      "label": "Connector Zalo",
+      "sublabel": "dịch vụ riêng, khóa riêng",
       "pos": [
         290,
         190
@@ -106,18 +78,18 @@
       ],
       "sources": [
         {
-          "path": "pema-agent/infra/docker-compose.yml",
-          "line": 232,
-          "end_line": 274,
-          "label": "service agent"
+          "path": "infra/docker-compose.yml",
+          "line": 126,
+          "end_line": 173,
+          "label": "service zalo"
         }
       ]
     },
     {
-      "id": "signer",
-      "type": "security",
-      "label": "crm-signer",
-      "sublabel": "giữ khóa, ký từng lời gọi",
+      "id": "agent",
+      "type": "backend",
+      "label": "Agent",
+      "sublabel": "profile rag, chỉ đọc",
       "pos": [
         540,
         190
@@ -128,60 +100,10 @@
       ],
       "sources": [
         {
-          "path": "pema-agent/infra/docker-compose.yml",
-          "line": 276,
-          "end_line": 304,
-          "label": "service crm-signer"
-        }
-      ]
-    },
-    {
-      "id": "api",
-      "type": "backend",
-      "label": "API CRM",
-      "sublabel": "FastAPI :8000, worker sự kiện",
-      "pos": [
-        790,
-        190
-      ],
-      "size": [
-        130,
-        60
-      ],
-      "sources": [
-        {
-          "path": "pema-agent/infra/docker-compose.yml",
-          "line": 159,
-          "end_line": 212,
-          "label": "service api"
-        },
-        {
-          "path": "pema-agent/backend/apps/api/pema/composition/agent_events_worker.py",
-          "line": 88,
-          "end_line": 102,
-          "label": "worker agent-events"
-        }
-      ]
-    },
-    {
-      "id": "crmdb",
-      "type": "database",
-      "label": "pema (CRM)",
-      "sublabel": "bệnh nhân, lịch, hội thoại",
-      "pos": [
-        1040,
-        190
-      ],
-      "size": [
-        130,
-        60
-      ],
-      "sources": [
-        {
-          "path": "pema-agent/infra/docker-compose.yml",
-          "line": 88,
-          "end_line": 118,
-          "label": "postgres"
+          "path": "infra/docker-compose.yml",
+          "line": 81,
+          "end_line": 124,
+          "label": "service agent"
         }
       ]
     },
@@ -189,10 +111,10 @@
       "id": "agentdb",
       "type": "database",
       "label": "pema_agent",
-      "sublabel": "database của agent",
+      "sublabel": "database duy nhất",
       "pos": [
-        290,
-        340
+        790,
+        190
       ],
       "size": [
         130,
@@ -200,15 +122,15 @@
       ],
       "sources": [
         {
-          "path": "pema-agent/infra/docker-compose.yml",
-          "line": 88,
-          "end_line": 118,
+          "path": "infra/docker-compose.yml",
+          "line": 31,
+          "end_line": 63,
           "label": "postgres"
         },
         {
-          "path": "pema-agent/infra/docker-compose.yml",
-          "line": 232,
-          "end_line": 238,
+          "path": "infra/docker-compose.yml",
+          "line": 91,
+          "end_line": 91,
           "label": "AGENT_DATABASE_URL"
         }
       ]
@@ -216,10 +138,10 @@
     {
       "id": "frontend",
       "type": "frontend",
-      "label": "Frontend",
+      "label": "Dashboard",
       "sublabel": "web nhân viên :3000",
       "pos": [
-        790,
+        540,
         340
       ],
       "size": [
@@ -228,10 +150,16 @@
       ],
       "sources": [
         {
-          "path": "pema-agent/infra/docker-compose.yml",
-          "line": 323,
-          "end_line": 355,
+          "path": "infra/docker-compose.yml",
+          "line": 191,
+          "end_line": 224,
           "label": "service frontend"
+        },
+        {
+          "path": "frontend/src/lib/server/agent-auth.ts",
+          "line": 1,
+          "end_line": 12,
+          "label": "đăng nhập bằng tài khoản của agent"
         }
       ]
     },
@@ -241,7 +169,7 @@
       "label": "Nhân viên",
       "sublabel": "trình duyệt",
       "pos": [
-        1040,
+        790,
         340
       ],
       "size": [
@@ -252,30 +180,18 @@
   ],
   "connections": [
     {
-      "id": "customer-to-agent",
+      "id": "customer-to-zalo",
       "from": "customer",
-      "to": "agent",
+      "to": "zalo",
       "label": "Zalo",
       "variant": "emphasis"
     },
     {
-      "id": "agent-to-signer",
-      "from": "agent",
-      "to": "signer",
-      "label": "không khóa"
-    },
-    {
-      "id": "signer-to-api",
-      "from": "signer",
-      "to": "api",
-      "label": "JWT 60 giây",
+      "id": "zalo-to-agent",
+      "from": "zalo",
+      "to": "agent",
+      "label": "tin khách (HMAC)",
       "variant": "security"
-    },
-    {
-      "id": "api-to-crmdb",
-      "from": "api",
-      "to": "crmdb",
-      "label": "SQL"
     },
     {
       "id": "agent-to-agentdb",
@@ -284,16 +200,22 @@
       "label": "SQL"
     },
     {
+      "id": "zalo-to-egress",
+      "from": "zalo",
+      "to": "egress",
+      "label": "tới Zalo"
+    },
+    {
       "id": "agent-to-egress",
       "from": "agent",
       "to": "egress",
-      "label": "proxy"
+      "label": "model, embedding"
     },
     {
       "id": "egress-to-internet",
       "from": "egress",
       "to": "internet",
-      "label": "mô hình, Zalo"
+      "label": "ra ngoài"
     },
     {
       "id": "staff-to-frontend",
@@ -302,57 +224,43 @@
       "label": "HTTPS"
     },
     {
-      "id": "frontend-to-api",
-      "from": "frontend",
-      "to": "api",
-      "label": "/api/v1"
-    },
-    {
-      "id": "api-to-redis",
-      "from": "api",
-      "to": "redis",
-      "label": "sự kiện live",
-      "variant": "dashed"
-    },
-    {
-      "id": "api-events-to-agent",
-      "from": "api",
-      "to": "agent",
-      "label": "sự kiện lịch (JWT CRM)",
-      "variant": "security"
-    },
-    {
-      "id": "frontend-controls-agent",
+      "id": "frontend-to-agent",
       "from": "frontend",
       "to": "agent",
-      "label": "điều khiển agent",
+      "label": "/agent"
+    },
+    {
+      "id": "frontend-to-zalo",
+      "from": "frontend",
+      "to": "zalo",
+      "label": "/connectors/zalo",
       "variant": "dashed"
     }
   ],
   "cards": [
     {
       "dot": "cyan",
-      "title": "Hai database, một Postgres",
+      "title": "Một database",
       "items": [
-        "pema (CRM) và pema_agent nằm chung một container nhưng không nhìn thấy nhau",
-        "Role của agent không có CONNECT vào pema"
+        "Chỉ có pema_agent (schema agent_rt); role agent_rt_app chỉ CONNECT vào nó",
+        "Stack không còn database CRM, Redis hay dịch vụ ký"
       ]
     },
     {
       "dot": "amber",
-      "title": "Hai chiều giữa CRM và agent",
+      "title": "Đăng nhập",
       "items": [
-        "Đi: agent gọi crm-signer, crm-signer ký rồi gọi API (không giữ khóa)",
-        "Về: API ký sự kiện bằng khóa CRM và chỉ gửi tới /v1/hooks/crm/events"
+        "Lần đăng nhập đầu tạo tài khoản quản trị của agent (plugin web)",
+        "Dashboard giữ token trong cookie httpOnly, gọi agent và connector thay trình duyệt"
       ]
     },
     {
       "dot": "rose",
       "title": "Ra internet",
       "items": [
-        "Model, embedding, Zalo Bot đi qua egress; web_search và cầu nối Zalo cá nhân vẫn đi thẳng",
+        "Model, embedding và mọi thứ connector gửi tới Zalo đi qua egress; web_search, web_fetch đi thẳng qua netguard",
         "Giai đoạn 1: chỉ ghi log, chưa chặn",
-        "Không vẽ: caddy (profile proxy), migrate, agent-migrate"
+        "Không vẽ: caddy (profile proxy), agent-migrate"
       ]
     }
   ]

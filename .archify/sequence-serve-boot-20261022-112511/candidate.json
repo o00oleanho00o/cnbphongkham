@@ -9,7 +9,7 @@
     "repository": {
       "url": "git@github-personal20:o00oleanho00o/cnbphongkham.git",
       "link_mode": "local-only",
-      "revision": "7d86533840b79a213b046bf19e0de37db65f3b14"
+      "revision": "4be635745c2fc00b28fce614208432b22d50a32f"
     }
   },
   "participants": [
@@ -20,9 +20,9 @@
       "sublabel": "cli._serve",
       "sources": [
         {
-          "path": "pema-agent/backend/apps/agent/agent_app/cli.py",
-          "line": 506,
-          "end_line": 553,
+          "path": "backend/apps/agent/agent_app/cli.py",
+          "line": 503,
+          "end_line": 551,
           "label": "_serve"
         }
       ]
@@ -34,15 +34,15 @@
       "sublabel": "runtime.py",
       "sources": [
         {
-          "path": "pema-agent/backend/apps/agent/agent_app/runtime.py",
-          "line": 206,
-          "end_line": 318,
+          "path": "backend/apps/agent/agent_app/runtime.py",
+          "line": 230,
+          "end_line": 248,
           "label": "build_runtime"
         },
         {
-          "path": "pema-agent/backend/apps/agent/agent_app/runtime.py",
-          "line": 85,
-          "end_line": 101,
+          "path": "backend/apps/agent/agent_app/runtime.py",
+          "line": 99,
+          "end_line": 114,
           "label": "Runtime"
         }
       ]
@@ -54,9 +54,9 @@
       "sublabel": "start_plugins",
       "sources": [
         {
-          "path": "pema-agent/backend/apps/agent/agent_app/runtime.py",
-          "line": 167,
-          "end_line": 203,
+          "path": "backend/apps/agent/agent_app/runtime.py",
+          "line": 191,
+          "end_line": 227,
           "label": "plugin_roots, start_plugins"
         }
       ]
@@ -68,15 +68,15 @@
       "sublabel": "plugin, cài đặt theo DB",
       "sources": [
         {
-          "path": "pema-agent/backend/apps/agent/agent_app/runtime.py",
-          "line": 103,
-          "end_line": 111,
+          "path": "backend/apps/agent/agent_app/runtime.py",
+          "line": 118,
+          "end_line": 126,
           "label": "start, refresh"
         },
         {
-          "path": "pema-agent/backend/apps/agent/agent_app/agent_settings.py",
+          "path": "backend/apps/agent/agent_app/agent_settings.py",
           "line": 1,
-          "end_line": 8,
+          "end_line": 10,
           "label": "AgentSettings"
         }
       ]
@@ -88,9 +88,9 @@
       "sublabel": "FastAPI + uvicorn",
       "sources": [
         {
-          "path": "pema-agent/backend/apps/agent/agent_app/gateway.py",
-          "line": 323,
-          "end_line": 357,
+          "path": "backend/apps/agent/agent_app/gateway.py",
+          "line": 340,
+          "end_line": 374,
           "label": "create_app, lifespan"
         }
       ]
@@ -102,9 +102,9 @@
       "sublabel": "4 vòng lặp",
       "sources": [
         {
-          "path": "pema-agent/backend/apps/agent/agent_app/gateway.py",
-          "line": 338,
-          "end_line": 345,
+          "path": "backend/apps/agent/agent_app/gateway.py",
+          "line": 355,
+          "end_line": 362,
           "label": "4 asyncio.Task"
         }
       ]
@@ -133,7 +133,7 @@
       "from": "cli",
       "to": "runtime",
       "y": 160,
-      "label": "load_profile(agents/clinic) + build_runtime(db)",
+      "label": "load_profile(agents/rag) + build_runtime(db)",
       "variant": "emphasis",
       "note": "agent.toml + SOUL.md + AGENTS.md; {{biến}} thiếu → dừng; không DB → trong bộ nhớ"
     },

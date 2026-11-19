@@ -1,17 +1,15 @@
 # Đọc bộ sơ đồ này như thế nào
 
-Thư mục này là bản đồ của project Pema Digital Clinic, vẽ từ mã nguồn (commit `7d86533`, 2026-10-22). Mỗi sơ đồ là một file HTML tự chứa, mở bằng trình duyệt, không cần cài gì.
+Thư mục này là bản đồ của Contete Agent, vẽ từ mã nguồn. Vẽ lần đầu ngày 2026-10-22; ngày 2026-11-19 sửa cho sản phẩm agent riêng (bỏ các sơ đồ về CRM, trích dẫn mã theo commit `4be6357`). Mỗi sơ đồ là một file HTML tự chứa, mở bằng trình duyệt, không cần cài gì.
 
 ## Bắt đầu từ đâu
 
 Mở `index.html`. Đó là trang dẫn đường duy nhất; mọi sơ đồ khác đều đi từ đó. Đọc từ trên xuống:
 
-1. **Tổng quan cả project**: ba thế hệ giao diện, tài liệu, và hệ thống mới `pema-agent`.
+1. **Stack đang chạy**: các container, một database, đường ra internet, và connector Zalo.
 2. **Lõi agent** (mục 2, phần quan trọng nhất): agent là gì và vận hành ra sao.
-3. **Stack đang chạy**: các container, hai database, đường ra internet.
-4. **Từng luồng của plugin CRM**: đặt lịch, nhắc lịch, dữ liệu CRM vào agent.
 
-Nếu chỉ có 15 phút, đọc ba sơ đồ: *Tổng quan cả project* → *Giải phẫu agent* → *Một lượt của agent*.
+Nếu chỉ có 15 phút, đọc ba sơ đồ: *Toàn cảnh stack* → *Giải phẫu agent* → *Một lượt của agent*.
 
 ## Thứ tự đọc mục 2 (lõi agent)
 
@@ -21,7 +19,7 @@ Mục 2 chia bốn nhóm, mỗi nhóm trả lời một câu hỏi. Đọc theo 
 
 | Sơ đồ | Trả lời câu hỏi |
 |---|---|
-| Giải phẫu agent | Lõi `agentcore` có gì, lớp `agent_app` lắp ráp thế nào, bốn UI (Zalo, HTTP, agent chat, trang quản trị) chỉ là cửa vào |
+| Giải phẫu agent | Lõi `agentcore` có gì, lớp `agent_app` lắp ráp thế nào, kênh của connector, HTTP, agent chat, trang quản trị chỉ là cửa vào |
 | Khởi động agent serve | Khi chạy `agent serve`, cái gì được dựng, bốn vòng nền nào chạy, tắt ra sao |
 | Bản đồ mã | File nào làm gì, hướng phụ thuộc, nên mở file nào trước |
 
@@ -48,8 +46,9 @@ Mục 2 chia bốn nhóm, mỗi nhóm trả lời một câu hỏi. Đọc theo 
 
 | Sơ đồ | Trả lời câu hỏi |
 |---|---|
-| Vòng chăm sóc lại | Khách im thì agent tự nhắn lại theo luật nào; model chỉ góp ý, mã quyết |
-| Schema agent_rt | 14 bảng của lõi, mọi cột, bảng nào nối bảng nào |
+| Chăm sóc lại (plugin follow_up) | Khách im thì agent tự nhắn lại theo luật nào; mã quyết, model chỉ viết câu chữ hoặc từ chối |
+| Một ca chạy thế nào | Động cơ ca: plugin mở ca, luật cứng chặn trước mỗi nút |
+| Schema agent_rt | Các bảng của lõi, mọi cột, bảng nào nối bảng nào |
 
 ## Cách dùng một sơ đồ
 
@@ -61,7 +60,7 @@ Mục 2 chia bốn nhóm, mỗi nhóm trả lời một câu hỏi. Đọc theo 
 
 ## Khi sơ đồ và mã khác nhau
 
-Mã là sự thật, sơ đồ là ảnh chụp tại commit `7d86533`. Nếu thấy lệch:
+Mã là sự thật, sơ đồ là ảnh chụp tại commit ghi trong `candidate.json` của nó. Nếu thấy lệch:
 
 1. Mở `candidate.json` trong thư mục của sơ đồ đó, sửa khối hay mũi tên.
 2. Chạy lại từ thư mục gốc repo:
@@ -76,4 +75,4 @@ node "<đường dẫn archify>/bin/archify.mjs" finalize <loại> .archify/<th�
 
 ## Những gì chưa vẽ
 
-Bên trong plugin Zalo (cầu nối, tài khoản), `sso`, `web`, `conversations`, Studio soạn kỹ năng, và các phần ngoài agent (app Android, thiết kế, web cũ). Các luật ranh giới agent ↔ CRM nằm ở `.claude/rules/agent-crm-boundary.md`; sơ đồ *Dữ liệu CRM vào agent* (mục 4) vẽ luật L4 trong số đó.
+Plugin `web`, `conversations`, `jev`, Studio soạn kỹ năng, dashboard (frontend), và đồ thị lượt RAG đang chờ duyệt (`docs/PLAN-rag-graph.md`). Các luật ranh giới của agent nằm ở `.claude/rules/agent-boundary.md`.

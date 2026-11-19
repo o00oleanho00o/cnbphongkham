@@ -1,17 +1,17 @@
 {
   "schemaVersion": 1,
-  "receiptId": "a414e859-8c1d-4cd2-9667-2e20339fd16a",
+  "receiptId": "35ae7f00-e703-4085-a7cf-e189cc05333c",
   "status": "current",
   "command": "deliver",
   "type": "sequence",
   "input": "E:\\Desktop\\cnbphongkham\\.archify\\sequence-serve-boot-20261022-112511\\candidate.json",
   "output": "E:\\Desktop\\cnbphongkham\\.archify\\sequence-serve-boot-20261022-112511\\serve-boot.html",
   "specification": {
-    "sha256": "8a79dc5bae6250c1c32b83515f073d3daf9c83647a6c5536e14e265b09dbf30b",
-    "bytes": 8441
+    "sha256": "3f0bba2753277906ee4ed06c94c18490093a0636c42c17d049086eb6f2d6671d",
+    "bytes": 8065
   },
   "artifact": {
-    "sha256": "00ab16f1d13fdf0ac09ba3c32e299ec25181144cf12685a0b1e9e42ff1ae2b79",
-    "bytes": 823660
+    "sha256": "8f154012d9092d4bd07b151cc6854583af3be004593346e4081307ed9fc8979b",
+    "bytes": 823567
   }
 }

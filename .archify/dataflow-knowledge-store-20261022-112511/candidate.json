@@ -9,7 +9,7 @@
     "repository": {
       "url": "git@github-personal20:o00oleanho00o/cnbphongkham.git",
       "link_mode": "local-only",
-      "revision": "7d86533840b79a213b046bf19e0de37db65f3b14"
+      "revision": "4be635745c2fc00b28fce614208432b22d50a32f"
     }
   },
   "stages": [
@@ -39,15 +39,15 @@
       "row": 0,
       "sources": [
         {
-          "path": "pema-agent/backend/apps/agent/plugins/knowledge/ingest.py",
+          "path": "backend/apps/agent/plugins/knowledge/ingest.py",
           "line": 1,
           "end_line": 7,
           "label": "Ingest"
         },
         {
-          "path": "pema-agent/backend/apps/agent/plugins/knowledge/__init__.py",
-          "line": 25,
-          "end_line": 32,
+          "path": "backend/apps/agent/plugins/knowledge/__init__.py",
+          "line": 26,
+          "end_line": 33,
           "label": "routes, provide"
         }
       ]
@@ -61,15 +61,15 @@
       "row": 2,
       "sources": [
         {
-          "path": "pema-agent/backend/apps/agent/plugins/knowledge/plugin.py",
-          "line": 93,
-          "end_line": 113,
+          "path": "backend/apps/agent/plugins/knowledge/plugin.py",
+          "line": 90,
+          "end_line": 110,
           "label": "SearchArgs"
         },
         {
-          "path": "pema-agent/backend/apps/agent/plugins/knowledge/plugin.py",
-          "line": 331,
-          "end_line": 349,
+          "path": "backend/apps/agent/plugins/knowledge/plugin.py",
+          "line": 328,
+          "end_line": 346,
           "label": "_search_tool"
         }
       ]
@@ -83,13 +83,13 @@
       "row": 0,
       "sources": [
         {
-          "path": "pema-agent/backend/apps/agent/plugins/knowledge/ingest.py",
+          "path": "backend/apps/agent/plugins/knowledge/ingest.py",
           "line": 1,
           "end_line": 7,
           "label": "cắt ngay khi thêm"
         },
         {
-          "path": "pema-agent/backend/apps/agent/plugins/knowledge/migrations/0001_create_store.sql",
+          "path": "backend/apps/agent/plugins/knowledge/migrations/0001_create_store.sql",
           "line": 54,
           "end_line": 61,
           "label": "terms, term_counts"
@@ -106,21 +106,21 @@
       "tag": "job nền",
       "sources": [
         {
-          "path": "pema-agent/backend/apps/agent/plugins/knowledge/embedder.py",
+          "path": "backend/apps/agent/plugins/knowledge/embedder.py",
           "line": 1,
           "end_line": 8,
           "label": "vai trò"
         },
         {
-          "path": "pema-agent/backend/apps/agent/plugins/knowledge/embedder.py",
+          "path": "backend/apps/agent/plugins/knowledge/embedder.py",
           "line": 25,
           "end_line": 32,
           "label": "BACKOFF_S"
         },
         {
-          "path": "pema-agent/backend/apps/agent/plugins/knowledge/plugin.py",
-          "line": 197,
-          "end_line": 198,
+          "path": "backend/apps/agent/plugins/knowledge/plugin.py",
+          "line": 194,
+          "end_line": 195,
           "label": "register_job"
         }
       ]
@@ -134,13 +134,13 @@
       "row": 2,
       "sources": [
         {
-          "path": "pema-agent/backend/apps/agent/plugins/knowledge/embedder.py",
+          "path": "backend/apps/agent/plugins/knowledge/embedder.py",
           "line": 135,
           "end_line": 135,
           "label": "query_vector"
         },
         {
-          "path": "pema-agent/backend/apps/agent/plugins/knowledge/search.py",
+          "path": "backend/apps/agent/plugins/knowledge/search.py",
           "line": 208,
           "end_line": 230,
           "label": "_vector: không bao giờ ném"
@@ -156,13 +156,13 @@
       "row": 3,
       "sources": [
         {
-          "path": "pema-agent/backend/apps/agent/plugins/knowledge/plugin.py",
-          "line": 67,
-          "end_line": 78,
+          "path": "backend/apps/agent/plugins/knowledge/plugin.py",
+          "line": 68,
+          "end_line": 79,
           "label": "default_settings embedding"
         },
         {
-          "path": "pema-agent/backend/apps/agent/plugins/knowledge/embedding.py",
+          "path": "backend/apps/agent/plugins/knowledge/embedding.py",
           "line": 87,
           "end_line": 87,
           "label": "EmbeddingClient"
@@ -178,13 +178,13 @@
       "row": 0,
       "sources": [
         {
-          "path": "pema-agent/backend/apps/agent/plugins/knowledge/migrations/0001_create_store.sql",
+          "path": "backend/apps/agent/plugins/knowledge/migrations/0001_create_store.sql",
           "line": 8,
           "end_line": 38,
           "label": "kb_source"
         },
         {
-          "path": "pema-agent/backend/apps/agent/plugins/knowledge/migrations/0001_create_store.sql",
+          "path": "backend/apps/agent/plugins/knowledge/migrations/0001_create_store.sql",
           "line": 43,
           "end_line": 68,
           "label": "kb_chunk"
@@ -200,7 +200,7 @@
       "row": 1,
       "sources": [
         {
-          "path": "pema-agent/backend/apps/agent/plugins/knowledge/migrations/0001_create_store.sql",
+          "path": "backend/apps/agent/plugins/knowledge/migrations/0001_create_store.sql",
           "line": 112,
           "end_line": 123,
           "label": "kb_embedding"
@@ -216,15 +216,15 @@
       "row": 3,
       "sources": [
         {
-          "path": "pema-agent/backend/apps/agent/plugins/knowledge/migrations/0001_create_store.sql",
+          "path": "backend/apps/agent/plugins/knowledge/migrations/0001_create_store.sql",
           "line": 98,
           "end_line": 110,
           "label": "kb_gap"
         },
         {
-          "path": "pema-agent/backend/apps/agent/plugins/knowledge/plugin.py",
-          "line": 323,
-          "end_line": 329,
+          "path": "backend/apps/agent/plugins/knowledge/plugin.py",
+          "line": 320,
+          "end_line": 326,
           "label": "record_gap"
         }
       ]
@@ -238,13 +238,13 @@
       "row": 0,
       "sources": [
         {
-          "path": "pema-agent/backend/apps/agent/plugins/knowledge/search.py",
+          "path": "backend/apps/agent/plugins/knowledge/search.py",
           "line": 203,
           "end_line": 206,
           "label": "_keyword"
         },
         {
-          "path": "pema-agent/backend/apps/agent/plugins/knowledge/search.py",
+          "path": "backend/apps/agent/plugins/knowledge/search.py",
           "line": 34,
           "end_line": 41,
           "label": "CANDIDATES"
@@ -260,13 +260,13 @@
       "row": 1,
       "sources": [
         {
-          "path": "pema-agent/backend/apps/agent/plugins/knowledge/search.py",
+          "path": "backend/apps/agent/plugins/knowledge/search.py",
           "line": 196,
           "end_line": 201,
           "label": "_branch: hai nhánh cùng lúc"
         },
         {
-          "path": "pema-agent/backend/apps/agent/plugins/knowledge/store.py",
+          "path": "backend/apps/agent/plugins/knowledge/store.py",
           "line": 83,
           "end_line": 89,
           "label": "vector_search"
@@ -282,13 +282,13 @@
       "row": 2,
       "sources": [
         {
-          "path": "pema-agent/backend/apps/agent/plugins/knowledge/search.py",
+          "path": "backend/apps/agent/plugins/knowledge/search.py",
           "line": 139,
           "end_line": 149,
           "label": "fusion, boost, spread, pack"
         },
         {
-          "path": "pema-agent/backend/apps/agent/plugins/knowledge/fusion.py",
+          "path": "backend/apps/agent/plugins/knowledge/fusion.py",
           "line": 22,
           "end_line": 38,
           "label": "vector_first, rank_fusion"
@@ -304,13 +304,13 @@
       "row": 1,
       "sources": [
         {
-          "path": "pema-agent/backend/apps/agent/plugins/knowledge/plugin.py",
-          "line": 276,
-          "end_line": 282,
+          "path": "backend/apps/agent/plugins/knowledge/plugin.py",
+          "line": 273,
+          "end_line": 279,
           "label": "judge_plan: ctx.use(JUDGE)"
         },
         {
-          "path": "pema-agent/backend/apps/agent/plugins/jev/__init__.py",
+          "path": "backend/apps/agent/plugins/jev/__init__.py",
           "line": 1,
           "end_line": 6,
           "label": "plugin jev"
@@ -326,15 +326,15 @@
       "row": 2,
       "sources": [
         {
-          "path": "pema-agent/backend/apps/agent/plugins/knowledge/search.py",
+          "path": "backend/apps/agent/plugins/knowledge/search.py",
           "line": 264,
           "end_line": 297,
           "label": "_packed, tool_text"
         },
         {
-          "path": "pema-agent/backend/apps/agent/plugins/knowledge/plugin.py",
-          "line": 82,
-          "end_line": 89,
+          "path": "backend/apps/agent/plugins/knowledge/plugin.py",
+          "line": 81,
+          "end_line": 86,
           "label": "search settings"
         }
       ]

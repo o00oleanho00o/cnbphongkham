@@ -9,7 +9,7 @@
     "repository": {
       "url": "git@github-personal20:o00oleanho00o/cnbphongkham.git",
       "link_mode": "local-only",
-      "revision": "7d86533840b79a213b046bf19e0de37db65f3b14"
+      "revision": "4be635745c2fc00b28fce614208432b22d50a32f"
     }
   },
   "mainPath": [
@@ -27,13 +27,13 @@
       "step": "01",
       "sources": [
         {
-          "path": "pema-agent/backend/apps/agent/agent_app/ingress_store.py",
+          "path": "backend/apps/agent/agent_app/ingress_store.py",
           "line": 33,
           "end_line": 38,
           "label": "INSERT ON CONFLICT DO NOTHING"
         },
         {
-          "path": "pema-agent/backend/apps/agent/alembic/versions/0001_baseline.sql",
+          "path": "backend/apps/agent/alembic/versions/0001_baseline.sql",
           "line": 222,
           "end_line": 223,
           "label": "UNIQUE external_id"
@@ -49,15 +49,15 @@
       "step": "02",
       "sources": [
         {
-          "path": "pema-agent/backend/apps/agent/agent_app/ingress_store.py",
+          "path": "backend/apps/agent/agent_app/ingress_store.py",
           "line": 56,
           "end_line": 59,
           "label": "_CLAIM"
         },
         {
-          "path": "pema-agent/backend/apps/agent/agent_app/dispatcher.py",
-          "line": 224,
-          "end_line": 243,
+          "path": "backend/apps/agent/agent_app/dispatcher.py",
+          "line": 256,
+          "end_line": 275,
           "label": "_drain"
         }
       ]
@@ -71,13 +71,13 @@
       "step": "03",
       "sources": [
         {
-          "path": "pema-agent/backend/apps/agent/agent_app/ingress_store.py",
+          "path": "backend/apps/agent/agent_app/ingress_store.py",
           "line": 60,
           "end_line": 63,
           "label": "_FINISH"
         },
         {
-          "path": "pema-agent/backend/apps/agent/alembic/versions/0001_baseline.sql",
+          "path": "backend/apps/agent/alembic/versions/0001_baseline.sql",
           "line": 46,
           "end_line": 46,
           "label": "done ⇔ reply"
@@ -92,7 +92,7 @@
       "tag": "delivery",
       "sources": [
         {
-          "path": "pema-agent/backend/apps/agent/agent_app/ingress_store.py",
+          "path": "backend/apps/agent/agent_app/ingress_store.py",
           "line": 82,
           "end_line": 92,
           "label": "_DUE_DELIVERIES"
@@ -107,13 +107,13 @@
       "tag": "delivery",
       "sources": [
         {
-          "path": "pema-agent/backend/apps/agent/agent_app/channel_hub.py",
-          "line": 205,
-          "end_line": 275,
+          "path": "backend/apps/agent/agent_app/channel_hub.py",
+          "line": 207,
+          "end_line": 277,
           "label": "deliver"
         },
         {
-          "path": "pema-agent/backend/apps/agent/agent_app/channel_hub.py",
+          "path": "backend/apps/agent/agent_app/channel_hub.py",
           "line": 79,
           "end_line": 81,
           "label": "PACED_DELIVERY"
@@ -128,9 +128,9 @@
       "tag": "delivery",
       "sources": [
         {
-          "path": "pema-agent/backend/apps/agent/agent_app/channel_hub.py",
-          "line": 273,
-          "end_line": 299,
+          "path": "backend/apps/agent/agent_app/channel_hub.py",
+          "line": 275,
+          "end_line": 302,
           "label": "finish sent, _tell_of_reply"
         }
       ]
@@ -143,13 +143,13 @@
       "tag": "status",
       "sources": [
         {
-          "path": "pema-agent/backend/apps/agent/agent_app/dispatcher.py",
-          "line": 328,
-          "end_line": 332,
+          "path": "backend/apps/agent/agent_app/dispatcher.py",
+          "line": 369,
+          "end_line": 376,
           "label": "error_kind"
         },
         {
-          "path": "pema-agent/backend/apps/agent/agent_app/ingress_store.py",
+          "path": "backend/apps/agent/agent_app/ingress_store.py",
           "line": 64,
           "end_line": 67,
           "label": "_FAIL"
@@ -164,15 +164,15 @@
       "tag": "status",
       "sources": [
         {
-          "path": "pema-agent/backend/apps/agent/agent_app/ingress_store.py",
+          "path": "backend/apps/agent/agent_app/ingress_store.py",
           "line": 71,
           "end_line": 77,
           "label": "_REQUEUE"
         },
         {
-          "path": "pema-agent/backend/apps/agent/agent_app/dispatcher.py",
-          "line": 48,
-          "end_line": 54,
+          "path": "backend/apps/agent/agent_app/dispatcher.py",
+          "line": 49,
+          "end_line": 55,
           "label": "max_attempts = 3"
         }
       ]
@@ -185,15 +185,15 @@
       "tag": "delivery",
       "sources": [
         {
-          "path": "pema-agent/backend/apps/agent/agent_app/ingress.py",
+          "path": "backend/apps/agent/agent_app/ingress.py",
           "line": 81,
           "end_line": 82,
           "label": "delivery None"
         },
         {
-          "path": "pema-agent/backend/apps/agent/agent_app/gateway.py",
-          "line": 392,
-          "end_line": 413,
+          "path": "backend/apps/agent/agent_app/gateway.py",
+          "line": 409,
+          "end_line": 430,
           "label": "chat, ingress"
         }
       ]
@@ -206,15 +206,15 @@
       "tag": "delivery",
       "sources": [
         {
-          "path": "pema-agent/backend/apps/agent/agent_app/dispatcher.py",
-          "line": 334,
-          "end_line": 338,
+          "path": "backend/apps/agent/agent_app/dispatcher.py",
+          "line": 378,
+          "end_line": 382,
           "label": "answered together with"
         },
         {
-          "path": "pema-agent/backend/apps/agent/agent_app/channel_hub.py",
-          "line": 220,
-          "end_line": 247,
+          "path": "backend/apps/agent/agent_app/channel_hub.py",
+          "line": 222,
+          "end_line": 249,
           "label": "SKIP, rỗng, từ chối"
         }
       ]
@@ -227,13 +227,13 @@
       "tag": "delivery",
       "sources": [
         {
-          "path": "pema-agent/backend/apps/agent/agent_app/channel_hub.py",
-          "line": 374,
-          "end_line": 389,
+          "path": "backend/apps/agent/agent_app/channel_hub.py",
+          "line": 387,
+          "end_line": 402,
           "label": "_failed"
         },
         {
-          "path": "pema-agent/backend/packages/agent-core/src/agentcore/channels.py",
+          "path": "backend/packages/agent-core/src/agentcore/channels.py",
           "line": 72,
           "end_line": 78,
           "label": "ChannelSendError.retryable"

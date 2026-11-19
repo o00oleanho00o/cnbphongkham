@@ -1,17 +1,17 @@
 {
   "schemaVersion": 1,
-  "receiptId": "229f9176-507e-4f68-b702-f985602a4d35",
+  "receiptId": "0069fcdb-06ff-4251-9453-b46c665dd151",
   "status": "current",
   "command": "deliver",
   "type": "workflow",
   "input": "E:\\Desktop\\cnbphongkham\\.archify\\workflow-run-turn-loop-20261022-112511\\candidate.json",
   "output": "E:\\Desktop\\cnbphongkham\\.archify\\workflow-run-turn-loop-20261022-112511\\run-turn-loop.html",
   "specification": {
-    "sha256": "62b1afdd0bc8665f77b677fb681eb3f066f18eb20127162ee66a23d9b6f808ce",
-    "bytes": 16522
+    "sha256": "b99d815ade6e81f9031d4d25aac524442dd87d1bd21feb06563aa69871d854cb",
+    "bytes": 15660
   },
   "artifact": {
-    "sha256": "bcc8c3b9cee0fa7812097bcbffa0fc99aac1c1c4a64283cfd0839003f0f9ef75",
-    "bytes": 845104
+    "sha256": "45ff7b269eb7efef1b5eebc08cc27d0d862271bd00136e8d4fe4aee086d08422",
+    "bytes": 844784
   }
 }

@@ -9,7 +9,7 @@
     "repository": {
       "url": "git@github-personal20:o00oleanho00o/cnbphongkham.git",
       "link_mode": "local-only",
-      "revision": "7d86533840b79a213b046bf19e0de37db65f3b14"
+      "revision": "4be635745c2fc00b28fce614208432b22d50a32f"
     }
   },
   "layout": {
@@ -34,7 +34,7 @@
       ],
       "sources": [
         {
-          "path": "pema-agent/backend/packages/agent-core/src/agentcore/harness/model/types.py",
+          "path": "backend/packages/agent-core/src/agentcore/harness/model/types.py",
           "line": 22,
           "end_line": 48,
           "label": "LlmRequest, ModelClient"
@@ -73,7 +73,7 @@
       ],
       "sources": [
         {
-          "path": "pema-agent/backend/packages/agent-core/src/agentcore/harness/store/base.py",
+          "path": "backend/packages/agent-core/src/agentcore/harness/store/base.py",
           "line": 24,
           "end_line": 35,
           "label": "SessionStore"
@@ -123,15 +123,15 @@
       ],
       "sources": [
         {
-          "path": "pema-agent/backend/packages/agent-core/src/agentcore/channels.py",
-          "line": 111,
-          "end_line": 126,
+          "path": "backend/packages/agent-core/src/agentcore/channels.py",
+          "line": 113,
+          "end_line": 128,
           "label": "ChannelAdapter"
         },
         {
-          "path": "pema-agent/backend/packages/agent-core/src/agentcore/channels.py",
-          "line": 129,
-          "end_line": 160,
+          "path": "backend/packages/agent-core/src/agentcore/channels.py",
+          "line": 131,
+          "end_line": 162,
           "label": "4 protocol tùy chọn của kênh"
         }
       ]
@@ -170,19 +170,19 @@
       ],
       "sources": [
         {
-          "path": "pema-agent/backend/apps/agent/agent_app/model_settings.py",
-          "line": 219,
-          "end_line": 277,
+          "path": "backend/apps/agent/agent_app/model_settings.py",
+          "line": 222,
+          "end_line": 280,
           "label": "DynamicModel"
         },
         {
-          "path": "pema-agent/backend/packages/agent-core/src/agentcore/harness/model/openai_compat.py",
+          "path": "backend/packages/agent-core/src/agentcore/harness/model/openai_compat.py",
           "line": 76,
           "end_line": 108,
           "label": "OpenAICompatModel"
         },
         {
-          "path": "pema-agent/backend/packages/agent-core/src/agentcore/harness/model/anthropic.py",
+          "path": "backend/packages/agent-core/src/agentcore/harness/model/anthropic.py",
           "line": 64,
           "end_line": 104,
           "label": "AnthropicModel"
@@ -212,13 +212,13 @@
       ],
       "sources": [
         {
-          "path": "pema-agent/backend/apps/agent/agent_app/storage.py",
+          "path": "backend/apps/agent/agent_app/storage.py",
           "line": 186,
           "end_line": 243,
           "label": "PostgresSessionStore"
         },
         {
-          "path": "pema-agent/backend/packages/agent-core/src/agentcore/harness/store/memory.py",
+          "path": "backend/packages/agent-core/src/agentcore/harness/store/memory.py",
           "line": 9,
           "end_line": 34,
           "label": "InMemorySessionStore"
@@ -227,28 +227,22 @@
     },
     {
       "id": "zalo_channel",
-      "label": "ZaloBotChannel",
+      "label": "ConnectorChannel",
       "kind": "class",
-      "sublabel": "plugin zalo (cũng ZaloPersonalChannel): đăng ký qua ctx.register_channel",
+      "sublabel": "plugin connectors: một lớp cho mọi nền tảng, đăng ký qua ctx.register_channel",
       "row": 1,
       "col": 2,
       "sources": [
         {
-          "path": "pema-agent/backend/apps/agent/plugins/zalo/bot/channel.py",
-          "line": 42,
-          "end_line": 42,
-          "label": "ZaloBotChannel"
+          "path": "backend/apps/agent/plugins/connectors/channel.py",
+          "line": 53,
+          "end_line": 53,
+          "label": "ConnectorChannel"
         },
         {
-          "path": "pema-agent/backend/apps/agent/plugins/zalo/personal/channel.py",
-          "line": 59,
-          "end_line": 59,
-          "label": "ZaloPersonalChannel"
-        },
-        {
-          "path": "pema-agent/backend/apps/agent/plugins/zalo/plugin.py",
-          "line": 200,
-          "end_line": 200,
+          "path": "backend/apps/agent/plugins/connectors/plugin.py",
+          "line": 229,
+          "end_line": 229,
           "label": "register_channel"
         }
       ]
@@ -278,7 +272,7 @@
       ],
       "sources": [
         {
-          "path": "pema-agent/backend/packages/agent-core/src/agentcore/memory/service.py",
+          "path": "backend/packages/agent-core/src/agentcore/memory/service.py",
           "line": 44,
           "end_line": 51,
           "label": "MemoryBackend"
@@ -303,7 +297,7 @@
       ],
       "sources": [
         {
-          "path": "pema-agent/backend/packages/agent-core/src/agentcore/trace.py",
+          "path": "backend/packages/agent-core/src/agentcore/trace.py",
           "line": 34,
           "end_line": 51,
           "label": "TurnTrace, Tracer"
@@ -356,9 +350,9 @@
       ],
       "sources": [
         {
-          "path": "pema-agent/backend/packages/agent-core/src/agentcore/harness/tools/spec.py",
+          "path": "backend/packages/agent-core/src/agentcore/harness/tools/spec.py",
           "line": 21,
-          "end_line": 73,
+          "end_line": 76,
           "label": "ToolContext, ToolOutput, ToolSpec"
         }
       ]
@@ -372,7 +366,7 @@
       "col": 0,
       "sources": [
         {
-          "path": "pema-agent/backend/apps/agent/agent_app/storage.py",
+          "path": "backend/apps/agent/agent_app/storage.py",
           "line": 89,
           "end_line": 116,
           "label": "PostgresMemoryBackend"
@@ -388,9 +382,9 @@
       "col": 1,
       "sources": [
         {
-          "path": "pema-agent/backend/apps/agent/agent_app/storage.py",
-          "line": 344,
-          "end_line": 392,
+          "path": "backend/apps/agent/agent_app/storage.py",
+          "line": 349,
+          "end_line": 397,
           "label": "PostgresTracer"
         }
       ]
@@ -421,13 +415,13 @@
       ],
       "sources": [
         {
-          "path": "pema-agent/backend/packages/agent-core/src/agentcore/harness/hooks/base.py",
+          "path": "backend/packages/agent-core/src/agentcore/harness/hooks/base.py",
           "line": 55,
           "end_line": 85,
           "label": "4 loại hook"
         },
         {
-          "path": "pema-agent/backend/packages/agent-core/src/agentcore/harness/hooks/base.py",
+          "path": "backend/packages/agent-core/src/agentcore/harness/hooks/base.py",
           "line": 122,
           "end_line": 145,
           "label": "before_tool fail closed"
@@ -489,8 +483,8 @@
       "title": "Thêm một thứ mới",
       "items": [
         "Nhà cung cấp model mới: một lớp complete() chuyển LlmRequest sang API của họ và phân loại lỗi thành ModelErrorKind; đăng ký trong model_factory",
-        "Kênh chat mới: một plugin với ChannelAdapter (+ ShowsTyping, ReportsTyping, PreparesText tùy chọn), ctx.register_channel; ChannelHub lo phần còn lại",
-        "Tool mới: một ToolSpec với pydantic args; T9 giữ danh sách đỏ cho tới khi chủ duyệt"
+        "Kênh chat mới: một connector ngoài agent theo docs/CONNECTOR-PROTOCOL.md; plugin connectors đăng ký ChannelAdapter cho nó, ChannelHub lo phần còn lại",
+        "Tool mới: một ToolSpec với pydantic args; thêm tool cho profile là đổi L7, chủ duyệt"
       ]
     },
     {

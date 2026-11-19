@@ -9,7 +9,7 @@
     "repository": {
       "url": "git@github-personal20:o00oleanho00o/cnbphongkham.git",
       "link_mode": "local-only",
-      "revision": "d9faf4db6e5367e8c957fd095591db7093e9457c"
+      "revision": "4be635745c2fc00b28fce614208432b22d50a32f"
     }
   },
   "lanes": [
@@ -72,15 +72,15 @@
       "sublabel": "ctx.cases.open(kind, key)",
       "sources": [
         {
-          "path": "pema-agent/backend/apps/agent/agent_app/plugins/host.py",
-          "line": 372,
-          "end_line": 377,
+          "path": "backend/apps/agent/agent_app/plugins/host.py",
+          "line": 394,
+          "end_line": 399,
           "label": "register_case"
         },
         {
-          "path": "pema-agent/backend/apps/agent/agent_app/cases/engine.py",
-          "line": 134,
-          "end_line": 163,
+          "path": "backend/apps/agent/agent_app/cases/engine.py",
+          "line": 150,
+          "end_line": 179,
           "label": "open_for"
         }
       ]
@@ -94,15 +94,15 @@
       "sublabel": "mọi kênh qua ChannelHub",
       "sources": [
         {
-          "path": "pema-agent/backend/apps/agent/agent_app/channel_hub.py",
-          "line": 312,
-          "end_line": 319,
+          "path": "backend/apps/agent/agent_app/channel_hub.py",
+          "line": 317,
+          "end_line": 324,
           "label": "heard"
         },
         {
-          "path": "pema-agent/backend/apps/agent/agent_app/cases/engine.py",
-          "line": 195,
-          "end_line": 210,
+          "path": "backend/apps/agent/agent_app/cases/engine.py",
+          "line": 294,
+          "end_line": 309,
           "label": "on_inbound"
         }
       ]
@@ -116,15 +116,15 @@
       "sublabel": "mở, tới wake_at, khách, sự kiện",
       "sources": [
         {
-          "path": "pema-agent/backend/apps/agent/agent_app/cases/engine.py",
-          "line": 176,
-          "end_line": 191,
+          "path": "backend/apps/agent/agent_app/cases/engine.py",
+          "line": 275,
+          "end_line": 290,
           "label": "_wake"
         },
         {
-          "path": "pema-agent/backend/apps/agent/agent_app/cases/engine.py",
-          "line": 214,
-          "end_line": 238,
+          "path": "backend/apps/agent/agent_app/cases/engine.py",
+          "line": 313,
+          "end_line": 344,
           "label": "run, pass_once"
         }
       ]
@@ -139,9 +139,9 @@
       "tag": "trần/người/ngày: chờ",
       "sources": [
         {
-          "path": "pema-agent/backend/packages/agent-core/src/agentcore/cases/rules.py",
-          "line": 132,
-          "end_line": 167,
+          "path": "backend/packages/agent-core/src/agentcore/cases/rules.py",
+          "line": 134,
+          "end_line": 169,
           "label": "blocked"
         }
       ]
@@ -155,9 +155,9 @@
       "sublabel": "tối đa 10 nút một lượt quét",
       "sources": [
         {
-          "path": "pema-agent/backend/apps/agent/agent_app/cases/engine.py",
-          "line": 240,
-          "end_line": 280,
+          "path": "backend/apps/agent/agent_app/cases/engine.py",
+          "line": 346,
+          "end_line": 386,
           "label": "step"
         }
       ]
@@ -171,9 +171,9 @@
       "sublabel": "mã của plugin quyết",
       "sources": [
         {
-          "path": "pema-agent/backend/apps/agent/agent_app/cases/engine.py",
-          "line": 282,
-          "end_line": 286,
+          "path": "backend/apps/agent/agent_app/cases/engine.py",
+          "line": 389,
+          "end_line": 393,
           "label": "_run: nút mã"
         }
       ]
@@ -188,15 +188,15 @@
       "tag": "goal + verify + bước",
       "sources": [
         {
-          "path": "pema-agent/backend/apps/agent/agent_app/cases/engine.py",
-          "line": 287,
-          "end_line": 305,
+          "path": "backend/apps/agent/agent_app/cases/engine.py",
+          "line": 394,
+          "end_line": 412,
           "label": "_run: nút model"
         },
         {
-          "path": "pema-agent/backend/packages/agent-core/src/agentcore/cases/rules.py",
-          "line": 225,
-          "end_line": 236,
+          "path": "backend/packages/agent-core/src/agentcore/cases/rules.py",
+          "line": 248,
+          "end_line": 259,
           "label": "turn_text"
         }
       ]
@@ -210,15 +210,15 @@
       "sublabel": "giữ trong agent_case.pending",
       "sources": [
         {
-          "path": "pema-agent/backend/packages/agent-core/src/agentcore/cases/tools.py",
+          "path": "backend/packages/agent-core/src/agentcore/cases/tools.py",
           "line": 65,
           "end_line": 97,
           "label": "make_case_tools"
         },
         {
-          "path": "pema-agent/backend/apps/agent/agent_app/cases/engine.py",
-          "line": 116,
-          "end_line": 124,
+          "path": "backend/apps/agent/agent_app/cases/engine.py",
+          "line": 132,
+          "end_line": 140,
           "label": "take"
         }
       ]
@@ -232,9 +232,9 @@
       "sublabel": "cạnh, bộ đếm, chờ",
       "sources": [
         {
-          "path": "pema-agent/backend/packages/agent-core/src/agentcore/cases/rules.py",
-          "line": 193,
-          "end_line": 222,
+          "path": "backend/packages/agent-core/src/agentcore/cases/rules.py",
+          "line": 195,
+          "end_line": 226,
           "label": "apply"
         }
       ]
@@ -248,15 +248,15 @@
       "sublabel": "ca chờ nằm ở đây",
       "sources": [
         {
-          "path": "pema-agent/backend/apps/agent/agent_app/cases/store.py",
+          "path": "backend/apps/agent/agent_app/cases/store.py",
           "line": 350,
           "end_line": 373,
           "label": "save"
         },
         {
-          "path": "pema-agent/backend/apps/agent/agent_app/cases/engine.py",
-          "line": 272,
-          "end_line": 279,
+          "path": "backend/apps/agent/agent_app/cases/engine.py",
+          "line": 379,
+          "end_line": 386,
           "label": "lưu, lost"
         }
       ],
@@ -271,15 +271,15 @@
       "sublabel": "done hoặc stopped",
       "sources": [
         {
-          "path": "pema-agent/backend/packages/agent-core/src/agentcore/cases/rules.py",
-          "line": 180,
-          "end_line": 190,
+          "path": "backend/packages/agent-core/src/agentcore/cases/rules.py",
+          "line": 182,
+          "end_line": 192,
           "label": "_end"
         },
         {
-          "path": "pema-agent/backend/apps/agent/agent_app/cases/engine.py",
-          "line": 316,
-          "end_line": 351,
+          "path": "backend/apps/agent/agent_app/cases/engine.py",
+          "line": 423,
+          "end_line": 434,
           "label": "_blocked, _close"
         }
       ]

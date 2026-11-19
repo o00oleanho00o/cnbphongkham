@@ -9,7 +9,7 @@
     "repository": {
       "url": "git@github-personal20:o00oleanho00o/cnbphongkham.git",
       "link_mode": "local-only",
-      "revision": "7d86533840b79a213b046bf19e0de37db65f3b14"
+      "revision": "4be635745c2fc00b28fce614208432b22d50a32f"
     }
   },
   "participants": [
@@ -17,12 +17,12 @@
       "id": "channel",
       "type": "external",
       "label": "Kênh",
-      "sublabel": "plugin zalo",
+      "sublabel": "plugin connectors",
       "sources": [
         {
-          "path": "pema-agent/backend/packages/agent-core/src/agentcore/channels.py",
-          "line": 111,
-          "end_line": 129,
+          "path": "backend/packages/agent-core/src/agentcore/channels.py",
+          "line": 113,
+          "end_line": 131,
           "label": "ChannelAdapter"
         }
       ]
@@ -34,15 +34,15 @@
       "sublabel": "nhận, gửi",
       "sources": [
         {
-          "path": "pema-agent/backend/apps/agent/agent_app/channel_hub.py",
-          "line": 301,
-          "end_line": 314,
+          "path": "backend/apps/agent/agent_app/channel_hub.py",
+          "line": 304,
+          "end_line": 317,
           "label": "receive"
         },
         {
-          "path": "pema-agent/backend/apps/agent/agent_app/channel_hub.py",
-          "line": 205,
-          "end_line": 237,
+          "path": "backend/apps/agent/agent_app/channel_hub.py",
+          "line": 207,
+          "end_line": 239,
           "label": "deliver"
         }
       ]
@@ -54,21 +54,21 @@
       "sublabel": "hàng đợi, khóa phiên",
       "sources": [
         {
-          "path": "pema-agent/backend/apps/agent/agent_app/dispatcher.py",
-          "line": 179,
-          "end_line": 193,
+          "path": "backend/apps/agent/agent_app/dispatcher.py",
+          "line": 210,
+          "end_line": 225,
           "label": "accept"
         },
         {
-          "path": "pema-agent/backend/apps/agent/agent_app/dispatcher.py",
-          "line": 224,
-          "end_line": 238,
+          "path": "backend/apps/agent/agent_app/dispatcher.py",
+          "line": 256,
+          "end_line": 270,
           "label": "_drain"
         },
         {
-          "path": "pema-agent/backend/apps/agent/agent_app/dispatcher.py",
-          "line": 283,
-          "end_line": 326,
+          "path": "backend/apps/agent/agent_app/dispatcher.py",
+          "line": 317,
+          "end_line": 346,
           "label": "_process"
         }
       ]
@@ -80,15 +80,15 @@
       "sublabel": "vòng lặp",
       "sources": [
         {
-          "path": "pema-agent/backend/packages/agent-core/src/agentcore/loop/run_turn.py",
-          "line": 369,
-          "end_line": 423,
+          "path": "backend/packages/agent-core/src/agentcore/loop/run_turn.py",
+          "line": 379,
+          "end_line": 434,
           "label": "turn()"
         },
         {
-          "path": "pema-agent/backend/packages/agent-core/src/agentcore/loop/run_turn.py",
-          "line": 275,
-          "end_line": 300,
+          "path": "backend/packages/agent-core/src/agentcore/loop/run_turn.py",
+          "line": 285,
+          "end_line": 310,
           "label": "call_model"
         }
       ]
@@ -100,13 +100,13 @@
       "sublabel": "ingress, session, turn",
       "sources": [
         {
-          "path": "pema-agent/backend/apps/agent/alembic/versions/0001_baseline.sql",
+          "path": "backend/apps/agent/alembic/versions/0001_baseline.sql",
           "line": 18,
           "end_line": 59,
           "label": "agent_ingress"
         },
         {
-          "path": "pema-agent/backend/apps/agent/alembic/versions/0001_baseline.sql",
+          "path": "backend/apps/agent/alembic/versions/0001_baseline.sql",
           "line": 74,
           "end_line": 83,
           "label": "agent_message"
@@ -120,9 +120,9 @@
       "sublabel": "qua ModelClient",
       "sources": [
         {
-          "path": "pema-agent/backend/apps/agent/agent_app/model_settings.py",
-          "line": 219,
-          "end_line": 277,
+          "path": "backend/apps/agent/agent_app/model_settings.py",
+          "line": 222,
+          "end_line": 280,
           "label": "DynamicModel"
         }
       ]
@@ -134,13 +134,13 @@
       "sublabel": "+ hooks",
       "sources": [
         {
-          "path": "pema-agent/backend/packages/agent-core/src/agentcore/harness/tools/executor.py",
+          "path": "backend/packages/agent-core/src/agentcore/harness/tools/executor.py",
           "line": 75,
           "end_line": 115,
           "label": "execute"
         },
         {
-          "path": "pema-agent/backend/packages/agent-core/src/agentcore/harness/tools/executor.py",
+          "path": "backend/packages/agent-core/src/agentcore/harness/tools/executor.py",
           "line": 140,
           "end_line": 173,
           "label": "_checked"
@@ -151,19 +151,19 @@
       "id": "tool",
       "type": "backend",
       "label": "Tool của plugin",
-      "sublabel": "vd crm_free_slots",
+      "sublabel": "vd kb_search",
       "sources": [
         {
-          "path": "pema-agent/backend/packages/agent-core/src/agentcore/harness/tools/spec.py",
-          "line": 46,
-          "end_line": 57,
+          "path": "backend/packages/agent-core/src/agentcore/harness/tools/spec.py",
+          "line": 49,
+          "end_line": 60,
           "label": "ToolSpec"
         },
         {
-          "path": "pema-agent/backend/apps/agent/plugins/crm/__init__.py",
-          "line": 137,
-          "end_line": 140,
-          "label": "từ chối trong nhóm"
+          "path": "backend/apps/agent/plugins/knowledge/plugin.py",
+          "line": 162,
+          "end_line": 176,
+          "label": "kb_search"
         }
       ]
     }
@@ -254,7 +254,7 @@
       "from": "model",
       "to": "turn",
       "y": 466,
-      "label": "tool_use: crm_free_slots(...)",
+      "label": "tool_use: kb_search(...)",
       "variant": "return"
     },
     {

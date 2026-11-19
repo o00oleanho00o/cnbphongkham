@@ -9,107 +9,365 @@
     "repository": {
       "url": "git@github-personal20:o00oleanho00o/cnbphongkham.git",
       "link_mode": "local-only",
-      "revision": "7d86533840b79a213b046bf19e0de37db65f3b14"
+      "revision": "4be635745c2fc00b28fce614208432b22d50a32f"
     }
   },
   "stages": [
-    { "label": "Nguồn" },
-    { "label": "Quyết định" },
-    { "label": "Model phụ" },
-    { "label": "Ghi lại" },
-    { "label": "Lượt sau" }
+    {
+      "label": "Nguồn"
+    },
+    {
+      "label": "Quyết định"
+    },
+    {
+      "label": "Model phụ"
+    },
+    {
+      "label": "Ghi lại"
+    },
+    {
+      "label": "Lượt sau"
+    }
   ],
   "nodes": [
     {
-      "id": "history", "type": "database", "label": "Lịch sử phiên", "sublabel": "agent_message theo seq", "stage": 0, "row": 0,
+      "id": "history",
+      "type": "database",
+      "label": "Lịch sử phiên",
+      "sublabel": "agent_message theo seq",
+      "stage": 0,
+      "row": 0,
       "sources": [
-        { "path": "pema-agent/backend/apps/agent/agent_app/storage.py", "line": 147, "end_line": 164, "label": "load, next seq" },
-        { "path": "pema-agent/backend/apps/agent/alembic/versions/0001_baseline.sql", "line": 74, "end_line": 82, "label": "agent_message" }
+        {
+          "path": "backend/apps/agent/agent_app/storage.py",
+          "line": 147,
+          "end_line": 164,
+          "label": "load, next seq"
+        },
+        {
+          "path": "backend/apps/agent/alembic/versions/0001_baseline.sql",
+          "line": 74,
+          "end_line": 82,
+          "label": "agent_message"
+        }
       ]
     },
     {
-      "id": "policy", "type": "external", "label": "ContextPolicy", "sublabel": "clinic: 128k; nén ở 75%; giữ 20%", "stage": 0, "row": 1,
+      "id": "policy",
+      "type": "external",
+      "label": "ContextPolicy",
+      "sublabel": "rag: 128k; nén ở 75%; giữ 20%",
+      "stage": 0,
+      "row": 1,
       "sources": [
-        { "path": "pema-agent/backend/packages/agent-core/src/agentcore/context/policy.py", "line": 11, "end_line": 34, "label": "ContextPolicy" },
-        { "path": "pema-agent/backend/apps/agent/agents/clinic/agent.toml", "line": 20, "end_line": 23, "label": "[context] clinic" }
+        {
+          "path": "backend/packages/agent-core/src/agentcore/context/policy.py",
+          "line": 11,
+          "end_line": 34,
+          "label": "ContextPolicy"
+        },
+        {
+          "path": "backend/apps/agent/agents/rag/agent.toml",
+          "line": 20,
+          "end_line": 23,
+          "label": "[context] rag"
+        }
       ]
     },
     {
-      "id": "notes", "type": "database", "label": "agent_memory", "sublabel": "agent ≤ 2200, user ≤ 1375 ký tự", "stage": 0, "row": 2,
+      "id": "notes",
+      "type": "database",
+      "label": "agent_memory",
+      "sublabel": "agent ≤ 2200, user ≤ 1375 ký tự",
+      "stage": 0,
+      "row": 2,
       "sources": [
-        { "path": "pema-agent/backend/apps/agent/alembic/versions/0001_baseline.sql", "line": 60, "end_line": 72, "label": "agent_memory" },
-        { "path": "pema-agent/backend/packages/agent-core/src/agentcore/memory/service.py", "line": 15, "end_line": 21, "label": "caps" }
+        {
+          "path": "backend/apps/agent/alembic/versions/0001_baseline.sql",
+          "line": 60,
+          "end_line": 72,
+          "label": "agent_memory"
+        },
+        {
+          "path": "backend/packages/agent-core/src/agentcore/memory/service.py",
+          "line": 15,
+          "end_line": 21,
+          "label": "caps"
+        }
       ]
     },
     {
-      "id": "estimate", "type": "backend", "label": "over_budget?", "sublabel": "ước lượng ký tự/token của yêu cầu", "stage": 1, "row": 0,
+      "id": "estimate",
+      "type": "backend",
+      "label": "over_budget?",
+      "sublabel": "ước lượng ký tự/token của yêu cầu",
+      "stage": 1,
+      "row": 0,
       "sources": [
-        { "path": "pema-agent/backend/packages/agent-core/src/agentcore/context/compaction.py", "line": 65, "end_line": 66, "label": "over_budget" },
-        { "path": "pema-agent/backend/packages/agent-core/src/agentcore/loop/run_turn.py", "line": 218, "end_line": 224, "label": "request_for" }
+        {
+          "path": "backend/packages/agent-core/src/agentcore/context/compaction.py",
+          "line": 81,
+          "end_line": 82,
+          "label": "over_budget"
+        },
+        {
+          "path": "backend/packages/agent-core/src/agentcore/loop/run_turn.py",
+          "line": 227,
+          "end_line": 233,
+          "label": "request_for"
+        }
       ]
     },
     {
-      "id": "cut", "type": "backend", "label": "choose_cut", "sublabel": "mốc là tin user; giữ lượt hiện tại", "stage": 1, "row": 1,
+      "id": "cut",
+      "type": "backend",
+      "label": "choose_cut",
+      "sublabel": "mốc là tin user; giữ lượt hiện tại",
+      "stage": 1,
+      "row": 1,
       "sources": [
-        { "path": "pema-agent/backend/packages/agent-core/src/agentcore/context/compaction.py", "line": 129, "end_line": 141, "label": "choose_cut" }
+        {
+          "path": "backend/packages/agent-core/src/agentcore/context/compaction.py",
+          "line": 145,
+          "end_line": 157,
+          "label": "choose_cut"
+        }
       ]
     },
     {
-      "id": "flush", "type": "backend", "label": "flush_memory", "sublabel": "≤ 2 lời gọi, chỉ tool memory", "stage": 2, "row": 0, "tag": "model",
+      "id": "flush",
+      "type": "backend",
+      "label": "flush_memory",
+      "sublabel": "≤ 2 lời gọi, chỉ tool memory",
+      "stage": 2,
+      "row": 0,
+      "tag": "model",
       "sources": [
-        { "path": "pema-agent/backend/packages/agent-core/src/agentcore/loop/run_turn.py", "line": 453, "end_line": 493, "label": "flush_memory" },
-        { "path": "pema-agent/backend/packages/agent-core/src/agentcore/loop/run_turn.py", "line": 55, "end_line": 61, "label": "FLUSH_NOTE" }
+        {
+          "path": "backend/packages/agent-core/src/agentcore/loop/run_turn.py",
+          "line": 464,
+          "end_line": 504,
+          "label": "flush_memory"
+        },
+        {
+          "path": "backend/packages/agent-core/src/agentcore/loop/run_turn.py",
+          "line": 55,
+          "end_line": 61,
+          "label": "FLUSH_NOTE"
+        }
       ]
     },
     {
-      "id": "summarise", "type": "backend", "label": "Tóm tắt", "sublabel": "6 mục, < 400 từ; lỗi → ghi chú bỏ", "stage": 2, "row": 2, "tag": "model",
+      "id": "summarise",
+      "type": "backend",
+      "label": "Tóm tắt",
+      "sublabel": "6 mục, < 400 từ; lỗi → ghi chú bỏ",
+      "stage": 2,
+      "row": 2,
+      "tag": "model",
       "sources": [
-        { "path": "pema-agent/backend/packages/agent-core/src/agentcore/context/compaction.py", "line": 23, "end_line": 45, "label": "SUMMARY_SYSTEM, fallback" },
-        { "path": "pema-agent/backend/packages/agent-core/src/agentcore/context/compaction.py", "line": 107, "end_line": 126, "label": "_summarise" }
+        {
+          "path": "backend/packages/agent-core/src/agentcore/context/compaction.py",
+          "line": 23,
+          "end_line": 45,
+          "label": "SUMMARY_SYSTEM, fallback"
+        },
+        {
+          "path": "backend/packages/agent-core/src/agentcore/context/compaction.py",
+          "line": 123,
+          "end_line": 142,
+          "label": "_summarise"
+        }
       ]
     },
     {
-      "id": "memsvc", "type": "security", "label": "MemoryService", "sublabel": "add/replace/remove; kiểm version", "stage": 3, "row": 0,
+      "id": "memsvc",
+      "type": "security",
+      "label": "MemoryService",
+      "sublabel": "add/replace/remove; kiểm version",
+      "stage": 3,
+      "row": 0,
       "sources": [
-        { "path": "pema-agent/backend/packages/agent-core/src/agentcore/memory/service.py", "line": 133, "end_line": 150, "label": "_edit: 3 lần thử" },
-        { "path": "pema-agent/backend/packages/agent-core/src/agentcore/harness/hooks/builtin.py", "line": 23, "end_line": 38, "label": "injection_guard" }
+        {
+          "path": "backend/packages/agent-core/src/agentcore/memory/service.py",
+          "line": 133,
+          "end_line": 150,
+          "label": "_edit: 3 lần thử"
+        },
+        {
+          "path": "backend/packages/agent-core/src/agentcore/harness/hooks/builtin.py",
+          "line": 23,
+          "end_line": 38,
+          "label": "injection_guard"
+        }
       ]
     },
     {
-      "id": "record", "type": "database", "label": "CompactionRecord", "sublabel": "summary + first_kept (agent_session)", "stage": 3, "row": 2,
+      "id": "record",
+      "type": "database",
+      "label": "CompactionRecord",
+      "sublabel": "summary + first_kept (agent_session)",
+      "stage": 3,
+      "row": 2,
       "sources": [
-        { "path": "pema-agent/backend/packages/agent-core/src/agentcore/harness/store/base.py", "line": 17, "end_line": 21, "label": "CompactionRecord" },
-        { "path": "pema-agent/backend/apps/agent/agent_app/storage.py", "line": 180, "end_line": 183, "label": "_SAVE_COMPACTION" }
+        {
+          "path": "backend/packages/agent-core/src/agentcore/harness/store/base.py",
+          "line": 17,
+          "end_line": 21,
+          "label": "CompactionRecord"
+        },
+        {
+          "path": "backend/apps/agent/agent_app/storage.py",
+          "line": 180,
+          "end_line": 183,
+          "label": "_SAVE_COMPACTION"
+        }
       ]
     },
     {
-      "id": "system", "type": "security", "label": "System prompt dựng lại", "sublabel": "ghi chú mới + <conversation-summary>", "stage": 4, "row": 0,
+      "id": "system",
+      "type": "security",
+      "label": "System prompt dựng lại",
+      "sublabel": "ghi chú mới + <conversation-summary>",
+      "stage": 4,
+      "row": 0,
       "sources": [
-        { "path": "pema-agent/backend/packages/agent-core/src/agentcore/prompt/builder.py", "line": 97, "end_line": 130, "label": "system(refresh=True)" },
-        { "path": "pema-agent/backend/packages/agent-core/src/agentcore/loop/run_turn.py", "line": 270, "end_line": 273, "label": "sau khi nén" }
+        {
+          "path": "backend/packages/agent-core/src/agentcore/prompt/builder.py",
+          "line": 97,
+          "end_line": 130,
+          "label": "system(refresh=True)"
+        },
+        {
+          "path": "backend/packages/agent-core/src/agentcore/loop/run_turn.py",
+          "line": 279,
+          "end_line": 283,
+          "label": "sau khi nén"
+        }
       ]
     },
     {
-      "id": "request", "type": "backend", "label": "Yêu cầu tiếp", "sublabel": "chỉ tin từ first_kept trở đi", "stage": 4, "row": 2,
+      "id": "request",
+      "type": "backend",
+      "label": "Yêu cầu tiếp",
+      "sublabel": "chỉ tin từ first_kept trở đi",
+      "stage": 4,
+      "row": 2,
       "sources": [
-        { "path": "pema-agent/backend/packages/agent-core/src/agentcore/loop/run_turn.py", "line": 206, "end_line": 216, "label": "build: history[first_kept:]" }
+        {
+          "path": "backend/packages/agent-core/src/agentcore/loop/run_turn.py",
+          "line": 217,
+          "end_line": 225,
+          "label": "build: history[first_kept:]"
+        }
       ]
     }
   ],
   "flows": [
-    { "id": "history-estimate", "from": "history", "to": "estimate", "label": "messages", "classification": "mỗi lời gọi", "variant": "default" },
-    { "id": "policy-estimate", "from": "policy", "to": "estimate", "label": "ngưỡng", "classification": "cấu hình", "variant": "default" },
-    { "id": "estimate-cut", "from": "estimate", "to": "cut", "label": "quá ngưỡng", "classification": "hoặc overflow", "variant": "emphasis" },
-    { "id": "policy-cut", "from": "policy", "to": "cut", "label": "keep_budget", "classification": "cấu hình", "variant": "default" },
-    { "id": "cut-flush", "from": "cut", "to": "flush", "label": "đoạn sắp bỏ", "classification": "transcript", "variant": "emphasis" },
-    { "id": "cut-summarise", "from": "cut", "to": "summarise", "label": "đoạn + tóm tắt cũ", "classification": "transcript", "variant": "emphasis" },
-    { "id": "notes-memsvc", "from": "notes", "to": "memsvc", "label": "bản hiện tại", "classification": "version", "variant": "default" },
-    { "id": "flush-memsvc", "from": "flush", "to": "memsvc", "label": "tool memory", "classification": "qua hook", "variant": "security" },
-    { "id": "summarise-record", "from": "summarise", "to": "record", "label": "summary", "classification": "văn bản", "variant": "emphasis" },
-    { "id": "cut-record", "from": "cut", "to": "record", "label": "first_kept", "classification": "chỉ số", "variant": "dashed" },
-    { "id": "memsvc-system", "from": "memsvc", "to": "system", "label": "ghi chú mới", "classification": "SessionData", "variant": "default" },
-    { "id": "record-system", "from": "record", "to": "system", "label": "tóm tắt vào prompt", "classification": "văn bản", "variant": "emphasis" },
-    { "id": "record-request", "from": "record", "to": "request", "label": "cắt lịch sử", "classification": "first_kept", "variant": "emphasis" }
+    {
+      "id": "history-estimate",
+      "from": "history",
+      "to": "estimate",
+      "label": "messages",
+      "classification": "mỗi lời gọi",
+      "variant": "default"
+    },
+    {
+      "id": "policy-estimate",
+      "from": "policy",
+      "to": "estimate",
+      "label": "ngưỡng",
+      "classification": "cấu hình",
+      "variant": "default"
+    },
+    {
+      "id": "estimate-cut",
+      "from": "estimate",
+      "to": "cut",
+      "label": "quá ngưỡng",
+      "classification": "hoặc overflow",
+      "variant": "emphasis"
+    },
+    {
+      "id": "policy-cut",
+      "from": "policy",
+      "to": "cut",
+      "label": "keep_budget",
+      "classification": "cấu hình",
+      "variant": "default"
+    },
+    {
+      "id": "cut-flush",
+      "from": "cut",
+      "to": "flush",
+      "label": "đoạn sắp bỏ",
+      "classification": "transcript",
+      "variant": "emphasis"
+    },
+    {
+      "id": "cut-summarise",
+      "from": "cut",
+      "to": "summarise",
+      "label": "đoạn + tóm tắt cũ",
+      "classification": "transcript",
+      "variant": "emphasis"
+    },
+    {
+      "id": "notes-memsvc",
+      "from": "notes",
+      "to": "memsvc",
+      "label": "bản hiện tại",
+      "classification": "version",
+      "variant": "default"
+    },
+    {
+      "id": "flush-memsvc",
+      "from": "flush",
+      "to": "memsvc",
+      "label": "tool memory",
+      "classification": "qua hook",
+      "variant": "security"
+    },
+    {
+      "id": "summarise-record",
+      "from": "summarise",
+      "to": "record",
+      "label": "summary",
+      "classification": "văn bản",
+      "variant": "emphasis"
+    },
+    {
+      "id": "cut-record",
+      "from": "cut",
+      "to": "record",
+      "label": "first_kept",
+      "classification": "chỉ số",
+      "variant": "dashed"
+    },
+    {
+      "id": "memsvc-system",
+      "from": "memsvc",
+      "to": "system",
+      "label": "ghi chú mới",
+      "classification": "SessionData",
+      "variant": "default"
+    },
+    {
+      "id": "record-system",
+      "from": "record",
+      "to": "system",
+      "label": "tóm tắt vào prompt",
+      "classification": "văn bản",
+      "variant": "emphasis"
+    },
+    {
+      "id": "record-request",
+      "from": "record",
+      "to": "request",
+      "label": "cắt lịch sử",
+      "classification": "first_kept",
+      "variant": "emphasis"
+    }
   ],
   "cards": [
     {

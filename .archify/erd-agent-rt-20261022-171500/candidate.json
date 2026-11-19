@@ -9,7 +9,7 @@
     "repository": {
       "url": "git@github-personal20:o00oleanho00o/cnbphongkham.git",
       "link_mode": "local-only",
-      "revision": "1cbd95d28f791363b9885ff29a6476d752097c91"
+      "revision": "4be635745c2fc00b28fce614208432b22d50a32f"
     }
   },
   "layout": {
@@ -24,7 +24,7 @@
       "col": 0,
       "sources": [
         {
-          "path": "pema-agent/backend/apps/agent/alembic/versions/0001_baseline.sql",
+          "path": "backend/apps/agent/alembic/versions/0001_baseline.sql",
           "line": 165,
           "end_line": 182,
           "label": "agent_session"
@@ -91,13 +91,13 @@
       "col": 0,
       "sources": [
         {
-          "path": "pema-agent/backend/apps/agent/alembic/versions/0001_baseline.sql",
+          "path": "backend/apps/agent/alembic/versions/0001_baseline.sql",
           "line": 74,
           "end_line": 82,
           "label": "agent_message"
         },
         {
-          "path": "pema-agent/backend/apps/agent/alembic/versions/0001_baseline.sql",
+          "path": "backend/apps/agent/alembic/versions/0001_baseline.sql",
           "line": 271,
           "end_line": 272,
           "label": "FK → agent_session"
@@ -150,13 +150,13 @@
       "col": 0,
       "sources": [
         {
-          "path": "pema-agent/backend/apps/agent/alembic/versions/0001_baseline.sql",
+          "path": "backend/apps/agent/alembic/versions/0001_baseline.sql",
           "line": 7,
           "end_line": 16,
           "label": "agent_conversation"
         },
         {
-          "path": "pema-agent/backend/packages/agent-core/src/agentcore/channels.py",
+          "path": "backend/packages/agent-core/src/agentcore/channels.py",
           "line": 186,
           "end_line": 197,
           "label": "session_id_for(epoch)"
@@ -201,13 +201,13 @@
       "col": 1,
       "sources": [
         {
-          "path": "pema-agent/backend/apps/agent/alembic/versions/0001_baseline.sql",
+          "path": "backend/apps/agent/alembic/versions/0001_baseline.sql",
           "line": 18,
           "end_line": 49,
           "label": "agent_ingress"
         },
         {
-          "path": "pema-agent/backend/apps/agent/alembic/versions/0001_baseline.sql",
+          "path": "backend/apps/agent/alembic/versions/0001_baseline.sql",
           "line": 261,
           "end_line": 265,
           "label": "3 index một phần"
@@ -321,7 +321,7 @@
       "col": 2,
       "sources": [
         {
-          "path": "pema-agent/backend/apps/agent/alembic/versions/0001_baseline.sql",
+          "path": "backend/apps/agent/alembic/versions/0001_baseline.sql",
           "line": 184,
           "end_line": 205,
           "label": "agent_turn"
@@ -411,13 +411,13 @@
       "col": 2,
       "sources": [
         {
-          "path": "pema-agent/backend/apps/agent/alembic/versions/0001_baseline.sql",
+          "path": "backend/apps/agent/alembic/versions/0001_baseline.sql",
           "line": 207,
           "end_line": 217,
           "label": "agent_turn_event"
         },
         {
-          "path": "pema-agent/backend/apps/agent/alembic/versions/0001_baseline.sql",
+          "path": "backend/apps/agent/alembic/versions/0001_baseline.sql",
           "line": 274,
           "end_line": 275,
           "label": "FK → agent_turn"
@@ -472,19 +472,19 @@
       "col": 3,
       "sources": [
         {
-          "path": "pema-agent/backend/apps/agent/alembic/versions/0002_agent_settings.sql",
+          "path": "backend/apps/agent/alembic/versions/0002_agent_settings.sql",
           "line": 4,
           "end_line": 28,
           "label": "agent_settings"
         },
         {
-          "path": "pema-agent/backend/apps/agent/alembic/versions/0004_cases.sql",
+          "path": "backend/apps/agent/alembic/versions/0004_cases.sql",
           "line": 62,
           "end_line": 65,
           "label": "+ cases_*"
         },
         {
-          "path": "pema-agent/backend/apps/agent/alembic/versions/0006_token_budget.sql",
+          "path": "backend/apps/agent/alembic/versions/0006_token_budget.sql",
           "line": 3,
           "end_line": 7,
           "label": "+ tokens_*"
@@ -616,7 +616,7 @@
       "col": 3,
       "sources": [
         {
-          "path": "pema-agent/backend/apps/agent/alembic/versions/0001_baseline.sql",
+          "path": "backend/apps/agent/alembic/versions/0001_baseline.sql",
           "line": 106,
           "end_line": 124,
           "label": "agent_model_settings"
@@ -683,7 +683,7 @@
       "col": 3,
       "sources": [
         {
-          "path": "pema-agent/backend/apps/agent/alembic/versions/0001_baseline.sql",
+          "path": "backend/apps/agent/alembic/versions/0001_baseline.sql",
           "line": 84,
           "end_line": 104,
           "label": "agent_model_entry"
@@ -755,7 +755,7 @@
       "col": 3,
       "sources": [
         {
-          "path": "pema-agent/backend/apps/agent/alembic/versions/0001_baseline.sql",
+          "path": "backend/apps/agent/alembic/versions/0001_baseline.sql",
           "line": 60,
           "end_line": 72,
           "label": "agent_memory"
@@ -804,7 +804,7 @@
       "col": 4,
       "sources": [
         {
-          "path": "pema-agent/backend/apps/agent/alembic/versions/0001_baseline.sql",
+          "path": "backend/apps/agent/alembic/versions/0001_baseline.sql",
           "line": 126,
           "end_line": 140,
           "label": "agent_plugin"
@@ -860,13 +860,13 @@
       "col": 4,
       "sources": [
         {
-          "path": "pema-agent/backend/apps/agent/alembic/versions/0001_baseline.sql",
+          "path": "backend/apps/agent/alembic/versions/0001_baseline.sql",
           "line": 153,
           "end_line": 163,
           "label": "agent_plugin_record"
         },
         {
-          "path": "pema-agent/backend/apps/agent/agent_app/plugins/records.py",
+          "path": "backend/apps/agent/agent_app/plugins/records.py",
           "line": 1,
           "end_line": 3,
           "label": "ctx.storage"
@@ -911,7 +911,7 @@
       "col": 4,
       "sources": [
         {
-          "path": "pema-agent/backend/apps/agent/alembic/versions/0001_baseline.sql",
+          "path": "backend/apps/agent/alembic/versions/0001_baseline.sql",
           "line": 142,
           "end_line": 151,
           "label": "agent_plugin_migration"
@@ -955,19 +955,19 @@
       "col": 2,
       "sources": [
         {
-          "path": "pema-agent/backend/apps/agent/alembic/versions/0004_cases.sql",
+          "path": "backend/apps/agent/alembic/versions/0004_cases.sql",
           "line": 4,
           "end_line": 35,
           "label": "agent_case"
         },
         {
-          "path": "pema-agent/backend/apps/agent/alembic/versions/0004_cases.sql",
+          "path": "backend/apps/agent/alembic/versions/0004_cases.sql",
           "line": 38,
           "end_line": 39,
           "label": "một ca sống mỗi khóa"
         },
         {
-          "path": "pema-agent/backend/apps/agent/alembic/versions/0005_case_pending.sql",
+          "path": "backend/apps/agent/alembic/versions/0005_case_pending.sql",
           "line": 4,
           "end_line": 6,
           "label": "+ pending"
@@ -1085,7 +1085,7 @@
       "col": 2,
       "sources": [
         {
-          "path": "pema-agent/backend/apps/agent/alembic/versions/0004_cases.sql",
+          "path": "backend/apps/agent/alembic/versions/0004_cases.sql",
           "line": 46,
           "end_line": 56,
           "label": "agent_case_event"
@@ -1240,7 +1240,7 @@
       "items": [
         "api_key_enc, secrets_enc: mã hóa bằng khóa dịch vụ (AGENT_SECRET_KEY) trước khi vào DB; model không bao giờ thấy",
         "Role agent_rt_app: chỉ SELECT/INSERT trên agent_turn và agent_turn_event (trace không sửa được), chỉ SELECT trên agent_plugin_migration",
-        "Bảng của plugin (kb_*, sk_*, cv_*, crm_*) cũng ở schema agent_rt nhưng do migration của từng plugin tạo; xem sơ đồ kho tri thức"
+        "Bảng của plugin (kb_*, sk_*, cv_*) cũng ở schema agent_rt nhưng do migration của từng plugin tạo; xem sơ đồ kho tri thức"
       ]
     }
   ]

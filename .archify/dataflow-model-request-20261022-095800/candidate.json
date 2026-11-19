@@ -9,13 +9,19 @@
     "repository": {
       "url": "git@github-personal20:o00oleanho00o/cnbphongkham.git",
       "link_mode": "local-only",
-      "revision": "7d86533840b79a213b046bf19e0de37db65f3b14"
+      "revision": "4be635745c2fc00b28fce614208432b22d50a32f"
     }
   },
   "stages": [
-    { "label": "Nguồn" },
-    { "label": "Lớp" },
-    { "label": "Gửi model" }
+    {
+      "label": "Nguồn"
+    },
+    {
+      "label": "Lớp"
+    },
+    {
+      "label": "Gửi model"
+    }
   ],
   "nodes": [
     {
@@ -26,8 +32,18 @@
       "stage": 0,
       "row": 0,
       "sources": [
-        { "path": "pema-agent/backend/apps/agent/agent_app/profile.py", "line": 3, "end_line": 4, "label": "SOUL, AGENTS" },
-        { "path": "pema-agent/backend/apps/agent/agents/clinic/agent.toml", "line": 12, "end_line": 18, "label": "biến, sections" }
+        {
+          "path": "backend/apps/agent/agent_app/profile.py",
+          "line": 3,
+          "end_line": 4,
+          "label": "SOUL, AGENTS"
+        },
+        {
+          "path": "backend/apps/agent/agents/rag/agent.toml",
+          "line": 12,
+          "end_line": 18,
+          "label": "biến, prompt"
+        }
       ]
     },
     {
@@ -39,9 +55,24 @@
       "row": 1,
       "tag": "ổn định",
       "sources": [
-        { "path": "pema-agent/backend/packages/agent-core/src/agentcore/prompt/builtin.py", "line": 1, "end_line": 6, "label": "thứ tự lõi" },
-        { "path": "pema-agent/backend/apps/agent/plugins/knowledge/plugin.py", "line": 194, "end_line": 194, "label": "knowledge (session)" },
-        { "path": "pema-agent/backend/packages/agent-core/src/agentcore/memory/service.py", "line": 1, "end_line": 7, "label": "ghi chú agent, user" }
+        {
+          "path": "backend/packages/agent-core/src/agentcore/prompt/builtin.py",
+          "line": 1,
+          "end_line": 6,
+          "label": "thứ tự lõi"
+        },
+        {
+          "path": "backend/apps/agent/plugins/knowledge/plugin.py",
+          "line": 191,
+          "end_line": 191,
+          "label": "knowledge (session)"
+        },
+        {
+          "path": "backend/packages/agent-core/src/agentcore/memory/service.py",
+          "line": 1,
+          "end_line": 7,
+          "label": "ghi chú agent, user"
+        }
       ]
     },
     {
@@ -52,7 +83,12 @@
       "stage": 0,
       "row": 2,
       "sources": [
-        { "path": "pema-agent/backend/packages/agent-core/src/agentcore/harness/store/base.py", "line": 19, "end_line": 37, "label": "CompactionRecord, SessionStore" }
+        {
+          "path": "backend/packages/agent-core/src/agentcore/harness/store/base.py",
+          "line": 19,
+          "end_line": 37,
+          "label": "CompactionRecord, SessionStore"
+        }
       ]
     },
     {
@@ -64,9 +100,24 @@
       "row": 3,
       "tag": "thay đổi",
       "sources": [
-        { "path": "pema-agent/backend/packages/agent-core/src/agentcore/prompt/builtin.py", "line": 103, "end_line": 114, "label": "environment, status" },
-        { "path": "pema-agent/backend/apps/agent/plugins/knowledge/plugin.py", "line": 196, "end_line": 196, "label": "knowledge_catalog" },
-        { "path": "pema-agent/backend/apps/agent/plugins/zalo/plugin.py", "line": 110, "end_line": 110, "label": "zalo_channel" }
+        {
+          "path": "backend/packages/agent-core/src/agentcore/prompt/builtin.py",
+          "line": 103,
+          "end_line": 114,
+          "label": "environment, status"
+        },
+        {
+          "path": "backend/apps/agent/plugins/knowledge/plugin.py",
+          "line": 193,
+          "end_line": 193,
+          "label": "knowledge_catalog"
+        },
+        {
+          "path": "backend/apps/agent/plugins/connectors/plugin.py",
+          "line": 70,
+          "end_line": 70,
+          "label": "channel_rules"
+        }
       ]
     },
     {
@@ -77,8 +128,18 @@
       "stage": 0,
       "row": 4,
       "sources": [
-        { "path": "pema-agent/backend/apps/agent/agent_app/assembly.py", "line": 54, "end_line": 61, "label": "lắp registry" },
-        { "path": "pema-agent/backend/packages/agent-core/src/agentcore/harness/tools/spec.py", "line": 70, "end_line": 73, "label": "schema()" }
+        {
+          "path": "backend/apps/agent/agent_app/assembly.py",
+          "line": 60,
+          "end_line": 66,
+          "label": "lắp registry"
+        },
+        {
+          "path": "backend/packages/agent-core/src/agentcore/harness/tools/spec.py",
+          "line": 73,
+          "end_line": 76,
+          "label": "schema()"
+        }
       ]
     },
     {
@@ -90,7 +151,12 @@
       "row": 0,
       "tag": "cache của nhà cung cấp",
       "sources": [
-        { "path": "pema-agent/backend/packages/agent-core/src/agentcore/prompt/builder.py", "line": 97, "end_line": 130, "label": "system()" }
+        {
+          "path": "backend/packages/agent-core/src/agentcore/prompt/builder.py",
+          "line": 97,
+          "end_line": 130,
+          "label": "system()"
+        }
       ]
     },
     {
@@ -101,7 +167,12 @@
       "stage": 1,
       "row": 2,
       "sources": [
-        { "path": "pema-agent/backend/packages/agent-core/src/agentcore/context/compaction.py", "line": 1, "end_line": 6, "label": "nén" }
+        {
+          "path": "backend/packages/agent-core/src/agentcore/context/compaction.py",
+          "line": 1,
+          "end_line": 6,
+          "label": "nén"
+        }
       ]
     },
     {
@@ -112,7 +183,12 @@
       "stage": 1,
       "row": 3,
       "sources": [
-        { "path": "pema-agent/backend/packages/agent-core/src/agentcore/prompt/builder.py", "line": 145, "end_line": 160, "label": "context()" }
+        {
+          "path": "backend/packages/agent-core/src/agentcore/prompt/builder.py",
+          "line": 145,
+          "end_line": 160,
+          "label": "context()"
+        }
       ]
     },
     {
@@ -123,7 +199,12 @@
       "stage": 1,
       "row": 4,
       "sources": [
-        { "path": "pema-agent/backend/packages/agent-core/src/agentcore/loop/run_turn.py", "line": 190, "end_line": 190, "label": "tools.schemas()" }
+        {
+          "path": "backend/packages/agent-core/src/agentcore/loop/run_turn.py",
+          "line": 192,
+          "end_line": 192,
+          "label": "tools.schemas()"
+        }
       ]
     },
     {
@@ -134,22 +215,102 @@
       "stage": 2,
       "row": 2,
       "sources": [
-        { "path": "pema-agent/backend/packages/agent-core/src/agentcore/loop/run_turn.py", "line": 206, "end_line": 225, "label": "build, request_for" },
-        { "path": "pema-agent/backend/packages/agent-core/src/agentcore/harness/model/types.py", "line": 22, "end_line": 40, "label": "LlmRequest" }
+        {
+          "path": "backend/packages/agent-core/src/agentcore/loop/run_turn.py",
+          "line": 217,
+          "end_line": 236,
+          "label": "build, request_for"
+        },
+        {
+          "path": "backend/packages/agent-core/src/agentcore/harness/model/types.py",
+          "line": 22,
+          "end_line": 40,
+          "label": "LlmRequest"
+        }
       ]
     }
   ],
   "flows": [
-    { "id": "profile-system", "from": "profile", "to": "system", "label": "identity, rules", "classification": "văn bản", "variant": "emphasis" },
-    { "id": "sessions-system", "from": "sessions", "to": "system", "label": "section + ghi chú", "classification": "văn bản", "variant": "default" },
-    { "id": "history-system", "from": "history", "to": "system", "label": "bản tóm tắt", "classification": "khi đã nén", "variant": "dashed" },
-    { "id": "history-kept", "from": "history", "to": "kept", "label": "tin mới", "classification": "theo thứ tự", "variant": "emphasis" },
-    { "id": "turn-context", "from": "turnsections", "to": "context", "label": "render mỗi bước", "classification": "văn bản", "variant": "default" },
-    { "id": "registry-schemas", "from": "registry", "to": "schemas", "label": "schema()", "classification": "JSON", "variant": "default" },
-    { "id": "system-request", "from": "system", "to": "request", "label": "system", "classification": "ổn định nhất", "variant": "emphasis" },
-    { "id": "kept-request", "from": "kept", "to": "request", "label": "messages", "classification": "lịch sử", "variant": "emphasis" },
-    { "id": "context-request", "from": "context", "to": "request", "label": "cuối yêu cầu", "classification": "tạm thời", "variant": "default" },
-    { "id": "schemas-request", "from": "schemas", "to": "request", "label": "tools (trống ở bước cuối)", "classification": "JSON", "variant": "default" }
+    {
+      "id": "profile-system",
+      "from": "profile",
+      "to": "system",
+      "label": "identity, rules",
+      "classification": "văn bản",
+      "variant": "emphasis"
+    },
+    {
+      "id": "sessions-system",
+      "from": "sessions",
+      "to": "system",
+      "label": "section + ghi chú",
+      "classification": "văn bản",
+      "variant": "default"
+    },
+    {
+      "id": "history-system",
+      "from": "history",
+      "to": "system",
+      "label": "bản tóm tắt",
+      "classification": "khi đã nén",
+      "variant": "dashed"
+    },
+    {
+      "id": "history-kept",
+      "from": "history",
+      "to": "kept",
+      "label": "tin mới",
+      "classification": "theo thứ tự",
+      "variant": "emphasis"
+    },
+    {
+      "id": "turn-context",
+      "from": "turnsections",
+      "to": "context",
+      "label": "render mỗi bước",
+      "classification": "văn bản",
+      "variant": "default"
+    },
+    {
+      "id": "registry-schemas",
+      "from": "registry",
+      "to": "schemas",
+      "label": "schema()",
+      "classification": "JSON",
+      "variant": "default"
+    },
+    {
+      "id": "system-request",
+      "from": "system",
+      "to": "request",
+      "label": "system",
+      "classification": "ổn định nhất",
+      "variant": "emphasis"
+    },
+    {
+      "id": "kept-request",
+      "from": "kept",
+      "to": "request",
+      "label": "messages",
+      "classification": "lịch sử",
+      "variant": "emphasis"
+    },
+    {
+      "id": "context-request",
+      "from": "context",
+      "to": "request",
+      "label": "cuối yêu cầu",
+      "classification": "tạm thời",
+      "variant": "default"
+    },
+    {
+      "id": "schemas-request",
+      "from": "schemas",
+      "to": "request",
+      "label": "tools (trống ở bước cuối)",
+      "classification": "JSON",
+      "variant": "default"
+    }
   ],
   "cards": [
     {

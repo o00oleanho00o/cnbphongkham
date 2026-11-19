@@ -9,21 +9,59 @@
     "repository": {
       "url": "git@github-personal20:o00oleanho00o/cnbphongkham.git",
       "link_mode": "local-only",
-      "revision": "64a3919d7a7c84522c48791708ad44fc288fed3b"
+      "revision": "4be635745c2fc00b28fce614208432b22d50a32f"
     }
   },
   "lanes": [
-    { "id": "chat", "label": "Kênh chat (harness)" },
-    { "id": "plugin", "label": "Plugin follow_up: nút mã" },
-    { "id": "judges", "label": "Bộ phán đoán", "variant": "exception" },
-    { "id": "out", "label": "Động cơ ca: gửi hay kết thúc" }
+    {
+      "id": "chat",
+      "label": "Kênh chat (harness)"
+    },
+    {
+      "id": "plugin",
+      "label": "Plugin follow_up: nút mã"
+    },
+    {
+      "id": "judges",
+      "label": "Bộ phán đoán",
+      "variant": "exception"
+    },
+    {
+      "id": "out",
+      "label": "Động cơ ca: gửi hay kết thúc"
+    }
   ],
   "phases": [
-    { "id": "p-open", "label": "Mở ca", "fromCol": 0, "toCol": 0 },
-    { "id": "p-judge", "label": "Chờ im, phán đoán", "fromCol": 1, "toCol": 2, "variant": "emphasis" },
-    { "id": "p-send", "label": "Kiểm ngay trước khi gửi", "fromCol": 3, "toCol": 5 }
+    {
+      "id": "p-open",
+      "label": "Mở ca",
+      "fromCol": 0,
+      "toCol": 0
+    },
+    {
+      "id": "p-judge",
+      "label": "Chờ im, phán đoán",
+      "fromCol": 1,
+      "toCol": 2,
+      "variant": "emphasis"
+    },
+    {
+      "id": "p-send",
+      "label": "Kiểm ngay trước khi gửi",
+      "fromCol": 3,
+      "toCol": 5
+    }
   ],
-  "mainPath": ["answer", "open", "quiet", "judge", "jev", "check", "write", "customer"],
+  "mainPath": [
+    "answer",
+    "open",
+    "quiet",
+    "judge",
+    "jev",
+    "check",
+    "write",
+    "customer"
+  ],
   "nodes": [
     {
       "id": "answer",
@@ -34,7 +72,7 @@
       "sublabel": "báo plugin, kèm user_id",
       "sources": [
         {
-          "path": "pema-agent/backend/apps/agent/agent_app/channel_hub.py",
+          "path": "backend/apps/agent/agent_app/channel_hub.py",
           "line": 279,
           "end_line": 302,
           "label": "_tell_of_reply"
@@ -51,9 +89,9 @@
       "tag": "bỏ qua tin chủ động",
       "sources": [
         {
-          "path": "pema-agent/backend/apps/agent/plugins/follow_up/case.py",
-          "line": 130,
-          "end_line": 166,
+          "path": "backend/apps/agent/plugins/follow_up/case.py",
+          "line": 149,
+          "end_line": 185,
           "label": "heard"
         }
       ]
@@ -67,9 +105,9 @@
       "sublabel": "chờ khách im 2 giờ",
       "sources": [
         {
-          "path": "pema-agent/backend/apps/agent/plugins/follow_up/case.py",
-          "line": 168,
-          "end_line": 179,
+          "path": "backend/apps/agent/plugins/follow_up/case.py",
+          "line": 187,
+          "end_line": 198,
           "label": "quiet"
         }
       ]
@@ -83,13 +121,13 @@
       "sublabel": "đọc chat, từ khóa 'đừng nhắn'",
       "sources": [
         {
-          "path": "pema-agent/backend/apps/agent/plugins/follow_up/case.py",
-          "line": 181,
-          "end_line": 202,
+          "path": "backend/apps/agent/plugins/follow_up/case.py",
+          "line": 200,
+          "end_line": 221,
           "label": "judge"
         },
         {
-          "path": "pema-agent/backend/apps/agent/plugins/follow_up/rules.py",
+          "path": "backend/apps/agent/plugins/follow_up/rules.py",
           "line": 167,
           "end_line": 185,
           "label": "decide"
@@ -106,13 +144,13 @@
       "tag": "dùng khi tin ≥ 60%",
       "sources": [
         {
-          "path": "pema-agent/backend/apps/agent/plugins/follow_up/case.py",
-          "line": 223,
-          "end_line": 252,
+          "path": "backend/apps/agent/plugins/follow_up/case.py",
+          "line": 242,
+          "end_line": 271,
           "label": "_verdict"
         },
         {
-          "path": "pema-agent/backend/apps/agent/plugins/follow_up/rules.py",
+          "path": "backend/apps/agent/plugins/follow_up/rules.py",
           "line": 255,
           "end_line": 272,
           "label": "read_jev"
@@ -128,15 +166,15 @@
       "sublabel": "prompt cũ, đọc giờ khách hẹn",
       "sources": [
         {
-          "path": "pema-agent/backend/apps/agent/plugins/follow_up/rules.py",
+          "path": "backend/apps/agent/plugins/follow_up/rules.py",
           "line": 188,
           "end_line": 212,
           "label": "SYSTEM_PROMPT"
         },
         {
-          "path": "pema-agent/backend/apps/agent/plugins/follow_up/rules.py",
-          "line": 332,
-          "end_line": 345,
+          "path": "backend/apps/agent/plugins/follow_up/rules.py",
+          "line": 333,
+          "end_line": 346,
           "label": "parse_verdict"
         }
       ]
@@ -150,21 +188,21 @@
       "sublabel": "8–20 giờ, cách 24 giờ, trần ngày",
       "sources": [
         {
-          "path": "pema-agent/backend/apps/agent/plugins/follow_up/case.py",
-          "line": 204,
-          "end_line": 221,
+          "path": "backend/apps/agent/plugins/follow_up/case.py",
+          "line": 223,
+          "end_line": 240,
           "label": "check"
         },
         {
-          "path": "pema-agent/backend/apps/agent/plugins/follow_up/rules.py",
+          "path": "backend/apps/agent/plugins/follow_up/rules.py",
           "line": 102,
           "end_line": 116,
           "label": "send_at"
         },
         {
-          "path": "pema-agent/backend/apps/agent/agent_app/cases/engine.py",
-          "line": 177,
-          "end_line": 190,
+          "path": "backend/apps/agent/agent_app/cases/engine.py",
+          "line": 192,
+          "end_line": 205,
           "label": "room_today"
         }
       ]
@@ -179,9 +217,9 @@
       "tag": "kết thúc",
       "sources": [
         {
-          "path": "pema-agent/backend/apps/agent/plugins/follow_up/case.py",
-          "line": 255,
-          "end_line": 307,
+          "path": "backend/apps/agent/plugins/follow_up/case.py",
+          "line": 274,
+          "end_line": 326,
           "label": "follow_up_case"
         }
       ]
@@ -195,13 +233,13 @@
       "sublabel": "lượt model: một tin hoặc SKIP",
       "sources": [
         {
-          "path": "pema-agent/backend/apps/agent/plugins/follow_up/rules.py",
+          "path": "backend/apps/agent/plugins/follow_up/rules.py",
           "line": 274,
           "end_line": 282,
           "label": "instruction_for"
         },
         {
-          "path": "pema-agent/backend/packages/agent-core/src/agentcore/cases/rules.py",
+          "path": "backend/packages/agent-core/src/agentcore/cases/rules.py",
           "line": 216,
           "end_line": 221,
           "label": "look_again"
@@ -217,7 +255,7 @@
       "sublabel": "tin chủ động trên kênh",
       "sources": [
         {
-          "path": "pema-agent/backend/apps/agent/agent_app/proactive.py",
+          "path": "backend/apps/agent/agent_app/proactive.py",
           "line": 32,
           "end_line": 64,
           "label": "send_to"
@@ -226,18 +264,94 @@
     }
   ],
   "edges": [
-    { "id": "answer-open", "from": "answer", "to": "open", "variant": "emphasis" },
-    { "id": "open-quiet", "from": "open", "to": "quiet", "label": "mở ca", "variant": "emphasis" },
-    { "id": "quiet-judge", "from": "quiet", "to": "judge", "label": "đã im", "variant": "emphasis" },
-    { "id": "judge-jev", "from": "judge", "to": "jev", "label": "hỏi", "variant": "emphasis" },
-    { "id": "jev-model", "from": "jev", "to": "model", "label": "không chắc", "variant": "dashed", "role": "branch" },
-    { "id": "jev-check", "from": "jev", "to": "check", "label": "hẹn giờ", "variant": "emphasis" },
-    { "id": "model-check", "from": "model", "to": "check", "label": "hẹn giờ", "variant": "default", "role": "branch" },
-    { "id": "judge-end", "from": "judge", "to": "end", "label": "xong / từ chối", "variant": "security", "role": "error" },
-    { "id": "check-quiet", "from": "check", "to": "quiet", "label": "khách nhắn trước", "variant": "dashed", "role": "return" },
-    { "id": "check-write", "from": "check", "to": "write", "label": "tới giờ", "variant": "emphasis" },
-    { "id": "write-customer", "from": "write", "to": "customer", "label": "một tin", "variant": "emphasis" },
-    { "id": "write-check", "from": "write", "to": "check", "label": "lỗi", "variant": "dashed", "role": "return" }
+    {
+      "id": "answer-open",
+      "from": "answer",
+      "to": "open",
+      "variant": "emphasis"
+    },
+    {
+      "id": "open-quiet",
+      "from": "open",
+      "to": "quiet",
+      "label": "mở ca",
+      "variant": "emphasis"
+    },
+    {
+      "id": "quiet-judge",
+      "from": "quiet",
+      "to": "judge",
+      "label": "đã im",
+      "variant": "emphasis"
+    },
+    {
+      "id": "judge-jev",
+      "from": "judge",
+      "to": "jev",
+      "label": "hỏi",
+      "variant": "emphasis"
+    },
+    {
+      "id": "jev-model",
+      "from": "jev",
+      "to": "model",
+      "label": "không chắc",
+      "variant": "dashed",
+      "role": "branch"
+    },
+    {
+      "id": "jev-check",
+      "from": "jev",
+      "to": "check",
+      "label": "hẹn giờ",
+      "variant": "emphasis"
+    },
+    {
+      "id": "model-check",
+      "from": "model",
+      "to": "check",
+      "label": "hẹn giờ",
+      "variant": "default",
+      "role": "branch"
+    },
+    {
+      "id": "judge-end",
+      "from": "judge",
+      "to": "end",
+      "label": "xong / từ chối",
+      "variant": "security",
+      "role": "error"
+    },
+    {
+      "id": "check-quiet",
+      "from": "check",
+      "to": "quiet",
+      "label": "khách nhắn trước",
+      "variant": "dashed",
+      "role": "return"
+    },
+    {
+      "id": "check-write",
+      "from": "check",
+      "to": "write",
+      "label": "tới giờ",
+      "variant": "emphasis"
+    },
+    {
+      "id": "write-customer",
+      "from": "write",
+      "to": "customer",
+      "label": "một tin",
+      "variant": "emphasis"
+    },
+    {
+      "id": "write-check",
+      "from": "write",
+      "to": "check",
+      "label": "lỗi",
+      "variant": "dashed",
+      "role": "return"
+    }
   ],
   "cards": [
     {
