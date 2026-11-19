@@ -96,6 +96,7 @@ function applyPatch(change: SettingsChange): Reply {
     judging: { ...settings.judging, ...patch.judging },
     search: { ...settings.search, ...patch.search },
     benchmark_mode: patch.benchmark_mode ?? settings.benchmark_mode,
+    answer: { ...settings.answer, ...patch.answer },
   };
   return { body: store.settings };
 }

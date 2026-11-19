@@ -51,6 +51,7 @@ from agentcore.prompt.builder import CONTEXT_CLOSE, CONTEXT_OPEN, PromptBuilder,
 from agentcore.prompt.sections import StepInfo, TurnInfo
 from agentcore.tenancy import DEFAULT_TENANT
 from agentcore.trace import TraceEvent, Tracer, TraceStop, TurnTrace, usage_detail
+from agentcore.turns import CodeStep, ModelOutcome, ModelStep, SendStep, TurnGraphSpec, TurnView
 
 MEMORY_TOOL: Final = "memory"
 FLUSH_STEPS: Final = 2
@@ -64,6 +65,10 @@ SYSTEM_NOTE_PREFIX: Final = "[System"
 UNSENT_NOTE: Final = (
     f"{SYSTEM_NOTE_PREFIX}] The person wrote again before your last answer was sent, so that answer was NOT "
     "sent to them. Answer again: cover everything they wrote so far, once, in the conversation's language."
+)
+CHECKED_NOTE: Final = (
+    f"{SYSTEM_NOTE_PREFIX}] Your last answer was NOT sent to the person: it did not pass a check. {{reason}} "
+    "Follow the instruction in the context block and answer again, in the conversation's language."
 )
 TRACE_WRITE_TIMEOUT_S: Final = 10.0
 
@@ -126,7 +131,7 @@ class RetryObserver(Protocol):
     def retry(self, error_kind: str) -> None: ...
 
 
-TurnStop = Literal["completed", "max_steps", "deadline", "budget", "loop"]
+TurnStop = Literal["completed", "max_steps", "deadline", "budget", "loop", "graph"]
 
 
 @dataclass(frozen=True, slots=True)
@@ -166,13 +171,15 @@ async def run_turn(
     timer: Callable[[], float] = time.perf_counter,
     steer: Callable[[], Awaitable[Sequence[str]]] | None = None,
     collected: int = 1,
+    graph: TurnGraphSpec | None = None,
 ) -> TurnResult:
     """``clock`` must return an aware datetime; tests pass a fixed one, and a ``sleep`` and ``timer`` of their
     own to skip retry pauses and move time. Without ``context`` nothing is compacted. ``user_id`` names the
     person the session talks to; the caller sets it, never the model. The ``tracer`` gets one trace per turn,
     also when the turn fails; a tracer error never fails the turn. ``steer`` is asked after each batch of tool
     calls for messages that came in meanwhile; they are stored as user messages before the next model call.
-    ``collected`` tells the trace how many waiting messages ``user_text`` joins."""
+    ``collected`` tells the trace how many waiting messages ``user_text`` joins. With a ``graph`` the turn walks
+    its nodes (``agentcore.turns``); every limit of the turn still holds for the whole walk."""
     started = timer()
     started_at = clock()
     turn_id = str(uuid4())
@@ -200,6 +207,11 @@ async def run_turn(
     loop_guard = LoopGuard(limits.guard)
     notes: list[str] = []
     """Loop guard reminders for the next model call; they ride in the context block and are never stored."""
+    standing: list[str] = []
+    """The instruction of the graph's node now running, in the context block of each of its calls."""
+    steps = 0
+    """Model calls of this turn so far."""
+    tool_texts: list[str] = []
     history: list[Message] = []
     """The stored history, kept in step with every append so a model step does not load it again."""
     compaction: CompactionRecord | None = None
@@ -218,7 +230,7 @@ async def run_turn(
         visible = history[compaction.first_kept :] if compaction else history
         return LlmRequest(
             system=system,
-            messages=with_context(visible, turn_prompt.context(step, notes)),
+            messages=with_context(visible, turn_prompt.context(step, [*standing, *notes])),
             tools=offered,
             max_output_tokens=limits.max_output_tokens,
             reasoning=limits.reasoning,
@@ -282,7 +294,8 @@ async def run_turn(
         await reload()
         return True
 
-    async def call_model(step: StepInfo, offered: list[ToolSchema]) -> AssistantResult:
+    async def call_model(step: StepInfo, offered: list[ToolSchema], *, quiet: bool = False) -> AssistantResult:
+        """``quiet``: the observer does not see the text (a call whose answer the person never gets)."""
         hook_ctx = HookContext(
             tenant_id=tenant_id, session_id=session_id, user_id=user_id, step=step.step, channel=channel
         )
@@ -290,7 +303,7 @@ async def run_turn(
         overflow_handled = False
         while True:
             request = await guards.before_model(await request_for(step, offered), hook_ctx)
-            sink = _WatchedSink(observer)
+            sink = _WatchedSink(None if quiet else observer)
             call_started = time.perf_counter()
             try:
                 result = await model.complete(request, sink=sink)
@@ -376,6 +389,157 @@ async def run_turn(
         events.append(TraceEvent("inbox", step, 0.0, detail={"mode": "steer", "messages": len(steered)}))
         return True
 
+    async def model_loop(offered: list[ToolSchema], cap: int) -> tuple[str, TurnStop]:
+        """Calls the model and runs the tools it asks for until it answers without a tool call, at most ``cap``
+        calls and within the turn's limits; then one call without tools answers. Returns the answer."""
+        nonlocal steps, usage
+        stop: TurnStop = "max_steps"
+        begun = steps
+        while steps < limits.max_steps and steps - begun < cap:
+            step = steps + 1
+            if step > 1 and out_of_time():
+                stop = "deadline"
+                break
+            if step > 1 and over_budget():
+                stop = "budget"
+                break
+            steps = step
+            result = await call_model(StepInfo(step=step, max_steps=limits.max_steps), offered)
+            notes.clear()
+            usage = usage + (result.message.usage or Usage())
+            await record(result.message)
+
+            uses = result.message.tool_uses()
+            if not uses:
+                # A person who wrote again while this answer was being made has not seen it yet: answer once
+                # more, to everything.
+                if await take_steered(step, unsent=True):
+                    continue
+                return result.message.text(), "completed"
+            runs = await executor.execute(uses, ctx, step=step, observer=observer)
+            for run in runs:
+                events.append(_tool_event(step, run))
+                await record(Message(role="tool", blocks=[run.result]))
+                tool_texts.append(run.result.content)
+            stop_using_tools = watch(step, uses, runs)
+            await take_steered(step, unsent=False)
+            if stop_using_tools:
+                stop = "loop"
+                break
+
+        steps += 1
+        result = await call_model(StepInfo(step=steps, max_steps=limits.max_steps, final=True), [])
+        usage = usage + (result.message.usage or Usage())
+        final = _without_tool_calls(result.message)
+        await record(final)
+        return final.text(), stop
+
+    async def unsent(reason: str) -> None:
+        """The draft in the history was not sent: say so to the model (and to a console that showed it)."""
+        if isinstance(observer, RetryObserver):
+            observer.retry("checked")
+        await record(Message.user(CHECKED_NOTE.format(reason=reason or "")))
+
+    def spent() -> bool:
+        return steps >= limits.max_steps or (steps > 0 and (out_of_time() or over_budget()))
+
+    async def walk(spec: TurnGraphSpec) -> TurnResult:
+        """Runs the graph's nodes from its start until a send step. A plugin's code that fails, with no error
+        edge to follow, ends the walk: the turn goes on as if there were no graph. A model step that comes when
+        the turn's limits are spent is skipped (the draft stays as it is, the checks decide)."""
+        nonlocal usage, steps
+        shape = spec.graph
+        state: Any = spec.state_model()
+        node = shape.node(shape.start)
+        draft, drafted, reason = "", False, ""
+        for _ in range(spec.max_nodes):
+            if node is None:  # cannot happen in a checked spec
+                break
+            began = time.perf_counter()
+            failed, note = False, ""
+            try:
+                if isinstance(node, SendStep):
+                    if node.text is None and not drafted:
+                        break
+                    text = draft if node.text is None else node.text(state)
+                    if node.text is not None:
+                        if drafted:
+                            await unsent(reason)
+                        await record(Message(role="assistant", blocks=[TextBlock(text=text)]))
+                        if observer is not None:
+                            observer.text(text)
+                    events.append(TraceEvent("node", steps, time.perf_counter() - began, name=node.id))
+                    return finished(text, "completed", steps)
+                if isinstance(node, CodeStep):
+                    visible = history[compaction.first_kept :] if compaction else history
+                    view = TurnView(
+                        user_text=user_text,
+                        history=tuple(visible),
+                        draft=draft,
+                        tool_texts=tuple(tool_texts),
+                        now=started_at,
+                        channel=channel,
+                        is_group=is_group,
+                    )
+                    decided = await node.run(state, view)
+                    state = state.model_copy(update=dict(decided.patch))
+                    note = reason = decided.note
+                elif spent():
+                    note = "skipped: the turn's limits are spent"
+                else:
+                    standing[:] = [node.instruction(state)]
+                    try:
+                        if node.keep:
+                            if drafted:
+                                await unsent(reason)
+                            offered = (
+                                schemas if node.tools is None else [s for s in schemas if s.name in node.tools]
+                            )
+                            first_result = len(tool_texts)
+                            draft, _ = await model_loop(offered, node.max_steps)
+                            drafted = True
+                            outcome = ModelOutcome(draft, tuple(tool_texts[first_result:]))
+                        else:
+                            steps += 1
+                            result = await call_model(StepInfo(step=steps, max_steps=limits.max_steps), [], quiet=True)
+                            usage = usage + (result.message.usage or Usage())
+                            outcome = ModelOutcome(_without_tool_calls(result.message).text(), ())
+                    finally:
+                        standing.clear()
+                    if node.after is not None:
+                        state = state.model_copy(update=dict(node.after(state, outcome)))
+            except ModelError:
+                raise
+            except Exception as err:  # a plugin's code failed: its error edge, else the turn without the graph
+                failed, note = True, type(err).__name__
+                logger.warning("turn graph %s: node %s failed (%s)", spec.name, node.id, note)
+            edge = None
+            try:
+                edge = _next_edge(spec, node.id, state, failed=failed)
+            except Exception as err:  # an edge's condition failed
+                failed, note = True, type(err).__name__
+            detail: dict[str, Any] = {"next": edge.dst if edge else None}
+            if note:
+                detail["note"] = note[:200]
+            if spec.counters:
+                detail["counters"] = {name: getattr(state, name) for name in spec.counters}
+            events.append(
+                TraceEvent("node", steps, time.perf_counter() - began, name=node.id, is_error=failed, detail=detail)
+            )
+            if edge is None:
+                if drafted:
+                    await unsent(reason)
+                text, stop = await model_loop(schemas, limits.max_steps)
+                return finished(text, stop, steps)
+            if edge.counter is not None:
+                state = state.model_copy(update={edge.counter: getattr(state, edge.counter) + 1})
+            node = shape.node(edge.dst)
+        else:
+            logger.warning("turn graph %s: ran %d nodes without reaching a send step", spec.name, spec.max_nodes)
+            return finished(draft, "graph", steps)
+        text, stop = await model_loop(schemas, limits.max_steps)
+        return finished(text, stop, steps)
+
     async def turn() -> TurnResult:
         nonlocal system, turn_start, usage
         system = await prompt.system(store, tenant_id, session_id, user_id=user_id)
@@ -394,44 +558,10 @@ async def run_turn(
         if collected > 1:
             events.append(TraceEvent("inbox", 0, 0.0, detail={"mode": "collect", "messages": collected}))
 
-        stop: TurnStop = "max_steps"
-        steps = 0
-        for step in range(1, limits.max_steps + 1):
-            if step > 1 and out_of_time():
-                stop = "deadline"
-                break
-            if step > 1 and over_budget():
-                stop = "budget"
-                break
-            steps = step
-            result = await call_model(StepInfo(step=step, max_steps=limits.max_steps), schemas)
-            notes.clear()
-            usage = usage + (result.message.usage or Usage())
-            await record(result.message)
-
-            uses = result.message.tool_uses()
-            if not uses:
-                # A person who wrote again while this answer was being made has not seen it yet: answer once
-                # more, to everything.
-                if await take_steered(step, unsent=True):
-                    continue
-                return finished(result.message.text(), "completed", step)
-            runs = await executor.execute(uses, ctx, step=step, observer=observer)
-            for run in runs:
-                events.append(_tool_event(step, run))
-                await record(Message(role="tool", blocks=[run.result]))
-            stop_using_tools = watch(step, uses, runs)
-            await take_steered(step, unsent=False)
-            if stop_using_tools:
-                stop = "loop"
-                break
-
-        final_step = StepInfo(step=steps + 1, max_steps=limits.max_steps, final=True)
-        result = await call_model(final_step, [])
-        usage = usage + (result.message.usage or Usage())
-        final = _without_tool_calls(result.message)
-        await record(final)
-        return finished(final.text(), stop, steps + 1)
+        if graph is not None and await _graph_on(graph):
+            return await walk(graph)
+        text, stop = await model_loop(schemas, limits.max_steps)
+        return finished(text, stop, steps)
 
     def trace_of(stop: TraceStop, steps: int, duration_s: float, error_kind: str | None) -> TurnTrace:
         return TurnTrace(
@@ -531,6 +661,33 @@ def _tool_event(step: int, run: ToolRun) -> TraceEvent:
     return TraceEvent(
         "tool_call", step, run.duration_s, name=run.result.name, is_error=run.result.is_error, detail=detail
     )
+
+
+async def _graph_on(spec: TurnGraphSpec) -> bool:
+    """Whether this turn walks the graph; a switch that cannot be read leaves it off (a plain turn)."""
+    if spec.active is None:
+        return True
+    try:
+        return await spec.active()
+    except Exception as err:  # the plugin's setting could not be read: answer without the graph
+        logger.warning("turn graph %s: switch not read (%s)", spec.name, type(err).__name__)
+        return False
+
+
+def _next_edge(spec: TurnGraphSpec, node_id: str, state: Any, *, failed: bool) -> Any:
+    """The edge the walk takes: the error edge after a failure, else the first one whose counter is below its
+    cap and whose condition holds; None when there is none."""
+    edges = spec.graph.edges_from(node_id)
+    if failed:
+        return next((e for e in edges if e.on == "error"), None)
+    for edge in edges:
+        if edge.on != "ok":
+            continue
+        if edge.counter is not None and getattr(state, edge.counter) >= spec.counters[edge.counter]:
+            continue
+        if edge.when is None or edge.when(state):
+            return edge
+    return None
 
 
 async def _write_trace(tracer: Tracer | None, trace: TurnTrace) -> None:

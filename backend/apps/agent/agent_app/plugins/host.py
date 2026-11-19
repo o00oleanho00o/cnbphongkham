@@ -36,6 +36,7 @@ from agentcore.cases import CaseRecord, CaseSpec
 from agentcore.channels import ChannelAdapter, Observe, ObservedMessage, valid_channel_name
 from agentcore.harness.hooks import Hook
 from agentcore.prompt import SessionSection, StepSection, TurnSection
+from agentcore.turns import TurnGraphSpec
 from secretcipher import decrypt_with, encrypt_with
 
 REGISTER: Final = "register"
@@ -84,6 +85,8 @@ class Contributions:
     observers: tuple[Observe, ...] = ()
     cases: tuple[tuple[str, CaseSpec], ...] = ()
     """(plugin, spec) of every kind of case."""
+    turn_graph: TurnGraphSpec | None = None
+    """The graph the customer's turns walk; one plugin at most declares one."""
 
 
 @dataclass(slots=True)
@@ -99,6 +102,7 @@ class _Loaded:
     authenticators: list[Authenticator] = field(default_factory=list[Authenticator])
     observers: list[Observe] = field(default_factory=list[Observe])
     cases: list[CaseSpec] = field(default_factory=list[CaseSpec])
+    turn_graphs: list[TurnGraphSpec] = field(default_factory=list[TurnGraphSpec])
     services: dict[str, object] = field(default_factory=dict[str, object])
     routes: dict[RouteKind, FastAPI] = field(default_factory=dict[RouteKind, FastAPI])
     disposers: list[Disposer] = field(default_factory=list[Disposer])
@@ -398,6 +402,13 @@ class PluginContext:
             raise PluginError(self.name, f"case {spec.kind} registered twice")
         return self._add(self._loaded.cases, spec)
 
+    def register_turn_graph(self, spec: TurnGraphSpec) -> Disposer:
+        """The graph the customer's turns walk (``agentcore.turns``): code steps, model steps, checks, a send.
+        An agent walks one graph at most: a second plugin that declares one cannot be enabled."""
+        if self._loaded.turn_graphs:
+            raise PluginError(self.name, "a plugin declares one turn graph at most")
+        return self._add(self._loaded.turn_graphs, spec)
+
     def register_authenticator(self, authenticator: Authenticator) -> Disposer:
         """Turns bearer tokens of its own (a login, an API key) into a caller of the gateway; asked after the
         service's own tokens, in plugin order, until one knows the token."""
@@ -613,6 +624,7 @@ class PluginHost:
             authenticators=tuple(a for p in loaded for a in p.authenticators),
             observers=tuple(o for p in loaded for o in p.observers),
             cases=tuple((p.source.name, c) for p in loaded for c in p.cases),
+            turn_graph=next((g for p in loaded for g in p.turn_graphs), None),
         )
 
     async def observe(self, message: ObservedMessage) -> None:
@@ -687,6 +699,10 @@ class PluginHost:
 
     def _check_unique(self, candidate: _Loaded) -> None:
         for other in self._loaded.values():
+            if candidate.turn_graphs and other.turn_graphs:
+                raise PluginError(
+                    candidate.source.name, f"an agent walks one turn graph; {other.source.name} already declares one"
+                )
             for kind, mine, theirs in (
                 ("tool", {t.name for t in candidate.tools}, {t.name for t in other.tools}),
                 ("prompt section", {s.name for s in candidate.sections}, {s.name for s in other.sections}),

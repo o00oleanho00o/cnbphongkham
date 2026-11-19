@@ -13,9 +13,9 @@ from typing import Any, Literal, Protocol
 
 from agentcore.messages import Usage
 
-TraceStop = Literal["completed", "max_steps", "deadline", "budget", "loop", "error"]
+TraceStop = Literal["completed", "max_steps", "deadline", "budget", "loop", "graph", "error"]
 EventKind = Literal[
-    "model_call", "model_retry", "tool_call", "guard", "inbox", "compaction", "memory_flush", "repair"
+    "model_call", "model_retry", "tool_call", "guard", "inbox", "compaction", "memory_flush", "repair", "node"
 ]
 
 

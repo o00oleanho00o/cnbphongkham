@@ -242,6 +242,7 @@ function seedSettings(): KnowledgeSettings {
     judging: { enabled: false, level: "medium" },
     search: { results: 8, min_score: 0.2, char_budget: 6000 },
     benchmark_mode: false,
+    answer: { graph: "off", unsure_reply: "Dạ em chưa có thông tin chắc chắn cho câu này, em chuyển nhân viên hỗ trợ mình ạ." },
   };
 }
 

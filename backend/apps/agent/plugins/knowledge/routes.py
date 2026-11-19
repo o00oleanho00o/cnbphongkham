@@ -458,6 +458,7 @@ def _warnings(state: EmbedStatus) -> list[str]:
 def _checked_settings(body: dict[str, Any]) -> dict[str, Any]:
     _check_embedding(as_mapping(body.get("embedding")))
     _check_judging(as_mapping(body.get("judging")))
+    _check_answer(as_mapping(body.get("answer")))
     search = as_mapping(body.get("search"))
     if search:
         if "results" in search and not (isinstance(search["results"], int) and 1 <= search["results"] <= 20):
@@ -468,6 +469,15 @@ def _checked_settings(body: dict[str, Any]) -> dict[str, Any]:
                 status.HTTP_422_UNPROCESSABLE_ENTITY, f"Ngân sách ký tự phải từ 500 đến {MAX_CHAR_BUDGET}."
             )
     return body
+
+
+def _check_answer(values: dict[str, Any]) -> None:
+    """Server-side limits of the checked answer flow; a wrong one is a 422."""
+    if "graph" in values and values["graph"] not in ("off", "on"):
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "Trả lời có kiểm phải là off hoặc on.")
+    reply = values.get("unsure_reply")
+    if reply is not None and not (isinstance(reply, str) and 1 <= len(reply.strip()) <= 500):
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "Câu khi không chắc dài từ 1 đến 500 ký tự.")
 
 
 def _check_judging(values: dict[str, Any]) -> None:

@@ -1,0 +1,8 @@
+{"set": "F", "turns": ["trị nám bao nhiêu tiền một buổi", "còn gói 10 buổi thì sao"], "facts": ["DEMO-PEMA.price.nam_package10_vnd"]}
+{"set": "F", "turns": ["laser hori giá thế nào", "vậy gói 8 buổi bao nhiêu"], "facts": ["DEMO-PEMA.price.hori_package8_vnd"]}
+{"set": "F", "turns": ["muốn đặt lịch trị mụn", "phải đặt cọc bao nhiêu"], "facts": ["DEMO-PEMA.booking.deposit_vnd"]}
+{"set": "F", "turns": ["chính sách hủy lịch thế nào", "hủy muộn thì mất bao nhiêu"], "facts": ["DEMO-PEMA.cancel.late_fee_vnd"]}
+{"set": "G", "q": "xin chào", "facts": []}
+{"set": "G", "q": "cảm ơn em nhé", "facts": []}
+{"set": "G", "q": "em là ai vậy", "facts": []}
+{"set": "G", "q": "ok để chị suy nghĩ thêm", "facts": []}

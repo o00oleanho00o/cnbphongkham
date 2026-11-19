@@ -12,7 +12,6 @@ plugins declare the cases. This module knows no plugin, database or model.
 
 from __future__ import annotations
 
-import re
 from collections.abc import Awaitable, Callable, Mapping
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
@@ -20,11 +19,12 @@ from typing import Any, Final, Literal
 
 from pydantic import BaseModel
 
+from agentcore.graph_rules import NAME, check_graph
+
 CaseStatus = Literal["open", "waiting", "needs_human", "done", "stopped"]
 LIVE: Final[frozenset[str]] = frozenset({"open", "waiting", "needs_human"})
 """A case in these states blocks a second one of the same kind and key."""
 WaitFor = Literal["customer", "clock", "event"]
-NAME: Final = re.compile(r"[a-z][a-z0-9_]{0,63}")
 
 
 @dataclass(frozen=True, slots=True)
@@ -189,28 +189,11 @@ def _check(spec: CaseSpec) -> None:
         raise ValueError(f"case kind {spec.kind!r}: use a-z, 0-9 and _, starting with a letter")
     if not spec.triggers:
         raise ValueError(f"case {spec.kind}: needs at least one trigger")
-    order = [n.id for n in spec.graph.nodes]
-    if not order or len(set(order)) != len(order):
-        raise ValueError(f"case {spec.kind}: node ids must be present and unique")
-    bad_ids = [i for i in order if not NAME.fullmatch(i)]
-    if bad_ids:
-        raise ValueError(f"case {spec.kind}: invalid node id(s) {', '.join(bad_ids)}")
-    if spec.graph.start not in order:
-        raise ValueError(f"case {spec.kind}: start node {spec.graph.start} is not a node")
-    fields = spec.state_model.model_fields
-    unknown = [name for name in spec.stop.counters if name not in fields]
-    if unknown:
-        raise ValueError(f"case {spec.kind}: counter(s) not in the state: {', '.join(unknown)}")
-    failing = [e.src for e in spec.graph.edges if e.on == "error"]
-    if len(set(failing)) != len(failing):
-        raise ValueError(f"case {spec.kind}: one error edge per node at most")
-    for edge in spec.graph.edges:
-        where = f"case {spec.kind}, edge {edge.src} -> {edge.dst}"
-        if edge.on == "error" and edge.when is not None:
-            raise ValueError(f"{where}: an error edge has no condition")
-        if edge.src not in order or edge.dst not in order:
-            raise ValueError(f"{where}: names a node that is not there")
-        if edge.counter is not None and edge.counter not in spec.stop.counters:
-            raise ValueError(f"{where}: counter {edge.counter} has no cap in stop.counters")
-        if order.index(edge.dst) <= order.index(edge.src) and edge.counter is None:
-            raise ValueError(f"{where}: goes back, so it needs a counter with a cap")
+    check_graph(
+        f"case {spec.kind}",
+        [n.id for n in spec.graph.nodes],
+        spec.graph.start,
+        spec.graph.edges,
+        spec.stop.counters,
+        spec.state_model.model_fields,
+    )

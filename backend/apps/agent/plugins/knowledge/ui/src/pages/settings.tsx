@@ -1,8 +1,9 @@
-/** Cài đặt: embedding, judging with Jev, search, benchmark; each section saves on its own. */
+/** Cài đặt: embedding, judging with Jev, search, checked answers, benchmark; each section saves on its own. */
 import { useCallback, useEffect, useState } from "react";
 
 import { knowledge, messageOf } from "../client";
 import { ui } from "../sdk";
+import { AnswerSection } from "../settings/answer-section";
 import { BenchmarkSection } from "../settings/benchmark-section";
 import { EmbeddingSection } from "../settings/embedding-section";
 import { JudgingSection } from "../settings/judging-section";
@@ -48,6 +49,7 @@ export function SettingsPage() {
           <EmbeddingSection settings={settings} onSaved={setSettings} />
           <JudgingSection settings={settings} onSaved={setSettings} />
           <SearchSection settings={settings} onSaved={setSettings} />
+          <AnswerSection settings={settings} onSaved={setSettings} />
           <BenchmarkSection settings={settings} onSaved={setSettings} />
         </>
       )}

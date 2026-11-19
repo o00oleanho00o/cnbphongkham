@@ -325,6 +325,8 @@ export interface KnowledgeSettings {
   judging: { enabled: boolean; level: JudgeLevel };
   search: { results: number; min_score: number; char_budget: number };
   benchmark_mode: boolean;
+  /** "on": the customer's turns search first, then every number of the answer is checked before it goes out. */
+  answer: { graph: "off" | "on"; unsure_reply: string };
 }
 
 export type SettingsPatch = {
@@ -335,6 +337,7 @@ export type SettingsPatch = {
   judging?: Partial<KnowledgeSettings["judging"]>;
   search?: Partial<KnowledgeSettings["search"]>;
   benchmark_mode?: boolean;
+  answer?: Partial<KnowledgeSettings["answer"]>;
   /** Groups to put back to the profile's values ("Về mặc định"); the server clears their `origin`. */
   reset?: "embedding"[];
 };

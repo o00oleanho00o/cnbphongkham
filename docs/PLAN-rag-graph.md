@@ -1,10 +1,11 @@
 # Kế hoạch: đồ thị của lượt trả lời, và agentic RAG có kiểm, có sửa
 
-Trạng thái: **bản 1 (2026-11-19), chờ chủ duyệt.** Nhánh `split/agent`. Gồm bước 15–18 của lộ trình tách ngày
+Trạng thái: **chủ duyệt ("go") 2026-11-19; bước 1–6 của mục 9 đã làm, bước 7 (đo) chờ khóa model.** Nhánh
+`contete-agent`. Chỗ làm khác bản duyệt: mục 12. Gồm bước 15–18 của lộ trình tách ngày
 2026-11-18: thước đo câu trả lời, đồ thị của lượt (khái niệm mới ở lõi), luồng RAG của plugin `knowledge` trên đồ thị đó,
 đo lại. Vòng tự cải thiện kho (bước 19) và gỡ chữ "phòng khám" (bước 20) có kế hoạch riêng sau.
 
-Luật áp: H1–H11 (`.claude/rules/agent-harness.md`), L1–L7 (`.claude/rules/agent-crm-boundary.md`). Đây là khái niệm mới
+Luật áp: H1–H11 (`.claude/rules/agent-harness.md`), L1–L7 (`.claude/rules/agent-boundary.md`). Đây là khái niệm mới
 ở lõi nên theo H10, H11: chủ nói "go" mới code.
 
 ## 1. Vì sao
@@ -199,7 +200,9 @@ Không viết unit test (luật `test-writing.md`). Sau bước 7 vẽ lại sơ
 
 ## 10. Kết quả đo
 
-(Chưa chạy.)
+Chưa chạy với model thật: máy làm bước này không có khóa model. Đã chạy trọn script với model giả (`EchoModel`) để
+kiểm script: nạp 22 tài liệu, hỏi 46 câu (A 15, B 15, C 8, nối tiếp 4, chào hỏi 4), chấm, in bảng. Lệnh đo thật ở
+đầu `scripts/rag_bench.py`; chạy `--graph off` rồi `--graph on`, ghi hai bảng vào đây.
 
 ## 11. Câu hỏi còn mở (chủ quyết)
 
@@ -211,3 +214,33 @@ Không viết unit test (luật `test-writing.md`). Sau bước 7 vẽ lại sơ
    hợp lệ và model thấy vì sao phải viết lại. Cách khác là bỏ bản nháp khỏi lịch sử, sạch hơn nhưng phải xử lý riêng các
    cặp tool của nút đó.
 4. **Tiền cho bước đo:** khoảng 0,5 USD mỗi lần chạy với DeepSeek, cần khóa model trong biến môi trường máy chạy.
+
+## 12. Đã làm (2026-11-19) và chỗ khác bản duyệt
+
+| Phần | Ở đâu |
+|---|---|
+| Kiểm đồ thị dùng chung (ca và lượt) | `agentcore/graph_rules.py`; `cases/spec.py` gọi nó, luật không nới |
+| Hình đồ thị lượt | `agentcore/turns.py` (`TurnGraphSpec`, `CodeStep`, `ModelStep`, `SendStep`, `TurnView`, `Step`) |
+| Vòng đi nút | `agentcore/loop/run_turn.py` (`walk`); vòng cũ tách thành `model_loop`, không có đồ thị thì chạy như cũ |
+| Nối vào agent | `ctx.register_turn_graph`, `Contributions.turn_graph`, `Agent.turn_graph`; dispatcher chỉ truyền cho lượt của khách |
+| Trace | sự kiện `node`, `stop = "graph"`; migration `0009_turn_graph` nới hai CHECK của `agent_turn`, `agent_turn_event` |
+| Luồng RAG | `plugins/knowledge/answer_graph.py`; cài đặt `answer.graph` (`off`/`on`), `answer.unsure_reply`; kiểm ở `routes.py` |
+| Giao diện | Kho tri thức > Cài đặt > "Trả lời có kiểm"; nhãn "Bước đồ thị" ở trang Trace |
+| E2E | `frontend/e2e/agent-rag-graph.spec.ts` (cần khóa model trên stack, image mới, migration 0009) |
+| Thước đo | `scripts/rag_bench.py`, câu thêm `scripts/rag_bench_extra.jsonl` |
+
+Khác bản duyệt:
+
+- **Bỏ chế độ `observe`.** Chưa có hội thoại thật để quan sát; thước đo làm việc đó. Cài đặt chỉ có `off` và `on`.
+- **Trần của bộ đếm là số lần đi cạnh** (trần 1 = đi tối đa một lần), khác đồ thị ca (chạm trần là ca dừng). Cạnh có bộ
+  đếm đã chạm trần thì bỏ qua, đi cạnh kế.
+- **`ModelStep(keep=False)`**: một lần gọi model không tool, không vào lịch sử, không hiện cho khách (nút `rewrite`).
+  Bản duyệt chưa nói câu JSON của bước viết lại đi đâu; để nó vào lịch sử thì khách và model sau thấy rác.
+- **`TurnGraphSpec.active`**: hỏi mỗi lượt xem đồ thị có bật không, để công tắc ở trang Cài đặt có hiệu lực ngay mà
+  không phải bật lại plugin. Đọc lỗi thì lượt chạy như không có đồ thị.
+- **Bản nháp bị chặn ở lại lịch sử** (câu hỏi 3, theo đề xuất), kèm tin `[System] ... NOT sent ...` trước lần viết lại
+  và trước câu cố định, để lịch sử luôn xen kẽ đúng.
+- **Thước đo chưa có tập thử thách (giá cũ, bản nháp) và chưa chấm bằng Jev.** Tập thử thách cần nạp tài liệu thử
+  thách ở chế độ benchmark; làm khi cần. Tài liệu được nạp không có ngày hết hạn, vì câu hỏi viết cho ngày 2026-10-12.
+- Câu hỏi 1, 2 theo đề xuất: câu cố định mặc định là "chuyển nhân viên" (sửa được ở trang Cài đặt); tin dưới 6 từ thì
+  ghép tin trước của khách.

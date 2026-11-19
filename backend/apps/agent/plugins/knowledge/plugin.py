@@ -20,12 +20,13 @@ from agentcore import PromptEnv, SessionSection, ToolContext, ToolOutput, ToolSp
 from agentcore.prompt.data import SessionData
 from plugin_kit import JUDGE, JudgeService
 
+from .answer_graph import UNSURE_REPLY, answer_graph
 from .embedder import IDLE_S, Embedder
 from .embedding import EmbeddingClient, EmbeddingConfig
 from .ingest import Ingest, new_id
 from .judging import DEFAULT_LEVEL, JudgePlan
 from .models import CatalogEntry, Gap, as_mapping
-from .search import Searcher, VectorPlan, tool_detail, tool_text
+from .search import Searcher, SearchResult, VectorPlan, tool_detail, tool_text
 from .store import InMemoryKnowledgeStore, KnowledgeStore, PostgresKnowledgeStore
 from .text import fold
 
@@ -84,6 +85,8 @@ def default_settings(config: Mapping[str, Any]) -> dict[str, Any]:
             "char_budget": min(int(config.get("char_budget", 6000)), MAX_CHAR_BUDGET),
         },
         "benchmark_mode": bool(config.get("benchmark_mode", False)),
+        # "on": the customer's turns walk the checked answer flow (answer_graph.py); "off": plain turns
+        "answer": {"graph": str(config.get("answer_graph", "off")), "unsure_reply": UNSURE_REPLY},
     }
 
 
@@ -193,6 +196,11 @@ class KnowledgePlugin:
         ctx.register_prompt_section(TurnSection("knowledge_catalog", self.catalog_text))
         ctx.register_job("embed", self.embedder.run)
         ctx.register_job("catalog", self.keep_catalog)
+        ctx.register_turn_graph(answer_graph(self))
+
+    @property
+    def zone(self) -> ZoneInfo:
+        return self._zone
 
     def today(self) -> date:
         return self._clock().astimezone(self._zone).date()
@@ -325,24 +333,34 @@ class KnowledgePlugin:
             Gap(new_id("gap"), folded, question.strip()[:500], 1, channel, self._clock())
         )
 
-    async def _search_tool(self, args: SearchArgs, ctx: ToolContext) -> ToolOutput:
-        try:
-            await self.ready()
-        except PluginError as err:
-            return ToolOutput(text=f"Kho tri thức chưa sẵn sàng: {err}", is_error=True)
+    async def search_for(
+        self, query: str, variants: list[str], now: datetime, channel: str, results: int | None = None
+    ) -> SearchResult:
+        """A search as the agent makes it (the tool, and the answer flow's first step); a question nothing
+        answers is recorded as a gap. Raises ``PluginError`` while the plugin's tables are missing."""
+        await self.ready()
         settings = (await self.settings())["search"]
         result = await self.searcher.search(
-            args.query,
-            self.asked_on(ctx),
-            results=args.results or int(settings["results"]),
+            query,
+            now.astimezone(self._zone).date(),
+            results=results or int(settings["results"]),
             char_budget=min(int(settings["char_budget"]), MAX_CHAR_BUDGET),
             services=await self.store.services(),
             vector=await self.vector_plan(settings),
-            variants=[text[:300] for text in args.alternatives if len(text.strip()) >= 2],
+            variants=[text[:300] for text in variants if len(text.strip()) >= 2],
             judge=await self.judge_plan(),
         )
         if not result.final:
-            await self.record_gap(args.query, ctx.channel or "")
+            await self.record_gap(query, channel)
+        return result
+
+    async def _search_tool(self, args: SearchArgs, ctx: ToolContext) -> ToolOutput:
+        try:
+            result = await self.search_for(
+                args.query, args.alternatives, ctx.now or self._clock(), ctx.channel or "", args.results
+            )
+        except PluginError as err:
+            return ToolOutput(text=f"Kho tri thức chưa sẵn sàng: {err}", is_error=True)
         return ToolOutput(text=tool_text(result), detail=tool_detail(result))
 
     async def _read_tool(self, args: ReadArgs, ctx: ToolContext) -> ToolOutput:

@@ -364,6 +364,8 @@ class Dispatcher:
                 tracer=self._tracer,
                 steer=steer_in if steer else None,
                 collected=len(texts),
+                # the customer's turns only: a case's turn is the agent's own (rule H8)
+                graph=None if _proactive(lead) else agent.turn_graph,
             )
             reply = TurnReply.of(result)
         except ModelError as err:

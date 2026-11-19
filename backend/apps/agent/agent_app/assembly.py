@@ -22,6 +22,7 @@ from agentcore import (
 from agentcore.harness.hooks import HookSet, injection_guard, result_warning, secret_redactor
 from agentcore.harness.tools.builtin import builtin_tools
 from agentcore.memory import InMemoryMemoryBackend, MemoryBackend, MemoryService, make_memory_tool
+from agentcore.turns import TurnGraphSpec
 
 
 @dataclass(frozen=True, slots=True)
@@ -34,6 +35,8 @@ class Agent:
     memory: MemoryService | None
     policy: LoopPolicy
     hooks: HookSet
+    turn_graph: TurnGraphSpec | None = None
+    """The graph the customer's turns walk (a plugin's); None runs them as plain turns."""
 
 
 def build_agent(
@@ -86,6 +89,7 @@ def build_agent(
         memory,
         policy,
         hooks,
+        added.turn_graph,
     )
 
 
