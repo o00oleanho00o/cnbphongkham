@@ -1,15 +1,15 @@
 # Triết lý agent và harness — luật bất biến
 
-Áp cho mọi thay đổi trong `pema-agent/backend` (lõi `packages/agent-core`, app `apps/agent`, plugin `apps/agent/plugins`),
-kể cả do subagent làm. Chủ hệ thống chốt (2026-10-22); thiết kế đầy đủ: `pema-agent/docs/DESIGN-case-loop.md`, kế hoạch và
-các quyết định đã làm: `pema-agent/docs/PLAN-case-loop.md`. Luật ranh giới agent ↔ CRM (L1–L7) ở
-`agent-crm-boundary.md` vẫn áp song song.
+Áp cho mọi thay đổi trong `backend` (lõi `packages/agent-core`, app `apps/agent`, plugin `apps/agent/plugins`),
+kể cả do subagent làm. Chủ hệ thống chốt (2026-10-22); thiết kế đầy đủ: `docs/DESIGN-case-loop.md`, kế hoạch và
+các quyết định đã làm: `docs/PLAN-case-loop.md`. Luật ranh giới của agent (L1–L7) ở
+`agent-boundary.md` vẫn áp song song.
 
 ## Công thức
 
 **Agent = Model + Harness.** **Harness = Context + Tool interfaces + Constraints + Verification + Correction.**
-**Agent ↔ Environment** (khách, CRM, đồng hồ). Model là một nút trong đồ thị do harness chạy, không phải bộ não ra lệnh
-cho harness. Mọi tính năng (RAG, CRM, nhắc lịch, chăm sóc lại…) là **plugin**; harness không biết plugin nào tồn tại.
+**Agent ↔ Environment** (khách, kho tri thức, đồng hồ). Model là một nút trong đồ thị do harness chạy, không phải bộ não ra lệnh
+cho harness. Mọi tính năng (RAG, kỹ năng, chăm sóc lại…) là **plugin**; harness không biết plugin nào tồn tại.
 
 ## Luật
 
@@ -18,7 +18,7 @@ cho harness. Mọi tính năng (RAG, CRM, nhắc lịch, chăm sóc lại…) l�
   đánh thức ca bằng `ctx.cases`). Lõi và động cơ không bao giờ import plugin, không bao giờ có `if kind == "..."`,
   không đọc bảng của plugin. Plugin không bao giờ sửa con trỏ, trạng thái hay bản ghi ca của động cơ, chỉ đi qua
   `ctx.cases`. **Plugin không import plugin khác**: cái nhiều plugin cùng dùng (hợp đồng dịch vụ `ctx.provide` /
-  `ctx.use`, bộ khóa JWKS) nằm ở `apps/agent/plugin_kit/`, thư mục trung lập không import `agent_app` hay `plugins`.
+  `ctx.use`) nằm ở `apps/agent/plugin_kit/`, thư mục trung lập không import `agent_app` hay `plugins`.
   Harness không mang hợp đồng của một tính năng cụ thể, không gọi tên plugin nào (kể cả trong cảnh báo).
 - **H2. Vòng và đồ thị là dữ liệu.** Trigger, điều kiện dừng, state, cạnh, bộ đếm, trần là dữ liệu khai báo trong
   `CaseSpec`, không viết cứng trong vòng lặp. Chủ sẽ tự làm graph engineering sau: không chốt cứng thứ gì ngăn việc đổi
@@ -49,7 +49,7 @@ cho harness. Mọi tính năng (RAG, CRM, nhắc lịch, chăm sóc lại…) l�
   ca (cạnh lỗi, `room_today`…), không phải một ngoại lệ cho một plugin. Một nhu cầu riêng của plugin thì giải
   ở plugin (nút mã, state, cách đặt khóa ca).
 - **H11. Plan trước, code sau.** Thay đổi lớn (khái niệm lõi, động cơ, đổi hành vi cho khách) viết vào kế hoạch, chờ chủ
-  nói "go". Tool mới cho profile `clinic` là đổi L7: chủ duyệt bằng văn bản, sửa danh sách T9.
+  nói "go". Tool mới cho profile `rag` là đổi L7: chủ duyệt bằng văn bản.
 
 ## Vi phạm đang biết (sửa xong thì xóa dòng)
 

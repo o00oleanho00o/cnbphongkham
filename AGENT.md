@@ -1,21 +1,21 @@
 # AGENT.md — Working rules for the agent
 
-This repository is the agent alone (branch `split/agent`, split from tag `split-base` on 2026-11-18). The Pema clinic
-CRM is a separate product (branch `split/crm`). Goal of this product: an **agentic RAG** agent that answers from its
-knowledge store, on the web console and on the chat platforms its connectors bring.
+This repository is Contete Agent, a product of its own (branch `contete-agent`; cut from the Pema clinic project at tag
+`split-base`, the CRM link removed on 2026-11-19). Goal: an **agentic RAG** agent that answers from its knowledge
+store, on the web console and on the chat platforms its connectors bring.
 
 ## Where things are
 
-- `pema-agent/backend`: the agent core (`packages/agent-core`), the agent service and its plugins (`apps/agent`),
-  `crm-signer` (only for an agent that talks to a CRM, compose profile `crm`), `packages/secret-cipher`.
-- `pema-agent/connectors/zalo`: the Zalo connector, its own service (`pema-agent/docs/CONNECTOR-PROTOCOL.md`).
-- `pema-agent/frontend`: the dashboard (TanStack Start). Its server signs staff in with the agent's own account
+- `backend`: the agent core (`packages/agent-core`), the agent service and its plugins (`apps/agent`),
+  `packages/secret-cipher`.
+- `connectors/zalo`: the Zalo connector, its own service (`docs/CONNECTOR-PROTOCOL.md`).
+- `frontend`: the dashboard (TanStack Start). Its server signs staff in with the agent's own account
   (plugin `web`) and forwards `/agent/...` and `/connectors/<name>/...`.
-- `pema-agent/infra`: compose stack, Caddy, backups. Default profile of the agent: `agents/rag`.
+- `infra`: compose stack, Caddy, backups. Default profile of the agent: `agents/rag`.
 
 ## Rules
 
-- Harness rules H1–H11: `.claude/rules/agent-harness.md`. Boundary rules L1–L7: `.claude/rules/agent-crm-boundary.md`.
+- Harness rules H1–H11: `.claude/rules/agent-harness.md`. Boundary rules L1–L7: `.claude/rules/agent-boundary.md`.
 - Checks: `.claude/rules/code-checks.md` (the bar is `bun run build` and a backend that starts). Tests: only e2e
   through the UI, `.claude/rules/test-writing.md`.
 - Big changes (core concepts, the engine, behaviour toward customers, new tools or plugins of a profile): a written

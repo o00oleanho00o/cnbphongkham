@@ -1,0 +1,149 @@
+// `bun run smoke`: every route of the app renders against the mock backend: the main heading is there and the
+// primary control of the screen is visible (package U, step U1). It is the cheap proof that a restyle did not
+// lose a screen; FEATURE-INVENTORY.md says what each screen must keep, this script only opens them.
+//
+// Needs the app running against the mock backend:  bun run dev:mock   (then, in another shell)  bun run smoke
+//   SMOKE_BASE_URL=http://localhost:3000   where the app listens (default)
+//   SMOKE_ROUTES=/today,/patients          limit to some routes (comma separated)
+//
+// Signs in as the owner (sees every screen). A route that is in the inventory but not in the table below fails,
+// so a new screen has to say what its heading and primary control are.
+import { fileURLToPath } from "node:url";
+
+import { chromium, type Locator, type Page } from "playwright";
+
+import { concreteRoute, listPageRoutes } from "./app-routes";
+
+const BASE = process.env.SMOKE_BASE_URL ?? "http://localhost:3000";
+const APP_DIR = fileURLToPath(new URL("../src/routes", import.meta.url));
+
+type Role = "button" | "link" | "textbox" | "searchbox" | "checkbox" | "switch";
+type Expectation = {
+  /** Text of the main heading (substring); empty string: any non-empty heading (a name from the data). */
+  heading: string;
+  /** The primary control: its role and accessible name (substring). */
+  action: { role: Role; name: string };
+};
+
+/** Redirect-only pages: where they must land. */
+const REDIRECTS: Readonly<Record<string, string>> = {
+  "/": "/admin/agent",
+  "/admin/agent": "/admin/agent/overview",
+};
+
+const EXPECTATIONS: Readonly<Record<string, Expectation>> = {
+  "/admin/auth": {
+    heading: "Tài khoản của tôi",
+    action: { role: "button", name: "Đổi mật khẩu" },
+  },
+  "/admin/agent/overview": { heading: "Tổng quan", action: { role: "button", name: "Tải lại" } },
+  "/admin/agent/sessions": {
+    heading: "Phiên chat",
+    action: { role: "textbox", name: "Tìm theo người" },
+  },
+  "/admin/agent/traces": {
+    heading: "Trace",
+    action: { role: "checkbox", name: "Chỉ lượt không thành công" },
+  },
+  "/admin/agent/cases": { heading: "Ca", action: { role: "button", name: "Tải lại" } },
+  "/admin/agent/model": { heading: "Model", action: { role: "button", name: "Lưu" } },
+  "/admin/agent/settings": {
+    heading: "Cài đặt",
+    action: { role: "button", name: "Lưu thay đổi" },
+  },
+  "/admin/agent/tools": { heading: "Công cụ", action: { role: "switch", name: "memory" } },
+  "/admin/agent/plugins": { heading: "Plugins", action: { role: "searchbox", name: "Tìm plugin" } },
+  "/admin/agent/plugins/[name]": { heading: "zalo", action: { role: "link", name: "Plugins" } },
+  // The first heading of a plugin's page is the plugin's name; the page it ships sits under the plugin's tabs.
+  "/admin/agent/plugins/[name]/[page]": {
+    heading: "zalo",
+    action: { role: "button", name: "Thêm tài khoản" },
+  },
+};
+
+/** Routes the smoke test does not open: sign-in has its own form, the kit examples are development only. */
+const SKIPPED = ["/login", "/dev/kit"];
+
+async function signIn(page: Page): Promise<void> {
+  await page.goto(`${BASE}/login`);
+  await page.fill("#email", "owner@contete.test");
+  await page.fill("#password", "demo1234");
+  await Promise.all([
+    page.waitForURL((url) => !url.pathname.startsWith("/login")),
+    page.click("button[type=submit]"),
+  ]);
+}
+
+function actionLocator(page: Page, { role, name }: Expectation["action"]): Locator {
+  const main = page.locator("main");
+  const candidates = name === "" ? main.getByRole(role) : main.getByRole(role, { name });
+  return candidates.filter({ visible: true }).first();
+}
+
+/** One line per problem of a route; empty when the route is fine. */
+async function problemsOf(page: Page, route: string): Promise<string[]> {
+  const target = concreteRoute(route);
+  const response = await page.goto(`${BASE}${target}`, { waitUntil: "load" });
+  if (response === null || response.status() >= 400)
+    return [`${route}: HTTP ${response?.status() ?? "none"}`];
+
+  const redirect = REDIRECTS[route];
+  if (redirect !== undefined) {
+    await page
+      .waitForURL((url) => url.pathname === redirect, { timeout: 15_000 })
+      .catch(() => null);
+    return new URL(page.url()).pathname === redirect
+      ? []
+      : [`${route}: expected to land on ${redirect}, is on ${new URL(page.url()).pathname}`];
+  }
+
+  const expectation = EXPECTATIONS[route];
+  if (expectation === undefined) return [`${route}: no expectation in scripts/route-smoke.ts`];
+
+  const heading = page.locator("main h1").first();
+  const headingOk = await heading
+    .waitFor({ state: "visible", timeout: 20_000 })
+    .then(() => true)
+    .catch(() => false);
+  if (!headingOk) return [`${route}: no main heading`];
+  const text = (await heading.innerText()).trim();
+  if (!text.includes(expectation.heading)) return [`${route}: heading is "${text}"`];
+
+  const action = actionLocator(page, expectation.action);
+  const actionOk = await action
+    .waitFor({ state: "visible", timeout: 20_000 })
+    .then(() => true)
+    .catch(() => false);
+  return actionOk
+    ? []
+    : [
+        `${route}: primary control (${expectation.action.role} "${expectation.action.name}") not visible`,
+      ];
+}
+
+async function main(): Promise<void> {
+  const only = process.env.SMOKE_ROUTES?.split(",").filter(Boolean) ?? [];
+  const routes = listPageRoutes(APP_DIR).filter((r) => !SKIPPED.includes(r));
+  const selected = routes.filter((r) => only.length === 0 || only.includes(r));
+
+  const browser = await chromium.launch();
+  const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  const page = await context.newPage();
+  const pageErrors: string[] = [];
+  page.on("pageerror", (e) => pageErrors.push(e.message));
+  await signIn(page);
+
+  const problems = await selected.reduce<Promise<string[]>>(async (previous, route) => {
+    const done = await previous;
+    pageErrors.length = 0;
+    const found = await problemsOf(page, route);
+    return [...done, ...found, ...pageErrors.map((e) => `${route}: page error: ${e}`)];
+  }, Promise.resolve([]));
+  await browser.close();
+
+  process.stdout.write(`smoke: ${selected.length} routes, ${problems.length} problem(s)\n`);
+  problems.forEach((line) => process.stdout.write(`  ${line}\n`));
+  process.exitCode = problems.length === 0 ? 0 : 1;
+}
+
+await main();

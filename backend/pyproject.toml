@@ -1,0 +1,77 @@
+[project]
+name = "contete-agent-backend"
+version = "0.1.0"
+description = "Agent: uv workspace root (not a package)."
+requires-python = ">=3.12"
+dependencies = []
+
+[tool.uv]
+package = false
+
+[tool.uv.workspace]
+members = ["packages/*", "apps/*"]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.9",
+    "pyright>=1.1.390",
+    "pytest>=8.3",
+    "pytest-asyncio>=0.24",
+    "import-linter>=2.1",
+    "httpx>=0.27",
+    "types-pyyaml>=6.0",
+]
+
+# ---------------------------------------------------------------- ruff
+[tool.ruff]
+line-length = 110
+target-version = "py312"
+src = ["packages/agent-core/src", "packages/secret-cipher/src", "apps/agent", ".."]
+extend-exclude = [".venv"]
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "B", "UP", "SIM", "C4", "PT", "RUF", "S", "T20", "N", "ASYNC"]
+ignore = [
+    "RUF001", "RUF002", "RUF003",  # Vietnamese text in strings/docstrings is intentional
+    "B008",                        # FastAPI Depends(...) in argument defaults
+]
+
+[tool.ruff.lint.per-file-ignores]
+"**/alembic/versions/*.py" = ["E501", "S608"]
+"**/alembic/env.py" = ["S608"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["agentcore", "agent_app", "secretcipher"]
+known-third-party = ["alembic"]
+
+# ------------------------------------------------------------- pyright
+[tool.pyright]
+typeCheckingMode = "strict"
+pythonVersion = "3.12"
+include = ["packages", "apps"]
+exclude = ["**/.venv", "**/__pycache__", "**/node_modules"]
+venvPath = "."
+venv = ".venv"
+extraPaths = [
+    "packages/agent-core/src",
+    "packages/secret-cipher/src",
+    "apps/agent",
+    "..",
+]
+
+# ------------------------------------------------------- import-linter
+[tool.importlinter]
+root_packages = ["agentcore", "agent_app", "secretcipher"]
+include_external_packages = true
+
+[[tool.importlinter.contracts]]
+name = "the secret cipher is a leaf"
+type = "forbidden"
+source_modules = ["secretcipher"]
+forbidden_modules = ["agentcore", "agent_app"]
+
+[[tool.importlinter.contracts]]
+name = "the agent core is general: it never imports the agent service"
+type = "forbidden"
+source_modules = ["agentcore"]
+forbidden_modules = ["agent_app"]

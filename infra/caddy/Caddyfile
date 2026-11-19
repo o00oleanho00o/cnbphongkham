@@ -1,0 +1,75 @@
+# The one public door (compose profile `proxy`). Reads {$CONTETE_PUBLIC_DOMAIN} (the site address) and
+# imports /etc/caddy/mode.caddy (the TLS mode: auto | internal | off, see infra/caddy/modes/ and infra/README.md).
+#
+# Everything goes to the dashboard (frontend:3000): its server answers the sign-in (/api/v1/auth, /api/v1/me), forwards
+# /agent/... to the agent and /connectors/<name>/... to the connectors. Postgres, the agent and the connectors are NOT
+# routed and cannot be: Caddy is attached only to the `edge` network, where only the frontend lives. Caddy is the only
+# container that publishes 80/443.
+{
+	# No admin API: nothing reconfigures this server at runtime, and port 2019 is one less thing to protect.
+	admin off
+
+	servers {
+		timeouts {
+			# slowloris: the request headers must arrive in 10 s, an idle keep-alive connection is dropped at 2 min
+			read_header 10s
+			idle 2m
+		}
+	}
+}
+
+import mode.caddy
+
+{$CONTETE_PUBLIC_DOMAIN:localhost} {
+	import contete_tls
+
+	encode zstd gzip
+
+	header {
+		# hide what runs behind (Caddy, TanStack Start)
+		-Server
+		-Via
+		-X-Powered-By
+		X-Content-Type-Options nosniff
+		# the dashboard is never framed (clickjacking); frame-ancestors is the modern form, X-Frame-Options the old one
+		X-Frame-Options DENY
+		Content-Security-Policy "frame-ancestors 'none'"
+		Referrer-Policy strict-origin-when-cross-origin
+		Permissions-Policy "camera=(), microphone=(), geolocation=()"
+		# only with a certificate a browser can trust (mode auto); empty in internal and off
+		import contete_hsts
+	}
+
+	# Access log: who asked for which path and what came back. NOT logged: the query string (it can carry search
+	# text, tokens or ids), cookies, Authorization, Set-Cookie, Referer's query.
+	log {
+		output stdout
+		format filter {
+			wrap json
+			request>uri regexp \?.* ""
+			request>headers>Cookie delete
+			request>headers>Authorization delete
+			request>headers>Proxy-Authorization delete
+			request>headers>Referer regexp \?.* ""
+			resp_headers>Set-Cookie delete
+		}
+	}
+
+	# The largest body is a document uploaded to the knowledge store (plugin knowledge: max_body_kb 12288).
+	request_body {
+		max_size 13MiB
+	}
+
+	handle {
+		reverse_proxy frontend:3000 {
+			lb_try_duration 15s
+			lb_try_interval 250ms
+		}
+	}
+}
+
+# Container health check only (never published): answers while the config is loaded.
+http://127.0.0.1:8081 {
+	bind 127.0.0.1
+	respond /ready "ok" 200
+}

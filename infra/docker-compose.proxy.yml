@@ -1,0 +1,18 @@
+# Override for "behind the reverse proxy": only Caddy publishes ports (80/443). The frontend stops
+# publishing its loopback port and is reachable only on the compose networks (`expose`). The agent never
+# publishes one.
+#
+#   docker compose -f infra/docker-compose.yml -f infra/docker-compose.proxy.yml --env-file infra/.env \
+#       --profile proxy up -d      
+#
+# Without this file (plain `up`, `bun run dev`) the port stays on the loopback address
+# CONTETE_FRONTEND_BIND: that is the development way, no proxy, no TLS, this machine only.
+#
+# `!reset` (Docker Compose 2.24+) empties the `ports` list of the base file instead of merging with it. Postgres
+# keeps its loopback port (database tools on the host); set CONTETE_PG_BIND to 127.0.0.1 and block the
+# ports in the host firewall if the machine has a public address, as the Ubuntu guide says.
+services:
+  frontend:
+    ports: !reset []
+    expose:
+      - "3000"

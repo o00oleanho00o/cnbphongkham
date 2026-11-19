@@ -5,15 +5,15 @@
 #   http://localhost:3000   the agent dashboard; the first sign-in creates the agent's admin account (plugin web)
 #   (the agent and the Zalo connector publish no port: staff reach them through the dashboard)
 #
-# The stack (postgres, agent-migrate, agent, egress, zalo, frontend) comes from pema-agent/infra: its compose file plus
+# The stack (postgres, agent-migrate, agent, egress, zalo, frontend) comes from infra: its compose file plus
 # docker-compose.local.yml, with the demo values of infra/.env.local-demo (local use only, ports on 127.0.0.1).
 # Stop: `docker compose down` (add -v to also drop data).
-# Development: add `-f pema-agent/infra/docker-compose.dev.yml` to run the agent sources of this checkout
+# Development: add `-f infra/docker-compose.dev.yml` to run the agent sources of this checkout
 # (`docker compose restart agent` after a change; no image build).
-name: rag-agent
+name: contete-agent
 
 include:
   - path:
-      - pema-agent/infra/docker-compose.yml
-      - pema-agent/infra/docker-compose.local.yml
-    env_file: pema-agent/infra/.env.local-demo
+      - infra/docker-compose.yml
+      - infra/docker-compose.local.yml
+    env_file: infra/.env.local-demo

@@ -11,5 +11,5 @@
   `performance` khi làm trong repo này): cấm `any`, cấm `as`/`!`, cấm `switch`/`for`/`let`, không `console.log`, TODO phải có
   số issue, import không dùng, câu `if` lồng nhau, re-render thừa… Viết theo kiểu code xung quanh, miễn chạy được.
 - **Vẫn giữ** vì chúng làm hại thật, không phải vì đẹp: không để lộ khóa hay mật khẩu trong file (`security.md`), không
-  ghi tên AI vào git, các luật L1–L7 và H1–H11 về ranh giới agent ↔ CRM và harness.
+  ghi tên AI vào git, các luật L1–L7 và H1–H11 về ranh giới của agent và harness.
 - Cấu hình `ruff`/`pyright`/`eslint` và target `make lint`/`make typecheck` vẫn nằm trong repo cho ai muốn chạy; không bắt buộc.
